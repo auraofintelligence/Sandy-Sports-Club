@@ -224,6 +224,92 @@ put('donate.html','Donations and screen campaign','An illustrative $50,000 modul
     section('CURRENT PRICE SIGNALS','Size changes the whole budget','The owner previously saw a roughly $45,000 China quote. It needs refreshing against panel size, pixel pitch, spares, processor, freight and Australian support. Australian Screens lists P6 outdoor screen from $4,500 plus GST per square metre, and a mounted 9 � 3 m P6 example at $169,000. A local modular hire provider illustrates 500 � 1000 mm outdoor panels and combinations. None of these is a Sandy Sports quote.','<div class="link-row"><a class="button outline" href="https://australianscreens.com.au/products/led-custom-outdoor-p6-sqm">P6 per square metre</a><a class="button outline" href="https://australianscreens.com.au/products/led-billboard-p6-mounted">9 � 3 m mounted example</a><a class="button outline" href="https://onpointstudios.com.au/products/led-panel-p3-9-outdoor">Modular hire example</a></div>','alt')+
     section('WAYS TO HELP','Pledge a contribution or a capability','The organiser can discuss founding gifts, sponsorship, equipment, transport, technical support, screen programming or grant partnerships. Email an expression of interest; the proposal site does not take payments or issue tax receipts.','<div class="link-row"><a class="button coral" href="mailto:sbt4183@gmail.com?subject=Sandy%20Sports%20screen%20support">Email a screen pledge</a><a class="button outline" href="/join.html">Join the founding team</a><a class="button outline" href="/assets.html">Full asset wish list</a></div>'),'funding.js')
 
+member_sections=[
+ ('sports','Sport and teams','Plan mixed play across every code','Browse volleyball, flag, beach cricket, football, rugby league, beach 5s, AirBadminton, tennis, ultimate, handball, netball and AFL crossovers. Teams, formats and sign-on windows belong to the sport leads.','hero-sports.webp','teams',[
+  ('VOLLEYBALL','Mixed play and pathways','Doubles, social rotations, juniors, officiating and tournament practice.'),
+  ('FIELD CODES','A different surface','Flag, cricket, football and rugby formats need their own layouts and partner club agreements.'),
+  ('OTHER GAMES','Variety on sand','Handball, net games, ultimate, netball crossover and island-made formats.'),
+ ]),
+ ('training','Skills and learning','A practical school-to-club skills catalogue','Players, coaches, officials and media crews can share training paths. Learning activities are proposals and need qualified leaders, safeguarding and suitable facilities.','hero-youth-elders.webp','learning',[
+  ('ON SAND','Coaching and movement','Volleyball technique, safe sand conditioning, first aid and modified games.'),
+  ('OFFICIATING','Run the competition','Rules, scoring, tournament desk and event volunteer training.'),
+  ('MEDIA','Tell the story','Camera, editing, live mixing, commentary, captions and production roles.'),
+ ]),
+ ('calendar','Calendar and availability','One programme across three towns','A member calendar can combine weekly sport, visiting club sessions, film nights, markets and festivals, with weather and venue changes communicated clearly.','hero-markets.webp','calendar',[
+  ('SPORT','Training and matches','Town, format, capacity, organiser and equipment are visible before sign-on.'),
+  ('SCREEN','Film and live sport','Screenings and broadcasts list rights, crew and access arrangements.'),
+  ('VOLUNTEERS','Availability','Offer a shift, see the run sheet and know who is responsible.'),
+ ]),
+ ('film','Film club membership','A creative home inside the sports club','Members can join the distinct Sandy Sports Film Club to programme cinema, support festivals, create island media and help broadcast sport.','hero-film.webp','film',[
+  ('CINEMA','Screening circle','Film selection, permissions, accessible captions and community discussion.'),
+  ('FESTIVAL','Creative exchange','Local shorts and visiting work with First Nations-led programming on its own terms.'),
+  ('LIVE','Sport television','Camera, audio, commentary, replays and media rights across sand sport and club crossovers.'),
+ ]),
+ ('crew','Event and media crew','Make the tournament and festival work','An eight-week summer window could bring sport, film and markets together when dates, hosts and permissions are ready. Members can offer defined crew roles.','hero-trust.webp','notices',[
+  ('GAMES','Court and field crew','Setup, scoring, hydration, equipment and pack-down.'),
+  ('FILM','Screen and broadcast crew','Rigging by qualified people, switching, captions and rights checks.'),
+  ('MARKET','Visitor experience','Stalls, circulation, waste, hospitality and accessibility.'),
+ ]),
+ ('equipment','Shared equipment','A fleet for the entire island','Members can request, book and return shared nets, balls, field kits, screens and production gear when an asset custodian and a real inventory system are appointed.','hero-funding.webp','equipment',[
+  ('SPORT','Courts and fields','Portable systems with inspection and replacement schedules.'),
+  ('SCREEN','Modular LED','Main cinema wall or smaller mobile displays with trained operators.'),
+  ('CARE','Custody and maintenance','A clear owner, booking, transport, insurance and repair process.'),
+ ])]
+committee_sections=[
+ ('governance','Governance and meetings','Founding decisions with visible follow-through','An inaugural committee can adopt roles, a constitution, meeting cadence, quorum rules, conflict declarations, minutes and a handover plan. Example records remain in the browser demo.','hero-trust.webp','meetings',[
+  ('DECIDE','Agendas and minutes','Record motions, evidence, responsible person and due date.'),
+  ('SHARE','Officer roles','Chair, secretary, treasurer and working groups with backup people.'),
+  ('REVIEW','Policies and consent','Membership, youth safeguarding, cultural permissions and privacy.'),
+ ]),
+ ('sport','Sport operations','A desk for every code and partner club','Volleyball leads the programme while each format has its own space, equipment, qualified people, insurance and agreement with island clubs.','hero-sports.webp','jobs',[
+  ('SCHEDULE','League and tournament design','Mixed competition formats, officials, weather changes and venue allocations.'),
+  ('PARTNER','Club crossover','Existing clubs keep their identity, coaches and member relationship.'),
+  ('SPACE','Surface and footprint','Use the space planner and site drawings for courts and larger field codes.'),
+ ]),
+ ('events','Events and summer programme','Build a full island calendar','Committee run sheets connect sport, markets, cinema, multicultural expos, film festivals and local transport across three towns. Publish only confirmed dates and permissions.','hero-markets.webp','events',[
+  ('SUMMER','Holiday programme','Coordinate school, club and visitor availability before setting dates.'),
+  ('PRODUCTION','Run sheets','Site lead, sport leads, media crew, suppliers, accessibility and pack-down.'),
+  ('REGIONAL','Olympic decade','Training camps and expos can seek relationships without claiming Games status.'),
+ ]),
+ ('film','Film club governance','Distinct editorial authority in shared club systems','The film club can elect a working group, manage its programme and production rights, and share facilities, safeguarding, asset custody and finance with the wider committee.','hero-film.webp','film',[
+  ('EDITORIAL','Programming','Local, Indigenous-led and multicultural work need their own permissions and decision paths.'),
+  ('PRODUCTION','Live broadcast','Rights, crews, equipment, bandwidth, commentary and player consent.'),
+  ('ASSETS','Screen operations','LED panels, rigging, transport, maintenance and supervised hire.'),
+ ]),
+ ('funding','Grants and investment','A large opportunity register with accountable applicants','Work across Council, Queensland, federal, GCBF, Indigenous-led sport and arts, youth, foundations, sponsors and private investment, with separate budgets and acquittals.','hero-funding.webp','grants',[
+  ('PUBLIC','Grant evidence','Applicant, site tenure, outcomes, eligible costs, deadline and matched funds.'),
+  ('PRIVATE','Investment packs','Cash flows, community access, ownership, risk and exit terms.'),
+  ('DONATIONS','Screen campaign','Verified recipient, actual gifts, receipts and live reporting before collecting.'),
+ ]),
+ ('assets','Facilities and assets','A three-town infrastructure register','Compare Ballow Road, Cunningham Road, Amity and Point Lookout without selecting land prematurely. Plan courts, fields, clubhouses, showers, lights, screens and transport as a system.','hero-nearby.webp','assets',[
+  ('VENUES','Site fit','Tenure, ecology, cultural heritage, access, utilities, neighbours and weather.'),
+  ('BUILD','Modular clubhouses','Extendable demountable modules, dressing rooms, showers and storage.'),
+  ('FLEET','Equipment stewardship','Procurement, custodian, loans, maintenance, replacement and insurance.'),
+ ]),
+ ('members','Membership and welfare','A place for players, families and volunteers','Before real accounts open, adopt membership classes, eligibility, consent, safeguarding, complaints and privacy pathways, plus a process for committee nominations.','hero-youth-elders.webp','members',[
+  ('WELCOME','Expression of interest','Follow up through the organiser email, then verify details privately.'),
+  ('PROTECT','Youth and family','Appropriate adults, consent, photography and clear incident response.'),
+  ('CONNECT','Volunteer care','Tasks, training, recognition and realistic workload.'),
+ ]),
+ ('publishing','Webmaster and communications','Keep the site accurate as the club forms','The Webmaster role needs server-side account controls, editorial review and an audit trail. The demo is isolated; published programme information must identify the responsible organiser.','hero-trust.webp','overview',[
+  ('PUBLISH','Content review','Proposed versus confirmed labels, source links, date checks and image rights.'),
+  ('ACCESS','Role management','Individual invitations, least privilege, expiry and recovery.'),
+  ('HANDOVER','Continuity','Repository, domain, backups, access logs and successor notes.'),
+ ])]
+
+def role_page(prefix,item):
+    key,title,heading,summary,img,pane,tiles=item
+    home='members.html' if prefix=='member' else 'committee.html'
+    put(f'{prefix}-{key}.html',title,summary,
+        hero(('MEMBER CLUBHOUSE' if prefix=='member' else 'COMMITTEE DESK'),heading,summary,img)+
+        section('THE WORK','What this desk covers','These are practical components of the proposed club. The linked workspace is an isolated, fictional browser demo, while nomination is sent by email.',cards([(a,b,c,'','') for a,b,c in tiles]))+
+        section('COORDINATE','Bring the right people together','Each page has its own place in the clubhouse. Use the role workspace to test a note, then nominate to help turn the proposal into a working club.',f'<div class="link-row"><a class="button coral" href="/{home}#{pane}">Open this demo desk</a><a class="button outline" href="/join.html">Nominate to help</a><a class="button outline" href="/{home}">All {prefix} desks</a></div>','sunny'))
+for item in member_sections: role_page('member',item)
+for item in committee_sections: role_page('committee',item)
+for prefix,sections,home in [('member',member_sections,'members.html'),('committee',committee_sections,'committee.html')]:
+    catalogue=section('ALL DESKS','Open a dedicated page for each role','Choose the area you want to develop, from training and sports to governance, film and assets.',cards([(prefix.upper(),item[1],item[3],item[4],f'/{prefix}-{item[0]}.html') for item in sections],'four'),'alt')
+    pages[home]=pages[home].replace('</main>',catalogue+'</main>')
+
 for slug,html in pages.items():
     (root/slug).write_text(html,encoding='utf-8')
 print(f'Generated {len(pages)} proposal pages')
