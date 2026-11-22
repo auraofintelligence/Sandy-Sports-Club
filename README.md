@@ -1,8 +1,8 @@
 # Sandy Sports Club proposal
 
-A 17-page proposal site for a mixed beach volleyball-led, three-town sand sports and culture club on Minjerribah / North Stradbroke Island. It includes flag football, cricket, football, beach rugby league and 5s, AirBadminton, tennis, ultimate, handball, netball, AFL crossover and fitness, plus an internal film club, events, markets and a modular LED screen network.
+A 46-page proposal site for a mixed beach volleyball-led, three-town sand sports and culture club on Minjerribah / North Stradbroke Island. It includes flag football, cricket, football, beach rugby league and 5s, AirBadminton, tennis, ultimate, handball, netball, AFL crossover and fitness, plus an internal film club, events, markets and a modular LED screen network.
 
-The public pages cover site options, facilities, asset wishes, grants and investment, a space planner, an illustrative $50,000 screen equipment funding visualisation, and email nominations for joining, committee roles and partner clubs. Member, committee and Webmaster demo desks store fictional working notes in each visitor's browser. No real membership account, payment gateway, donor ledger, land tenure or event approval exists yet.
+The public pages cover site options, facilities, asset wishes, grants and investment, dedicated sport and skills pages, a film club, a PLFC v1.2-inspired constitution builder with a women-led committee option, a space planner, an illustrative $50,000 screen equipment funding visualisation, and email nominations for joining, committee roles and partner clubs. Member, committee and Webmaster demo desks store fictional working notes in each visitor's browser. No real membership account, payment gateway, donor ledger, land tenure or event approval exists yet.
 
 ## Build and hosting
 
@@ -15,6 +15,3 @@ The site is stewarded by Luke Nathan Hayes / Strange But True under the [interim
 ## Before real accounts or payments
 
 A secure Worker and database, individual role invitations, consent and safeguarding, an eligible recipient and account, donation terms, audited donation records, and current screen quotations must be established. The demos do not create production identity or shared data.
-
-
-Cloudflare deployment is connected to the `main` branch of this repository.

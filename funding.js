@@ -8,4 +8,3 @@ function update(){const [gc,gv,sc,sv,grant]=inputs.map(id=>Math.max(0,Math.min(1
 }
 inputs.forEach(id=>byId(id)?.addEventListener('input',update));
 byId('reset-funding')?.addEventListener('click',()=>{[40,100,4,5000,15000].forEach((v,i)=>byId(inputs[i]).value=v);update()});update();
-

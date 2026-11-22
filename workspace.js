@@ -49,4 +49,3 @@ function initWorkspace(el,role){
 }
 document.querySelectorAll('#workspace[data-role]').forEach(el=>initWorkspace(el,el.dataset.role));
 document.querySelectorAll('[data-workspace]').forEach(el=>initWorkspace(el,el.dataset.workspace));
-

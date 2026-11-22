@@ -5,7 +5,7 @@ const pages = [
   ['facilities.html','Facilities & assets'],['space-planner.html','Space planner'],
   ['grants.html','Grants & investment'],['donate.html','Donate & screen'],['join.html','Join / nominate'],
   ['clubhouse.html','Clubhouse'],['members.html','Members'],['committee.html','Committee'],
-  ['webmaster.html','Webmaster'],['sources.html','Sources']
+  ['webmaster.html','Webmaster'],['constitution.html','Constitution'],['sources.html','Sources']
 ];
 const nav = pages.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`).join('');
 document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-mark.svg" alt=""><span>SANDY SPORTS<small>MINJERRIBAH � STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-cta" href="/clubhouse.html">Explore the club</a></header>`);
@@ -23,4 +23,3 @@ const backToTop=document.querySelector('.back-to-top');
 function updateBackToTop(){backToTop.hidden=window.scrollY<450}
 window.addEventListener('scroll',updateBackToTop,{passive:true});updateBackToTop();
 backToTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
-

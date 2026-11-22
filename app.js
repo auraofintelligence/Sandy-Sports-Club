@@ -27,4 +27,3 @@ function calculate(){
 sport?.addEventListener('change',()=>{const p=presets[sport.value];length.value=p.length;width.value=p.width;buffer.value=p.buffer;$('#sport-note').textContent=p.note;calculate()});
 $('#space-form')?.addEventListener('input',calculate);calculate();
 $('#copy-plan')?.addEventListener('click',async()=>{const summary=`Sandy Sports space sketch: ${sport.options[sport.selectedIndex].text}; ${count.value} zones of ${length.value} � ${width.value} m; ${buffer.value} m buffer; ${columns.value} columns, ${gap.value} m gap. Envelope ${$('#grid-result').textContent}, ${$('#area-result').textContent}. Planning assumption only.`;try{await navigator.clipboard.writeText(summary);$('#copy-status').textContent='Copied.'}catch{$('#copy-status').textContent='Copy unavailable.'}});
-
