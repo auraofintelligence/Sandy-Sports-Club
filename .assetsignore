@@ -4,3 +4,6 @@ README.md
 LICENSE.md
 wrangler.jsonc
 .assetsignore
+build_pages.py
+polish.py
+
