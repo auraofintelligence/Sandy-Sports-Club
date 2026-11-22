@@ -16,3 +16,5 @@ The site is stewarded by Luke Nathan Hayes / Strange But True under the [interim
 
 A secure Worker and database, individual role invitations, consent and safeguarding, an eligible recipient and account, donation terms, audited donation records, and current screen quotations must be established. The demos do not create production identity or shared data.
 
+
+Cloudflare deployment is connected to the `main` branch of this repository.
