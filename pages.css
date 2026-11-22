@@ -18,7 +18,7 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 @media(max-width:700px){.site-gallery{grid-template-columns:1fr}.site-gallery img{height:auto}.site-gallery .panorama{grid-column:auto}}
 
 /* Compact navigation and an ordered route through all 46 pages. */
-@media(max-width:1320px){
+@media(max-width:1600px){
   .site-header .menu-toggle{display:block;border:1px solid #acd2d0;background:transparent;border-radius:7px;color:#fff;padding:.55rem .85rem}
   .site-header nav,.site-header nav.open{position:absolute;top:100%;right:1rem;left:auto;width:min(340px,calc(100vw - 2rem));max-width:none;max-height:calc(100dvh - 116px);overflow-y:auto;flex-direction:column;align-items:stretch;gap:0;padding:.65rem;border:1px solid #396071;border-radius:0 0 16px 16px;background:#102d40;box-shadow:0 16px 30px #0827357a;z-index:20}
   .site-header nav{display:none}
