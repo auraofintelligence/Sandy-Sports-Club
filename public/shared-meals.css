@@ -1,0 +1,96 @@
+.meals, .meal-guest-shell {
+  --meal-ink: #123c3c;
+  --meal-border: #c9d9cf;
+  --meal-soft: #edf4ed;
+  color: var(--meal-ink);
+  overflow-wrap: anywhere;
+}
+.meals *, .meal-guest-shell, .meal-guest-shell * { box-sizing: border-box; }
+.meals [hidden], .meal-guest-shell [hidden] { display: none !important; }
+.meals { max-width: 57rem; }
+.meal-review { border:1px solid var(--meal-border); background:var(--meal-soft); border-radius:.8rem; padding:clamp(1rem,3vw,1.5rem) }
+.meal-review > h3 { margin:0 }
+.meal-review > .meal-actions { margin:1rem 0 .2rem }
+.meal-review .meal-actions { flex-wrap:wrap }
+.meal-review [data-show][aria-pressed=true] { box-shadow:0 0 0 2px var(--meal-ink) }
+.meal-review [data-review-body] > .meal-card { margin-top:1rem }
+.meal-review [data-review-status]:not(:empty) { margin-top:.75rem }
+.meal-heading, .meal-card > summary, .meal-people li, .meal-jobs li, .meal-invites li, .meal-row-actions, .meal-actions {
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+}
+.meal-heading, .meal-card > summary, .meal-people li, .meal-jobs li, .meal-invites li { justify-content: space-between; }
+.meal-heading { margin-bottom: 1.5rem; }
+.meal-heading h2, .meal-heading p, .meal-section h3 { margin: 0; }
+.meal-heading p { margin-top: .45rem; }
+.meal-section { padding-block: 1rem; }
+.meal-section > p { margin: .6rem 0; }
+.meal-card, .meal-create { border: 1px solid var(--meal-border); border-radius: .8rem; background: #fff; margin: .7rem 0 0; }
+.meal-card > summary { padding: 1rem; cursor: pointer; list-style: none; }
+.meal-card > summary::-webkit-details-marker { display: none; }
+.meal-card > summary > span:first-child { display: grid; flex: 1 1 13rem; min-width: 0; }
+.meal-card > summary::after { content: '+'; font-size: 1.35rem; }
+.meal-card[open] > summary::after { content: '−'; }
+.meal-card > summary strong { font-size: 1.08rem; }
+.meal-card summary small, .meal-jobs small, .meal-invites small, .meal-form label small { display: block; color: #49625b; font-size: .86rem; }
+.meal-state { background: var(--meal-soft); border-radius: .4rem; padding: .2rem .5rem; font-size: .84rem; font-weight: 700; }
+.meal-card-body { border-top: 1px solid var(--meal-border); padding: .9rem clamp(.85rem, 3vw, 1.4rem); }
+.meal-card-body > p:first-child { margin-top: 0; }
+.meal-info { display: grid; gap: .65rem; padding: 0; margin: .85rem 0; }
+.meal-info > div { display: grid; grid-template-columns: minmax(6rem, 8rem) minmax(0,1fr); align-items: baseline; gap: .6rem; }
+.meal-info dt { color: #48685e; font-weight: 700; }
+.meal-info dd { margin: 0; white-space: pre-line; }
+.meal-address, .meal-note, .meal-private-link { padding: .8rem; background: var(--meal-soft); border-radius: .5rem; }
+.meal-card h4, .meal-guest-shell h4 { margin: 1rem 0 .4rem; }
+.meal-create, .meal-edit > form, .meal-private-link { padding: 1rem; }
+.meal-form, .meal-form > label, .meal-edit > label, .meal-search > label, .meal-private-link > label { display: grid; gap: .4rem; }
+.meal-form { gap: .85rem; }
+.meal-ideas small { display: block; }
+.meal-ideas > div { display: flex; flex-wrap: wrap; gap: .4rem; margin: .45rem 0; }
+.meal-form label, .meal-search label, .meal-private-link label { font-weight: 650; min-width: 0; }
+.meal-form label small, .meal-form small { font-weight: normal; }
+.meal-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.meal-pair > label { display: grid; gap: .4rem; align-content: start; }
+.meal-form :is(input:not([type=checkbox]), textarea, select), .meal-search input, .meal-private-link input {
+  display: block; min-width: 0; width: 100%; min-height: 2.7rem; padding: .6rem .7rem; border: 1px solid #8aa99a; border-radius: .45rem; background: #fff; font: inherit; color: #173d39;
+}
+.meal-form input[type=date], .meal-form input[type=time] { max-width: 100%; appearance: none; }
+.meal-form fieldset { margin: .8rem 0; min-inline-size: 0; padding: .75rem; border: 1px solid var(--meal-border); border-radius: .45rem; }
+.meal-form legend { font-weight: 700; padding-inline: .3rem; }
+.meal-form label.meal-check { display: flex; align-items: baseline; gap: .6rem; font-weight: 500; margin: .4rem 0; cursor: pointer; }
+.meal-check input { width: 1.05rem; height: 1.05rem; flex: 0 0 auto; }
+.meal-edit, .meal-cancel { border-top: 1px solid var(--meal-border); padding: .65rem 0; }
+.meal-edit > summary, .meal-cancel > summary, .meal-invites summary { min-height: 2.5rem; cursor: pointer; font-weight: 700; align-content: center; }
+.meal-edit > label { margin: .65rem 0; }
+.meal-edit > form { padding: .45rem 0; }
+.meal-edit > p, .meal-cancel > p { margin: .35rem 0 .7rem; }
+.meal-form button, .meal-private-link button { justify-self: start; }
+.meal-search { display: flex; align-items: end; flex-wrap: wrap; gap: .6rem; }
+.meal-search > label { flex: 1 1 15rem; }
+.meal-private-link { display: grid; gap: .5rem; margin-block: .75rem; }
+.meal-private-link small { display: block; }
+.meal-jobs, .meal-people, .meal-invites { padding: 0; margin: .3rem 0 .9rem; list-style: none; }
+.meal-jobs li, .meal-people li, .meal-invites li { padding: .5rem .2rem; border-bottom: 1px solid var(--meal-border); }
+.meal-help { margin: .8rem 0; }
+.meal-invite-tools { margin-top: 1.1rem; }
+.meal-cancel { margin-top: 1.3rem; color: #71391e; }
+.meals [role=status]:empty, .meal-guest-shell [role=status]:empty { display: none; }
+.meals [role=status]:not(:empty), .meal-guest-shell [role=status]:not(:empty) { font-weight: 650; }
+.meal-guest-page { margin: 0; background: #f4f6ef; color: #173d39; font: 1rem/1.5 system-ui,sans-serif; }
+.meal-demo { background: #7d3a24; color: #fff; text-align: center; padding: .6rem .9rem; font-weight: 600; }
+.meal-guest-shell { width: min(100% - 2rem, 41rem); margin: clamp(1rem,4vw,3rem) auto; padding: clamp(1rem,4vw,2.2rem); background: white; border: 1px solid var(--meal-border); border-radius: 1rem; }
+.meal-guest-shell > header { display: flex; align-items: center; gap: .8rem; }
+.meal-guest-shell > header p, .meal-guest-title p { margin: 0; }
+.meal-guest-shell h1 { font-size: clamp(1.7rem,5vw,2.5rem); line-height: 1.15; margin: 1.4rem 0 1rem; }
+.meal-guest-title h2 { font-size: 1.4rem; margin: 1rem 0 .25rem; }
+.meal-guest-shell .button { display: inline-block; font: inherit; font-weight: 700; background: #096064; color: white; border: 1px solid #096064; border-radius: .5rem; padding: .65rem 1rem; cursor: pointer; }
+.meal-guest-shell .text-link, .meal-guest-shell a { font: inherit; font-weight: 650; color: #06575b; }
+.meal-guest-shell .text-link { background: none; border: 0; text-decoration: underline; cursor: pointer; min-height: 2.75rem; }
+.meal-guest-shell :focus-visible { outline: 3px solid #9b4716; outline-offset: 2px; }
+.meal-guest-shell footer { display: flex; flex-wrap: wrap; gap: .7rem 1rem; border-top: 1px solid var(--meal-border); margin-top: 1.25rem; padding-top: .8rem; }
+@media (max-width: 32rem) {
+  .meal-pair, .meal-info > div { grid-template-columns: minmax(0, 1fr); gap: .15rem; }
+  .meal-pair { gap: .75rem; }
+  .meal-card > summary { gap: .45rem; }
+  .meal-card > summary > span:first-child { flex-basis: 100%; }
+  .meal-card > summary::after { margin-inline-start: auto; }
+}

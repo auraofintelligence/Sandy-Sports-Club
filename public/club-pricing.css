@@ -1,0 +1,26 @@
+.pricing-panel{max-width:58rem}
+.pricing-panel>p,.price-hint,.price-setup p{color:var(--muted)}
+.price-categories{display:flex;flex-wrap:wrap;gap:.45rem;margin:1.2rem 0}
+.price-categories button[aria-pressed=true]{background:var(--deep);color:white;border-color:var(--deep)}
+.pricing-panel fieldset{border:0;margin:0;padding:0;min-width:0}
+.price-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(7.75rem,11rem);align-items:center;gap:.55rem 1.2rem;padding:.9rem 0;border-top:1px solid var(--line)}
+.price-name strong,.price-name small,.price-row label{display:block}
+.price-name small,.price-row small{color:var(--muted)}
+.price-row input:not([type=checkbox]),.price-row select{display:block;width:100%;min-width:0;min-height:44px;padding:.45rem .65rem;border:1px solid #9fb5ac;border-radius:6px;background:white;color:var(--ink)}
+.price-row label{font-weight:600;font-size:.93rem}
+.price-row .price-extra,.price-row>label:not(.price-amount),.price-row>[data-remove]{grid-column:1/-1}
+.price-extra{font-size:.92rem}.price-extra summary,.price-setup summary{cursor:pointer;color:var(--teal)}
+.price-extra[open]{background:var(--mint);border-radius:8px;padding:.8rem 1rem}
+.price-extra label,.price-extra small{margin-top:.8rem}
+.price-extra .price-check{display:flex;align-items:baseline;gap:.45rem}
+.price-check input{align-self:start;margin-top:.3rem;width:1.1rem;height:1.1rem;flex:none}
+.price-row>[data-remove],.pricing-panel [data-add]{justify-self:start;text-align:left}
+.pricing-panel [data-add]{min-height:44px;padding:0}
+.price-hint{margin:.7rem 0;font-size:.91rem}
+.price-status:not(:empty){margin:1rem 0 0;font-weight:600}
+.price-setup{border-top:1px solid var(--line);margin:1.25rem 0 0;padding-top:.9rem}
+.price-setup a{text-decoration:underline}.price-setup p{margin:.65rem 0}
+.price-reviewing [data-review]{margin-top:1rem}
+.price-reviewing fieldset{display:none}
+.pricing-panel .stock-review li{margin-bottom:.6rem}
+#club-prices,#treasurer-orders,#club-ledger,[data-view=stock] h2{scroll-margin-top:4rem}

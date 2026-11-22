@@ -1,0 +1,22 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src https://www.youtube-nocookie.com https://www.facebook.com/plugins/page.php; frame-ancestors 'self'
+
+/grant-opportunities.mjs
+  Content-Type: text/javascript; charset=utf-8
+
+/newsletter-recipe.mjs
+  Content-Type: text/javascript; charset=utf-8
+
+/returning-membership.html
+  Referrer-Policy: no-referrer
+  Cache-Control: private, no-store
+  X-Robots-Tag: noindex, nofollow
+
+/meal-invite.html
+  Referrer-Policy: no-referrer
+  Cache-Control: private, no-store
+  X-Robots-Tag: noindex, nofollow
+

@@ -1,0 +1,57 @@
+body:not([data-club-member]) [data-view="members"],
+body:not([data-club-committee]) [data-view="committee"],
+body:not([data-role-treasurer]) :is([data-view="stock"],.treasurer-entry) { display:none !important; }
+.private-tools[hidden], .club-access[hidden] { display:none; }
+.club-access { max-width:44rem; margin-inline:auto; }
+.club-access .panel { margin-block:1.3rem; }
+.private-tools .officer-session{flex-basis:100%;font-size:1rem;color:#28564c}
+.club-access .field-note, .account-tools .field-note { font-size:.94rem; color:#3c5e5b; }
+.officer-first-visit{margin:1rem 0}
+.officer-first-visit summary{font-weight:700;color:var(--teal);cursor:pointer}
+.officer-first-visit[open] p{margin-top:.65rem}
+.club-access [role="status"],.account-tools [role="status"] { min-height:1.4em; color:#743c25; }
+.private-tools { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem 1.1rem; margin:1rem 0 1.5rem; }
+.private-tools a,.private-tools button,.account-tools button.text-link { font:inherit; font-weight:700; color:#07575a; text-decoration:underline; text-underline-offset:3px; }
+.private-tools button { background:transparent; border:0; cursor:pointer; }
+.account-tools { margin-block:1.5rem; }
+.account-tools summary { cursor:pointer; font-weight:700; color:#07575a; }
+.account-tools form { max-width:36rem; }
+.account-tools input[readonly] { width:100%; }
+.pending-invitations { margin-block:1.2rem 1.8rem; }
+.pending-title,.pending-invite { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.65rem 1rem; }
+.pending-title h3,.pending-invitations [role=status] { margin:.45rem 0; }
+.pending-invitations [role=status] { color:#3c5e5b; }
+.pending-invitations ul { padding:0; margin:0; list-style:none; }
+.pending-invite { padding:.9rem 0; border-bottom:1px solid #c4d5cb; }
+.pending-invite > div:first-child { min-width:0; display:grid; overflow-wrap:anywhere; }
+.pending-invite small,.pending-invite span { color:#3c5e5b; }
+.pending-invite small { font-size:.88rem; }
+.invite-feedback:not(:empty) { width:100%; }
+.invite-feedback label,.invite-feedback input { display:block; min-width:0; }
+.invite-feedback button { margin-top:.5rem; }
+.account-row { display:flex; align-items:center; flex-wrap:wrap; gap:.8rem; border-top:1px solid #c4d5cb; padding:.7rem 0; }
+.member-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0 1.5rem; }
+.member-tabs button { padding:.7rem 1rem; border:1px solid #93b9ae; border-radius:.65rem; color:#174a48; background:#fff; font:inherit; cursor:pointer; }
+.member-tabs button[aria-pressed="true"] { background:#07575a; color:white; border-color:#07575a; }
+[data-member-pane] { max-width:56rem; }
+[data-member-pane] h2 { margin:1em 0 .45em; }
+[data-member-pane][hidden] { display:none; }
+.community-card { margin-top:.9rem; background:white; border:1px solid #cedbd3; border-radius:1rem; padding:1rem 1.2rem; }
+.community-card header,.community-card footer { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:.75rem; }
+.community-card time { font-size:.85rem; color:#466762; }
+.community-card footer { justify-content:flex-start; }
+.community-card footer button { background:transparent; border:0; padding:.5rem 0; color:#07575a; text-decoration:underline; cursor:pointer; font:inherit; }
+.community-replies { padding-left:clamp(.75rem,3vw,2rem); border-left:2px solid #bdcfc5; }
+.community-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+.member-photo { max-width:100%; max-height:24rem; object-fit:contain; border-radius:.7rem; }
+#member-conversation form[hidden] { display:none; }
+.authority-register,.handoff-panel { margin-block:1rem; }
+.authority-register summary,.handoff-panel summary { cursor:pointer; font-weight:700; }
+.authority-register dt { margin-top:.8rem; font-weight:700; }
+.authority-register dd { margin:.2rem 0 .8rem; max-width:65ch; }
+.authority-card,.handoff-record { margin-top:1rem; padding:1rem; border:1px solid #b9cec6; border-radius:.65rem; overflow-wrap:anywhere; }
+.authority-card h4 { font-size:1.15rem; margin:0; }
+.desk-shortcuts a { font-weight:700; padding:.7rem .85rem; border:1px solid #b9cec6; border-radius:.65rem; color:#07575a; text-decoration:none; }
+.desk-shortcuts a:hover,.desk-shortcuts a:focus-visible { background:#e6f3ed; }
+.handoff-preview { border-left:3px solid #408d7c; padding:.5rem 1rem; background:#f3f7f3; }
+@media(max-width:42rem){.member-tabs{display:grid;grid-template-columns:1fr 1fr}.member-tabs button{text-align:left;line-height:1.25}}

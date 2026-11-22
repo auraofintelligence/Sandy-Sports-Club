@@ -1,19 +1,36 @@
-# Sandy Sports Club proposal
+# Sandy Sports Club
 
-A 46-page proposal site for a mixed beach volleyball-led, three-town sand sports and culture club on Minjerribah / North Stradbroke Island. It includes flag football, cricket, football, beach rugby league and 5s, AirBadminton, tennis, ultimate, handball, netball, AFL crossover and fitness, plus an internal film club, events, markets and a modular LED screen network.
+This repository combines the Sandy Sports Club proposal pages with a separate Cloudflare Worker clubhouse adapted from the Point Lookout Fishing Club system. The public site describes a proposed island-wide sand sport and culture club. The clubhouse supplies server-backed joining, member, committee, grant, wish-list, newsletter, and Treasurer workflows.
 
-The public pages cover site options, facilities, asset wishes, grants and investment, dedicated sport and skills pages, a film club, a PLFC v1.2-inspired constitution builder with a women-led committee option, a space planner, an illustrative $50,000 screen equipment funding visualisation, and email nominations for joining, committee roles and partner clubs. The Sandy committee room has browser-local meeting, officer task, event, grant, wish, member safeguard, film, newsletter, social, sponsor, AGM and handover desks. The grants page names five researched programmes checked on 23 November 2026 and links to their official sources. Eight proposed equipment wishes link to the relevant research leads. No real membership account, payment gateway, donor ledger, land tenure or event approval exists yet.
+## Current state
 
-## Build and hosting
+The Worker source is a Sandy-specific port. It has **not** been connected to a Sandy D1 database or deployed from this branch. The public proposal pages can be read without an account; private tools need the Sandy Worker, its own databases and secrets.
 
-Run `python build_pages.py` after editing generated page content. The resulting HTML and shared CSS/JS can be served directly from the repository root. `wrangler.jsonc` describes a Cloudflare Worker static assets deployment. The original illustrations and Mozzie mascot are under `assets/`. `site.js` supplies a complete page directory and a previous/next cycle covering all 46 pages; `club-tools.js` supplies the local committee and grant/wish views.
+- The PLFC application -> committee review -> Treasurer verification -> single-use invitation -> member activation sequence is preserved. Sandy starts with no actual members. Its one example member is a preview profile without a login or database row.
+- Five separate office accounts are reserved and disabled: President, Vice President, Secretary, Assistant Secretary and Treasurer. There are no active office invitations or committee sign-ins. The Webmaster can issue each office a private activation invitation later.
+- Six source-linked grant leads are unassigned research entries, not applications. Eight proposed equipment wishes are committee drafts without amounts, receipts or purchase commitments.
+- Three clearly marked merchandise samples have no prices or stock counts. The Treasurer must enter prices and actual inventory before a request can be accepted. Membership fees and offers also remain unset.
+- The five-office newsletter desk, birthday preferences and queues, renewal, pack, notices, events, meetings, stock, and reporting workflows use Sandy's own database. Outgoing email and scheduled jobs are not enabled.
+- The operational Webmaster has all-area administration and a read-only switch for each office and a member profile preview. A separate Webmaster demo uses a different database, cookie and secret; its API refuses writes.
 
-Forms at `join.html` prepare an email addressed to `sbt4183@gmail.com`; the visitor sends it in their own email application. The funding counter accepts scenario inputs only and never presents an unverified amount as donations received.
+The existing 46-page public proposal retains its page directory and previous/next links. Primary navigation opens the real clubhouse joining, member and committee routes. The informational proposal pages remain available from the site map.
 
-The site is stewarded by Luke Nathan Hayes / Strange But True under the [interim public source licence](LICENCE.md) while the club forms. See [asset and third-party notes](LICENSE.md). The separate [Strange But True site](https://auraofintelligence.github.io/strange-but-true/) links the proponent's event, media and grant work.
+## Build and checks
 
-## Before real accounts or payments
+Use Node 20 or later:
 
-A secure Worker and database, individual role invitations, consent and safeguarding, an eligible recipient and account, donation terms, audited donation records, and current screen quotations must be established. The demos do not create production identity or shared data.
+```powershell
+npm ci
+npm run build
+npm test
+```
 
-Deployment source: the existing Cloudflare Worker is connected to this repository's `main` branch.
+`npm run build` bundles `worker/index.mjs` at `dist/server/index.js`; Cloudflare serves `public/` as static assets. Tests use local SQLite and some original PLFC test fixtures still need to be adapted or retired where fishing-specific behavior was removed. The Sandy auth, showcase, meeting and equipment checks are the current focused verification.
+
+## Isolated Cloudflare setup
+
+`wrangler.jsonc` deliberately contains placeholders for two **new** D1 database IDs: `DB` for real Sandy records and `SHOWCASE_DB` for the view-only Webmaster demo. Neither PLFC database nor PLFC secret belongs in this project. Create Sandy-specific `PRIVATE_AUTH_KEY`, `SHOWCASE_AUTH_KEY`, and a temporary `SANDY_BOOTSTRAP_TOKEN` as Worker secrets. Apply all `drizzle/` migrations independently to both empty databases; then provision the first Webmaster with the one-time bootstrap endpoint and remove the bootstrap secret. The office accounts remain disabled until individual invitations are deliberately issued.
+
+Cloudflare's connected build must run `npm run build` before deploying `dist/server/index.js`; `wrangler.jsonc` alone does not set that dashboard build command. The inherited scheduled trigger is disabled. Review the email sender, consent text, fees, catalogue prices, payments, privacy, and club governance before enabling delivery or accepting transactions.
+
+See [Sandy port notes](docs/SANDY-PORT-NOTES.md) for the setup and isolation details. The source uses Luke Nathan Hayes / Strange But True's [public source licence](LICENSE) while the proposed club has no adopted terms. Original PLFC material is credited as the architecture being adapted; the Sandy database and accounts are independent.

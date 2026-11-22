@@ -1,0 +1,51 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash,randomBytes,webcrypto} from 'node:crypto';
+import {readdirSync} from 'node:fs';
+import {database} from './d1-fixture.mjs';
+import {handleRequest} from '../worker/index.mjs';
+globalThis.crypto??=webcrypto;
+const origin='https://club.example',hash=s=>createHash('sha256').update(s).digest('hex');
+const call=(env,path,{data,cookie,viewAs,method=data?'POST':'GET'}={})=>handleRequest(new Request(origin+path,{method,headers:{Origin:origin,...(data?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...(viewAs?{'X-Sandy-View-As':viewAs}:{})},...(data?{body:JSON.stringify(data)}:{})}),env);
+test('invited showcase accounts use only separate example records and cannot write',async t=>{
+  const live=database(t),demo=database(t),env={DB:live,SHOWCASE_DB:demo,PRIVATE_AUTH_KEY:randomBytes(32).toString('hex'),SHOWCASE_AUTH_KEY:randomBytes(32).toString('hex')};
+  const ownerToken=randomBytes(32).toString('hex');
+  await live.prepare("INSERT INTO club_invites(digest,role,created_by,expires) VALUES(?,'administrator','test',?)").bind(hash(ownerToken),Math.floor(Date.now()/1000)+600).run();
+  const owner=await call(env,'/api/auth/activate',{data:{login:'webmaster',password:'1234',token:ownerToken}});
+  assert.equal(owner.status,200);const ownerCookie=owner.headers.get('set-cookie').split(';')[0];
+  assert.equal((await call(env,'/api/showcase/invite',{data:{keyword:'island'}})).status,403);
+  const issued=await call(env,'/api/showcase/invite',{cookie:ownerCookie,data:{keyword:'island'}});
+  assert.equal(issued.status,201);const invite=await issued.json();assert.equal(invite.login,'webmaster-demo-island');
+  const activated=await call(env,'/api/showcase/auth/activate',{data:{login:invite.login,password:'1234',token:invite.token}});
+  assert.equal(activated.status,200);const cookies=activated.headers.get('set-cookie');assert.match(cookies,/__Host-sandy_showcase=/);assert.match(cookies,/__Host-sandy_session=;/);
+  const demoCookie=cookies.match(/__Host-sandy_showcase=[a-f0-9]+/)[0];
+  const session=await (await call(env,'/api/session',{cookie:demoCookie+'; '+ownerCookie})).json();
+  assert.equal(session.showcase,true);assert.equal(session.readOnly,true);assert.equal(session.identity.name,invite.login);
+  const preview=await (await call(env,'/api/session',{cookie:demoCookie,viewAs:'secretary'})).json();
+  assert.equal(preview.viewAs,'secretary');assert.equal(preview.role,'committee');assert.equal(preview.accountRole,'committee');
+  assert.equal(preview.administrator,false);assert.equal(preview.readOnly,true);
+  const ownerPreview=await (await call(env,'/api/session',{cookie:ownerCookie,viewAs:'member'})).json();
+  assert.equal(ownerPreview.viewAs,'member');assert.equal(ownerPreview.role,'signed_in');assert.equal(ownerPreview.readOnly,true);
+  const forbiddenPreviewWrite=await call(env,'/api/committee/todos',{cookie:ownerCookie,viewAs:'secretary',data:{action:'complete'}});
+  assert.equal(forbiddenPreviewWrite.status,403);assert.equal((await forbiddenPreviewWrite.json()).code,'role_preview_read_only');
+  const denied=await call(env,'/api/committee/todos',{cookie:demoCookie,data:{action:'complete'}});
+  assert.equal(denied.status,403);assert.equal((await denied.json()).code,'showcase_read_only');
+  assert.equal((await call(env,'/api/accounts',{cookie:demoCookie})).status,403);
+  assert.equal((await call(env,'/api/showcase/invite',{cookie:demoCookie+'; '+ownerCookie,data:{keyword:'other'}})).status,403);
+  assert.equal((await call(env,'/api/auth/logout',{cookie:demoCookie,data:{}})).status,200);
+  assert.equal((await call(env,'/api/session',{cookie:demoCookie+'; '+ownerCookie})).status,401);
+});
+
+test('opening a newsletter in an officer preview never advances the monthly member cycle',async t=>{
+  const migrations=readdirSync(new URL('../drizzle/',import.meta.url)).filter(name=>/^\d{4}.*\.sql$/.test(name)).sort();
+  const db=database(t,migrations),env={DB:db,PRIVATE_AUTH_KEY:randomBytes(32).toString('hex')};
+  const token=randomBytes(32).toString('hex');
+  await db.prepare("INSERT INTO club_invites(digest,role,created_by,expires) VALUES(?,'administrator','test',?)")
+    .bind(hash(token),Math.floor(Date.now()/1000)+600).run();
+  const login=await call(env,'/api/auth/activate',{data:{login:'webmaster',password:'test-password',token}});
+  assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];
+  const preview=await call(env,'/api/committee/news',{cookie,viewAs:'secretary'});
+  assert.equal(preview.status,200);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM member_newsletter_jobs').first()).n,0);
+  const operational=await call(env,'/api/committee/news',{cookie});
+  assert.equal(operational.status,200);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM member_newsletter_jobs').first()).n,1);
+});

@@ -1,0 +1,45 @@
+/* A single-choice field keeps its native menu, keyboard and touch handling. */
+@media screen {
+  select:not([multiple]):is(:not([size]), [size="1"], [size="0"]) {
+    --choice-ink: #185b5c;
+    --choice-well: #e6f1ec;
+    --choice-rule: #96b8ad;
+    --choice-surface: #fff;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: 44px;
+    text-overflow: ellipsis;
+
+    /* Several form modules set a complete background and padding on all inputs.
+       Keep the dropdown indicator and its reserved space together across them. */
+    padding-inline-end: 2.8rem !important;
+    background:
+      linear-gradient(45deg, transparent 39%, var(--choice-ink) 41% 62%, transparent 64%) right 1.19rem center / .46rem .46rem no-repeat,
+      linear-gradient(-45deg, transparent 39%, var(--choice-ink) 41% 62%, transparent 64%) right .77rem center / .46rem .46rem no-repeat,
+      linear-gradient(to right, var(--choice-rule) 1px, var(--choice-well) 1px) right center / 2.4rem 100% no-repeat
+      var(--choice-surface) !important;
+  }
+
+  select:not([multiple]):is(:not([size]), [size="1"], [size="0"]):disabled {
+    --choice-ink: #63746e;
+    --choice-well: #e6eae7;
+    --choice-rule: #c0cac4;
+    --choice-surface: #f3f5f2;
+    cursor: default;
+  }
+}
+
+/* System contrast themes can suppress background images. Use their own arrow. */
+@media screen and (forced-colors: active) {
+  select:not([multiple]):is(:not([size]), [size="1"], [size="0"]) {
+    -webkit-appearance: auto;
+    appearance: auto;
+    background: Field !important;
+    color: FieldText;
+    padding-inline-end: .7rem !important;
+  }
+}

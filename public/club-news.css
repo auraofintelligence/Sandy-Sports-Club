@@ -1,0 +1,57 @@
+#committee-news,#member-news{max-width:62rem;scroll-margin-top:4.5rem}
+[data-reading-news]>.demo-page-coach{display:none}
+.news-reminders{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:.85rem;align-items:start;margin:1rem 0}
+.news-next,.news-birthdays,.news-issue,.news-archive,.news-member-edition{padding:clamp(1rem,3vw,1.65rem)}
+.news-next h3,.news-issue h3{font-size:1.25rem}
+.news-next p{margin:.55rem 0}
+.news-next small,.news-channel,.news-editor>p,.news-archive>p{color:var(--muted)}
+.news-birthdays,.news-archive,.news-contribution{border:1px solid var(--line);border-radius:var(--radius);background:white}
+.news-birthdays summary,.news-president summary,.news-archive summary,.news-member-edition summary,.news-contribution summary{cursor:pointer;font-weight:700;color:var(--teal)}
+.news-birthdays p,.news-birthdays ul,.news-archive ul{margin:.65rem 0}
+.news-select,.news-add,.news-issue-heading,.news-section-controls{display:flex;gap:.55rem .85rem;align-items:end;flex-wrap:wrap}
+.news-select{border-bottom:1px solid var(--line);padding-bottom:1rem}
+.news-issue-heading{align-items:center;margin:1.15rem 0}
+.news-issue label,.news-contribution label{display:grid;gap:.25rem;font-weight:650}
+.news-issue :is(input,select,textarea),.news-contribution :is(input,textarea){display:block;width:100%;padding:.55rem .7rem;min-height:44px;border:1px solid #93aa9f;border-radius:6px;line-height:1.45;color:var(--ink);background:white;font:inherit}
+.news-issue textarea,.news-contribution textarea{resize:vertical}
+.news-editor{display:grid;gap:1rem;max-width:48rem}
+.news-editor>p{margin:0}
+.news-editor>[data-open-recipe]{justify-self:start}
+.news-kitchen{border-block:1px solid var(--line);padding:.85rem 0;margin:.75rem 0}
+.news-kitchen[open]>:is(label,.button-row){margin-top:.9rem}
+.news-kitchen label small{font-weight:400;color:var(--muted)}
+.news-recipe-copy h5{margin:1rem 0 .3rem;color:var(--ink);font-size:1rem}
+.news-recipe-copy :is(ul,ol){padding-left:1.5rem;margin:.2rem 0 .75rem}
+.news-recipe-copy li{padding-left:.15rem;margin-bottom:.35rem;overflow-wrap:anywhere}
+.news-block{min-width:0;margin:0;padding:.75rem;border:1px solid var(--line);border-radius:8px}
+.news-block legend{font-weight:700;padding:0 .35rem}
+.news-section-controls{margin-top:.3rem}
+.news-section-controls button{min-height:38px}
+.news-president{background:var(--mint);padding:.85rem 1rem;border-radius:.55rem}
+.news-president[open] summary{margin-bottom:.65rem}
+.news-president p{margin:.55rem 0 0;font-size:.92rem;color:var(--muted)}
+.news-channel{border-top:1px solid var(--line);padding-top:.8rem;margin:1rem 0 0;font-size:.92rem}
+.news-copy{max-width:48rem;border:1px solid var(--line);border-radius:.75rem;overflow:hidden;background:white;margin:.7rem 0 1rem}
+.news-copy header{display:flex;align-items:center;gap:1rem;padding:1.2rem 1.25rem;background:var(--deep);color:white}
+.news-copy header img{width:clamp(2.8rem,8vw,4rem);height:auto;flex:none;border-radius:50%;background:white}
+.news-copy header div{min-width:0;overflow-wrap:anywhere}
+.news-copy header p{font-size:.87rem;margin:0 0 .45rem}
+.news-copy header h3{font-size:clamp(1.55rem,3.5vw,2.15rem)}
+.news-copy section{padding:.8rem 1.25rem}
+.news-copy section+section{border-top:1px solid var(--line)}
+.news-copy h4{font-size:1.15rem;margin:.1rem 0 .45rem}
+.news-copy section p,.news-contribution-text{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.news-review label{margin:1rem 0}
+.news-review .button-row{margin:.8rem 0}
+.news-archive,.news-member-edition,.news-contribution{margin:1rem 0}
+.news-member-edition .news-copy{margin:1rem 0 0}
+[data-news-status]:not(:empty),[data-contribution-status]:not(:empty){margin:.8rem 0 0;font-weight:650}
+.news-contribution{padding:clamp(1rem,3vw,1.55rem)}
+.news-contribution h3,.news-contribution h4{margin:.5rem 0;font-size:1.16rem}
+.news-contribution label,.news-contribution .button-row{margin:.75rem 0}
+.news-submission{border-top:1px solid var(--line);padding:.65rem 0}
+.news-submission small,.news-contribution small{color:var(--muted)}
+.news-example{padding:.7rem .9rem;background:var(--mint);margin:.5rem 0}
+.news-submissions{padding:.8rem 1rem;margin:1rem 0;border-left:3px solid var(--teal);background:var(--mint)}
+.news-submissions summary{font-weight:700;cursor:pointer}
+@media(max-width:560px){.news-select>label,.news-add>label{width:100%}.news-select button,.news-add button{min-height:44px}}

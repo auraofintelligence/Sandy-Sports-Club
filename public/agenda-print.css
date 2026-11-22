@@ -1,0 +1,32 @@
+#agenda-print-sheet{display:none}
+.holiday-planning{margin:1.25rem 0;padding:clamp(1rem,3vw,1.8rem);border-left:4px solid var(--teal)}
+.holiday-planning h2{font-size:clamp(1.3rem,3vw,1.75rem)}
+.holiday-planning p{margin:.55rem 0;max-width:68ch}
+.agm-jobs{margin:1rem 0;padding:1rem 1.3rem}
+.agm-jobs summary{font-weight:700;cursor:pointer;color:var(--teal)}
+.agm-jobs>summary{font-size:1.15rem}
+.agm-jobs>p,.agm-jobs article>label,.agm-jobs .agm-help{display:block;margin:.8rem 0}
+.agm-jobs article{margin:1.2rem 0;border-top:1px solid var(--line);padding-top:1rem}
+.agm-jobs ol{padding-left:1.4rem;max-width:50rem}
+.agm-jobs li{padding:.75rem .3rem;border-top:1px solid var(--line)}
+.agm-jobs li small{display:block;color:var(--muted)}
+.agm-jobs li details{margin:.25rem 0}
+.agm-jobs article select{display:block;max-width:100%;margin:.4rem 0}
+@media print {
+  @page club-agenda {size:A4 portrait;margin:8mm 10mm}
+  body.printing-agenda{page:club-agenda;margin:0!important;background:white!important}
+  body.printing-agenda>:not(#agenda-print-sheet){display:none!important}
+  body.printing-agenda>#agenda-print-sheet{display:flex!important;flex-direction:column;min-height:276mm;width:auto;margin:0;padding:0;color:#172b2d;font:11pt/1.35 Arial,sans-serif}
+  body.printing-agenda>#agenda-print-sheet.long-agenda{display:block!important}
+  #agenda-print-sheet .agenda-stationery-top,#agenda-print-sheet .agenda-stationery-foot{width:100%;height:auto;max-width:100%;object-fit:contain}
+  #agenda-print-sheet .agenda-stationery-top{margin-bottom:4mm}
+  #agenda-print-sheet .agenda-stationery-foot{margin-top:auto;padding-top:4mm}
+  #agenda-print-sheet header{padding-bottom:2mm;border-bottom:1pt solid #263c60}
+  #agenda-print-sheet header>p:first-child{font-weight:700;color:#20595c}
+  #agenda-print-sheet h1{margin:0 0 1.5mm;font:700 20pt/1.12 Arial,sans-serif}
+  #agenda-print-sheet h2{margin:3mm 0 1mm;font:700 13pt/1.2 Arial,sans-serif}
+  #agenda-print-sheet p{margin:.7mm 0}
+  #agenda-print-sheet ol{padding-left:8mm;margin:1mm 0}
+  #agenda-print-sheet li{padding:1.35mm 0 1.35mm 1mm;border-bottom:.3pt solid #ccd8d5;break-inside:avoid}
+  #agenda-print-sheet>p{margin:2mm 0 0}
+}

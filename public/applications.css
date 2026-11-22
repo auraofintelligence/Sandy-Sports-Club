@@ -1,0 +1,52 @@
+.apply-dialog {
+  box-sizing: border-box;
+  width: min(36rem, calc(100% - 1.5rem));
+  max-height: 90dvh;
+  margin: auto;
+  padding: clamp(1.3rem, 4vw, 2.3rem);
+  overflow: auto;
+  border: 1px solid var(--line, #c9d7cd);
+  border-radius: 1.15rem;
+  background: var(--paper, #fafbf8);
+  color: var(--ink, #113d3e);
+}
+.apply-dialog::backdrop { background: rgba(6, 38, 40, .67); }
+.apply-top, .apply-case { display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
+.apply-top .eyebrow { margin: 0; }
+.apply-dialog h2 { margin: 1rem 0; line-height: 1.15; font-size: clamp(1.65rem, 5vw, 2.3rem); }
+.apply-form, .apply-inbox { display: grid; gap: 1rem; }
+.apply-form p, .apply-inbox p { margin: 0; }
+.apply-form label, .apply-inbox > label { display: grid; gap: .3rem; font-weight: 650; }
+.apply-form input:not([type=checkbox]), .apply-form textarea, .apply-form select, .apply-inbox select {
+  box-sizing: border-box; width: 100%; min-height: 2.7rem; padding: .55rem .7rem;
+  border: 1px solid #9cb4a8; border-radius: .4rem; color: #173e3f; background: #fff; font: inherit;
+}
+.apply-form .apply-check { display: grid; grid-template-columns: 1.2rem 1fr; gap: .55rem; align-items: start; font-weight: 450; }
+.apply-check input { margin-top: .33rem; width: 1.12rem; height: 1.12rem; }
+.apply-form [hidden], .apply-form [role=status]:empty, .apply-record:empty { display: none; }
+.apply-form button { justify-self: start; }
+.apply-inbox > summary { font-size: 1.18rem; cursor: pointer; font-weight: 750; }
+.apply-inbox[open] > :not(summary):not(:empty) { margin-top: .9rem; }
+.apply-cases { display: grid; gap: .4rem; }
+.apply-case { text-align: left; flex-wrap: wrap; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .45rem; background: var(--paper); color: var(--ink); }
+.apply-case span { color: var(--muted); font-size: .85rem; }
+.apply-case:hover { border-color: var(--teal); }
+.apply-record { border-top: 1px solid var(--line); padding-top: 1rem; }
+.apply-facts { margin: .5rem 0 1rem; }
+.apply-facts > div { padding: .4rem 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: minmax(6rem, .7fr) 1.4fr; gap: .65rem; }
+.apply-facts dt { font-weight: 650; }
+.apply-facts dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.club-price-list{margin:.3rem 0;display:grid;gap:.4rem}
+.club-price-list>div{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding:.35rem 0}
+.club-price-list dt{overflow-wrap:anywhere}
+.club-price-list dd{margin:0;white-space:nowrap;font-weight:750}
+[data-membership-fee]{padding:.8rem 1rem;background:#eef4ef;border-radius:.5rem}
+.club-card-fees{margin-top:1rem}
+.club-card-fees h3{font-size:1.1rem}.club-card-fees h2{font-size:1.4rem;margin-bottom:.5rem}
+.club-price-inbox{padding:1.15rem;margin-block:1rem}
+.club-price-inbox summary{font-size:1.15rem;font-weight:750;cursor:pointer}
+.club-price-inbox[open]>:not(summary):not(:empty){margin-top:.75rem}
+.club-price-inbox button[hidden]{display:none}
+.club-price-changes{padding:0;list-style:none;margin:0}
+.club-price-changes li{display:grid;gap:.15rem;border-top:1px solid var(--line);padding:.6rem 0}
+.club-price-changes small{color:var(--muted)}

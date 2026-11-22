@@ -1,0 +1,20 @@
+[data-notice-email-choices] { max-width: 54rem; }
+[data-notice-email-choices][hidden], [data-notice-email-choices] [hidden] { display: none; }
+.ne-panel { min-width: 0; margin: 1rem 0; padding: .7rem 1rem; background: white; border: 1px solid var(--line); border-radius: .7rem; overflow-wrap: anywhere; }
+.ne-panel summary { padding: .45rem 0; min-height: 44px; color: var(--teal); font-weight: 700; cursor: pointer; }
+.ne-panel summary [data-ne-summary] { display: inline-block; margin-inline-start: .24rem; color: #45635a; font-size: .88rem; font-weight: 500; }
+.ne-body { max-width: 38rem; }
+.ne-body form { display: grid; gap: .55rem; padding: .4rem 0 .7rem; }
+.ne-body fieldset { margin: 0; padding: 0; min-width: 0; border: 0; }
+.ne-body legend, .ne-field { font-weight: 700; }
+.ne-check, .ne-actions { display: flex; align-items: center; gap: .65rem; min-height: 44px; }
+.ne-check input { flex: none; width: 1.2rem; height: 1.2rem; margin: 0; accent-color: var(--teal); }
+.ne-field { display: grid; gap: .35rem; }
+.ne-field input { min-width: 0; width: 100%; max-width: 100%; min-height: 44px; padding: .5rem .7rem; color: var(--ink); font: inherit; background: white; border: 1px solid #93aaa0; border-radius: .4rem; box-sizing: border-box; }
+.ne-field input[readonly] { background: #edf2ee; }
+.ne-field input[name=code] { max-width: 12rem; letter-spacing: .16em; }
+.ne-help, .ne-body [role=status] { margin: .3rem 0 .55rem; }
+.ne-help { color: #45635a; font-size: .94rem; }
+.ne-actions { flex-wrap: wrap; }
+.ne-body .button { justify-self: start; }
+.ne-body [data-ne-confirm], .ne-setup { margin-top: .5rem; padding-top: .6rem; border-top: 1px solid var(--line); }

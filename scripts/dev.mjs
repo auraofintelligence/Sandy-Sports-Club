@@ -1,0 +1,12 @@
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {resolve,sep,extname} from 'node:path';
+import {webcrypto} from 'node:crypto';
+globalThis.crypto ??= webcrypto;
+const root=resolve('.');
+const port=Number(process.env.PORT??4183);
+const {default:worker}=await import('../dist/server/index.js');
+const types={'.mjs':'text/javascript; charset=utf-8','.json':'application/json','.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.gif':'image/gif','.webm':'video/webm'};
+const publicRoot=resolve(root,'public');
+const server=createServer(async(req,res)=>{try{const url=new URL(req.url,'http://localhost:'+port);if(['GET','HEAD'].includes(req.method)&&!url.pathname.startsWith('/api/')&&!url.pathname.endsWith('.ics')){const file=resolve(publicRoot,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));if(file.startsWith(publicRoot+sep)){try{const content=await readFile(file);res.writeHead(200,{'Content-Type':types[extname(file)]??'application/octet-stream','Cache-Control':'no-store'});res.end(req.method==='HEAD'?undefined:content);return}catch{}}}const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=Buffer.concat(chunks);const request=new Request('http://localhost:'+port+req.url,{method:req.method,headers:req.headers,...(body.length?{body,duplex:'half'}:{})});const result=await worker.fetch(request,{},{});res.writeHead(result.status,Object.fromEntries(result.headers));res.end(Buffer.from(await result.arrayBuffer()));}catch{res.writeHead(500);res.end('Preview unavailable');}});
+server.listen(port,'127.0.0.1',()=>console.log('Local: http://localhost:'+port));

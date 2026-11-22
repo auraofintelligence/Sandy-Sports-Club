@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+<title>Ask the Webmaster | Sandy Sports Club</title><link rel="icon" href="/assets/sandy-original-logo.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/club-access.css">
+<link rel="stylesheet" href="/form-choices.css">
+<script type="module" src="/webmaster-help-form.js"></script></head>
+<body><div class="preview-bar"><span>CLUB PROPOSAL</span><span>Private assistance requests go to the Webmaster and Secretary when the Sandy service is configured.</span></div>
+<main class="content page-content club-access"><a class="text-link" href="/clubhouse.html#members">Back to the clubhouse</a>
+<h1 class="page-title">Ask the Webmaster</h1>
+<section id="help-start" class="panel"><p>The Webmaster receives your request and the Secretary gets a private copy. Either officer can follow up. You can ask for help before signing in.</p>
+<form class="stack-form" id="help-form">
+<label>What do you need help with?<select name="topic" required>
+<option value="">Choose a reason</option><option value="invitation">Get a new invitation</option><option value="password">Reset my password</option><option value="workspace">Access a club page</option><option value="email">My club email alerts</option><option value="website">Other website help</option></select></label>
+<label>What would you like to ask? (optional)<textarea name="question" rows="3" maxlength="350" placeholder="For example, I chose Reset password and the next screen didn’t open."></textarea></label>
+<label>How should an officer contact you?<select name="contactType"><option value="email">Email</option><option value="phone">Phone</option></select></label>
+<label><span id="help-contact-label">Your email address</span><input name="contact" type="email" autocomplete="email" required maxlength="254"></label>
+<p>Keep passwords, sign-in codes and private invitation links to yourself. Your question and contact details can be read by the Webmaster and Secretary.</p>
+<button type="submit" class="button">Send private request</button>
+<p role="status" id="help-feedback"></p></form></section>
+<section class="panel" id="help-receipt" hidden><h2 tabindex="-1">Your help request</h2><p id="help-result" role="status"></p><p id="help-reference"></p>
+<p id="help-receipt-note">Save your private link to check this request later.</p>
+<button class="text-link" type="button" id="help-copy">Copy my private status link</button><p id="help-copy-status" role="status"></p>
+<label id="help-copy-manual" hidden>Private status link<input type="url" readonly></label>
+<button class="button outline small" type="button" id="help-refresh">Check status</button>
+<button class="text-link" type="button" id="help-new">Start another request</button></section>
+</main></body></html>

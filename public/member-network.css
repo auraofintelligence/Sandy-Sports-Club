@@ -1,0 +1,43 @@
+#member-profile,#member-friends,#member-catch-map {max-width:58rem;margin:1.2rem 0 2rem;overflow-wrap:anywhere}
+.net-heading {margin:0 0 1.3rem}
+.net-heading h1 {font-size:clamp(2rem,5vw,3.2rem);line-height:1.08;letter-spacing:-.045em;margin:.2rem 0 .55rem}
+.net-heading p,.net-group>p,.net-help {max-width:58ch}
+.net-form,.net-search {display:grid;gap:.85rem;max-width:42rem;margin:.9rem 0}
+.net-form label:not(.net-check),.net-search label {display:grid;gap:.35rem;font-weight:700}
+.net-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea),.net-search input {font:inherit;color:var(--ink);background:white;width:100%;max-width:100%;min-height:44px;min-width:0;border:1px solid #829d9b;border-radius:.45rem;padding:.63rem .8rem}
+.net-form>button,.net-search>button {justify-self:start}
+.net-coordinates {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:.65rem;margin:.6rem 0}
+.net-set {margin:0;padding:.7rem 1rem .9rem;border:1px solid var(--line);border-radius:.65rem;min-width:0}
+.net-set legend {padding:0 .35rem;font-weight:700}
+.net-check,.net-current-face,.net-actions,.net-subhead {display:flex;align-items:center;gap:.6rem}
+.net-check {padding:.4rem 0;min-height:44px}
+.net-check input {width:1.2rem;height:1.2rem;margin:0;flex:none}
+.net-current-face {padding:.85rem 1rem;background:var(--mint);border-radius:.6rem;gap:1rem}
+.net-current-face p,.net-help,.net-meta,.net-form small,.net-pin-list small,.net-access small {font-size:.93rem;color:#36575b;margin:.25rem 0}
+.angler-face,.net-avatar-grid img {object-fit:cover;background:#e5efeb;border-radius:.65rem;flex:none}
+.angler-face {width:72px;height:72px}
+.angler-face.small {width:42px;height:42px;border-radius:50%}
+.net-avatar-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:.6rem;margin:.65rem 0}
+.net-form .net-avatar-grid label {position:relative;display:block;padding:3px;border:2px solid transparent;border-radius:.65rem;cursor:pointer}
+.net-avatar-grid label:has(input:checked) {border-color:var(--teal);background:var(--mint)}
+.net-avatar-grid label:has(input:focus-visible) {outline:3px solid #a94711;outline-offset:2px}
+.net-avatar-grid input {position:absolute;left:.35rem;bottom:.35rem;width:1rem;height:1rem}
+.net-avatar-grid img {display:block;width:100%;height:auto;aspect-ratio:1}
+.net-box {margin:.65rem 0;padding:.8rem 1rem;border:1px solid var(--line);border-radius:.65rem;background:white}
+.net-box summary,.net-access summary {font-weight:700;color:var(--teal);cursor:pointer}
+.net-group {margin:1.45rem 0}
+.net-group h2,.net-subhead h2 {font-size:clamp(1.4rem,3vw,1.85rem);margin:.5rem 0}
+.net-group h3,.net-item h3 {font-size:1.15rem;margin:.4rem 0}
+.net-subhead {justify-content:space-between;gap:.5rem 1rem;flex-wrap:wrap}
+.net-actions {flex-wrap:wrap;gap:.3rem 1rem}
+.net-actions>details[open] {flex-basis:100%}
+.net-people,.net-access,.net-pin-list {margin:.45rem 0;padding:0;list-style:none}
+.net-people li,.net-access>li,.net-pin-list>li {display:flex;align-items:center;gap:.55rem 1rem;flex-wrap:wrap;border-top:1px solid var(--line);padding:.55rem 0}
+.net-people li>span,.net-access>li>div:first-child,.net-pin-list>li>div {flex:1 1 9rem;min-width:0}
+.net-access small,.net-pin-list small {display:block}
+.net-item {padding:.85rem 0;margin:.45rem 0;border-top:1px solid var(--line)}
+.net-item .net-note {white-space:pre-line}
+.net-photo {display:block;max-width:min(100%,40rem);max-height:28rem;width:auto;height:auto;object-fit:contain;border-radius:.6rem;margin:.7rem 0}
+.net-heading a,.net-form a {text-decoration:underline}
+[data-network-status]:not(:empty) {padding:.65rem 0;font-weight:650}
+@media(min-width:42rem){.net-search {grid-template-columns:minmax(0,22rem) auto;align-items:end}}

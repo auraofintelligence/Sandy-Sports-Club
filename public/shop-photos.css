@@ -1,0 +1,12 @@
+.shop-photo-editor { display:grid; gap:.65rem; max-width:42rem; min-width:0; }
+.shop-photo-editor label { display:grid; gap:.3rem; min-width:0; font-weight:700; }
+.shop-photo-editor :is(select,input) { width:100%; max-width:100%; min-width:0; box-sizing:border-box; font-size:1rem; }
+.shop-photo-editor input[type=file] { padding:.4rem; }
+.shop-photo-editor :is(p,small) { margin:0; }
+.shop-photo-editor small { color:#415951; }
+.shop-photo-editor img { display:block; height:auto; max-height:19rem; max-width:100%; object-fit:contain; border-radius:.5rem; }
+.shop-photo-editor [hidden] { display:none; }
+.shop-photo-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.8rem; }
+.shop-photo-editor details { padding:.45rem 0; }
+.shop-photo-editor summary { cursor:pointer; font-weight:700; }
+.shop-photo-editor details p { margin:.5rem 0; }

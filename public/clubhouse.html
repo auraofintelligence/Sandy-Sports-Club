@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123e45">
+  <meta name="description" content="Sandy Sports Club membership, member clubhouse, committee workspace and club shop.">
+  <title>Sandy Sports Club | Clubhouse</title>
+  <link rel="stylesheet" href="/applications.css">
+  <link rel="stylesheet" href="/member-lifecycle.css">
+  <link rel="stylesheet" href="/club-news.css">
+  <link rel="stylesheet" href="/equipment-wishes.css">
+  <link rel="stylesheet" href="/grant-register.css">
+  <link rel="stylesheet" href="/meeting-workflow.css">
+  <link rel="stylesheet" href="/agenda-print.css">
+  <link rel="stylesheet" href="/club-equipment.css">
+  <link rel="stylesheet" href="/member-calendar.css">
+  <link rel="stylesheet" href="/member-recipes.css">
+  <link rel="stylesheet" href="/member-network.css">
+  <link rel="stylesheet" href="/shared-meals.css">
+  <link rel="stylesheet" href="/returning-members.css">
+  <link rel="stylesheet" href="/social-planner.css">
+  <link rel="stylesheet" href="/fundraising-events.css">
+  <link rel="stylesheet" href="/sponsor-rooms.css">
+  <link rel="stylesheet" href="/committee-notices.css">
+  <link rel="stylesheet" href="/notice-email-profile.css">
+  <link rel="stylesheet" href="/officer-todos.css">
+  <link rel="stylesheet" href="/shop.css">
+  <link rel="stylesheet" href="/shop-photos.css">
+  <link rel="stylesheet" href="/club-pricing.css">
+  <link rel="stylesheet" href="/stock-reports.css">
+  <link rel="stylesheet" href="/merch-stocktake.css">
+  <link rel="stylesheet" href="/sandy-clubhouse.css">
+  <script type="module" src="/sandy-clubhouse.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="#home" aria-label="Sandy Sports Club home"><img class="wordmark-mark" src="/assets/sandy-original-logo.png" width="44" height="44" alt=""><span><strong>Sandy Sports Club</strong><small>Clubhouse</small></span></a>
+    <button class="menu-toggle" type="button" aria-controls="main-nav" aria-expanded="false">Menu</button>
+    <nav id="main-nav" aria-label="Main navigation">
+      <a data-page="home" href="#home">Home</a>
+      <a data-page="join" href="#join">Join</a>
+      <a data-page="members" href="#members">Members</a>
+      <a data-page="grants" href="#grants">Grants</a>
+      <a data-page="sponsors" href="#sponsors">Partners</a>
+      <a data-page="shop" href="#shop">Merch</a>
+      <a data-page="committee" href="#committee">Committee</a>
+      <a data-page="webmaster" href="#webmaster">Webmaster</a>
+    </nav>
+    <div id="session-control" aria-live="polite"></div>
+  </header>
+  <div id="connection-status" class="connection-status" role="status" hidden></div>
+  <main id="main" tabindex="-1">
+    <section data-view="home" class="page hero">
+      <p class="eyebrow">Sandy Sports Club</p>
+      <h1>A clubhouse for the whole club</h1>
+      <p class="lead">Join the club, follow what members are working on and find the right desk when you need it.</p>
+      <div class="button-row"><a class="button" href="#join">How to join</a><a class="button outline" href="#members">Members' area</a></div>
+      <figure class="hero-art"><img src="/assets/hero-sports.webp" alt="Concept scene of mixed sports on sand courts" width="1600" height="900"><figcaption>Illustrative club concept; no venue or event is confirmed.</figcaption></figure>
+      <div class="home-grid">
+        <a class="home-card" href="#join"><span>01</span><strong>Membership</strong><small>Application, approval, pack and renewal</small></a>
+        <a class="home-card" href="#members"><span>02</span><strong>Member clubhouse</strong><small>Notices, newsletters, wishes and benefits</small></a>
+        <a class="home-card" href="#shop"><span>03</span><strong>Club merch</strong><small>See the demonstration catalogue</small></a>
+        <a class="home-card" href="#committee"><span>04</span><strong>Committee</strong><small>Offices, grants and the newsletter desk</small></a>
+      </div>
+    </section>
+    <section data-view="join" class="page" hidden>
+      <p class="eyebrow">Membership</p><h1>Join Sandy Sports Club</h1>
+      <p class="lead">Choose adult, cadet, junior, social, casual or lifetime membership. Young members need guardian permission. The committee reviews each application before the Treasurer confirms payment and issues a private account invitation.</p>
+      <ol class="process-list"><li><strong>Apply</strong><span>Choose your category and give the club a way to contact you.</span></li><li><strong>Committee review</strong><span>An officer checks the application and any guardian permission.</span></li><li><strong>Payment and invitation</strong><span>The Treasurer confirms the fee and payment before an account is issued.</span></li><li><strong>Member clubhouse</strong><span>Choose notice and birthday preferences, follow your pack and renewal, and read member news.</span></li></ol>
+      <p>Fees have not been set for Sandy. The Treasurer will publish the applicable amounts before payment is arranged. This page does not take a payment.</p>
+      <p><a href="/constitution.html">Read the proposed constitution</a> before applying.</p>
+      <button id="apply-button" class="button" type="button" disabled>Checking applications</button><p id="apply-status" class="field-note" role="status"></p>
+      <p class="secondary">Sandy starts with its own member register. A login from another club cannot sign in here.</p>
+    </section>
+    <section data-view="grants" class="page" hidden><div id="public-grants"></div></section>
+    <section data-view="sponsors" class="page" hidden><div id="sponsor-room"></div></section>
+    <section data-view="preview-member" class="page" hidden>
+      <p class="eyebrow">Illustration only</p><h1>Member profile preview</h1><p class="lead">See the shape of a member account. This is a public example, with no login and no member record behind it.</p>
+      <div class="office-grid"><article class="office-card"><h2>Membership</h2><dl><dt>Example category</dt><dd>Adult</dd><dt>Member number</dt><dd>Assigned when the register is ready</dd><dt>Pack</dt><dd>Prepared after joining</dd></dl></article>
+      <article class="office-card"><h2>My choices</h2><p>A member can choose club notices, newsletter email, birthday greeting and approved offers. The day and month of a birthday stay private.</p></article>
+      <article class="office-card"><h2>My clubhouse</h2><p>Private notices, newsletters, equipment wishes and renewal reminders appear once a real membership is active.</p></article></div>
+      <div class="button-row"><a class="button" href="#join">How to join</a><a class="button outline" href="#members">Member sign-in</a></div>
+    </section>
+    <section data-view="members" class="page" hidden>
+      <div id="members-gate" class="access-gate" hidden></div>
+      <div id="members-private" hidden>
+        <p class="eyebrow">Private member area</p><h1>Members' clubhouse</h1><p id="member-mode" class="workspace-note"></p>
+        <p id="member-notice-alert" hidden><a href="#members/notices"></a></p>
+        <nav class="section-nav" aria-label="Member areas">
+          <a href="#members">Overview</a><a href="#members/membership">My membership &amp; benefits</a><a href="#members/profile">Profile</a><a href="#members/friends">Friends</a><a href="#members/notices">Notices</a><a href="#members/news">Newsletter</a><a href="#members/calendar">Calendar</a><a href="#members/conversation">Conversation</a><a href="#members/minutes">Minutes</a><a href="#members/recipes">Recipes</a><a href="#members/meals">Shared meals</a><a href="#members/equipment-wishes">Wish list</a><a href="#members/safety">Safety</a>
+        </nav>
+        <section data-member-pane="overview"><h2>Your member area</h2><div class="tile-grid"><a href="#members/membership">My membership, birthday choices and discounts</a><a href="#members/profile">My profile</a><a href="#members/notices">My club notices</a><a href="#members/news">Member newsletters</a><a href="#members/calendar">Club dates</a><a href="#members/equipment-wishes">Club equipment wishes</a></div></section>
+        <section data-member-pane="membership" hidden><h2>My membership &amp; benefits</h2><p id="paid-until"></p><div id="member-returning"></div><div id="member-benefits"></div><div id="member-handoffs"></div></section>
+        <section data-member-pane="notices" hidden><h2>My club notices</h2><div id="member-notice-inbox"></div><div data-notice-email-choices="members"></div></section>
+        <section data-member-pane="profile" hidden><h2>My profile</h2><div id="member-profile"></div><div data-notice-email-choices="profile"></div></section>
+        <section data-member-pane="friends" hidden><h2>Friends and sharing</h2><div id="member-friends"></div></section>
+        <section data-member-pane="news" hidden><h2>Member newsletters</h2><div id="member-news"></div></section>
+        <section data-member-pane="calendar" hidden><div id="member-calendar"></div></section>
+        <section data-member-pane="conversation" hidden><h2>Club conversation</h2><div id="member-conversation"><p data-conversation-gate></p><form class="stack-form"><label>Name<input name="author" maxlength="80"></label><label>Message<textarea name="message" required maxlength="2000"></textarea></label><label>Photo<input name="photo" type="file" accept="image/jpeg,image/png,image/webp"></label><span data-reply-label></span><button type="button" data-cancel-reply hidden>Cancel reply</button><button class="button" type="submit">Share with members</button></form><p role="status"></p><div data-posts></div></div></section>
+        <section data-member-pane="minutes" hidden><h2>Member minutes</h2><div id="shared-minutes"></div></section>
+        <section data-member-pane="recipes" hidden><div id="member-recipes"></div></section>
+        <section data-member-pane="meals" hidden><div id="member-meals"></div></section>
+        <section data-member-pane="safety" hidden><div id="member-safeguards"></div></section>
+        <section data-member-pane="equipment-wishes" hidden><div id="member-equipment-wishes"></div></section>
+      </div>
+      <div id="lapsed-returning" hidden></div><div id="member-renewal-inbox" hidden></div>
+    </section>
+    <section data-view="committee" class="page" hidden>
+      <div id="committee-gate" class="access-gate" hidden></div>
+      <div id="committee-private" hidden>
+        <p class="eyebrow">Private officer workspace</p><h1>Committee</h1><p id="committee-mode" class="workspace-note"></p>
+        <nav class="section-nav" aria-label="Committee desks">
+          <a href="#committee">Offices</a><a href="#committee/applications">Applications</a><a href="#committee/automations">Membership</a><a href="#committee/news">Newsletter</a><a href="#committee/notices">Notices</a><a href="#committee/meetings">Meetings</a><a href="#committee/grants">Grants</a><a href="#committee/equipment">Equipment</a><a href="#committee/events">Events</a><a href="#committee/social">Social</a><a href="#committee/sponsors">Partners</a><a href="#committee/todos">Office work</a><a href="#committee/handover">Handover</a><a href="#committee/agm-jobs">AGM</a><a href="#committee/returning">Returning members</a><a href="#committee/safety">Safeguards</a><a href="#committee/authority">Authority</a><a href="#committee/handoffs">Handoffs</a><a href="#committee/access" data-admin-link hidden>Access</a>
+        </nav>
+        <section data-committee-pane="overview"><h2>Office holders and roles</h2><p>The five office account slots are separate. An invitation and activation will establish who holds each office; a reserved slot is not an active officer.</p><div id="office-roster" class="office-grid" role="status"></div><div id="committee-notice-summary"></div><div id="committee-price-alerts" hidden></div><p><a href="#committee/todos">Open the office work lists</a> to see duties and assigned jobs. The Treasurer has a separate <a href="#stock">stock and prices desk</a>.</p></section>
+        <section data-committee-pane="applications" hidden><h2>Applications</h2><div id="committee-applications"></div></section>
+        <section data-committee-pane="automations" hidden><h2>Membership desk</h2><div id="committee-automations"></div></section>
+        <section data-committee-pane="returning" hidden><div id="committee-returning"></div></section>
+        <section data-committee-pane="safety" hidden><div id="committee-safeguards"></div></section>
+        <section data-committee-pane="news" hidden><div id="committee-news"></div></section>
+        <section data-committee-pane="notices" hidden><div id="committee-notices"></div><div data-notice-email-choices="committee"></div></section>
+        <section data-committee-pane="events" hidden><div id="fundraising-events"></div></section>
+        <section data-committee-pane="social" hidden><div id="social-planner-desk"></div></section>
+        <section data-committee-pane="sponsors" hidden><div id="sponsor-desk"></div></section>
+        <section data-committee-pane="agm-jobs" hidden><div id="agm-jobs"></div></section>
+        <section data-committee-pane="authority" hidden><details id="operating-authority" class="panel"><summary>Operating authority</summary><div data-authorities></div><p role="status"></p></details></section>
+        <section data-committee-pane="handoffs" hidden><div id="committee-handoffs"></div></section>
+        <section data-committee-pane="meetings" hidden><section aria-label="Meeting workflow" id="meeting-desk">
+<div class="desk-register" id="desk-register">
+<label for="desk-picker">Choose a meeting<select id="desk-picker"></select></label>
+<details id="desk-create"><summary>Schedule a meeting</summary><form class="stack-form" id="desk-create-form">
+<label>Type of meeting<select name="kind"><option value="committee">Management committee meeting</option><option value="general">General meeting</option><option value="agm">Annual general meeting</option><option value="special">Special general meeting</option><option value="informal">Informal catch-up</option></select></label>
+<label>Meeting title<input maxlength="120" name="title" placeholder="e.g. February committee meeting" required=""/></label>
+<div class="field-pair"><label>Date<input name="date" required="" type="date"/></label><label>Brisbane time<input name="time" required="" type="time"/></label></div>
+<label>Location<input maxlength="140" name="location" placeholder="Venue or meeting place" required=""/></label>
+<button class="button small" type="submit">Create meeting and agenda</button><p id="desk-create-message" role="status"></p>
+</form></details>
+<details><summary>Add meetings to my calendar</summary>
+<p>The file contains private committee dates. Choose your private calendar when importing it.</p><ol><li>Save the calendar file and find it in Downloads.</li><li>Open it in Apple Calendar or Outlook and choose Add. In Google Calendar on a computer, choose Settings, then Import &amp; export.</li><li>Check the dates in your calendar. Download a fresh copy for later changes.</li></ol>
+<button class="button outline small" id="desk-export-calendar" type="button">Save private calendar file</button><p id="desk-calendar-status" role="status"></p>
+</details>
+</div>
+<details class="desk-original" hidden="" id="desk-all-followups"><summary>Open follow-ups across meetings</summary><div data-all-followups=""></div></details>
+<header class="desk-meeting-header"><div><p id="desk-meeting-when"></p><h2 id="desk-meeting-title"></h2><p id="desk-meeting-place"></p></div><strong id="meeting-badge">Draft</strong></header>
+<nav aria-label="Meeting steps" class="meeting-steps">
+<button data-meeting-step="agenda" type="button"><span>1</span>Agenda</button>
+<button data-meeting-step="capture" type="button"><span>2</span>Capture notes</button>
+<button data-meeting-step="review" type="button"><span>3</span>Review minutes</button>
+<button data-meeting-step="follow" type="button"><span>4</span>Follow up</button>
+</nav>
+<div class="meeting-stage panel" data-meeting-panel="agenda">
+<div id="formal-agenda"></div>
+<div hidden="" id="desk-reminders"></div>
+<div class="desk-tools"><button class="button" data-meeting-go="capture" type="button">Open meeting notes</button></div>
+</div>
+<div class="meeting-stage panel" data-meeting-panel="capture" hidden="">
+<h3 tabindex="-1">Capture the conversation</h3>
+<p>Type what happened, paste a transcript or open the recorder. Say who will do each job and by when.</p>
+<details class="desk-record recording-panel transcript-details"><summary>Record voice or video</summary>
+<p>Everyone present must agree before you start. If supported, live transcription uses the browser’s speech service and may send audio to that provider.</p>
+<label class="checkbox-label"><input id="record-consent" type="checkbox"/>Everyone present agrees to the selected recording and transcription.</label>
+<div class="record-controls"><label>Record<select id="record-mode"><option value="audio">Voice only</option><option value="video">Voice and video</option></select></label><button class="button small" id="record-start" type="button">Start recording</button><button class="button outline small" disabled="" id="record-stop" type="button">Stop recording</button></div>
+<p class="secondary" id="record-status" role="status">The file stays in this browser until you download it.</p><video controls="" hidden="" id="record-preview" playsinline=""></video><div id="record-download"></div>
+<label>Live or pasted transcript<textarea id="record-transcript" maxlength="16000" rows="4"></textarea></label><button class="button outline small" id="transcript-to-notes" type="button">Use transcript in minutes</button>
+</details>
+<label for="meeting-notes">Secretary’s notes or transcript</label><textarea id="meeting-notes" maxlength="16000" placeholder="What did people agree? Who will follow up?" rows="7"></textarea>
+<div class="desk-tools"><button class="button" id="prepare-minutes" type="button">Prepare draft minutes</button><button class="button outline" id="save-meeting" type="button">Save draft</button></div>
+<details class="desk-original" id="desk-ai"><summary>Ask AI for a second read</summary><p>This sends the notes above to Cloudflare AI to look for decisions and jobs. Each suggestion includes the words it came from. Choose which ones to add.</p><button class="button outline small" id="desk-ask-ai" type="button">Send these notes to Cloudflare AI</button><div id="desk-ai-note" role="status"></div></details>
+</div>
+<div class="meeting-stage panel" data-meeting-panel="review" hidden="">
+<h3 id="desk-review-heading" tabindex="-1">Check the draft minutes</h3>
+<details class="desk-original" hidden="" id="desk-formal-summary"></details>
+<p id="desk-review-help">Compare the suggestions with what was actually agreed. Correct the wording and fill any missing names or dates before approval.</p>
+<details class="desk-original"><summary>Read the original meeting notes</summary><p id="desk-original-notes"></p></details>
+<section aria-label="AI suggestions to review" hidden="" id="desk-suggestion-list"></section>
+<label for="desk-decisions">Agreed decisions, one per line</label><textarea id="desk-decisions" placeholder="Write each decision as the committee agreed it." rows="3"></textarea>
+<h4>Jobs from this meeting</h4><div id="desk-edit-actions"></div>
+<button class="text-link" id="desk-add-action" type="button">Add a job</button>
+<div class="desk-approval"><label class="checkbox-label"><input id="desk-confirm" type="checkbox"/><span id="desk-approval-instruction">I checked the minutes and confirm the committee approved this record.</span></label>
+<div class="desk-tools"><button class="button" id="desk-approve" type="button">Approve minutes</button><button class="button outline" id="desk-save-review" type="button">Save draft</button></div></div>
+</div>
+<div class="meeting-stage panel" data-meeting-panel="follow" hidden="">
+<h3 tabindex="-1">Jobs and reminders</h3><p hidden="" id="desk-approved-on"></p><p id="desk-follow-summary"></p>
+<div id="desk-follow-actions"></div><div class="desk-tools"><button class="button outline" id="export-meeting" type="button">Download minutes</button><button class="text-link" data-meeting-go="review" type="button">Read the minutes</button></div>
+<details class="desk-original" hidden="" id="desk-release"><summary id="desk-release-label">Share the minutes with paid members</summary>
+<p id="desk-release-help">Check the wording for members. Start with the approved decisions and leave personal contact details and private discussion out. Once shared, this copy stays in the member area.</p>
+<label for="desk-release-text">Copy for paid members</label><textarea id="desk-release-text" maxlength="8000" rows="5"></textarea>
+<button class="button small" id="desk-release-submit" type="button">Share minutes with paid members</button><p id="desk-release-status" role="status"></p>
+</details>
+</div>
+<div class="desk-save-line"><span aria-live="polite" id="notes-status" role="status"></span><button class="text-link" hidden="" id="desk-reload" type="button">Load latest saved meeting</button><button class="text-link" hidden="" id="desk-exit-practice" type="button">Leave practice</button></div>
+</section></section>
+        <section data-committee-pane="equipment" hidden><div id="club-equipment"></div></section>
+        <section data-committee-pane="grants" hidden><div id="committee-grant-register"></div></section>
+        <section data-committee-pane="todos" hidden><div id="officer-todos"></div></section>
+        <section data-committee-pane="handover" hidden><div id="officer-handover"></div></section>
+        <section data-committee-pane="access" hidden><h2>Club access</h2><p>Invite each named office privately. Membership accounts follow the application and Treasurer verification flow.</p><div id="office-access"></div></section>
+        <div id="member-publication-form" hidden></div>
+      </div>
+    </section>
+    <section data-view="webmaster" class="page" hidden>
+      <div id="webmaster-gate" class="access-gate" hidden></div>
+      <div id="webmaster-private" hidden>
+        <p class="eyebrow">Sandy administration</p><h1>Webmaster</h1>
+        <p>Use the view switch in the header to inspect the member preview and each office. Return to Webmaster view before making changes.</p>
+        <nav class="section-nav" aria-label="Webmaster areas"><a href="#committee">Committee</a><a href="#members">Members</a><a href="#stock">Treasurer</a><a href="#grants">Grants</a></nav>
+        <section id="webmaster-management"><h2>Office account slots</h2><div id="webmaster-office-roster" class="office-grid"></div><p><a class="button outline" href="#committee/access">Manage office invitations</a></p>
+          <h2>Club accounts</h2><div id="webmaster-accounts"></div>
+          <h2>Separate view-only demo</h2><p>Create a private demo invitation only when the separate demo store and its key are configured. A demo account cannot edit live Sandy records.</p><button type="button" class="button outline" id="issue-demo">Create demo invitation</button><p id="demo-issue-status" role="status"></p><div id="demo-issued-link"></div>
+        </section>
+        <p id="webmaster-preview-note" hidden>This is the view-only demonstration. Changes to club records and account access are unavailable.</p>
+      </div>
+    </section>
+    <section data-view="shop" class="page" hidden></section>
+    <section data-view="stock" class="page" hidden></section>
+  </main>
+  <footer class="site-footer"><strong>Sandy Sports Club</strong><nav aria-label="Footer navigation"><a href="#home">Home</a><a href="#join">Join</a><a href="#members">Members</a><a href="#grants">Grants</a><a href="#sponsors">Partners</a><a href="#shop">Merch</a><a href="#committee">Committee</a><a href="#webmaster">Webmaster</a></nav><small>Clubhouse preview. Account invitations, fees and offers are managed through the Sandy workspace.</small></footer>
+</body>
+</html>

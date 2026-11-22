@@ -1,0 +1,94 @@
+.wish-room {
+  --wish-ink: #133e40;
+  --wish-teal: #086365;
+  --wish-mist: #eaf1e9;
+  display: grid;
+  gap: 1rem;
+  color: var(--wish-ink);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.wish-room > * { min-width: 0; margin: 0; }
+.wish-room > button, .wish-room > a, .wish-form > button { justify-self: start; }
+.wish-room h1, .wish-room h2, .wish-room h3 { line-height: 1.13; }
+.wish-room h1 { font-size: clamp(1.8rem, 4vw, 3rem); }
+.wish-room .wish-hero {
+  padding: clamp(1.2rem, 4vw, 2.8rem);
+  border-radius: 1.1rem;
+  background: #123f40;
+  color: white;
+}
+.wish-hero h2 { font-size: clamp(2rem, 4.6vw, 3.3rem); color: white; margin: .25rem 0 .65rem; }
+.wish-hero p { font-size: .82rem; font-weight: 700; letter-spacing: .07em; color: #c4e6d2; margin: 0; }
+.wish-hero span { color: #edf5ee; }
+.wish-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%, 20rem),1fr)); gap: 1rem; align-items: start; }
+.wish-card, .wish-room .wish-empty { border: 1px solid #c4d6ce; border-radius: 1rem; padding: clamp(1rem,2.5vw,1.5rem); background: #fff; }
+.wish-card { display: grid; gap: .9rem; min-width: 0; }
+.wish-card > *, .wish-empty h3 { margin: 0; min-width: 0; }
+.wish-empty p { margin: .5rem 0 0; }
+.wish-example { margin-top: .65rem; }
+.wish-example .wish-card { background: #f6f8f4; max-width: 30rem; margin-top: .45rem; }
+.wish-card h3 { font-size: clamp(1.4rem, 2.7vw, 2rem); }
+.wish-purpose { white-space: pre-line; }
+.wish-tag { display: inline-block; justify-self: start; align-self: start; padding: .25rem .7rem; border-radius: 1rem; background: var(--wish-mist); color: #284f42; font-weight: 700; font-size: .78rem; line-height: 1.4; }
+.wish-tags, .wish-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; }
+.wish-totals { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .55rem; }
+.wish-totals > div { display: grid; align-content: start; }
+.wish-totals span, .wish-no-history, .wish-footnote { color: #435e5c; font-size: .86rem; }
+.wish-totals strong { font-variant-numeric: tabular-nums; font-size: clamp(.98rem,2.25vw,1.3rem); }
+.wish-progress { width: 100%; height: .8rem; border: 0; border-radius: 10px; overflow: hidden; background: #dfebe3; color: var(--wish-teal); appearance: none; }
+.wish-progress::-webkit-progress-bar { background: #dfebe3; border-radius: 10px; }
+.wish-progress::-webkit-progress-value { background: var(--wish-teal); border-radius: 10px; }
+.wish-progress::-moz-progress-bar { background: var(--wish-teal); border-radius: 10px; }
+.wish-kind { display: grid; gap: .15rem; background: #f0f3e3; border-inline-start: .3rem solid #839346; border-radius: .35rem; padding: .7rem 1rem; }
+.wish-surplus { font-weight: 650; }
+.wish-history, .wish-ledger details { border-top: 1px solid #d2e2da; padding-top: .45rem; }
+.wish-room summary { cursor: pointer; padding: .55rem .1rem; font-weight: 650; }
+.wish-history-inner { display: grid; gap: .4rem; }
+.wish-history-inner svg { height: 5.2rem; width: 100%; overflow: visible; background: #f3f7f2; border-radius: .5rem; cursor: crosshair; }
+.wish-history-inner .wish-baseline { stroke: #c0cec3; stroke-width: 1; }
+.wish-history-inner .wish-trace { stroke: var(--wish-teal); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; fill: none; vector-effect: non-scaling-stroke; }
+.wish-history-inner circle { fill: #ad4c29; stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.wish-chart-key { display: flex; justify-content: space-between; gap: .8rem; font-size: .91rem; }
+.wish-chart-dates { display: flex; justify-content: space-between; gap: .8rem; font-size: .75rem; color: #435e5c; }
+.wish-history label, .wish-form label { display: grid; gap: .35rem; font-weight: 650; min-width: 0; }
+.wish-room select, .wish-room input, .wish-room textarea { box-sizing: border-box; min-width: 0; max-width: 100%; width: 100%; }
+.wish-form, .wish-form label { grid-template-columns: minmax(0,1fr); }
+.wish-room select { overflow: hidden; text-overflow: ellipsis; }
+.wish-list, .wish-ledger ol { list-style: none; margin: 0; padding: 0; }
+.wish-list li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .4rem 1rem; border-top: 1px solid #c4d6ce; padding: .9rem 0; }
+.wish-list p, .wish-ledger li p { margin: .2rem 0; }
+.wish-search { display: flex; align-items: end; flex-wrap: wrap; gap: .45rem 1rem; }
+.wish-search label { display: grid; gap: .35rem; flex: 1 1 15rem; min-width: 0; max-width: 25rem; font-weight: 650; }
+.wish-search input { min-height: 44px; padding: .55rem .75rem; border: 1px solid #829e9c; border-radius: .45rem; background: #fff; font: inherit; }
+.wish-search button { min-height: 44px; }
+.wish-search [hidden], .wish-list > li[hidden] { display: none; }
+.wish-search-status { color: #435e5c; font-size: .9rem; }
+.wish-ledger { display: grid; gap: .65rem; }
+.wish-ledger h2 { font-size: 1.4rem; margin: 0; }
+.wish-ledger li { padding: .7rem 0; border-bottom: 1px solid #d2e2da; }
+.wish-ledger li span { display: block; color: #435e5c; font-size: .85rem; }
+.wish-form { display: grid; gap: .9rem; max-width: 34rem; min-width: 0; }
+.wish-form [hidden], .wish-message:empty { display: none; }
+.wish-form p { margin: 0; }
+.wish-message[role="alert"] { color: #832f17; font-weight: 650; }
+.wish-tools .button { white-space: normal; }
+.wish-funding { display: grid; gap: .75rem; border: 1px solid #c4d6ce; border-radius: .85rem; padding: clamp(1rem,3vw,1.5rem); background: #fff; }
+.wish-funding > *, .wish-funding li p { margin: 0; }
+.wish-funding h2 { font-size: 1.4rem; }
+.wish-funding h3 { font-size: 1.05rem; }
+.wish-funding > .text-link { justify-self: start; }
+.wish-linked-grants, .wish-funding-matches { display: grid; gap: .75rem; list-style: none; padding: 0; }
+.wish-linked-grants li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; }
+.wish-linked-grants li span { display: block; font-size: .875rem; color: #435e5c; }
+.wish-link-grant { border-block: 1px solid #d2e2da; }
+.wish-link-grant .wish-form { padding-bottom: .75rem; }
+.wish-funding-matches li { border-inline-start: 3px solid #b0cfbf; padding-inline-start: .75rem; }
+.wish-grant-origin { padding: .75rem 1rem; border-radius: .5rem; background-color: var(--wish-mist); }
+.wish-grant-origin p { margin: 0; }
+@media (max-width: 26rem) {
+  .wish-list .text-link { text-align: left; }
+  .wish-card { padding: .9rem; }
+  .wish-tools { align-items: stretch; }
+  .wish-tools .button { flex-grow: 1; }
+}

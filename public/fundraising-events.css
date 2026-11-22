@@ -1,0 +1,67 @@
+#fundraising-events {max-width:59rem;margin:1rem 0 2.5rem;overflow-wrap:anywhere}
+#fundraising-events h1 {font-size:clamp(2rem,5vw,3.2rem);letter-spacing:-.04em;line-height:1.1;margin:.6rem 0}
+#fundraising-events h2 {font-size:clamp(1.35rem,3vw,1.75rem);margin:1.25rem 0 .55rem}
+#fundraising-events h3 {font-size:1.12rem;line-height:1.35;margin:0}
+.event-heading,.event-tools,.event-job-actions {display:flex;align-items:center;gap:.6rem 1.2rem;flex-wrap:wrap}
+.event-heading {justify-content:space-between;margin:1.1rem 0}
+.event-heading>div:first-child {flex:1 1 24rem}
+.event-heading p {margin:.5rem 0;max-width:55ch}
+.event-heading .text-link,.event-group .text-link {min-height:44px}
+.event-group {margin:1.25rem 0}
+.event-group>p,.event-list li,.event-jobs>li {border-top:1px solid var(--line);padding:.75rem .1rem}
+.event-list,.event-jobs {padding:0;list-style:none;margin:0}
+.event-list li {display:flex;justify-content:space-between;align-items:center;gap:.4rem 1rem;flex-wrap:wrap}
+.event-list li>div {flex:1 1 22rem}
+.event-list p,.event-owner,.event-meta {font-size:.94rem;color:#38565a;margin:.3rem 0}
+.event-open {color:var(--teal);background:none;border:0;padding:.15rem 0;text-align:left;font:inherit;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:.18em}
+.event-list li>span {color:#33565a;font-weight:600;font-size:.94rem}
+.event-box {margin:.65rem 0;padding:.83rem 1.05rem;border:1px solid var(--line);border-radius:.7rem;background:white}
+#fundraising-events summary {font-weight:700;color:var(--teal);cursor:pointer}
+.event-job-guide {margin:.35rem 0 .55rem}
+.event-job-guide summary,.event-job-actions summary {width:fit-content}
+.event-job-actions>details[open] {flex-basis:100%}
+.event-job-guide p,.event-box p,.event-notes {max-width:62ch;margin:.55rem 0;white-space:pre-line}
+.event-box a {text-decoration:underline}
+.event-form {display:grid;gap:.85rem;max-width:42rem;margin:.9rem 0}
+.event-form label {display:grid;gap:.3rem;font-weight:700}
+.event-form :is(input:not([type=checkbox]),select,textarea) {min-height:44px;min-width:0;width:100%;padding:.65rem .8rem;border:1px solid #819e9e;background:white;color:var(--ink);border-radius:.4rem;font:inherit}
+.event-form>button {justify-self:start}
+.event-form .event-check {align-items:center;display:flex;gap:.6rem}
+.event-check input {width:1.2rem;height:1.2rem;flex:none}
+.event-pair,.event-amounts {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:.75rem 1rem}
+.event-amounts {margin:1rem 0}
+.event-amounts dt {color:#38565a}
+.event-amounts dd {font-size:1.2rem;font-weight:700;margin:0}
+.event-closed,[data-event-status]:not(:empty) {font-weight:650}
+.event-closed {padding:.65rem 1rem;background:var(--mint);border-left:3px solid var(--teal)}
+[data-event-heading]:focus,[data-event-job][tabindex="-1"]:focus {outline:none}
+#event-jobs-print {display:none}
+@page club-event-jobs { size:A4 portrait; margin:9mm 12mm }
+@media print {
+  body.printing-event-jobs {page:club-event-jobs;margin:0!important;background:white!important}
+  body.printing-event-jobs>:not(#event-jobs-print) {display:none!important}
+  body.printing-event-jobs>#event-jobs-print {display:block!important;page:club-event-jobs;color:#182c37;padding:0;font:11pt/1.32 Arial,sans-serif}
+  #event-jobs-print .crew-letterhead {display:block;width:100%;height:auto}
+  #event-jobs-print h1 {margin:3mm 0 0;font:700 20pt/1.14 Arial,sans-serif}
+  #event-jobs-print>p {margin:2mm 0}
+  #event-jobs-print h2 {font-size:12pt;margin:4mm 0 0}
+  #event-jobs-print table {table-layout:fixed;border-collapse:collapse;width:100%;font:inherit}
+  #event-jobs-print thead {display:table-header-group}
+  #event-jobs-print th,#event-jobs-print td {text-align:left;vertical-align:top;padding:1.7mm 1.5mm;border-bottom:.22mm solid #879aa3;overflow-wrap:anywhere}
+  #event-jobs-print th {border-bottom:.45mm solid #324b62}
+  #event-jobs-print th:first-child {width:48%}
+  #event-jobs-print th:last-child {width:14mm}
+  #event-jobs-print tr {break-inside:avoid}
+  #event-jobs-print .crew-tick {display:block;width:5mm;height:5mm;border:.4mm solid #20374b}
+  #event-jobs-print .crew-line {height:6mm;border-bottom:.2mm solid #79939d}
+  #event-jobs-print .crew-letterhead:last-child {margin-top:4mm;break-before:avoid}
+}
+#fundraising-events[data-read-only] [data-event-new],
+#fundraising-events[data-read-only] [data-event-start-type],
+#fundraising-events[data-read-only] [data-event-edit],
+#fundraising-events[data-read-only] [data-event-action],
+#fundraising-events[data-read-only] [data-event-helper],
+#fundraising-events[data-read-only] [data-event-add-job],
+#fundraising-events[data-read-only] [data-event-money-form],
+#fundraising-events[data-read-only] [data-event-close],
+#fundraising-events[data-read-only] [data-event-member-notice] form {display:none!important}

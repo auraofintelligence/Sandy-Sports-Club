@@ -1,0 +1,25 @@
+#member-calendar { max-width: 52rem; }
+.member-cal-head p { max-width: 62ch; margin: .55rem 0 1rem; }
+.member-cal-controls,.member-cal-actions { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.55rem 1rem; margin:.7rem 0; }
+.member-cal-controls h3,.member-cal-list h3 { font-size:clamp(1.3rem,3vw,1.8rem); }
+.member-month-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; background:var(--line); border:1px solid var(--line); border-radius:.45rem; overflow:hidden; }
+.member-month-grid>* { min-height:3.5rem; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--ink); background:var(--paper); }
+.member-month-grid .cal-weekday { min-height:2rem; font-size:.85rem; font-weight:bold; }
+.member-month-grid button { background:var(--deep); color:white; }
+.member-month-grid button:focus-visible { outline-offset:-4px; }
+.member-month-grid [aria-current=date] { box-shadow:inset 0 0 0 2px #a25b30; font-weight:bold; }
+.member-month-grid small { font-size:.75rem; }
+.member-cal-list { margin:1.5rem 0; }
+.member-cal-list>h3 { margin-bottom:.7rem; }
+.member-cal-event { border-top:1px solid var(--line); padding:.6rem 0; }
+.member-cal-event>summary,.member-cal-help>summary { cursor:pointer; color:var(--teal); font-weight:700; }
+.member-cal-event>summary span { font-size:.88rem; font-weight:500; }
+.member-cal-event>summary strong { display:block; margin-left:1rem; overflow-wrap:anywhere; }
+.member-cal-event p { margin:.5rem 0; }
+.member-cal-audience { color:#48635f; font-size:.9rem; }
+.member-cal-description { white-space:pre-wrap; overflow-wrap:anywhere; }
+.member-cal-actions { justify-content:flex-start; align-items:start; }
+.member-cal-help[open] { flex-basis:100%; }
+.member-cal-help li { margin:.35rem 0; }.member-cal-help a { text-decoration:underline; font-weight:700; }
+.member-cal-event textarea { display:block; width:100%; }
+@media(max-width:530px){.member-month-grid>*{min-height:2.85rem}.member-month-grid small{font-size:.65rem;line-height:1.1}.member-cal-controls>div{display:flex;flex-wrap:wrap;gap:.3rem}}
