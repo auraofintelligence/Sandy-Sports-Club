@@ -16,3 +16,39 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .brand-mark{width:72px;height:49px;object-fit:contain}
 .site-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.8rem 0}.site-gallery figure{margin:0;background:white;border-radius:18px;overflow:hidden;box-shadow:0 10px 35px #102d4012}.site-gallery img{width:100%;height:225px;object-fit:cover}.site-gallery figcaption{padding:.85rem 1rem;font-size:.9rem;line-height:1.45}.site-gallery .panorama{grid-column:1/-1}.site-gallery .panorama img{height:auto;max-height:430px;object-fit:contain;background:#102d40}.site-gallery a,.site-photo-credit a{font-weight:800;color:#a93f2e}.site-photo-credit{font-size:.9rem;max-width:900px}
 @media(max-width:700px){.site-gallery{grid-template-columns:1fr}.site-gallery img{height:auto}.site-gallery .panorama{grid-column:auto}}
+
+/* Compact navigation and an ordered route through all 46 pages. */
+@media(max-width:1320px){
+  .site-header .menu-toggle{display:block;border:1px solid #acd2d0;background:transparent;border-radius:7px;color:#fff;padding:.55rem .85rem}
+  .site-header nav,.site-header nav.open{position:absolute;top:100%;right:1rem;left:auto;width:min(340px,calc(100vw - 2rem));max-width:none;max-height:calc(100dvh - 116px);overflow-y:auto;flex-direction:column;align-items:stretch;gap:0;padding:.65rem;border:1px solid #396071;border-radius:0 0 16px 16px;background:#102d40;box-shadow:0 16px 30px #0827357a;z-index:20}
+  .site-header nav{display:none}
+  .site-header nav.open{display:flex}
+  .site-header nav a{display:block;padding:.62rem .8rem;border-radius:8px;white-space:normal;font-size:.94rem}
+  .site-header nav a:hover,.site-header nav a:focus-visible{background:#28566b}
+}
+.page-cycle{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;margin:-1.3rem 0 3rem;padding:1rem 0 1.7rem;border-bottom:1px solid #4b6873}
+.page-cycle>a{display:flex;flex-direction:column;gap:.25rem;max-width:440px;padding:1rem 1.2rem;border:1px solid #7297a4;border-radius:14px;background:#153e51;text-decoration:none}
+.page-cycle>a:last-child{text-align:right;justify-self:end;width:100%}
+.page-cycle>a:hover,.page-cycle>a:focus-visible{background:#245c70;border-color:#ffbf4f}
+.page-cycle span{color:#ffbf4f;font-size:.85rem;font-weight:700}
+.page-cycle strong{color:#fff;font-size:1.14rem}
+.cycle-count{white-space:nowrap;text-align:center;color:#d1dfde!important}
+.page-directory{margin-top:3rem;padding-top:2rem;border-top:1px solid #4b6873}
+.page-directory h2{font-size:1.8rem;margin-bottom:.35rem}
+.page-directory>p{color:#d1dfde}
+.directory-groups{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.65rem}
+.directory-groups details{align-self:start;border:1px solid #7297a4;border-radius:12px;background:#153e51;overflow:hidden}
+.directory-groups summary{cursor:pointer;padding:.85rem;color:#ffbf4f;font-weight:800}
+.directory-groups summary small{display:block;color:#d1dfde;font-weight:400}
+.directory-links{display:flex;flex-direction:column;padding:.1rem .85rem .8rem;gap:.4rem}
+.directory-links a{text-decoration:none;padding:.25rem .35rem;border-radius:5px}
+.directory-links a:hover,.directory-links a:focus-visible,.directory-links a[aria-current]{background:#316075;color:#fff}
+.card{position:relative}.card .image-kind{position:absolute;top:190px;right:.65rem;z-index:1;background:#092b3cdd;color:#fff;border-radius:5px;padding:.2rem .5rem;font-size:.72rem;font-weight:800}
+.page-section.dark .button.outline{color:#fff;border-color:#fff}
+.page-section.dark .button.outline:hover{background:#fff;color:#102d40;filter:none}
+@media(max-width:900px){.directory-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.page-cycle{grid-template-columns:1fr 1fr;margin-top:0}.page-cycle .cycle-count{grid-column:1/-1;grid-row:1}.page-cycle>a{font-size:.9rem;padding:.8rem}.page-cycle strong{font-size:1rem}.directory-groups{grid-template-columns:1fr}.page-directory{margin-top:2rem}}
+
+/* Sandy committee tools are public, browser-local planning desks. */
+.tool-intro{background:#e7f3f1;color:#102d40;border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.3rem}.tool-intro h3{margin:.1rem 0 .5rem}.tool-intro p{margin:.5rem 0}.tool-intro a,.opportunity a,.wish-card a{color:#8d3021;font-weight:800}.opportunity-grid,.wish-grid,.office-grid,.tool-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.opportunity,.wish-card,.office-grid article,.tool-record{background:#fff;color:#102d40;border:1px solid #c8d8d5;border-radius:16px;padding:1.25rem}.opportunity h3,.wish-card h3,.tool-record h3{margin:.3rem 0}.opportunity p,.wish-card p,.tool-record p{line-height:1.5}.opportunity .tag,.wish-card .tag{color:#9e3927;font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.tool-actions{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}.tool-actions button,.tool-record button,.wish-card button{border:1px solid #174457;border-radius:8px;background:#fff;color:#174457;font:inherit;font-weight:800;padding:.55rem .75rem;cursor:pointer}.tool-actions button:hover,.tool-record button:hover,.wish-card button:hover{background:#174457;color:#fff}.tool-form{background:#fff;border:1px solid #b8d0cc;color:#102d40;border-radius:14px;padding:1rem;margin:1.2rem 0}.tool-form summary{cursor:pointer;font-weight:900}.tool-form form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;padding-top:1rem}.tool-form label{display:block;font-weight:700}.tool-form input,.tool-form textarea,.tool-form select,.tool-intro select{display:block;width:100%;border:1px solid #8eaba8;border-radius:8px;padding:.6rem;font:inherit;margin-top:.25rem}.tool-form label:has(textarea){grid-column:1/-1}.tool-form button{justify-self:start}.tool-records{display:grid;gap:.8rem}.office-grid{margin-bottom:1rem}.office-grid ol{padding-left:1.3rem}.office-grid li{margin:.45rem 0}.tool-summary a{display:block;background:#fff;color:#102d40;border-radius:12px;padding:1rem;font-weight:800;text-decoration:none}.checklist li{margin:.8rem 0}.workspace-nav{max-height:calc(100vh - 2rem);overflow:auto}.page-section.dark .opportunity,.page-section.dark .wish-card{color:#102d40}
+@media(max-width:700px){.opportunity-grid,.wish-grid,.office-grid,.tool-summary,.tool-form form{grid-template-columns:1fr}.tool-form label:has(textarea){grid-column:auto}.workspace-nav{max-height:none}}

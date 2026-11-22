@@ -8,9 +8,9 @@ function build(){
   equity:'Proposed equity target: at least half of filled elected management committee positions should be held by women and/or gender diverse people. For an odd number, aim for at least one fewer than half, consistent with the Australian Sports Commission example. Invite women into substantial officer and programme roles. All genders remain eligible; use self-description, privacy and a documented recruitment response to vacancies.',
   balanced:'Proposed balance policy: actively recruit women and gender diverse people, avoid an all-male founding committee, aim for a gender-balanced management committee and review representation each year. Set a measurable target and vacancy response with the founding group.'
  }[val('balance')]||'Founding decision: settle a leadership composition policy.';
- return `# ${val('name')} - constitution working draft
+ return `# ${val('name')} — constitution working draft
 
-Generated ${new Date().toLocaleDateString('en-AU')}. Drafting aid based on the owner's PLFC v1.2 custom constitution structure. This is not the adopted or registered rules of Sandy Sports.
+Generated ${new Date().toLocaleDateString('en-AU')}. Drafting aid based on the owner’s PLFC v1.2 custom constitution structure. This is not the adopted or registered rules of Sandy Sports.
 
 ## 1. Name and objects
 
@@ -64,7 +64,7 @@ ${val('additional')||'No additional notes entered.'}
 
 ## PLFC v1.2 topic map for clause-by-clause review
 
-${topics.map((topic,i)=>`${i+1}. ${topic} - [draft or review clause against current Queensland requirements]`).join('\n')}
+${topics.map((topic,i)=>`${i+1}. ${topic} — [draft or review clause against current Queensland requirements]`).join('\n')}
 
 ## Review points
 
