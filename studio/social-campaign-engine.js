@@ -723,6 +723,22 @@ export const CAMPAIGN_LAYERS = [
     "url": "/join.html",
     "group": "Seasonal",
     "emoji": "🧳"
+  },
+  {
+    "id": "surprise",
+    "label": "Spontaneous island stories",
+    "frequency": 1,
+    "priority": 2,
+    "topics": [
+      "A surprise local sporting moment (verify details)",
+      "Unexpected community contributions",
+      "Photo or video challenge with permission",
+      "A playful sport quiz"
+    ],
+    "cta": "Share a story or suggestion",
+    "url": "/join.html",
+    "group": "Community",
+    "emoji": "✨"
   }
 ];
 
