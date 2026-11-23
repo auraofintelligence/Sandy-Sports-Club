@@ -36,9 +36,34 @@ const platformIds=["youtube","facebook","instagram","tiktok","noticeboard"],defa
 function loadSettings(){try{return Object.assign(defaultSettings(),JSON.parse(localStorage.getItem("sandy-planner-settings-v2"))||{})}catch{return defaultSettings()}}
 function saveSettings(cfg){try{localStorage.setItem("sandy-planner-settings-v2",JSON.stringify(cfg))}catch{}}
 let strategy=loadSettings(),start=strategy.start,plan=[],days=new Map(),selected="",viewMonth="",edits={},generated=false,mixSeed=strategy.mix||0;
+let monthSettings={},undoStack=[],selectedIds=new Set(),monthPreview=null,monthSalt=0,liveLayerVisibility={};
 const storageKey=()=>["sandy-planner-edits-v2",start,strategy.volume,strategy.video,strategy.qld,strategy.nsw,strategy.ads?"ads":"organic",strategy.audience,strategy.mix,strategy.channels.join("."),categories.map(c=>(strategy.topics||{})[c.id]||"normal").join(".")].join("-");
 function getEdits(){try{return JSON.parse(localStorage.getItem(storageKey()))||{}}catch{return{}}}
 function saveEdits(){try{localStorage.setItem(storageKey(),JSON.stringify(edits));return true}catch{return false}}
+const monthStoreKey=()=>"sandy-monthly-batches-v1-"+storageKey();
+function loadMonthData(){try{const value=JSON.parse(localStorage.getItem(monthStoreKey())||"null");return value&&Array.isArray(value.plan)?value:null}catch{return null}}
+function saveMonthData(){
+ const data={plan,monthSettings,undoStack:undoStack.slice(-3)};
+ try{localStorage.setItem(monthStoreKey(),JSON.stringify(data));saveEdits();return true}catch{return false}
+}
+function snapshot(){return {plan:JSON.parse(JSON.stringify(plan)),edits:JSON.parse(JSON.stringify(edits)),monthSettings:JSON.parse(JSON.stringify(monthSettings))}}
+function checkpoint(){undoStack.push(snapshot());if(undoStack.length>3)undoStack.shift()}
+function restoreLast(){
+ const prev=undoStack.pop();if(!prev)return false;
+ plan=prev.plan;edits=prev.edits;monthSettings=prev.monthSettings;saveMonthData();
+ monthPreview=null;selectedIds.clear();render();updateUndoButtons();return true;
+}
+function updateUndoButtons(){
+ for(const id of ["sp-undo","sp-m-undo"]){const element=$(id);if(element)element.disabled=!undoStack.length}
+}
+function editedOrApproved(post){
+ const record=edits[post.id]||{};
+ return !!Object.keys(record).length || ["Approved","Scheduled","Published"].includes(record.status||"");
+}
+function monthFor(p){return (edits[p.id]?.date||p.date).slice(0,7)}
+function stateFor(p){return edits[p.id]?.status||"Idea"}
+function monthPosts(month){return plan.filter(p=>monthFor(p)===month)}
+
 function readStrategy(){
  const obj={start:startInput.value||toBrisbaneToday(),volume:$("sp-volume").value,audience:$("sp-audience").value,video:Number($("sp-video").value),qld:$("sp-qld").value,nsw:$("sp-nsw").value,ads:$("sp-ads").checked,channels:platformIds.filter(p=>$("sp-platform-"+p).checked),topics:{},mix:mixSeed};
  for(const c of categories)obj.topics[c.id]=$("sp-weight-"+c.id).value;
@@ -50,6 +75,21 @@ function validateStrategy(c){
  if(c.video<100&&!c.channels.some(x=>["facebook","instagram","noticeboard"].includes(x)))return "With only YouTube or TikTok selected, choose 100% video or add a channel that supports images and polls.";
  return "";
 }
+const MEDIA_PROFILE_VERSION="2026-11-23 / PLFC-informed Sandy production presets";
+const mediaProfiles={
+ youtube:{video:"Shorts 1080×1920 (9:16), ~30s; standard video 1920×1080 (16:9), thumbnail 3840×2160",ad:"Video ads 1080×1920 (Shorts) or 1920×1080 (in-stream); placement preview required"},
+ facebook:{video:"Organic Reels 1080×1920 (9:16), Feed 1080×1350 (4:5)",image:"Organic Feed 1080×1350 (4:5), carousel 1080×1080 (1:1)",ad:"Feed 1440×1800 (4:5); Reels/Stories premium 1440×2560 (9:16); safe-zone check"},
+ instagram:{video:"Organic Reels/Stories 1080×1920 (9:16)",image:"Organic Feed 1080×1440 (3:4) or 1080×1350 (4:5); carousel 1080×1080",ad:"Feed image 1440×1800 (4:5); Reels/Stories premium 1440×2560 (9:16); verify Feed video placement"},
+ tiktok:{video:"Vertical 1080×1920 (9:16), 30s combination",image:"Photo post 1080×1920 (9:16)",ad:"In-feed 1080×1920 (9:16); 21–34s typical creative; carousel placement varies"},
+ noticeboard:{video:"Proposed static adaptation only: TV 1920×1080, kiosk 1080×1920",image:"Proposed TV 1920×1080 (16:9), kiosk 1080×1920 (9:16), responsive web notice",ad:"Not available: no live noticeboard ad service or expenditure"}
+};
+function specsForPost(p){
+ const fmt=p.format==="video"?"video":"image";
+ return "Spec "+MEDIA_PROFILE_VERSION+" · "+p.channels.map(ch=>{
+ const name=ch==="youtube-standard"?"YouTube standard":ch[0].toUpperCase()+ch.slice(1),key=ch==="youtube-standard"?"youtube":ch,profile=mediaProfiles[key];
+ return name+": "+(profile?.[fmt]||platformText[p.format]||"Preview placement")+(p.paid?"; PAID: "+profile?.ad:"");
+ }).join(" | ");
+}
 const platformText={video:"YouTube Shorts 1080×1920 (9:16); Facebook/Instagram Reels 1080×1920 organic, 1440×2560 premium ad export; TikTok 1080×1920. Add subtitles, safe zones and a 30-second sequence. Standard YouTube variant (when selected): 1920×1080 (16:9), with a 3840×2160 thumbnail. For a longer sequence, overlap the final/first 2 seconds.",image:"Facebook Feed 1080×1350 organic or 1440×1800 paid (4:5); Instagram Feed 1080×1440 (3:4) or 1080×1350 (4:5).",carousel:"Facebook/Instagram carousel 1080×1080 (1:1), or custom 4:5 feed cards when placement allows.",poll:"Facebook poll or Instagram Story poll: 1080×1920 (9:16). An interactive poll needs a native platform action.",link:"Facebook link preview, source thumbnail 1200×630 (1.91:1); adapt a static notice for the planned Noticeboard web channel."};
 const channelFormats={video:["youtube","facebook","instagram","tiktok"],image:["facebook","instagram"],carousel:["facebook","instagram"],poll:["facebook","instagram"],link:["facebook","noticeboard"]};
 function channelNames(post){let out=post.channels.map(id=>({youtube:"YouTube Shorts","youtube-standard":"YouTube standard (16:9)",facebook:post.format==="video"?"Facebook Reels":"Facebook Feed",instagram:post.format==="video"?"Instagram Reels":"Instagram Feed/Story",tiktok:"TikTok",noticeboard:"Straddie Noticeboard (proposed)"}[id]));return out.join(" · ")}
@@ -57,7 +97,8 @@ function brief(post){
  const cat=categories[post.cat],style=post.format;
  const open=["Show the concept, then invite a response.","Begin with a question or demonstration.","Use one clear example before explaining the proposal.","Offer a useful takeaway; do not promise an event."][post.seq%4];
  let action="Ask: "+cat.cta;
- let format=style==="video"?"Video structure: 0–3s hook; 3–20s example or practical tip; 20–30s takeaway and invitation. If serialised, overlap 2 seconds between adjacent clips.":style==="poll"?"Use one specific answerable question and a small set of choices.":"Use concise text and one clear illustrative visual.";
+ let related=post.relatedTopic||cat.topics[(cat.topics.indexOf(post.topic)+1+cat.topics.length)%cat.topics.length];
+ let format=style==="video"?"30-second two-topic sequence: 0–3s hook; 3–14s "+post.topic+"; 14–25s "+related+"; 25–30s CTA. Overlap 2 seconds if extended into adjacent clips.":style==="poll"?"Use one specific answerable question and a small set of choices.":"Use concise text and one clear illustrative visual.";
  let caveat=cat.id==="safety"?" WEATHER/SAFETY HOLD: obtain and date-stamp verified Bureau of Meteorology or official guidance shortly before publication; never invent a future forecast.":cat.id==="events"?" EVENTS HOLD: mention actual dates or countdowns only after the organiser confirms permissions and the event.":cat.id==="funding"?" FUNDRAISING HOLD: no raffle, donation or grant claim without eligible entity, review and approval.":cat.id==="news"?" PROGRESS HOLD: describe only work actually completed.":" Clearly identify Sandy Sports as a proposal, not an operating club.";
  return open+" Creative approach: "+post.angle+". "+format+" "+action+caveat;
 }
@@ -120,20 +161,26 @@ function build(s,cfg){
 const monthsList=()=>{const end=add(start,364),out=[];let curr=start.slice(0,7);while(curr<=end.slice(0,7)){out.push(curr);let [y,m]=curr.split("-").map(Number);m++;if(m>12){y++;m=1}curr=y+"-"+pad(m)}return out};
 const labelDate=s=>new Date(s+"T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",weekday:"long",day:"numeric",month:"long",year:"numeric"});
 function regenerate(){
- const data=build(start,strategy);plan=data.all;days=data.dayMap;edits=getEdits();
+ const data=build(start,strategy),saved=loadMonthData();plan=saved?.plan||data.all;days=data.dayMap;edits=getEdits();monthSettings=saved?.monthSettings||{};undoStack=saved?.undoStack||[];selectedIds.clear();monthPreview=null;
  const months=monthsList();$("sp-month").innerHTML=months.map(x=>'<option value="'+x+'">'+new Date(x+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"long",year:"numeric"})+"</option>").join("");
  if(!months.includes(viewMonth))viewMonth=months[0];$("sp-month").value=viewMonth;
  if(!days.has(selected))selected=start;const video=plan.filter(x=>x.format==="video").length,ads=plan.filter(x=>x.paid).length;
  $("sp-results").hidden=false;
  $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Days with a primary post</small></div><div class="sp-stat"><strong>'+plan.length+'</strong><small>Content packages incl. peak extras</small></div><div class="sp-stat"><strong>'+Math.round(100*video/plan.length)+'%</strong><small>Video content (your target: '+strategy.video+'%)</small></div><div class="sp-stat"><strong>'+ads+'</strong><small>Paid candidates; $0 authorised</small></div>';
- render();
+ render();updateUndoButtons();
 }
 const matches=p=>{
  const category=$("sp-cat").value,channel=$("sp-channel").value,paid=$("sp-paid").value;
- return (category==="all"||categories[p.cat].id===category)&&(channel==="all"||p.channels.includes(channel))&&(paid==="all"||(paid==="paid"?p.paid:!p.paid));
+ const vis=liveLayerVisibility[viewMonth]||monthSettings[viewMonth]?.layers||{};
+ const visible=(vis[categories[p.cat].id]?.visible!==false);
+ return visible&&(category==="all"||categories[p.cat].id===category)&&(channel==="all"||p.channels.includes(channel))&&(paid==="all"||(paid==="paid"?p.paid:!p.paid));
 };
 function postsOn(date){return plan.filter(p=>(edits[p.id]?.date||p.date)===date)}
-function effectivePost(p){const ov=edits[p.id]||{},fmt=ov.format||p.format;let channels=channelFormats[fmt].filter(ch=>strategy.channels.includes(ch));if(fmt==="video"&&strategy.channels.includes("youtube")&&p.channels.includes("youtube-standard"))channels.push("youtube-standard");if(strategy.channels.includes("noticeboard")&&p.channels.includes("noticeboard")&&!channels.includes("noticeboard"))channels.push("noticeboard");return {...p,format:fmt,channels}}
+function effectivePost(p){
+ const ov=edits[p.id]||{},fmt=ov.format||p.format;
+ const channels=Array.isArray(ov.channels)?ov.channels.slice():Array.isArray(p.channels)?p.channels.slice():channelFormats[fmt].filter(ch=>strategy.channels.includes(ch));
+ return {...p,format:fmt,channels,title:ov.title||p.title,date:ov.date||p.date,time:ov.time||p.time,audienceRegion:ov.audienceRegion??p.audienceRegion??"all",audienceMember:ov.audienceMember??p.audienceMember??"all",audienceGender:ov.audienceGender??p.audienceGender??"all"};
+}
 function suggestedCaption(p){const cat=categories[p.cat];return "Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? Sandy Sports is still a community proposal. Your ideas can help shape what comes next. "+cat.cta}
 function render(){
  const m=viewMonth,[y,mm]=m.split("-").map(Number),nd=new Date(Date.UTC(y,mm,0)).getUTCDate(),offset=weekday(m+"-01");
@@ -147,7 +194,7 @@ function render(){
   const flags=row.holiday;
   out+='<button type="button" class="sp-day'+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+' matching content packages" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+" idea"+(shown.length===1?"":"s")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
  }
- $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+" matching ideas this month";renderDetail();
+ $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+" matching ideas this month";renderDetail();renderMonthRoster();
 }
 function renderDetail(){
  const row=days.get(selected),host=$("sp-detail");if(!row){host.innerHTML="<h3>Choose a date</h3>";return}
@@ -156,7 +203,7 @@ function renderDetail(){
  let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" draft idea(s). Nothing gets published or paid for here.</p>";
  if(!match.length)html+='<p>No content matches these filters. Adjust the filters or choose another date.</p>';
  for(const p of match){
-  const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",caption=override.caption||suggestedCaption(p),spec=platformText[p.format]+(p.channels.includes("noticeboard")?" Noticeboard adaptation (proposed): static 1920×1080 for TV; 1080×1920 portrait kiosk; responsive web notice with a QR code and expiry.":"");
+  const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",caption=override.caption||suggestedCaption(p),spec=specsForPost(p);
   const special=p.sourceHold?'<span class="sp-tag warn">Verify before publishing</span>':'';
   html+='<article class="sp-item" data-item="'+$esc(p.id)+'"><div class="sp-meta">'+$esc(override.time||p.time)+' AEST · '+$esc(p.dayExtra)+' · '+$esc(cat.name)+'</div><h4>'+$esc(override.title||p.title)+'</h4><span class="sp-tag">'+$esc(p.format.toUpperCase())+'</span>'+special+(p.paid?'<span class="sp-tag ad">Paid ad idea (not authorised)</span>':"")+
    '<p><strong>Channels:</strong> '+$esc(channelNames(p))+'</p><p><strong>Asset specs:</strong> '+$esc(spec)+'</p><p><strong>Production brief:</strong> '+$esc(brief(p))+'</p><p><strong>Audience:</strong> '+$esc(p.group)+(p.paid?"; <strong>ad spend:</strong> not set":"")+'</p><p><strong>Source:</strong> <a href="'+p.page+'">'+$esc(cat.name)+" page</a></p>"+
@@ -174,10 +221,10 @@ function exportCsv(){
  const header=["date","time_AEST","category","title","format","channels","dimensions_and_duration","source_page","audience","paid_candidate","spend_authorised","status","caption","production_brief","working_notes"];
  const quoted=x=>'"'+String(x==null?"":x).replace(/"/g,'""').replace(/\r?\n/g," ")+'"';
  const arr=[header.join(",")];
- for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),platformText[p.format]+(p.channels.includes("noticeboard")?"; TV 1920×1080, kiosk 1080×1920; proposed only":""),p.page,p.group,p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
+ for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),specsForPost(p),p.page,p.group,p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
  const blob=new Blob(["\ufeff"+arr.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="sandy-sports-social-"+start+"-365-days.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
-function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),platformText[p.format],ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
+function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),specsForPost(p),ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
 
 
 $("sp-cat").innerHTML+=categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("");
