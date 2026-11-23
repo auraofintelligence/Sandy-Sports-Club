@@ -32,15 +32,15 @@ const shuffle=(a,r)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1)
 function holidays(date){const active=holidayRanges.filter(h=>h[1]<=date&&h[2]>=date).map(h=>h[0]);return {q:active.includes("QLD"),n:active.includes("NSW")||active.includes("NSW-W"),w:active.includes("NSW-W"),both:active.includes("QLD")&&active.some(x=>x.startsWith("NSW"))}};
 function toBrisbaneToday(){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Australia/Brisbane",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const f=k=>p.find(x=>x.type===k).value;return f("year")+"-"+f("month")+"-"+f("day")}
 const startInput=$("sp-start");if(!startInput)return;
-const platformIds=["youtube","facebook","instagram","tiktok","noticeboard"],defaultSettings=()=>({start:toBrisbaneToday(),volume:"balanced",audience:"all",video:67,qld:"high",nsw:"light",ads:false,channels:platformIds.slice(),topics:{},mix:0});
-function loadSettings(){try{return Object.assign(defaultSettings(),JSON.parse(localStorage.getItem("sandy-planner-settings-v2"))||{})}catch{return defaultSettings()}}
-function saveSettings(cfg){try{localStorage.setItem("sandy-planner-settings-v2",JSON.stringify(cfg))}catch{}}
+const platformIds=["youtube","facebook","instagram","tiktok","noticeboard"],defaultSettings=()=>({start:toBrisbaneToday(),volume:"empty",audience:"all",video:67,qld:"off",nsw:"off",ads:false,channels:platformIds.slice(),topics:{},mix:0});
+function loadSettings(){try{return Object.assign(defaultSettings(),JSON.parse(localStorage.getItem("sandy-planner-settings-v3"))||{})}catch{return defaultSettings()}}
+function saveSettings(cfg){try{localStorage.setItem("sandy-planner-settings-v3",JSON.stringify(cfg))}catch{}}
 let strategy=loadSettings(),start=strategy.start,plan=[],days=new Map(),selected="",viewMonth="",edits={},generated=false,mixSeed=strategy.mix||0;
 let monthSettings={},undoStack=[],selectedIds=new Set(),monthPreview=null,monthSalt=0,liveLayerVisibility={};
-const storageKey=()=>["sandy-planner-edits-v2",start,strategy.volume,strategy.video,strategy.qld,strategy.nsw,strategy.ads?"ads":"organic",strategy.audience,strategy.mix,strategy.channels.join("."),categories.map(c=>(strategy.topics||{})[c.id]||"normal").join(".")].join("-");
+const storageKey=()=>["sandy-blank-planner-v3",start].join("-");
 function getEdits(){try{return JSON.parse(localStorage.getItem(storageKey()))||{}}catch{return{}}}
 function saveEdits(){try{localStorage.setItem(storageKey(),JSON.stringify(edits));return true}catch{return false}}
-const monthStoreKey=()=>"sandy-monthly-batches-v1-"+storageKey();
+const monthStoreKey=()=>"sandy-pattern-schedule-v3-"+storageKey();
 function loadMonthData(){try{const value=JSON.parse(localStorage.getItem(monthStoreKey())||"null");return value&&Array.isArray(value.plan)?value:null}catch{return null}}
 function saveMonthData(){
  const data={plan,monthSettings,undoStack:undoStack.slice(-3)};
@@ -161,13 +161,21 @@ function build(s,cfg){
 const monthsList=()=>{const end=add(start,364),out=[];let curr=start.slice(0,7);while(curr<=end.slice(0,7)){out.push(curr);let [y,m]=curr.split("-").map(Number);m++;if(m>12){y++;m=1}curr=y+"-"+pad(m)}return out};
 const labelDate=s=>new Date(s+"T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",weekday:"long",day:"numeric",month:"long",year:"numeric"});
 function regenerate(){
- const data=build(start,strategy),saved=loadMonthData();plan=saved?.plan||data.all;days=data.dayMap;edits=getEdits();monthSettings=saved?.monthSettings||{};undoStack=saved?.undoStack||[];selectedIds.clear();monthPreview=null;
- const months=monthsList();$("sp-month").innerHTML=months.map(x=>'<option value="'+x+'">'+new Date(x+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"long",year:"numeric"})+"</option>").join("");
+ const saved=loadMonthData();
+ plan=saved?.plan||[];
+ days=new Map(Array.from({length:365},(_,i)=>{const date=add(start,i);return [date,{date,posts:[],holiday:holidays(date)}]}));
+ edits=getEdits();monthSettings=saved?.monthSettings||{};undoStack=saved?.undoStack||[];
+ selectedIds.clear();monthPreview=null;
+ const months=monthsList();$("sp-month").innerHTML=months.map(x=>'<option value="'+x+'">'+new Date(x+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"long",year:"numeric"})+'</option>').join("");
  if(!months.includes(viewMonth))viewMonth=months[0];$("sp-month").value=viewMonth;
- if(!days.has(selected))selected=start;const video=plan.filter(x=>x.format==="video").length,ads=plan.filter(x=>x.paid).length;
+ if(!days.has(selected))selected=start;
+ refreshStats();render();updateUndoButtons();
+}
+function refreshStats(){
+ const video=plan.filter(p=>effectivePost(p).format==="video").length;
+ const total=plan.length,daysUsed=new Set(plan.map(p=>(edits[p.id]?.date||p.date))).size;
  $("sp-results").hidden=false;
- $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Days with a primary post</small></div><div class="sp-stat"><strong>'+plan.length+'</strong><small>Content packages incl. peak extras</small></div><div class="sp-stat"><strong>'+Math.round(100*video/plan.length)+'%</strong><small>Video content (your target: '+strategy.video+'%)</small></div><div class="sp-stat"><strong>'+ads+'</strong><small>Paid candidates; $0 authorised</small></div>';
- render();updateUndoButtons();
+ $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Dates available</small></div><div class="sp-stat"><strong>'+total+'</strong><small>Draft slots you selected</small></div><div class="sp-stat"><strong>'+daysUsed+'</strong><small>Dates with planned slots</small></div><div class="sp-stat"><strong>'+(total?Math.round(video*100/total)+"%":"—")+'</strong><small>Video share of scheduled slots</small></div>';
 }
 const matches=p=>{
  const category=$("sp-cat").value,channel=$("sp-channel").value,paid=$("sp-paid").value;
