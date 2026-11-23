@@ -526,7 +526,7 @@ $("sp-clear-selected").addEventListener("click",()=>{selectedIds.clear();renderM
 $("sp-csv").addEventListener("click",exportCsv);
 $("sp-reset").addEventListener("click",()=>{
  if(window.confirm("Clear the saved titles, dates, captions, statuses and notes for this draft? The generated topic mix stays the same.")){
-  localStorage.removeItem(storageKey());edits={};render();message("Edits cleared for this draft. Other strategy versions remain saved separately.");
+  checkpoint();edits={};saveMonthData();render();updateUndoButtons();message("Manual edits cleared for this draft. Use Undo to restore them.");
  }
 });
 generated=true;regenerate();hydrateMonthControls();message("The calendar is ready. Select a month and use the collapsible monthly controls; annual defaults are optional.");
