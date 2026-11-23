@@ -68,3 +68,93 @@
 .annual-pattern-status .annual-scope-note{width:100%;border-top:1px solid #a7c9b6;padding-top:.55rem;display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:.6rem}
 .annual-pattern-status .button{border:1px solid #468b86!important;background:#fff!important;color:#0b5861!important}
 @media(max-width:590px){.annual-quick-topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-quick-topic{font-size:.74rem;line-height:1.25}.annual-calendar-empty button{margin-left:0}}
+
+/* Calendar density upgrade (Nov 2026): keep every post icon, but pack by time,
+   left-to-right and top-to-bottom. A narrow embedded browser is not a wide desktop. */
+.studio-content .annual-calendar-shell{container-type:inline-size}
+.studio-content .annual-calendar-day{
+  justify-content:flex-start;
+  align-items:stretch;
+  gap:5px;
+  min-width:0;
+  min-height:88px;
+}
+.studio-content .annual-calendar-day-top{flex:0 0 auto}
+.studio-content .annual-calendar-icons{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(16px,18px));
+  justify-content:start;
+  justify-items:center;
+  align-items:center;
+  align-content:start;
+  gap:3px 2px;
+  width:100%;
+  min-width:0;
+  min-height:0;
+  flex:0 0 auto;
+  white-space:normal;
+}
+.studio-content .annual-calendar-icons>.annual-calendar-post-icon{
+  display:grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  min-width:0;
+  min-height:0;
+  line-height:1;
+  font-size:15px;
+  text-align:center;
+  white-space:nowrap;
+}
+.studio-content .annual-calendar-dots{margin-top:auto;flex:0 0 auto}
+
+/* The eighth "Week total" column steals too much width from the seven dates in
+   half-screen / side-bar browsers. Keep it, but move it under its own week. */
+@container (max-width:790px){
+  .studio-content .annual-calendar-weekdays,
+  .studio-content .annual-calendar-week-row{
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:4px;
+  }
+  .studio-content .annual-calendar-weekdays>span:last-child{display:none}
+  .studio-content .annual-calendar-week-total{
+    grid-column:1/-1;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-end;
+    gap:.55rem;
+    min-height:26px;
+    padding:3px 8px;
+    border-radius:7px;
+  }
+  .studio-content .annual-calendar-week-total strong{font-size:.8rem;line-height:1.2}
+  .studio-content .annual-calendar-week-total span{font-size:.7rem}
+  .studio-content .annual-calendar-week-total span:last-child{display:inline}
+  .studio-content .annual-calendar-day{padding:5px 3px}
+}
+@container (max-width:480px){
+  .studio-content .annual-calendar-weekdays,
+  .studio-content .annual-calendar-week-row{gap:2px}
+  .studio-content .annual-calendar-day{
+    border-radius:7px;
+    min-height:70px;
+    gap:3px;
+    padding:4px 2px;
+  }
+  .studio-content .annual-calendar-weekdays>span{font-size:.61rem;letter-spacing:0}
+  .studio-content .annual-calendar-day-top{gap:1px}
+  .studio-content .annual-calendar-day-top strong{font-size:.8rem}
+  .studio-content .annual-calendar-count{min-width:13px;font-size:.57rem;padding:1px 2px}
+  .studio-content .annual-calendar-icons{
+    grid-template-columns:repeat(auto-fit,minmax(14px,16px));
+    gap:2px 1px;
+  }
+  .studio-content .annual-calendar-icons>.annual-calendar-post-icon{
+    width:16px;
+    height:16px;
+    font-size:13px;
+  }
+  .studio-content .annual-calendar-week-total{min-height:22px;padding:2px 5px}
+  .studio-content .annual-calendar-week-total span:last-child{display:none}
+}
