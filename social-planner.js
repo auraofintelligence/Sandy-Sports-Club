@@ -211,6 +211,10 @@ function renderDetail(){
    '<label>Caption <textarea class="sp-edit-caption" rows="4" maxlength="1800">'+$esc(caption)+'</textarea></label>'+
    '<label>Format <select class="sp-edit-format">'+["video","image","carousel","poll","link"].map(x=>'<option value="'+x+'"'+(x===p.format?' selected':'')+'>'+x+'</option>').join("")+'</select></label>'+
    '<div class="sp-edit-timing"><label>Date <input type="date" class="sp-edit-date" min="'+start+'" max="'+add(start,364)+'" value="'+$esc(override.date||p.date)+'"></label><label>Time (Brisbane) <input type="time" class="sp-edit-time" value="'+$esc(override.time||p.time)+'"></label></div>'+
+   '<label>Audience area <select class="sp-edit-audience">'+Object.entries(areaLabels).map(([key,name])=>'<option value="'+key+'"'+(key===p.audienceRegion?" selected":"")+'>'+$esc(name)+'</option>').join("")+'</select></label>'+ 
+   '<label>Membership audience <select class="sp-edit-member">'+Object.entries(classLabels).map(([key,name])=>'<option value="'+key+'"'+(key===p.audienceMember?" selected":"")+'>'+$esc(name)+'</option>').join("")+'</select></label>'+
+   '<label>Gender (voluntary, no inference) <select class="sp-edit-gender">'+Object.entries(genderLabels).map(([key,name])=>'<option value="'+key+'"'+(key===p.audienceGender?" selected":"")+'>'+$esc(name)+'</option>').join("")+'</select></label>'+
+   '<label><input type="checkbox" class="sp-edit-locked" '+(override.locked?'checked':'')+'> Keep this post unchanged during monthly regeneration</label>'+
    '<label>Status <select class="sp-status" data-id="'+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published","Rejected"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label>'+
    '<label>Working notes <textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Source checks, visual assets, review notes...">'+$esc(note)+'</textarea></label>'+
    '<div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save changes</button><button type="button" class="secondary" data-alt="'+$esc(p.id)+'">Try another idea</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
@@ -218,13 +222,13 @@ function renderDetail(){
  host.innerHTML=html;
 }
 function exportCsv(){
- const header=["date","time_AEST","category","title","format","channels","dimensions_and_duration","source_page","audience","paid_candidate","spend_authorised","status","caption","production_brief","working_notes"];
+ const header=["date","time_AEST","category","title","format","channels","spec_profile_version","dimensions_and_duration","source_page","audience_area","membership_audience","voluntary_gender_audience","paid_candidate","spend_authorised","status","caption","production_brief","working_notes"];
  const quoted=x=>'"'+String(x==null?"":x).replace(/"/g,'""').replace(/\r?\n/g," ")+'"';
  const arr=[header.join(",")];
- for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),specsForPost(p),p.page,p.group,p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
+ for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),MEDIA_PROFILE_VERSION,specsForPost(p),p.page,areaLabels[p.audienceRegion]||p.group,classLabels[p.audienceMember]||"Everyone",genderLabels[p.audienceGender]||"Everyone",p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
  const blob=new Blob(["\ufeff"+arr.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="sandy-sports-social-"+start+"-365-days.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
-function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),specsForPost(p),ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
+function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),specsForPost(p),ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+(areaLabels[p.audienceRegion]||p.group)+" · "+(classLabels[p.audienceMember]||"Everyone")+" · "+(genderLabels[p.audienceGender]||"Everyone"),p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
 
 
 $("sp-cat").innerHTML+=categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("");
@@ -476,7 +480,7 @@ $("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;selectedIds
 $("sp-grid").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b){selected=b.dataset.date;render()}});
 $("sp-detail").addEventListener("change",e=>{
  if(e.target.classList.contains("sp-status")){
-  const id=e.target.dataset.id;edits[id]=Object.assign({},edits[id]||{},{status:e.target.value});saveEdits();
+  const id=e.target.dataset.id;checkpoint();edits[id]=Object.assign({},edits[id]||{},{status:e.target.value});saveMonthData();updateUndoButtons();
  }
 });
 $("sp-detail").addEventListener("click",e=>{
@@ -486,15 +490,15 @@ $("sp-detail").addEventListener("click",e=>{
   const id=altBtn.dataset.alt,p=plan.find(x=>x.id===id);if(!p)return;
   const prev=edits[id]||{},count=(prev.alt||0)+1,c=categories[p.cat];
   const index=c.topics.indexOf(p.topic),newTopic=c.topics[(Math.max(0,index)+count*7)%c.topics.length];
-  edits[id]=Object.assign({},prev,{alt:count,title:newTopic+" · "+angleCycle[(count+p.seq)%angleCycle.length],caption:"What do you think about "+newTopic.charAt(0).toLowerCase()+newTopic.slice(1)+"? Sandy Sports is a proposal and we'd love your ideas. "+c.cta});
-  saveEdits();renderDetail();message("Alternative idea drafted. You can edit it or try another.");
+  checkpoint();edits[id]=Object.assign({},prev,{alt:count,title:newTopic+" · "+angleCycle[(count+p.seq)%angleCycle.length],caption:"What do you think about "+newTopic.charAt(0).toLowerCase()+newTopic.slice(1)+"? Sandy Sports is a proposal and we'd love your ideas. "+c.cta});
+  saveMonthData();updateUndoButtons();renderDetail();message("Alternative idea drafted. You can edit it or try another.");
  }
  if(saveBtn){
   const id=saveBtn.dataset.save,card=saveBtn.closest("[data-item]"),original=plan.find(p=>p.id===id);
   const val=x=>card.querySelector(x).value;
-  const changed={title:val(".sp-edit-title").trim()||original.title,caption:val(".sp-edit-caption").trim(),format:val(".sp-edit-format"),date:val(".sp-edit-date")||original.date,time:val(".sp-edit-time")||original.time,status:val(".sp-status"),note:val(".sp-note")};
+  const changed={title:val(".sp-edit-title").trim()||original.title,caption:val(".sp-edit-caption").trim(),format:val(".sp-edit-format"),date:val(".sp-edit-date")||original.date,time:val(".sp-edit-time")||original.time,status:val(".sp-status"),note:val(".sp-note"),audienceRegion:val(".sp-edit-audience"),audienceMember:val(".sp-edit-member"),audienceGender:val(".sp-edit-gender"),locked:card.querySelector(".sp-edit-locked").checked};
   if(changed.date<start||changed.date>add(start,364)){message("Choose a date inside this 365-day calendar.");return}
-  edits[id]=Object.assign({},edits[id]||{},changed);const okay=saveEdits();
+  checkpoint();edits[id]=Object.assign({},edits[id]||{},changed);const okay=saveMonthData();updateUndoButtons();
   message(okay?"Post changes saved privately in this browser. Export CSV to keep a separate copy.":"Could not save in browser storage. Export the CSV to keep a copy.");
   render();
  }
