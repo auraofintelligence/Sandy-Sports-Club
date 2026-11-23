@@ -94,6 +94,9 @@ const platformText={video:"YouTube Shorts 1080×1920 (9:16); Facebook/Instagram 
 const channelFormats={video:["youtube","facebook","instagram","tiktok"],image:["facebook","instagram"],carousel:["facebook","instagram"],poll:["facebook","instagram"],link:["facebook","noticeboard"]};
 function channelNames(post){let out=post.channels.map(id=>({youtube:"YouTube Shorts","youtube-standard":"YouTube standard (16:9)",facebook:post.format==="video"?"Facebook Reels":"Facebook Feed",instagram:post.format==="video"?"Instagram Reels":"Instagram Feed/Story",tiktok:"TikTok",noticeboard:"Straddie Noticeboard (proposed)"}[id]));return out.join(" · ")}
 function brief(post){
+ if(!post.topic)return post.format==="video"
+  ?"Blank video slot. Choose a subject and make a 30-second brief with a hook, two related ideas and a call to action. Check rights and captions."
+  :"Blank content slot. Add your subject, copy, image or link and review notes before publishing.";
  const cat=categories[post.cat],style=post.format;
  const open=["Show the concept, then invite a response.","Begin with a question or demonstration.","Use one clear example before explaining the proposal.","Offer a useful takeaway; do not promise an event."][post.seq%4];
  let action="Ask: "+cat.cta;
@@ -189,7 +192,7 @@ function effectivePost(p){
  const channels=Array.isArray(ov.channels)?ov.channels.slice():Array.isArray(p.channels)?p.channels.slice():channelFormats[fmt].filter(ch=>strategy.channels.includes(ch));
  return {...p,format:fmt,channels,title:ov.title||p.title,date:ov.date||p.date,time:ov.time||p.time,audienceRegion:ov.audienceRegion??p.audienceRegion??"all",audienceMember:ov.audienceMember??p.audienceMember??"all",audienceGender:ov.audienceGender??p.audienceGender??"all"};
 }
-function suggestedCaption(p){const cat=categories[p.cat];return "Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? Sandy Sports is still a community proposal. Your ideas can help shape what comes next. "+cat.cta}
+function suggestedCaption(p){if(!p.topic)return "";const cat=categories[p.cat];return "Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? Sandy Sports is still a community proposal. Your ideas can help shape what comes next. "+cat.cta}
 function render(){
  const m=viewMonth,[y,mm]=m.split("-").map(Number),nd=new Date(Date.UTC(y,mm,0)).getUTCDate(),offset=weekday(m+"-01");
  $("sp-month-label").textContent=new Date(m+"-01T00:00:00Z").toLocaleDateString("en-AU",{month:"long",year:"numeric",timeZone:"UTC"});
@@ -200,16 +203,17 @@ function render(){
   if(!row){out+='<div class="sp-day outside" aria-label="'+date+' outside selected 365-day range"><span class="date">'+d+"</span></div>";continue}
   const shown=postsOn(date).map(effectivePost).filter(matches);monthItems+=shown.length;
   const flags=row.holiday;
-  out+='<button type="button" class="sp-day'+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+' matching content packages" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+" idea"+(shown.length===1?"":"s")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
+  out+='<button type="button" class="sp-day'+(shown.length?"":" empty")+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+' matching content packages" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+" post"+(shown.length===1?"":"s")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
  }
- $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+" matching ideas this month";renderDetail();renderMonthRoster();
+ $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+" visible slots this month";renderDetail();renderMonthRoster();
 }
 function renderDetail(){
  const row=days.get(selected),host=$("sp-detail");if(!row){host.innerHTML="<h3>Choose a date</h3>";return}
  const match=postsOn(selected).map(effectivePost).filter(matches),h=row.holiday,labels=[];
  if(h.q)labels.push("QLD holidays");if(h.n)labels.push(h.w?"NSW Western Division":"NSW holidays");if(weekday(selected)>=4)labels.push("Weekend lead-in / peak");
- let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" draft idea(s). Nothing gets published or paid for here.</p>";
- if(!match.length)html+='<p>No content matches these filters. Adjust the filters or choose another date.</p>';
+ let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" planned post slot(s). No publishing or spending is connected.</p>";
+ if(!match.length)html+='<p>This date is empty. Turn on a repeating pattern or add a blank post below.</p>';
+ html+='<div class="sp-add-slot"><label>New blank post<select id="sp-new-category">'+categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("")+'</select></label><button type="button" data-add-post>+ Add blank post</button></div>';
  for(const p of match){
   const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",caption=override.caption||suggestedCaption(p),spec=specsForPost(p);
   const special=p.sourceHold?'<span class="sp-tag warn">Verify before publishing</span>':'';
