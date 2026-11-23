@@ -31,11 +31,11 @@ export function renderTimingPanel(settings,esc=fallbackEsc,editingId=''){
     '<div class="annual-signal-grid">'+timing+'</div>'+
     '<h3>Confirmed dates and milestones</h3>'+
     '<p>Confirmed dates generate countdowns. Imported unconfirmed dates may show internal preparation ideas only. '+
-    'Use the annual calendar importer above to bring existing event records into this list; verify dates and applicable fishing rules before any public promotion.</p>'+
+    'Use the annual calendar importer above to bring existing event records into this list; verify dates and applicable event rules before any public promotion.</p>'+
     '<div class="annual-milestone-form"><label>Type <select data-milestone-kind>'+
     Object.entries(LABELS).filter(([k])=>!['holidays','nswHolidays'].includes(k)).map(([k,v])=>
       '<option value="'+k+'"'+(editing?.kind===k?' selected':'')+'>'+esc(v[1])+'</option>').join('')+'</select></label>'+
-    '<label>Title <input data-milestone-title maxlength="140" value="'+esc(editing?.title||'')+'" placeholder="E.g. confirmed club fishing meet"></label>'+
+    '<label>Title <input data-milestone-title maxlength="140" value="'+esc(editing?.title||'')+'" placeholder="E.g. proposed sports or film meeting"></label>'+
     '<label>Target date <input data-milestone-date type="date" value="'+esc(editing?.date||'')+'"></label>'+
     '<label>Official or club reference (optional) <input data-milestone-source type="url" maxlength="400" value="'+esc(editing?.sourceUrl||'')+'" placeholder="https://…"></label>'+
     '<label class="annual-signal-confirm"><input type="checkbox" data-milestone-confirm'+(editing?.confirmed?' checked':'')+'> Date and details verified</label>'+
