@@ -8,7 +8,7 @@ function copyFallback(text){const box=document.createElement("textarea");box.val
 async function init(){
  try{
   if(!mount)throw Error("Missing Studio workbench");
-  const {setupAnnualCampaigns}=await import("./social-campaigns.js?v=20261124-calendar-density");
+  const {setupAnnualCampaigns}=await import("./social-campaigns.js?v=20261124-temporal-parity");
   let record=null;
   try{record=JSON.parse(localStorage.getItem(key)||"null")}catch{}
   let settings=record?.settings||null,version=record?.version||0,history=Array.isArray(record?.history)?record.history:[];
