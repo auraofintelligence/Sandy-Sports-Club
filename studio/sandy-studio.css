@@ -49,3 +49,22 @@
 .studio-error{background:#feece8;color:#8a2e21;padding:1rem;border-radius:10px}
 @media(max-width:900px){.studio-handoff-grid{grid-template-columns:1fr}.studio-intro{grid-template-columns:1fr 160px;gap:1rem}}
 @media(max-width:630px){.studio-intro{grid-template-columns:1fr;padding:1.4rem 1rem}.studio-intro img{display:none}.studio-content{padding:0 .65rem 2rem}.studio-form-pair{grid-template-columns:1fr}.studio-handoff{padding:.7rem}.studio-handoff-form,.studio-handoff-aside{padding:.75rem}.studio-highlights span{font-size:.7rem}.studio-content .annual-planner{padding:.55rem}}
+
+/* Explicit topic activation: no misleading daily minimum when every layer is off. */
+.annual-calendar-empty{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem 1rem;margin:.8rem 0 1.05rem;padding:.9rem 1rem;border:1px solid #dfbd7f;border-radius:13px;background:#fff6e3;color:#684915}
+.annual-calendar-empty strong{font-weight:850;flex:0 0 auto}.annual-calendar-empty span{font-size:.85rem;flex:1 1 300px}
+.annual-calendar-empty button{margin-left:auto;background:#fff!important;color:#094f61!important;border:1px solid #2c7580!important}
+.annual-topic-quickpanel{margin:.3rem 0 1.05rem;padding:1rem;border:1px solid #aadbd6;border-radius:13px;background:#effaf7}
+.annual-topic-quickpanel h3{font-size:1.05rem;margin:0 0 .3rem;color:#144d5a}
+.annual-topic-quickpanel p{font-size:.84rem;color:#37636a;margin:0 0 .75rem}
+.annual-quick-topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.5rem}
+.annual-quick-topic{display:flex;align-items:center;gap:.5rem;min-height:46px;border:1px solid #b3d9d5;border-radius:9px;background:#fff;padding:.5rem .65rem;cursor:pointer;font-size:.83rem;font-weight:750}
+.annual-quick-topic:has(input:checked){background:#d8f3e6;border-color:#178675;box-shadow:inset 0 0 0 1px #178675}
+.annual-quick-topic input{accent-color:#0a8284;flex:none;width:17px;height:17px}
+.annual-quick-topic>span:nth-of-type(1){font-size:1.1rem}
+.annual-pattern-status{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem .75rem;padding:.72rem .85rem;margin:0 0 .75rem;background:#e2f5eb;color:#144f3c;border-radius:10px;font-size:.83rem}
+.annual-pattern-status.empty{background:#fff2dc;color:#76520d}
+.annual-pattern-status strong{font-weight:850}.annual-pattern-status span:not(.annual-scope-note){flex:1 1 225px}
+.annual-pattern-status .annual-scope-note{width:100%;border-top:1px solid #a7c9b6;padding-top:.55rem;display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:.6rem}
+.annual-pattern-status .button{border:1px solid #468b86!important;background:#fff!important;color:#0b5861!important}
+@media(max-width:590px){.annual-quick-topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-quick-topic{font-size:.74rem;line-height:1.25}.annual-calendar-empty button{margin-left:0}}
