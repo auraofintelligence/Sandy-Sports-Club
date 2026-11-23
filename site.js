@@ -29,7 +29,7 @@ const committeeGuide=[
   route('committee-governance','Governance'),route('committee-sport','Sport operations'),
   route('committee-events','Events desk'),route('committee-film','Film governance'),
   route('committee-funding','Funding desk'),route('committee-assets','Asset desk'),
-  route('committee-members','Membership'),route('committee-publishing','Publishing')
+  route('committee-members','Membership'),route('committee-publishing','Publishing'),route('social-planner','365-day social planner')
 ];
 const pageGroups=[
   ['Sports',[pages[0],pages[1],pages[2],pages[3],...sportGuide]],
