@@ -31,11 +31,25 @@ const rand=(seed)=>{let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)|0;let t=Math.imu
 const shuffle=(a,r)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function holidays(date){const active=holidayRanges.filter(h=>h[1]<=date&&h[2]>=date).map(h=>h[0]);return {q:active.includes("QLD"),n:active.includes("NSW")||active.includes("NSW-W"),w:active.includes("NSW-W"),both:active.includes("QLD")&&active.some(x=>x.startsWith("NSW"))}};
 function toBrisbaneToday(){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Australia/Brisbane",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const f=k=>p.find(x=>x.type===k).value;return f("year")+"-"+f("month")+"-"+f("day")}
-const startInput=$("sp-start");if(!startInput)return;const defaults="2026-11-23";
-let start=toBrisbaneToday(),plan=[],days=new Map(),selected="",viewMonth="",edits={};
-const storageKey=()=>"sandy-planner-edits-v1-"+start;
+const startInput=$("sp-start");if(!startInput)return;
+const platformIds=["youtube","facebook","instagram","tiktok","noticeboard"],defaultSettings=()=>({start:toBrisbaneToday(),volume:"balanced",audience:"all",video:67,qld:"high",nsw:"light",ads:false,channels:platformIds.slice(),topics:{},mix:0});
+function loadSettings(){try{return Object.assign(defaultSettings(),JSON.parse(localStorage.getItem("sandy-planner-settings-v2"))||{})}catch{return defaultSettings()}}
+function saveSettings(cfg){try{localStorage.setItem("sandy-planner-settings-v2",JSON.stringify(cfg))}catch{}}
+let strategy=loadSettings(),start=strategy.start,plan=[],days=new Map(),selected="",viewMonth="",edits={},generated=false,mixSeed=strategy.mix||0;
+const storageKey=()=>["sandy-planner-edits-v2",start,strategy.volume,strategy.video,strategy.qld,strategy.nsw,strategy.ads?"ads":"organic",strategy.audience,strategy.mix,strategy.channels.join("."),categories.map(c=>(strategy.topics||{})[c.id]||"normal").join(".")].join("-");
 function getEdits(){try{return JSON.parse(localStorage.getItem(storageKey()))||{}}catch{return{}}}
 function saveEdits(){try{localStorage.setItem(storageKey(),JSON.stringify(edits));return true}catch{return false}}
+function readStrategy(){
+ const obj={start:startInput.value||toBrisbaneToday(),volume:$("sp-volume").value,audience:$("sp-audience").value,video:Number($("sp-video").value),qld:$("sp-qld").value,nsw:$("sp-nsw").value,ads:$("sp-ads").checked,channels:platformIds.filter(p=>$("sp-platform-"+p).checked),topics:{},mix:mixSeed};
+ for(const c of categories)obj.topics[c.id]=$("sp-weight-"+c.id).value;
+ return obj;
+}
+function validateStrategy(c){
+ if(!c.channels.length)return "Choose at least one publishing channel.";
+ if(!categories.some(x=>c.topics[x.id]!=="off"))return "Choose at least one topic.";
+ if(c.video<100&&!c.channels.some(x=>["facebook","instagram","noticeboard"].includes(x)))return "With only YouTube or TikTok selected, choose 100% video or add a channel that supports images and polls.";
+ return "";
+}
 const platformText={video:"YouTube Shorts 1080×1920 (9:16); Facebook/Instagram Reels 1080×1920 organic, 1440×2560 premium ad export; TikTok 1080×1920. Add subtitles, safe zones and a 30-second sequence. Standard YouTube variant (when selected): 1920×1080 (16:9), with a 3840×2160 thumbnail. For a longer sequence, overlap the final/first 2 seconds.",image:"Facebook Feed 1080×1350 organic or 1440×1800 paid (4:5); Instagram Feed 1080×1440 (3:4) or 1080×1350 (4:5).",carousel:"Facebook/Instagram carousel 1080×1080 (1:1), or custom 4:5 feed cards when placement allows.",poll:"Facebook poll or Instagram Story poll: 1080×1920 (9:16). An interactive poll needs a native platform action.",link:"Facebook link preview, source thumbnail 1200×630 (1.91:1); adapt a static notice for the planned Noticeboard web channel."};
 const channelFormats={video:["youtube","facebook","instagram","tiktok"],image:["facebook","instagram"],carousel:["facebook","instagram"],poll:["facebook","instagram"],link:["facebook","noticeboard"]};
 function channelNames(post){let out=post.channels.map(id=>({youtube:"YouTube Shorts","youtube-standard":"YouTube standard (16:9)",facebook:post.format==="video"?"Facebook Reels":"Facebook Feed",instagram:post.format==="video"?"Instagram Reels":"Instagram Feed/Story",tiktok:"TikTok",noticeboard:"Straddie Noticeboard (proposed)"}[id]));return out.join(" · ")}
@@ -55,46 +69,62 @@ function makePost(date,seq,catIndex,serial,extra){
  const group=h.both?"QLD/NSW family visitors":h.q?"Queensland school-holiday visitors":h.n?"NSW visitors":cat.id==="funding"?"Potential local partners":"Local residents and interested visitors";
  return {id:date+"-"+seq,date,time:["07:30","09:30","11:30","13:30","15:30","17:30","19:30","20:30"][seq]||"21:00",cat:catIndex,title:topic+" · "+angle,topic,angle,format:fmt,channels,paid,group,brief:"",page:cat.url,dayExtra:extra||"",seq,sourceHold:["safety","events","funding","news"].includes(cat.id)};
 }
-function build(s){
- const r=rand(Number(s.replace(/-/g,""))+18403),pool=[];
- categories.forEach((c,i)=>{for(let n=0;n<c.n;n++)pool.push(i)});shuffle(pool,r);
- const priority=["visitors","voice","health","volleyball","vision"];let last=[];
- for(let i=0;i<365;i++){
-  const date=add(s,i),h=holidays(date),tom=holidays(add(s,i+1)),wd=weekday(date);
-  if((h.q||h.n)&&!priority.includes(categories[pool[i]].id)&&r()<0.38){
-   const next=pool.findIndex((id,j)=>j>i&&j<i+40&&priority.includes(categories[id].id)&&!last.includes(id));
-   if(next>0)[pool[i],pool[next]]=[pool[next],pool[i]];
-  }
-  if(last.includes(pool[i])){
-   const next=pool.findIndex((id,j)=>j>i&&j<i+40&&!last.includes(id)&&id!==pool[i]);
-   if(next>0)[pool[i],pool[next]]=[pool[next],pool[i]];
-  }
-  last=[pool[i],last[0]];
- }
+function build(s,cfg){
+ const r=rand(Number(s.replace(/-/g,""))+18403+(cfg.mix||0)*131),pool=[],weights=categories.map(c=>({off:0,less:0.5,normal:1,more:2.5}[cfg.topics[c.id]||"normal"]||0)*c.n);
+ const enabled=id=>categories.some((c,i)=>c.id===id&&weights[i]>0);
+ const choose=(items,avoid)=>{let possible=items.filter(i=>i>=0&&weights[i]>0&&i!==avoid);if(!possible.length)possible=items.filter(i=>i>=0&&weights[i]>0);if(!possible.length)possible=weights.map((x,i)=>x>0?i:-1).filter(x=>x>=0);let sum=possible.reduce((a,i)=>a+weights[i],0),roll=r()*sum;for(const i of possible){roll-=weights[i];if(roll<=0)return i}return possible[possible.length-1]};
+ const allIndices=categories.map((_,i)=>i);
+ for(let i=0;i<365;i++)pool.push(choose(allIndices,i>0?pool[i-1]:-1));
  let serial=0,all=[],dayMap=new Map();
  for(let i=0;i<365;i++){
   const date=add(s,i),wd=weekday(date),h=holidays(date),tom=holidays(add(s,i+1)),entry=[];
-  const create=(cat,extra,customTitle)=>{const post=makePost(date,entry.length,cat,serial++,extra);if(customTitle){post.topic=customTitle;post.title=customTitle+" · "+post.angle}entry.push(post)};
+  const create=(cat,extra,customTitle)=>{if(cat<0||weights[cat]===0)return;const post=makePost(date,entry.length,cat,serial++,extra);if(customTitle){post.topic=customTitle;post.title=customTitle+" · "+post.angle}entry.push(post)};
   create(pool[i],"Daily anchor");
-  let extras=(wd===4?1:wd===5?2:wd===6?1:0);if([3,4,5].includes(wd))extras+=1;
-  if(h.q)extras+=1;if(h.both)extras+=1;else if(h.n&&!h.q&&i%2===0)extras+=1;
-  // School-holiday start countdowns are added below as separate, clearly labelled ideas.
-  const extraPool=h.q?["visitors","health","voice","safety","other","volleyball"]:h.n?["visitors","voice","other","health"]:wd>=4?["visitors","other","health","voice","safety"]:["vision","volunteers","film","skills","funding","places"];
-  for(let n=0;n<extras;n++){if(n===0&&[3,4,5].includes(wd)){const word=wd===3?"Thursday weekend outlook":wd===4?"Friday forecast update":"Saturday conditions update";create(categories.findIndex(x=>x.id==="safety"),"Verified weather placeholder",word+" (verify official forecast before posting)");continue}const key=extraPool[(i+n*3+Math.floor(r()*extraPool.length))%extraPool.length];const ci=categories.findIndex(x=>x.id===key);create(ci,n===0&&wd>=4?"Weekend bonus":h.q?"QLD holiday boost":h.n?"NSW holiday boost":"Weekend or holiday lead-in")}
-  if(tom.q&&!h.q)create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","Queensland school holidays start tomorrow: help shape Sandy Sports");
-  if(tom.n&&!h.n)create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","NSW school holidays start tomorrow: what would you like to play on Straddie?");
-  if(date.endsWith("-01"))create(categories.findIndex(x=>x.id==="news"),"Monthly newsletter draft","Month-start newsletter ideas: confirm progress and invite feedback");
+  if(cfg.volume!=="one"){
+   let extras=wd===4?1:wd===5?2:wd===6?1:0;
+   if(cfg.volume==="busy")extras+=wd===4?1:wd===5?2:wd===6?2:0;
+   if([3,4,5].includes(wd)&&enabled("safety"))extras+=1;
+   if(h.q)extras+=cfg.qld==="high"?2:cfg.qld==="light"?1:0;
+   if(h.n)extras+=cfg.nsw==="high"?2:cfg.nsw==="light"&&i%2===0?1:0;
+   const q=h.q&&cfg.qld!=="off",n=h.n&&cfg.nsw!=="off";
+   const candidateKeys=q?["visitors","health","voice","safety","other","volleyball"]:n?["visitors","voice","other","health"]:wd>=4?["visitors","other","health","voice","safety"]:["vision","volunteers","film","skills","funding","places"];
+   const allowed=candidateKeys.map(k=>categories.findIndex(x=>x.id===k)).filter(idx=>idx>=0&&weights[idx]>0);
+   for(let k=0;k<extras;k++){
+    if(k===0&&[3,4,5].includes(wd)&&enabled("safety")){
+     const word=wd===3?"Thursday weekend outlook":wd===4?"Friday forecast update":"Saturday conditions update";
+     create(categories.findIndex(x=>x.id==="safety"),"Verified weather placeholder",word+" (verify official forecast before posting)");
+    }else{
+     const ci=choose(allowed.length?allowed:allIndices,entry.length?entry[entry.length-1].cat:-1);
+     create(ci,wd>=4?"Weekend bonus":q?"QLD holiday boost":n?"NSW holiday boost":"Working idea");
+    }
+   }
+   if(tom.q&&!h.q&&cfg.qld!=="off")create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","Queensland school holidays start tomorrow: help shape Sandy Sports");
+   if(tom.n&&!h.n&&cfg.nsw!=="off")create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","NSW school holidays start tomorrow: what would you like to play on Straddie?");
+   if(date.endsWith("-01"))create(categories.findIndex(x=>x.id==="news"),"Monthly newsletter draft","Month-start newsletter ideas: confirm progress and invite feedback");
+  }
   dayMap.set(date,{date,posts:entry,holiday:h});all.push(...entry);
  }
+ const target=Math.round(all.length*cfg.video/100),order=shuffle(all.map((_,i)=>i),rand(Number(s.replace(/-/g,""))+92342+(cfg.mix||0)*563)),videoIndices=new Set(order.slice(0,target));
+ const otherFormats=["image","carousel","poll","link"];
+ all.forEach((p,i)=>{
+  p.format=videoIndices.has(i)?"video":otherFormats[(i+Math.floor(i/13))%otherFormats.length];
+  const base=channelFormats[p.format].filter(x=>cfg.channels.includes(x));
+  if(p.format==="video"&&cfg.channels.includes("youtube")&&i%9===0)base.push("youtube-standard");
+  if(cfg.channels.includes("noticeboard")&&["visitors","vision","places","events","volunteers","funding","news"].includes(categories[p.cat].id)&&i%3===0&&!base.includes("noticeboard"))base.push("noticeboard");
+  p.channels=base;
+  p.paid=cfg.ads&&p.paid&&p.channels.some(x=>["youtube","facebook","instagram","tiktok"].includes(x));
+  p.group=cfg.audience==="local"?"Local residents":cfg.audience==="visitors"?"Holidaymakers and visiting families":p.group;
+ });
  return {all,dayMap};
 }
 const monthsList=()=>{const end=add(start,364),out=[];let curr=start.slice(0,7);while(curr<=end.slice(0,7)){out.push(curr);let [y,m]=curr.split("-").map(Number);m++;if(m>12){y++;m=1}curr=y+"-"+pad(m)}return out};
 const labelDate=s=>new Date(s+"T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",weekday:"long",day:"numeric",month:"long",year:"numeric"});
 function regenerate(){
- const data=build(start);plan=data.all;days=data.dayMap;edits=getEdits();
+ const data=build(start,strategy);plan=data.all;days=data.dayMap;edits=getEdits();
  const months=monthsList();$("sp-month").innerHTML=months.map(x=>'<option value="'+x+'">'+new Date(x+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"long",year:"numeric"})+"</option>").join("");
  if(!months.includes(viewMonth))viewMonth=months[0];$("sp-month").value=viewMonth;
  if(!days.has(selected))selected=start;const video=plan.filter(x=>x.format==="video").length,ads=plan.filter(x=>x.paid).length;
+ $("sp-results").hidden=false;
  $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Days with a primary post</small></div><div class="sp-stat"><strong>'+plan.length+'</strong><small>Content packages incl. peak extras</small></div><div class="sp-stat"><strong>'+Math.round(100*video/plan.length)+'%</strong><small>Video content (target ~67%)</small></div><div class="sp-stat"><strong>'+ads+'</strong><small>Paid candidates; $0 authorised</small></div>';
  render();
 }
