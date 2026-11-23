@@ -51,7 +51,7 @@ function checkpoint(){undoStack.push(snapshot());if(undoStack.length>3)undoStack
 function restoreLast(){
  const prev=undoStack.pop();if(!prev)return false;
  plan=prev.plan;edits=prev.edits;monthSettings=prev.monthSettings;saveMonthData();
- monthPreview=null;selectedIds.clear();render();updateUndoButtons();return true;
+ monthPreview=null;selectedIds.clear();hydrateMonthControls();render();updateUndoButtons();return true;
 }
 function updateUndoButtons(){
  for(const id of ["sp-undo","sp-m-undo"]){const element=$(id);if(element)element.disabled=!undoStack.length}
@@ -456,11 +456,12 @@ function generateFromChoices(){
   if(!window.confirm("Your existing edits belong to the previous strategy. They will remain in this browser, but switching strategies opens a different draft. Export the current CSV first if you want a copy. Continue?"))return;
  }
  strategy=cfg;start=cfg.start;selected=start;viewMonth=start.slice(0,7);generated=true;
- saveSettings(cfg);regenerate();
+ saveSettings(cfg);regenerate();hydrateMonthControls();
  message("Draft generated from your choices. Edit any post in the calendar. Nothing will publish automatically.");
  $("sp-preview").hidden=true;
 }
 applySettings(strategy);
+setupMonthControls();
 $("sp-video").addEventListener("input",()=>{$("sp-video-out").textContent=$("sp-video").value+"%"});
 $("sp-builder").addEventListener("change",e=>{
  if(e.target.matches("button"))return;
@@ -470,7 +471,7 @@ $("sp-builder").addEventListener("change",e=>{
 $("sp-preview-btn").addEventListener("click",previewStrategy);
 $("sp-generate-btn").addEventListener("click",generateFromChoices);
 $("sp-remix-btn").addEventListener("click",()=>{mixSeed++;previewStrategy()});
-$("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;const available=Array.from(days.keys()).find(x=>x.slice(0,7)===viewMonth);if(available)selected=available;render()});
+$("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;selectedIds.clear();const available=Array.from(days.keys()).find(x=>x.slice(0,7)===viewMonth);if(available)selected=available;hydrateMonthControls();render()});
 ["sp-cat","sp-channel","sp-paid"].forEach(id=>$(id).addEventListener("change",()=>{if(generated)render()}));
 $("sp-grid").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b){selected=b.dataset.date;render()}});
 $("sp-detail").addEventListener("change",e=>{
@@ -498,12 +499,32 @@ $("sp-detail").addEventListener("click",e=>{
   render();
  }
 });
+$("sp-m-preview").addEventListener("click",previewMonth);
+$("sp-m-apply").addEventListener("click",applyMonth);
+for(const id of ["sp-undo","sp-m-undo"])$(id).addEventListener("click",()=>{if(restoreLast())monthMessage("Last change undone; posts and settings restored.")});
+$("sp-copy-months").addEventListener("click",copyMonthSettings);
+$("sp-b-apply").addEventListener("click",applyBulk);
+$("sp-month-rows").addEventListener("change",e=>{
+ const b=e.target.closest("[data-bulk-id]");if(!b)return;
+ if(b.checked)selectedIds.add(b.dataset.bulkId);else selectedIds.delete(b.dataset.bulkId);
+ $("sp-selected-count").textContent=selectedIds.size+" selected";
+});
+$("sp-month-rows").addEventListener("click",e=>{
+ const b=e.target.closest("[data-roster-day]");if(!b)return;
+ selected=b.dataset.rosterDay;render();
+});
+$("sp-select-all").addEventListener("click",()=>{
+ const visible=monthPosts(viewMonth).map(effectivePost).filter(matches);
+ for(const p of visible)selectedIds.add(p.id);
+ renderMonthRoster();
+});
+$("sp-clear-selected").addEventListener("click",()=>{selectedIds.clear();renderMonthRoster()});
 $("sp-csv").addEventListener("click",exportCsv);
 $("sp-reset").addEventListener("click",()=>{
  if(window.confirm("Clear the saved titles, dates, captions, statuses and notes for this draft? The generated topic mix stays the same.")){
   localStorage.removeItem(storageKey());edits={};render();message("Edits cleared for this draft. Other strategy versions remain saved separately.");
  }
 });
-message("Choose your topics and settings, then preview a week. No calendar has been created for you yet.");
+generated=true;regenerate();hydrateMonthControls();message("The calendar is ready. Select a month and use the collapsible monthly controls; annual defaults are optional.");
 
 })();
