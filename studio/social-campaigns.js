@@ -1041,7 +1041,10 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       onUse({title:postLabel(post,edit),body:postBrief(post,edit)+(edit.notes?'\n\nWorking notes: '+edit.notes:'')+
         '\n\nSuggested format: '+post.format+' ('+post.size+'). '+post.cta+
         '.\n[Planning note only: target '+postTime(post,edit)+' AEST (Australia/Brisbane). Remove this note before publishing.]',
-        channels:post.channels,plannedDate:post.date,plannedTime:postTime(post,edit)});
+        channels:post.channels,plannedDate:post.date,plannedTime:postTime(post,edit),
+        postId:post.id,topicLayers:post.layerIds,format:post.format,
+        creativeVariants:post.creativeVariants||[],timingSignal:post.timingSignal||null,
+        proposalSource:post.layerIds?.[0]||''});
     }
   });
   mount.addEventListener('close',event=>{
