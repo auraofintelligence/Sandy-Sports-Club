@@ -201,7 +201,7 @@ function monthConfig(month){
 function layerRow(c){
  return '<div class="sp-pattern-row off" data-category="'+c.id+'"><label><input type="checkbox" id="sp-m-on-'+c.id+'"> '+$esc(c.emoji+" "+c.name)+'</label>'+
  '<div class="sp-frequency"><input type="range" min="1" max="7" step="1" id="sp-m-rate-'+c.id+'" value="2" disabled aria-label="'+$esc(c.name)+' posts per week"><output id="sp-m-rate-out-'+c.id+'">2/wk</output></div>'+
- '<label class="sp-visibility"><input type="checkbox" id="sp-m-show-'+c.id+'" checked> Show</label></div>';
+ '<label class="sp-visibility"><input type="checkbox" class="sp-layer-show" id="sp-m-show-'+c.id+'" checked> Show</label></div>';
 }
 function ruleRow(rule){
  return '<div class="sp-pattern-row off" data-rule="'+rule.id+'"><label><input type="checkbox" id="sp-r-on-'+rule.id+'"> '+$esc(rule.name)+'</label>'+
@@ -318,7 +318,7 @@ function proposalForMonth(month,cfg){
   if(rule.id==="weather")count=Math.min(count,eligible.length);
   if(!count)continue;
   let label={weekend:"Weekend lead-in",qld:"QLD school holiday",nsw:"NSW school holiday",weather:"Weather check · Thu/Fri/Sat",newsletter:"Monthly newsletter",countdown:"Holiday countdown · day before"}[rule.id];
-  if(rule.id==="newsletter"&&eligible.length>1)eligible=[eligible[0],eligible[Math.floor(eligible.length/2)]];
+  if(rule.id==="newsletter"&&eligible.length>1)eligible=count===1?[eligible[0]]:[eligible[0],eligible[Math.floor(eligible.length/2)]];
   evenly(eligible,count,categoryIndex(rule.cat),label);
  }
  // Only the category patterns that the user explicitly switched on produce slots.
