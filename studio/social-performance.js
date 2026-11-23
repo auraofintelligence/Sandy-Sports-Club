@@ -130,7 +130,7 @@ export function planMetricsCSV(posts,postEdits,records){
   }
   const columns=['sandy_post_id','date','time_AEST','time_zone','title','content_format','topics',
     'channels','brief','cta','storyboard','working_notes','working_status',
-    'timing_signal','signal_target','lead_days',
+    'timing_signal','signal_target','lead_days','time_of_day','time_reason',
     'platform','external_post_id','post_url','platform_published_at','visibility_source_field','report_imported_at',
     'views','likes','comments','shares','saves','clicks'];
   const quote=value=>{
@@ -150,6 +150,7 @@ export function planMetricsCSV(posts,postEdits,records){
         working_status:edit.status||'Idea',
         timing_signal:p.timingSignal?.kind||'',signal_target:p.timingSignal?.targetDate||'',
         lead_days:p.timingSignal?.leadDays??'',
+        time_of_day:p.timeOfDaySignal?.window||'',time_reason:p.timeOfDaySignal?.reason||'',
         platform:result?.platform||'',external_post_id:result?.externalId||'',
         post_url:result?.postUrl||'',platform_published_at:result?.publishedAt||'',visibility_source_field:result?.visibilitySourceField||'',report_imported_at:result?.importedAt||'',
         views:result?.views??'',likes:result?.likes??'',comments:result?.comments??'',
