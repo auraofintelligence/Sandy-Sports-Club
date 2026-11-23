@@ -819,6 +819,31 @@ export const POSTING_DAY_TYPES=Object.freeze([
   {id:'publicHoliday',label:'Public holiday',icon:'🎉'},
   {id:'holiday',label:'QLD school holidays',icon:'🎒'}
 ]);
+// Queensland-local, editorial time-of-day slots. A proposed time is not a platform scheduling action.
+const AUTO_TIME_WINDOWS=Object.freeze({
+ weekday:['08:00','18:15','12:15','16:45','20:00','10:30','14:45','07:15','09:30','11:45','13:30','15:30','17:30','19:15','21:00','22:00','06:45','08:45','10:15','13:00'],
+ friday:['07:30','17:30','12:15','19:30','15:30','09:30','21:00','11:00','14:00','18:30','08:30','10:15','13:15','16:15','20:30','22:00','06:45','09:45','11:45','14:45'],
+ weekend:['08:00','17:30','11:00','19:30','13:30','09:15','15:15','20:45','07:15','10:00','12:15','14:30','16:30','18:30','21:30','06:45','08:45','10:45','12:45','22:00'],
+ holiday:['08:15','17:45','11:30','15:00','19:15','09:30','13:30','20:30','07:00','10:30','12:30','14:30','16:45','18:45','21:15','22:00','07:45','08:45','11:00','13:00']
+});
+function suggestedTimeOfDay(day,index,bounds,post,anchor){
+ if(anchor!=='auto'){
+  const base=Number(anchor.slice(0,2))*60+Number(anchor.slice(3));
+  const interval=60;
+  const minute=Math.min(22*60+45,base+index*interval);
+  return {time:String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0'),reason:'User-selected base time, spaced by one hour'};
+ }
+ const type=bounds.category;
+ const times=AUTO_TIME_WINDOWS[type]||AUTO_TIME_WINDOWS.weekday;
+ let time=times[index%times.length];
+ const layer=post.layerIds?.[0]||'';
+ if(layer==='weather')time='07:15';
+ if(post.id.startsWith('holiday-eve-')||post.id.startsWith('nsw-holiday-eve-'))time='17:15';
+ if(post.timingSignal?.phase==='follow')time='18:15';
+ const hour=Number(time.slice(0,2));
+ const window=hour<11?'morning':hour<16?'midday/afternoon':'evening';
+ return {time,window,reason:(layer==='weather'?'Morning official-forecast review':post.timingSignal?.phase==='follow'?'Post-event recap placeholder':type+' editorial '+window+' window')};
+}
 export const DEFAULT_DAILY_LIMITS=Object.freeze({
   weekdayMin:2,weekday:6,fridayMin:2,friday:8,weekendMin:2,weekend:10,
   longWeekendMin:3,longWeekend:12,publicHolidayMin:3,publicHoliday:14,
@@ -1128,14 +1153,10 @@ export function generateCampaignYear(startMonth,settings=defaultCampaignSettings
     p.size=p.format.startsWith('30-second')?'1080×1920':p.format==='link'?'1200×630':'1080×1350';
     p.durationSeconds=p.format.startsWith('30-second')?30:null;
     const anchor=settingsForDate(settings,p.date).postingTime||'auto';
-    const defaults=[0,6].includes(weekday(p.date))?'08:00':weekday(p.date)===5?'17:00':'18:00';
-    const start=anchor==='auto'?defaults:anchor;
     const index=posts.filter(other=>other.date===p.date).indexOf(p);
-    const minute=Number(start.slice(0,2))*60+Number(start.slice(3))+index*105;
-    // Same-day scheduling only; individual posts can later be moved to any minute.
-    const minuteWithinDay=Math.min(1439,minute);
-    p.suggestedTime=p.curated?p.requestedTime:
-      String(Math.floor(minuteWithinDay/60)).padStart(2,'0')+':'+String(minuteWithinDay%60).padStart(2,'0');
+    const timing=suggestedTimeOfDay(p.date,index,dayPostingBounds(p.date,settingsForDate(settings,p.date).limits),p,anchor);
+    p.suggestedTime=p.curated?p.requestedTime:timing.time;
+    p.timeOfDaySignal={window:timing.window||'user-selected',reason:timing.reason,timeZone:'Australia/Brisbane'};
     p.creativeVariants=creativeVariantsFor(p,settingsForDate(settings,p.date).delivery);
     p.destinations=[...new Set(p.creativeVariants.filter(v=>v.distribution==='organic').map(v=>v.platform))];
     // The existing social post editor supports only the four connected club channels.
