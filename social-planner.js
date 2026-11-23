@@ -127,16 +127,20 @@ function suggestedCaption(p){if(!p.topic)return "";const cat=categories[p.cat];r
 function render(){
  const m=viewMonth,[y,mm]=m.split("-").map(Number),nd=new Date(Date.UTC(y,mm,0)).getUTCDate(),offset=weekday(m+"-01");
  $("sp-month-label").textContent=new Date(m+"-01T00:00:00Z").toLocaleDateString("en-AU",{month:"long",year:"numeric",timeZone:"UTC"});
+ const showingPreview=!!monthPreview&&monthPreview.month===m&&JSON.stringify(monthPreview.cfg)===JSON.stringify(readMonthControls());
+ const previewPosts=showingPreview?monthPreview.keep.concat(monthPreview.newPosts).map(effectivePost):[];
  let out="";for(let k=0;k<offset;k++)out+='<div aria-hidden="true"></div>';
  let monthItems=0;
  for(let d=1;d<=nd;d++){
   const date=m+"-"+pad(d),row=days.get(date);
   if(!row){out+='<div class="sp-day outside" aria-label="'+date+' outside selected 365-day range"><span class="date">'+d+"</span></div>";continue}
-  const shown=postsOn(date).map(effectivePost).filter(matches);monthItems+=shown.length;
+  const shown=(showingPreview?previewPosts.filter(p=>p.date===date):postsOn(date).map(effectivePost)).filter(matches);
+  monthItems+=shown.length;
   const flags=row.holiday;
-  out+='<button type="button" class="sp-day'+(shown.length?"":" empty")+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+' matching content packages" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+" post"+(shown.length===1?"":"s")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
+  out+='<button type="button" class="sp-day'+(shown.length?"":" empty")+(showingPreview?" preview":"")+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+(showingPreview?' proposed blank slots':' planned posts')+'" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+(showingPreview?" preview":shown.length===1?" post":" posts")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
  }
- $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+" visible slots this month";renderDetail();renderMonthRoster();
+ $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+(showingPreview?" preview slots (not applied)":" planned slots");
+ renderDetail();renderMonthRoster();
 }
 function renderDetail(){
  const row=days.get(selected),host=$("sp-detail");if(!row){host.innerHTML="<h3>Choose a date</h3>";return}
@@ -144,6 +148,10 @@ function renderDetail(){
  if(h.q)labels.push("QLD holidays");if(h.n)labels.push(h.w?"NSW Western Division":"NSW holidays");if(weekday(selected)>=4)labels.push("Weekend lead-in / peak");
  let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" planned post slot(s). No publishing or spending is connected.</p>";
  if(!match.length)html+='<p>This date is empty. Turn on a repeating pattern or add a blank post below.</p>';
+ if(monthPreview?.month===viewMonth){
+  const pending=monthPreview.newPosts.filter(p=>p.date===selected).length;
+  if(pending)html+='<p class="sp-hint"><strong>'+pending+' blank slots previewed for this date.</strong> Press Apply to keep them.</p>';
+ }
  html+='<div class="sp-add-slot"><label>New blank post<select id="sp-new-category">'+categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("")+'</select></label><button type="button" data-add-post>+ Add blank post</button></div>';
  for(const p of match){
   const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",caption=override.caption||suggestedCaption(p),spec=specsForPost(p);
@@ -225,16 +233,17 @@ function setupMonthControls(){
  $("sp-rule-choices").innerHTML=patternRules.map(ruleRow).join("");
  $("sp-month-form").addEventListener("input",e=>{
   if(e.target.matches?.('input[type="range"]'))updateSliderLabels();
-  monthPreview=null;$("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
+  previewMonth();
  });
  $("sp-month-form").addEventListener("change",e=>{
-  updateSliderLabels();monthPreview=null;$("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
+  updateSliderLabels();
   if(e.target.classList.contains("sp-layer-show")){
-   liveLayerVisibility[viewMonth]={};
-   for(const c of categories)liveLayerVisibility[viewMonth][c.id]={visible:$("sp-m-show-"+c.id).checked};
-   render();
+   checkpoint();
+   const cfg=monthConfig(viewMonth);
+   for(const c of categories)cfg.layers[c.id].visible=$("sp-m-show-"+c.id).checked;
+   monthSettings[viewMonth]=cfg;saveMonthData();updateUndoButtons();
   }
-  monthMessage("Settings changed. Preview the month to see exactly how many blank slots your selected patterns will place.");
+  previewMonth();
  });
 }
 function hydrateMonthControls(){
@@ -355,7 +364,8 @@ function previewMonth(){
  (preview.skipped.length?'<p class="sp-hint">'+preview.skipped.length+' slots could not fit within your daily limit.</p>':'')+
  '<p class="sp-hint">These are empty content slots. You decide the titles, ideas and captions.</p>';
  $("sp-month-preview").hidden=false;$("sp-m-apply").disabled=false;
- monthMessage("Preview ready. Apply only if this is the pattern mix you want for the month.");
+ liveLayerVisibility[viewMonth]=cfg.layers;render();
+ monthMessage("This calendar preview reflects your sliders. Press Apply only when you want to keep the blank slots.");
 }
 function applyMonth(){
  if(!monthPreview||monthPreview.month!==viewMonth||JSON.stringify(monthPreview.cfg)!==JSON.stringify(readMonthControls())){monthMessage("Preview the current settings before applying.");return}
@@ -369,7 +379,25 @@ function applyMonth(){
  selectedIds.clear();monthPreview=null;
  $("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
  refreshStats();render();updateUndoButtons();
- monthMessage("Month applied: "+created+" suggestions, "+retained+" edited/approved posts preserved. "+(ok?"Saved in this browser.":"Local saving failed: export CSV to preserve this plan."));
+ monthMessage("Month applied: "+created+" blank slots, "+retained+" edited/approved posts preserved. "+(ok?"Saved in this browser.":"Local saving failed: export CSV to preserve this plan."));
+}
+function applyAllMonths(){
+ const cfg=readMonthControls(),error=validateMonth(cfg);
+ if(error){monthMessage(error);return}
+ if(!window.confirm("Apply these switched-on patterns to all 365 days? Existing edited and approved posts will be kept. This action can be undone."))return;
+ checkpoint();
+ let created=0,protectedCount=0,skipped=0;
+ for(const month of monthsList()){
+  const outcome=proposalForMonth(month,cfg);
+  const oldIds=new Set(outcome.replaceable.map(x=>x.id));
+  plan=plan.filter(p=>!oldIds.has(p.id)).concat(outcome.newPosts);
+  monthSettings[month]=JSON.parse(JSON.stringify(cfg));
+  created+=outcome.newPosts.length;protectedCount+=outcome.keep.length;skipped+=outcome.skipped.length;
+ }
+ monthPreview=null;selectedIds.clear();liveLayerVisibility[viewMonth]=cfg.layers;
+ const ok=saveMonthData();refreshStats();render();updateUndoButtons();
+ $("sp-month-preview").hidden=true;$("sp-m-apply").disabled=true;
+ monthMessage("Applied "+created+" blank slots across the 365-day period. "+protectedCount+" edited/approved posts preserved."+(skipped?" "+skipped+" could not fit the daily limits.":"")+(ok?" Saved locally; Undo is available.":" Storage failed; export CSV."));
 }
 function copyMonthSettings(){
  const targets=[...$("sp-copy-month-choices").querySelectorAll("[data-copy-month]:checked")].map(x=>x.dataset.copyMonth);
@@ -482,6 +510,7 @@ $("sp-detail").addEventListener("click",e=>{
 });
 $("sp-m-preview").addEventListener("click",previewMonth);
 $("sp-m-apply").addEventListener("click",applyMonth);
+$("sp-y-apply").addEventListener("click",applyAllMonths);
 for(const id of ["sp-undo","sp-m-undo"])$(id).addEventListener("click",()=>{if(restoreLast())monthMessage("Last change undone; posts and settings restored.")});
 $("sp-copy-months").addEventListener("click",copyMonthSettings);
 $("sp-b-apply").addEventListener("click",applyBulk);
