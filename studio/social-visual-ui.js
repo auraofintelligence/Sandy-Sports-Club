@@ -75,6 +75,7 @@ export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),
       const qld=Boolean(data?.holiday),nsw=Boolean(data?.nswHoliday);
       const publicHoliday=Boolean(data?.publicHoliday),longWeekend=Boolean(data?.longWeekend);
       const temporal=date===today?'today':date<today?'past':'future';
+      const temporalLabel=temporal==='today'?'TODAY':temporal==='past'?'PAST':'FUTURE';
       // One icon represents one post, even when several posts share a topic.
       // The calendar wraps them rather than hiding, sampling or deduplicating.
       const icons=items.map(post=>({icon:layerIcon(post.layerIds[0]),title:(getPostTime(post)+" · "+(post.title||"Planned post"))}));
@@ -93,10 +94,11 @@ export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),
         (data?.manualPlan?'; individually planned posts':data?.minimum?'; '+data.minimum+' to '+data.maximum+' suggested posts per day':'');
       html+='<button type="button" class="annual-calendar-day '+temporal+(items.length?' has-posts':'')+
         (qld?' qld':'')+(nsw?' nsw':'')+(publicHoliday?' public-holiday':'')+
-        (longWeekend?' long-weekend':'')+'" data-calendar-day="'+date+'"'+(date===today?' aria-current="date"':'')+
+        (longWeekend?' long-weekend':'')+'" data-temporal="'+temporal+'" data-calendar-day="'+date+'"'+(date===today?' aria-current="date"':'')+
         ' aria-label="'+esc(tooltip)+'" title="'+esc(tooltip)+'">'+
         '<span class="annual-calendar-day-top"><strong>'+index+'</strong>'+
         (items.length?'<b class="annual-calendar-count">'+items.length+'</b>':'')+'</span>'+
+        '<small class="annual-calendar-period '+temporal+'" aria-hidden="true">'+temporalLabel+'</small>'+
         ((publicHoliday||longWeekend||data?.partialPublicHoliday)?
           '<span class="annual-calendar-date-flags">'+
           (publicHoliday?'<span class="annual-cal-notation ph" title="'+esc(data.publicHolidayName||'Queensland public holiday')+'">PH</span>':'')+
@@ -107,7 +109,7 @@ export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),
           item.icon+'</span>').join('')+'</span>'+
         '<span class="annual-calendar-dots">'+(qld?'<i class="qld" title="Queensland school holidays"></i>':'')+
         (nsw?'<i class="nsw" title="NSW school holidays"></i>':'')+'</span>'+
-        (temporal==='today'?'<small class="annual-today-label">TODAY</small>':'')+
+        ''+
         (publicHoliday&&data?.publicHolidayName?'<small class="annual-calendar-holiday-name">'+esc(data.publicHolidayName)+'</small>':'')+
         (anchored.length?'<small class="annual-calendar-event-mark" title="'+
           esc(anchored.map(item=>item.title+(item.confirmed?' (verified)':' (planning only)')).join('; '))+'">'+
