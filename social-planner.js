@@ -294,6 +294,7 @@ function proposalForMonth(month,cfg){
  const dates=monthDates(month),old=monthPosts(month),protectedPosts=old.filter(editedOrApproved),replaceable=old.filter(x=>!editedOrApproved(x));
  const keepByDate=new Map(dates.map(d=>[d,protectedPosts.filter(p=>(edits[p.id]?.date||p.date)===d)]));
  const salt=Number(month.replace("-",""))+strategy.mix*233+cfg.base*443+cfg.video*67+cfg.limit*47;
+ const batchNonce=Date.now().toString(36)+"-"+Math.floor(Math.random()*1000000).toString(36);
  const random=rand(salt),newPosts=[],limitsExceeded=[],layerWeights=categories.map(c=>{
   const l=cfg.layers[c.id];if(!l.enabled)return 0;
   const f={low:.4,normal:1,high:2.5}[l.frequency]||1;
@@ -339,7 +340,7 @@ function proposalForMonth(month,cfg){
    }
    const p=makePost(date,kept.length+j,ci,serial++,"Monthly suggestion");
    if(special){p.topic=special;p.title=special+" · "+p.angle}
-   p.id="monthly-"+month+"-"+date+"-"+j+"-"+(salt+Math.floor(random()*1000000));
+   p.id="monthly-"+month+"-"+batchNonce+"-"+date+"-"+j+"-"+serial;
    p.audienceRegion=cfg.audience;p.audienceMember=cfg.member;p.audienceGender=cfg.gender;
    p.group=areaLabels[cfg.audience];
    p.relatedTopic=categories[ci].topics[(Math.floor(random()*categories[ci].topics.length))];
