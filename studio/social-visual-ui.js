@@ -208,8 +208,8 @@ export function renderCalendarDialog({day,view,postId,posts,plan,esc,getEdit,rev
       '<div class="annual-dialog-post-icon" aria-hidden="true">'+layerIcon(post.layerIds[0])+'</div>'+
       '<h3 class="annual-dialog-post-title">'+esc(postLabel(post,edit))+'</h3>'+
       '<div class="annual-post-tags"><span>'+(isVideo(post)?'🎬 30-sec video':'🖼️ Image or link')+'</span>'+
-      '<span>'+esc(postTime(post,edit))+' AEST</span><span>'+esc(edit?.status||'Idea')+'</span></div>'+
-      '<section class="annual-dialog-section"><h4>Creative brief</h4><p>'+esc(postBrief(post,edit))+'</p></section>'+timing+performance+
+      '<span>'+esc(postTime(post,edit))+' AEST</span><span>'+esc(post.timeOfDaySignal?.window||'')+'</span><span>'+esc(edit?.status||'Idea')+'</span></div>'+
+      '<section class="annual-dialog-section"><h4>Creative brief</h4><p>'+esc(postBrief(post,edit))+'</p></section>'+ (post.timeOfDaySignal?'<p class="annual-small">🕒 Suggested time: '+esc(post.timeOfDaySignal.reason)+' (Brisbane time; editable).</p>':'')+timing+performance+
       (edit?.notes?'<section class="annual-dialog-section"><h4>Your notes</h4><p>'+esc(edit.notes)+'</p></section>':'')+
       '<section class="annual-dialog-section"><h4>Audience and invitation</h4><p>'+esc(Object.values(post.audience||{}).map(a=>a.join(', ')).join(' · '))+
       '</p><p><strong>Call to action:</strong> '+esc(post.cta)+'</p></section>'+
@@ -220,7 +220,7 @@ export function renderCalendarDialog({day,view,postId,posts,plan,esc,getEdit,rev
       '<footer class="annual-dialog-actions">'+
       '<button type="button" class="button" data-calendar-edit="'+esc(post.id)+'">✏️ Edit this post</button>'+
       '<button type="button" class="button outline" data-calendar-dismiss="'+esc(post.id)+'">Remove suggestion</button>'+
-      '<button type="button" class="button outline" data-annual-use="'+esc(post.id)+'">Open in club editor</button>'+
+      '<button type="button" class="button outline" data-annual-use="'+esc(post.id)+'">Prepare production pack</button>'+
       '<button type="button" class="button outline" data-calendar-back>← All posts today</button></footer></dialog>';
   }
   return '<dialog class="annual-day-dialog" data-annual-day-dialog aria-label="Posts for '+esc(formatted)+'">'+headline+
