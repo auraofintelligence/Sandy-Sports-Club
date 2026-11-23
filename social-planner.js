@@ -229,7 +229,7 @@ function renderDetail(){
    '<label><input type="checkbox" class="sp-edit-locked" '+(override.locked?'checked':'')+'> Keep this post unchanged during monthly regeneration</label>'+
    '<label>Status <select class="sp-status" data-id="'+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published","Rejected"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label>'+
    '<label>Working notes <textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Source checks, visual assets, review notes...">'+$esc(note)+'</textarea></label>'+
-   '<div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save changes</button><button type="button" class="secondary" data-alt="'+$esc(p.id)+'">Try another idea</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
+   '<div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save changes</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button><button type="button" class="secondary" data-remove-post="'+$esc(p.id)+'">Remove slot</button></div></article>';
  }
  host.innerHTML=html;
 }
@@ -504,7 +504,7 @@ function applyBulk(){
   actions.push([id,patch]);
  }
  checkpoint();for(const [id,patch] of actions)edits[id]={...(edits[id]||{}),...patch};
- const ok=saveMonthData();selectedIds.clear();render();updateUndoButtons();
+ const ok=saveMonthData();selectedIds.clear();refreshStats();render();updateUndoButtons();
  $("sp-b-feedback").textContent="Updated "+ids.length+" selected post(s), preserving their other fields. "+(ok?"Saved locally.":"Storage failed; export CSV.");
  monthMessage("Bulk edit applied to "+ids.length+" posts. Undo is available.");
 }
@@ -529,17 +529,14 @@ function generateFromChoices(){
  message("Draft generated from your choices. Edit any post in the calendar. Nothing will publish automatically.");
  $("sp-preview").hidden=true;
 }
-applySettings(strategy);
 setupMonthControls();
-$("sp-video").addEventListener("input",()=>{$("sp-video-out").textContent=$("sp-video").value+"%"});
-$("sp-builder").addEventListener("change",e=>{
- if(e.target.matches("button"))return;
- $("sp-preview").hidden=true;
- message(generated?"Your controls have changed. The existing calendar is untouched until you choose Generate again.":"Strategy changed. Preview a week before generating the full calendar.");
+startInput.value=start;
+startInput.addEventListener("change",()=>{
+ const next=startInput.value;if(!next||next===start)return;
+ if(plan.length&&!window.confirm("Open a new 365-day period? Your current plan is saved separately in this browser.")){startInput.value=start;return}
+ strategy.start=next;saveSettings(strategy);start=next;selected=start;viewMonth=start.slice(0,7);
+ regenerate();hydrateMonthControls();monthMessage("This period is ready. Its dates are empty until you turn on patterns.");
 });
-$("sp-preview-btn").addEventListener("click",previewStrategy);
-$("sp-generate-btn").addEventListener("click",generateFromChoices);
-$("sp-remix-btn").addEventListener("click",()=>{mixSeed++;previewStrategy()});
 $("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;selectedIds.clear();const available=Array.from(days.keys()).find(x=>x.slice(0,7)===viewMonth);if(available)selected=available;hydrateMonthControls();render()});
 ["sp-cat","sp-channel","sp-paid"].forEach(id=>$(id).addEventListener("change",()=>{if(generated)render()}));
 $("sp-grid").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b){selected=b.dataset.date;render()}});
@@ -549,23 +546,37 @@ $("sp-detail").addEventListener("change",e=>{
  }
 });
 $("sp-detail").addEventListener("click",e=>{
- const saveBtn=e.target.closest("[data-save]"),copyBtn=e.target.closest("[data-copy]"),altBtn=e.target.closest("[data-alt]");
- if(copyBtn)copyBrief(copyBtn.dataset.copy);
- if(altBtn){
-  const id=altBtn.dataset.alt,p=plan.find(x=>x.id===id);if(!p)return;
-  const prev=edits[id]||{},count=(prev.alt||0)+1,c=categories[p.cat];
-  const index=c.topics.indexOf(p.topic),newTopic=c.topics[(Math.max(0,index)+count*7)%c.topics.length];
-  checkpoint();edits[id]=Object.assign({},prev,{alt:count,title:newTopic+" · "+angleCycle[(count+p.seq)%angleCycle.length],caption:"What do you think about "+newTopic.charAt(0).toLowerCase()+newTopic.slice(1)+"? Sandy Sports is a proposal and we'd love your ideas. "+c.cta});
-  saveMonthData();updateUndoButtons();renderDetail();message("Alternative idea drafted. You can edit it or try another.");
+ const addButton=e.target.closest("[data-add-post]"),removeButton=e.target.closest("[data-remove-post]");
+ const saveBtn=e.target.closest("[data-save]"),copyBtn=e.target.closest("[data-copy]");
+ if(addButton){
+  const catIndex=categories.findIndex(c=>c.id===$("sp-new-category").value);
+  if(catIndex<0)return;
+  const cfg=monthConfig(selected.slice(0,7)),id="manual-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9);
+  const p=emptySlot(selected,catIndex,"Manual",cfg,postsOn(selected).length,id);
+  p.title="Untitled post";p.manual=true;p.dayExtra="Added manually";
+  p.format=cfg.video>=50?"video":"image";
+  p.channels=channelFormats[p.format].filter(ch=>cfg.platforms.includes(ch));
+  if(!p.channels.length&&cfg.platforms.includes("noticeboard"))p.channels=["noticeboard"];
+  if(!p.channels.length){p.format="video";p.channels=cfg.platforms.filter(ch=>channelFormats.video.includes(ch))}
+  checkpoint();plan.push(p);saveMonthData();refreshStats();
+  $("sp-cat").value="all";$("sp-channel").value="all";$("sp-paid").value="all";
+  render();updateUndoButtons();monthMessage("Blank post added. You choose its subject and caption.");return;
  }
+ if(removeButton){
+  const id=removeButton.dataset.removePost,p=plan.find(x=>x.id===id);
+  if(!p||!window.confirm("Remove this planned post? You can undo it afterwards."))return;
+  checkpoint();plan=plan.filter(x=>x.id!==id);delete edits[id];saveMonthData();
+  refreshStats();render();updateUndoButtons();monthMessage("Post removed. Undo is available.");return;
+ }
+ if(copyBtn)copyBrief(copyBtn.dataset.copy);
  if(saveBtn){
   const id=saveBtn.dataset.save,card=saveBtn.closest("[data-item]"),original=plan.find(p=>p.id===id);
   const val=x=>card.querySelector(x).value;
   const changed={title:val(".sp-edit-title").trim()||original.title,caption:val(".sp-edit-caption").trim(),format:val(".sp-edit-format"),date:val(".sp-edit-date")||original.date,time:val(".sp-edit-time")||original.time,status:val(".sp-status"),note:val(".sp-note"),audienceRegion:val(".sp-edit-audience"),audienceMember:val(".sp-edit-member"),audienceGender:val(".sp-edit-gender"),locked:card.querySelector(".sp-edit-locked").checked};
-  if(changed.date<start||changed.date>add(start,364)){message("Choose a date inside this 365-day calendar.");return}
+  if(changed.date<start||changed.date>add(start,364)){monthMessage("Choose a date inside this 365-day calendar.");return}
   checkpoint();edits[id]=Object.assign({},edits[id]||{},changed);const okay=saveMonthData();updateUndoButtons();
-  message(okay?"Post changes saved privately in this browser. Export CSV to keep a separate copy.":"Could not save in browser storage. Export the CSV to keep a copy.");
-  render();
+  monthMessage(okay?"Post changes saved privately in this browser. Export CSV for a separate copy.":"Could not save in browser storage. Export CSV to keep a copy.");
+  refreshStats();render();
  }
 });
 $("sp-m-preview").addEventListener("click",previewMonth);
@@ -590,10 +601,12 @@ $("sp-select-all").addEventListener("click",()=>{
 $("sp-clear-selected").addEventListener("click",()=>{selectedIds.clear();renderMonthRoster()});
 $("sp-csv").addEventListener("click",exportCsv);
 $("sp-reset").addEventListener("click",()=>{
- if(window.confirm("Clear the saved titles, dates, captions, statuses and notes for this draft? The generated topic mix stays the same.")){
-  checkpoint();edits={};saveMonthData();render();updateUndoButtons();message("Manual edits cleared for this draft. Use Undo to restore them.");
- }
+ if(!window.confirm("Start a fresh blank calendar for this period? Drafts and pattern settings can be restored with Undo."))return;
+ checkpoint();plan=[];edits={};monthSettings={};liveLayerVisibility={};selectedIds.clear();
+ saveMonthData();hydrateMonthControls();refreshStats();render();updateUndoButtons();
+ monthMessage("Empty calendar ready. Turn on the patterns you want and set their frequency sliders.");
 });
-generated=true;regenerate();hydrateMonthControls();message("The calendar is ready. Select a month and use the collapsible monthly controls; annual defaults are optional.");
+generated=true;regenerate();hydrateMonthControls();
+monthMessage("Your 365-day calendar is empty. Switch on patterns, set their frequency sliders, then preview and apply a month.");
 
 })();
