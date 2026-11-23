@@ -327,6 +327,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     const qld=monthDays.filter(day=>day.holiday).length,nsw=monthDays.filter(day=>day.nswHoliday).length;
     const videoCount=current.filter(p=>p.durationSeconds).length,composites=current.filter(p=>p.composite).length;
     const i=months.indexOf(selectedMonth);
+    const todayIso=brisbaneToday(),todayMonth=todayIso.slice(0,7),todayInRange=months.includes(todayMonth);
+    const todayLabel=new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date(todayIso+'T00:00:00Z'));
     const choice=months.map(m=>'<option value="'+m+'"'+(m===selectedMonth?' selected':'')+'>'+monthName(m)+'</option>').join('');
     const stat=(icon,value,label)=>'<div class="annual-stat-card"><span class="annual-stat-icon" aria-hidden="true">'+icon+'</span>'+
       '<div><strong>'+value+'</strong><span>'+esc(label)+'</span></div></div>';
@@ -342,13 +344,18 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       '<div class="annual-month-navigation"><button type="button" data-annual-step="-1" aria-label="Previous month"'+(i===0?' disabled':'')+'>‹</button>'+
       '<label class="sr-only" for="annual-month-picker">Choose a month</label>'+
       '<select id="annual-month-picker" data-annual-month>'+choice+'</select>'+
-      '<button type="button" data-annual-step="1" aria-label="Next month"'+(i===months.length-1?' disabled':'')+'>›</button></div></div>'+
+      '<button type="button" data-annual-step="1" aria-label="Next month"'+(i===months.length-1?' disabled':'')+'>›</button>'+
+      '<button type="button" class="annual-jump-today" data-annual-today'+(todayInRange?'':' disabled title="Today is outside this planning year"')+'>Go to today</button></div></div>'+
       (current.length===0?'<aside class="annual-calendar-empty" role="status"><strong>No posts in '+monthName(selectedMonth)+'</strong><span>Switch on a content topic under Plan your posts → Pattern sliders. Save the month when the calendar shows the posts you want. Posting minimums, video share and visibility alone do not activate topics.</span><button type="button" data-month-open-topics class="button outline small">Choose topics</button></aside>':'')+
       '<div class="annual-visual-stats">'+stat('🗓️',current.length,'Posts this month')+
       stat('🎬',videoCount+' / '+current.length,'Video ideas')+
       stat('🔗',composites,'Combined topics')+
       stat('🏖️',qld+(nsw?' + '+nsw:''),'QLD / NSW holiday days')+'</div>'+
       '<section class="annual-calendar-shell" aria-label="Click-to-open monthly calendar">'+
+      '<div class="annual-temporal-key" role="note" aria-label="Date status key: past today and future in Brisbane time">'+
+      '<span class="annual-date-key past"><strong>PAST</strong><small>Before today</small></span>'+
+      '<span class="annual-date-key today"><strong>TODAY</strong><small>'+esc(todayLabel)+' · Brisbane</small></span>'+
+      '<span class="annual-date-key future"><strong>FUTURE</strong><small>After today</small></span></div>'+
       '<div class="annual-calendar-header"><div><h3>📅 Calendar</h3><p>Tap any date for a quick brief. Open a post to edit or explore.</p></div>'+
       '<label class="annual-calendar-filter">Topic <select data-annual-topic>'+
       '<option value="all">All topics</option>'+CAMPAIGN_LAYERS.map(l=>'<option value="'+l.id+'"'+(topicFilter===l.id?' selected':'')+'>'+
@@ -1015,6 +1022,14 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       const persisted=persistEdits();
       notice=persisted?'Post edits saved in this browser.':'Edit saved for this visit only; your browser blocked local storage.';
       modalView='detail';modalPostId=id;draw();return;
+    }
+    if(b.hasAttribute('data-annual-today')){
+      const today=brisbaneToday();
+      if(!Array.from({length:12},(_,i)=>nextMonth(startMonth,i)).includes(today.slice(0,7)))return;
+      if(batchDirty&&!window.confirm('Discard unapplied changes to this month before jumping to today?'))return;
+      selectMonth(today.slice(0,7));focusDay=today;draw();
+      root()?.querySelector('.annual-calendar-shell')?.scrollIntoView?.({behavior:'smooth',block:'start'});
+      return;
     }
     if(b.hasAttribute('data-annual-step')){
       const months=Array.from({length:12},(_,i)=>nextMonth(startMonth,i));
