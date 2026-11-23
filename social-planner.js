@@ -125,7 +125,7 @@ function regenerate(){
  if(!months.includes(viewMonth))viewMonth=months[0];$("sp-month").value=viewMonth;
  if(!days.has(selected))selected=start;const video=plan.filter(x=>x.format==="video").length,ads=plan.filter(x=>x.paid).length;
  $("sp-results").hidden=false;
- $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Days with a primary post</small></div><div class="sp-stat"><strong>'+plan.length+'</strong><small>Content packages incl. peak extras</small></div><div class="sp-stat"><strong>'+Math.round(100*video/plan.length)+'%</strong><small>Video content (target ~67%)</small></div><div class="sp-stat"><strong>'+ads+'</strong><small>Paid candidates; $0 authorised</small></div>';
+ $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Days with a primary post</small></div><div class="sp-stat"><strong>'+plan.length+'</strong><small>Content packages incl. peak extras</small></div><div class="sp-stat"><strong>'+Math.round(100*video/plan.length)+'%</strong><small>Video content (your target: '+strategy.video+'%)</small></div><div class="sp-stat"><strong>'+ads+'</strong><small>Paid candidates; $0 authorised</small></div>';
  render();
 }
 const matches=p=>{
@@ -179,18 +179,82 @@ function exportCsv(){
 }
 function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),platformText[p.format],ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
 
-$("sp-cat").innerHTML+='<option value="all" hidden>All</option>'+categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("");$("sp-cat").querySelector('option[hidden]')?.remove();
-startInput.value=start;startInput.addEventListener("change",()=>{if(!startInput.value)return;start=startInput.value;viewMonth=start.slice(0,7);selected=start;regenerate()});
+
+$("sp-cat").innerHTML+=categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("");
+$("sp-topic-choices").innerHTML=categories.map(c=>'<label><span>'+$esc(c.emoji+" "+c.name)+'</span><select id="sp-weight-'+c.id+'" aria-label="'+$esc(c.name)+' topic priority">'+["off","less","normal","more"].map(x=>'<option value="'+x+'">'+({off:"Off",less:"Less",normal:"Normal",more:"More"}[x])+'</option>').join("")+'</select></label>').join("");
+function applySettings(cfg){
+ startInput.value=cfg.start;$("sp-volume").value=cfg.volume;$("sp-audience").value=cfg.audience;
+ $("sp-video").value=cfg.video;$("sp-video-out").textContent=cfg.video+"%";
+ $("sp-qld").value=cfg.qld;$("sp-nsw").value=cfg.nsw;$("sp-ads").checked=!!cfg.ads;
+ for(const id of platformIds)$("sp-platform-"+id).checked=cfg.channels.includes(id);
+ for(const c of categories)$("sp-weight-"+c.id).value=(cfg.topics||{})[c.id]||"normal";
+}
+function message(s){$("sp-strategy-message").textContent=s}
+function previewStrategy(){
+ const cfg=readStrategy(),error=validateStrategy(cfg);if(error){message(error);return}
+ const preview=build(cfg.start,cfg),dates=Array.from({length:7},(_,i)=>add(cfg.start,i));
+ const cards=dates.map(date=>{
+  const items=preview.dayMap.get(date).posts;
+  return '<div class="sp-preview-day"><strong>'+new Date(date+"T00:00:00Z").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"})+'</strong><div><b>'+$esc(items[0].title)+'</b><p class="sp-hint">'+items.length+' proposed post'+(items.length===1?"":"s")+' · '+$esc(categories[items[0].cat].name)+'</p>'+(items.length>1?'<span class="sp-hint">Plus: '+$esc(items.slice(1,3).map(x=>x.topic).join(" · "))+'</span>':"")+'</div></div>';
+ }).join("");
+ $("sp-preview").innerHTML='<h3>Sample week · your choices</h3><p class="sp-hint">This is a preview of the mix, not an approved schedule. Try another mix, adjust topics, or generate the full draft when ready.</p>'+cards;
+ $("sp-preview").hidden=false;saveSettings(cfg);
+ message("Preview ready. Make changes above until the mix feels right; the calendar has not been generated.");
+}
+function generateFromChoices(){
+ const cfg=readStrategy(),error=validateStrategy(cfg);if(error){message(error);return}
+ if(generated&&JSON.stringify(cfg)!==JSON.stringify(strategy)&&Object.keys(edits).length>0){
+  if(!window.confirm("Your existing edits belong to the previous strategy. They will remain in this browser, but switching strategies opens a different draft. Export the current CSV first if you want a copy. Continue?"))return;
+ }
+ strategy=cfg;start=cfg.start;selected=start;viewMonth=start.slice(0,7);generated=true;
+ saveSettings(cfg);regenerate();
+ message("Draft generated from your choices. Edit any post in the calendar. Nothing will publish automatically.");
+ $("sp-preview").hidden=true;
+}
+applySettings(strategy);
+$("sp-video").addEventListener("input",()=>{$("sp-video-out").textContent=$("sp-video").value+"%"});
+$("sp-builder").addEventListener("change",e=>{
+ if(e.target.matches("button"))return;
+ $("sp-preview").hidden=true;
+ message(generated?"Your controls have changed. The existing calendar is untouched until you choose Generate again.":"Strategy changed. Preview a week before generating the full calendar.");
+});
+$("sp-preview-btn").addEventListener("click",previewStrategy);
+$("sp-generate-btn").addEventListener("click",generateFromChoices);
+$("sp-remix-btn").addEventListener("click",()=>{mixSeed++;previewStrategy()});
 $("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;const available=Array.from(days.keys()).find(x=>x.slice(0,7)===viewMonth);if(available)selected=available;render()});
-["sp-cat","sp-channel","sp-paid"].forEach(id=>$(id).addEventListener("change",render));
+["sp-cat","sp-channel","sp-paid"].forEach(id=>$(id).addEventListener("change",()=>{if(generated)render()}));
 $("sp-grid").addEventListener("click",e=>{const b=e.target.closest("[data-date]");if(b){selected=b.dataset.date;render()}});
-$("sp-detail").addEventListener("change",e=>{if(e.target.classList.contains("sp-status")){const id=e.target.dataset.id;edits[id]=Object.assign({},edits[id]||{},{status:e.target.value});saveEdits()}});
+$("sp-detail").addEventListener("change",e=>{
+ if(e.target.classList.contains("sp-status")){
+  const id=e.target.dataset.id;edits[id]=Object.assign({},edits[id]||{},{status:e.target.value});saveEdits();
+ }
+});
 $("sp-detail").addEventListener("click",e=>{
- const saveBtn=e.target.closest("[data-save]"),copyBtn=e.target.closest("[data-copy]");
+ const saveBtn=e.target.closest("[data-save]"),copyBtn=e.target.closest("[data-copy]"),altBtn=e.target.closest("[data-alt]");
  if(copyBtn)copyBrief(copyBtn.dataset.copy);
- if(saveBtn){const id=saveBtn.dataset.save,box=$("sp-detail").querySelector('textarea[data-id="'+id+'"]');edits[id]=Object.assign({},edits[id]||{},{note:box.value});const okay=saveEdits();saveBtn.textContent=okay?"Saved locally":"Export CSV to preserve edits";setTimeout(()=>{saveBtn.textContent="Save notes"},1400)}
+ if(altBtn){
+  const id=altBtn.dataset.alt,p=plan.find(x=>x.id===id);if(!p)return;
+  const prev=edits[id]||{},count=(prev.alt||0)+1,c=categories[p.cat];
+  const index=c.topics.indexOf(p.topic),newTopic=c.topics[(Math.max(0,index)+count*7)%c.topics.length];
+  edits[id]=Object.assign({},prev,{alt:count,title:newTopic+" · "+angleCycle[(count+p.seq)%angleCycle.length],caption:"What do you think about "+newTopic.charAt(0).toLowerCase()+newTopic.slice(1)+"? Sandy Sports is a proposal and we'd love your ideas. "+c.cta});
+  saveEdits();renderDetail();message("Alternative idea drafted. You can edit it or try another.");
+ }
+ if(saveBtn){
+  const id=saveBtn.dataset.save,card=saveBtn.closest("[data-item]"),original=plan.find(p=>p.id===id);
+  const val=x=>card.querySelector(x).value;
+  const changed={title:val(".sp-edit-title").trim()||original.title,caption:val(".sp-edit-caption").trim(),format:val(".sp-edit-format"),date:val(".sp-edit-date")||original.date,time:val(".sp-edit-time")||original.time,status:val(".sp-status"),note:val(".sp-note")};
+  if(changed.date<start||changed.date>add(start,364)){message("Choose a date inside this 365-day calendar.");return}
+  edits[id]=Object.assign({},edits[id]||{},changed);const okay=saveEdits();
+  message(okay?"Post changes saved privately in this browser. Export CSV to keep a separate copy.":"Could not save in browser storage. Export the CSV to keep a copy.");
+  render();
+ }
 });
 $("sp-csv").addEventListener("click",exportCsv);
-$("sp-reset").addEventListener("click",()=>{if(window.confirm("Clear saved statuses and notes for this 365-day plan in this browser? This cannot be undone unless you have exported them.")){localStorage.removeItem(storageKey());edits={};renderDetail()}});
-regenerate();
+$("sp-reset").addEventListener("click",()=>{
+ if(window.confirm("Clear the saved titles, dates, captions, statuses and notes for this draft? The generated topic mix stays the same.")){
+  localStorage.removeItem(storageKey());edits={};render();message("Edits cleared for this draft. Other strategy versions remain saved separately.");
+ }
+});
+message("Choose your topics and settings, then preview a week. No calendar has been created for you yet.");
+
 })();
