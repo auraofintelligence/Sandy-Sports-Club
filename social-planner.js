@@ -132,6 +132,9 @@ const matches=p=>{
  const category=$("sp-cat").value,channel=$("sp-channel").value,paid=$("sp-paid").value;
  return (category==="all"||categories[p.cat].id===category)&&(channel==="all"||p.channels.includes(channel))&&(paid==="all"||(paid==="paid"?p.paid:!p.paid));
 };
+function postsOn(date){return plan.filter(p=>(edits[p.id]?.date||p.date)===date)}
+function effectivePost(p){const ov=edits[p.id]||{},fmt=ov.format||p.format;let channels=channelFormats[fmt].filter(ch=>strategy.channels.includes(ch));if(fmt==="video"&&strategy.channels.includes("youtube")&&p.channels.includes("youtube-standard"))channels.push("youtube-standard");if(strategy.channels.includes("noticeboard")&&p.channels.includes("noticeboard")&&!channels.includes("noticeboard"))channels.push("noticeboard");return {...p,format:fmt,channels}}
+function suggestedCaption(p){const cat=categories[p.cat];return "Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? Sandy Sports is still a community proposal. Your ideas can help shape what comes next. "+cat.cta}
 function render(){
  const m=viewMonth,[y,mm]=m.split("-").map(Number),nd=new Date(Date.UTC(y,mm,0)).getUTCDate(),offset=weekday(m+"-01");
  $("sp-month-label").textContent=new Date(m+"-01T00:00:00Z").toLocaleDateString("en-AU",{month:"long",year:"numeric",timeZone:"UTC"});
@@ -140,7 +143,7 @@ function render(){
  for(let d=1;d<=nd;d++){
   const date=m+"-"+pad(d),row=days.get(date);
   if(!row){out+='<div class="sp-day outside" aria-label="'+date+' outside selected 365-day range"><span class="date">'+d+"</span></div>";continue}
-  const shown=row.posts.filter(matches);monthItems+=shown.length;
+  const shown=postsOn(date).map(effectivePost).filter(matches);monthItems+=shown.length;
   const flags=row.holiday;
   out+='<button type="button" class="sp-day'+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+' matching content packages" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+" idea"+(shown.length===1?"":"s")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
  }
@@ -148,25 +151,34 @@ function render(){
 }
 function renderDetail(){
  const row=days.get(selected),host=$("sp-detail");if(!row){host.innerHTML="<h3>Choose a date</h3>";return}
- const match=row.posts.filter(matches),h=row.holiday,labels=[];
+ const match=postsOn(selected).map(effectivePost).filter(matches),h=row.holiday,labels=[];
  if(h.q)labels.push("QLD holidays");if(h.n)labels.push(h.w?"NSW Western Division":"NSW holidays");if(weekday(selected)>=4)labels.push("Weekend lead-in / peak");
- let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" matching content package(s); drafts only, nothing goes live automatically.</p>";
- if(!match.length)html+='<p>Nothing matches these filters. Choose another category or channel.</p>';
+ let html='<h3>'+labelDate(selected)+'</h3><p class="sp-hint">'+$esc(labels.join(" · ")||"Normal seven-day schedule")+'</p><p class="sp-hint">'+match.length+" draft idea(s). Nothing gets published or paid for here.</p>";
+ if(!match.length)html+='<p>No content matches these filters. Adjust the filters or choose another date.</p>';
  for(const p of match){
-  const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",spec=platformText[p.format]+(p.channels.includes("noticeboard")?" Noticeboard adaptation (proposed): static 1920×1080 for TV; 1080×1920 portrait kiosk; responsive web notice with a QR code and expiry.":"");
+  const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",caption=override.caption||suggestedCaption(p),spec=platformText[p.format]+(p.channels.includes("noticeboard")?" Noticeboard adaptation (proposed): static 1920×1080 for TV; 1080×1920 portrait kiosk; responsive web notice with a QR code and expiry.":"");
   const special=p.sourceHold?'<span class="sp-tag warn">Verify before publishing</span>':'';
-  html+='<article class="sp-item" data-item="'+$esc(p.id)+'"><div class="sp-meta">'+$esc(p.time)+' AEST · '+$esc(p.dayExtra)+' · '+$esc(cat.name)+'</div><h4>'+$esc(p.title)+'</h4><span class="sp-tag">'+$esc(p.format.toUpperCase())+'</span>'+special+(p.paid?'<span class="sp-tag ad">Paid ad candidate (not authorised)</span>':"")+'<p><strong>Channels:</strong> '+$esc(channelNames(p))+'</p><p><strong>Asset specs:</strong> '+$esc(spec)+'</p><p><strong>Production:</strong> '+$esc(brief(p))+'</p><p><strong>Suggested copy:</strong> '+$esc("Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? It is still a community proposal, and your ideas could help shape what comes next. "+cat.cta)+'</p><p><strong>Audience:</strong> '+$esc(p.group)+(p.paid?"; <strong>ad spend:</strong> not set / requires approval":"")+'</p><p><strong>Source:</strong> <a href="'+p.page+'">'+$esc(cat.name)+" page</a></p><label>Status<select class=\"sp-status\" data-id=\""+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label><label>Working notes<textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Edit the hook, final caption, assets, source checks, or approval notes...">'+$esc(note)+'</textarea></label><div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save notes</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
+  html+='<article class="sp-item" data-item="'+$esc(p.id)+'"><div class="sp-meta">'+$esc(override.time||p.time)+' AEST · '+$esc(p.dayExtra)+' · '+$esc(cat.name)+'</div><h4>'+$esc(override.title||p.title)+'</h4><span class="sp-tag">'+$esc(p.format.toUpperCase())+'</span>'+special+(p.paid?'<span class="sp-tag ad">Paid ad idea (not authorised)</span>':"")+
+   '<p><strong>Channels:</strong> '+$esc(channelNames(p))+'</p><p><strong>Asset specs:</strong> '+$esc(spec)+'</p><p><strong>Production brief:</strong> '+$esc(brief(p))+'</p><p><strong>Audience:</strong> '+$esc(p.group)+(p.paid?"; <strong>ad spend:</strong> not set":"")+'</p><p><strong>Source:</strong> <a href="'+p.page+'">'+$esc(cat.name)+" page</a></p>"+
+   '<label>Title <input class="sp-edit-title" type="text" maxlength="220" value="'+$esc(override.title||p.title)+'"></label>'+
+   '<label>Caption <textarea class="sp-edit-caption" rows="4" maxlength="1800">'+$esc(caption)+'</textarea></label>'+
+   '<label>Format <select class="sp-edit-format">'+["video","image","carousel","poll","link"].map(x=>'<option value="'+x+'"'+(x===p.format?' selected':'')+'>'+x+'</option>').join("")+'</select></label>'+
+   '<div class="sp-edit-timing"><label>Date <input type="date" class="sp-edit-date" min="'+start+'" max="'+add(start,364)+'" value="'+$esc(override.date||p.date)+'"></label><label>Time (Brisbane) <input type="time" class="sp-edit-time" value="'+$esc(override.time||p.time)+'"></label></div>'+
+   '<label>Status <select class="sp-status" data-id="'+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published","Rejected"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label>'+
+   '<label>Working notes <textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Source checks, visual assets, review notes...">'+$esc(note)+'</textarea></label>'+
+   '<div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save changes</button><button type="button" class="secondary" data-alt="'+$esc(p.id)+'">Try another idea</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
  }
  host.innerHTML=html;
 }
 function exportCsv(){
- const header=["date","time_AEST","category","title","format","channels","dimensions_and_duration","source_page","audience","paid_candidate","spend_authorised","status","production_brief","working_notes"];
+ const header=["date","time_AEST","category","title","format","channels","dimensions_and_duration","source_page","audience","paid_candidate","spend_authorised","status","caption","production_brief","working_notes"];
  const quoted=x=>'"'+String(x==null?"":x).replace(/"/g,'""').replace(/\r?\n/g," ")+'"';
  const arr=[header.join(",")];
- for(const p of plan){const ov=edits[p.id]||{};arr.push([p.date,p.time,categories[p.cat].name,p.title,p.format,channelNames(p),platformText[p.format]+(p.channels.includes("noticeboard")?"; TV 1920×1080, kiosk 1080×1920; proposed only":""),p.page,p.group,p.paid?"Yes":"No","No",ov.status||"Idea",brief(p),ov.note||""].map(quoted).join(","))}
+ for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),platformText[p.format]+(p.channels.includes("noticeboard")?"; TV 1920×1080, kiosk 1080×1920; proposed only":""),p.page,p.group,p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
  const blob=new Blob(["\ufeff"+arr.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="sandy-sports-social-"+start+"-365-days.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
-function copyBrief(id){const p=plan.find(x=>x.id===id);if(!p)return;const ov=edits[id]||{},content=[p.date+" "+p.time+" AEST",p.title,categories[p.cat].name,p.format,channelNames(p),platformText[p.format],brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
+function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),platformText[p.format],ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+p.group,p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
+
 $("sp-cat").innerHTML+='<option value="all" hidden>All</option>'+categories.map(c=>'<option value="'+c.id+'">'+$esc(c.emoji+" "+c.name)+'</option>').join("");$("sp-cat").querySelector('option[hidden]')?.remove();
 startInput.value=start;startInput.addEventListener("change",()=>{if(!startInput.value)return;start=startInput.value;viewMonth=start.slice(0,7);selected=start;regenerate()});
 $("sp-month").addEventListener("change",e=>{viewMonth=e.target.value;const available=Array.from(days.keys()).find(x=>x.slice(0,7)===viewMonth);if(available)selected=available;render()});
