@@ -4,7 +4,7 @@ import {renderItemisedDay,renderWeekItemised,mondayOf,nextDay} from './social-da
 import {renderSaveFeedback,renderCampaignHistory} from './social-save-history.js?v=20261123-history';
 import {PUBLISHING_DESTINATIONS,placementSources,CREATIVE_SPEC_VERSION,MASTER_ASSET_PRESETS} from './social-placements.js?v=20261123-formats';
 import {renderDestinationChoices,renderAssetGuide} from './social-format-guide.js?v=20261123-formats';
-import {LAYER_ICONS,renderMonthCalendar,renderCalendarDialog,postLabel,postBrief,postTime,isMinuteTime,brisbaneToday} from './social-visual-ui.js?v=20261123-annual-events';
+import {LAYER_ICONS,renderMonthCalendar,renderCalendarDialog,postLabel,postBrief,postTime,isMinuteTime,brisbaneToday} from './social-visual-ui.js?v=20261124-calendar-density';
 import {renderTimingPanel,renderAnalyticsPanel} from './social-insights-ui.js?v=20261123-annual-events';
 import {parseDelimited,suggestedMapping,metricFromRow,linkMetrics,latestMetrics,summarizeMetrics,compareContentPatterns,planMetricsCSV} from './social-performance.js?v=20261123-timing-reports';
 import {parseAnnualCalendarCSV,clubEventCandidates,meetingCandidates,mergeEventCandidates,importCalendarAnchors,surpriseDayItem} from './social-event-import.js?v=20261123-annual-events';
