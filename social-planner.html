@@ -12,6 +12,26 @@
 .sp *{box-sizing:border-box}.sp h2{margin:0 0 8px}.sp p{margin:8px 0}.sp-intro{max-width:75ch}.sp-top{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}.sp-stat{flex:1 1 165px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:white}.sp-stat strong{font-size:1.6rem;display:block;color:var(--ink)}.sp-stat small{font-size:.78rem;color:#47616b}
 .sp-controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--light)}.sp-controls label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.82rem}.sp-controls input,.sp-controls select{min-height:41px;border:1px solid #9eb9c3;border-radius:8px;padding:7px 9px;background:#fff;color:#102d40}.sp-controls button,.sp-actions button{cursor:pointer;border:1px solid #0a8197;background:#0a8197;color:white;padding:10px 13px;border-radius:8px;font-weight:700;min-height:41px}.sp-controls button.secondary,.sp-actions button.secondary{background:white;color:#0a6179}.sp-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:12px 0;font-size:.82rem;color:#375563}.sp-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;background:#2481ad}.sp-dot.q{background:#ec8d39}.sp-dot.n{background:#8f64c2}.sp-dot.b{background:#3b9979}
 .sp-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:16px;margin-top:12px;align-items:start}.sp-calendar,.sp-detail{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.sp-titlebar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.sp-titlebar h2{font-size:1.25rem}.sp-weekdays,.sp-month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.sp-weekdays span{text-align:center;font-size:.76rem;font-weight:800;color:#3b5961;padding:8px 0}.sp-day{border:1px solid #ccdedf;background:#faffff;border-radius:9px;padding:7px 5px;min-height:75px;color:#153748;cursor:pointer;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:5px}.sp-day:focus-visible{outline:3px solid #ef9337}.sp-day.selected{border:2px solid #086e85;background:#e2f9f6}.sp-day.outside{background:#f4f5f6;color:#929ca1;border-style:dashed;cursor:default}.sp-day .date{font-weight:800}.sp-day .count{font-size:.72rem;color:#375765}.sp-day .markers{display:flex;gap:3px}.sp-day .markers span{height:5px;border-radius:5px;flex:1;max-width:12px;background:#cfdae0}.sp-day .markers .q{background:#ec8d39}.sp-day .markers .n{background:#8f64c2}.sp-day .markers .w{background:#2481ad}.sp-detail{position:sticky;top:16px;max-height:75vh;overflow:auto}.sp-detail h3{font-size:1.2rem;margin:0 0 6px}.sp-item{border-top:1px solid var(--line);padding:13px 0}.sp-item h4{font-size:1rem;margin:5px 0}.sp-tag{display:inline-block;background:#e1f2f2;color:#124a5a;padding:3px 7px;border-radius:6px;font-size:.72rem;margin:2px 3px 2px 0}.sp-tag.ad{background:#ffe5c6}.sp-tag.warn{background:#fff1da}.sp-item .sp-meta{font-size:.82rem;color:#4f6672}.sp-item label{display:block;font-size:.82rem;font-weight:700;margin:9px 0 4px}.sp-item select,.sp-item textarea{width:100%;border:1px solid #a8c2c7;border-radius:7px;padding:8px;color:#153748;background:white}.sp-item textarea{min-height:68px;resize:vertical;font:inherit;font-size:.88rem}.sp-actions{margin-top:9px;display:flex;gap:7px}.sp-actions button{font-size:.8rem;min-height:34px;padding:7px 10px}.sp [hidden]{display:none!important}
+.sp-month-panel,.sp-advanced,.sp-month-roster{background:#fff;border:1px solid #c6e0df;border-radius:13px;margin:12px 0 18px;padding:14px}
+.sp-month-panel summary,.sp-advanced summary{cursor:pointer;font-weight:800}
+.sp-month-panel summary small{display:block;color:#5b7881;font-size:.77rem;font-weight:400;margin-top:3px}
+.sp-month-form{padding:12px 0 2px}
+.sp-m-check{align-items:center!important;flex-direction:row!important}
+.sp-layer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.sp-layer-row{display:grid;grid-template-columns:minmax(90px,1.4fr) repeat(2,minmax(80px,.7fr)) minmax(60px,.5fr);gap:6px;align-items:center;border-bottom:1px solid #e4f0f1;padding:7px 0;font-size:.78rem}
+.sp-layer-row label{display:flex;gap:3px;align-items:center}.sp-layer-row select{min-height:30px;max-width:100%;padding:3px}.sp-layer-row .sp-layer-show{min-width:16px;min-height:16px}
+.sp-copy-months{display:flex;flex-wrap:wrap;gap:8px 15px;margin:12px 0}.sp-copy-months label{font-size:.8rem}
+.sp-month-roster{margin-top:18px}.sp-month-roster h3{margin:0}
+.sp-month-rows{max-height:340px;overflow:auto;margin-top:10px;border-top:1px solid #dce9ed}
+.sp-roster-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid #e4ecee;padding:7px 5px;font-size:.82rem}
+.sp-roster-row .sp-roster-date{flex:0 0 72px;font-variant-numeric:tabular-nums;color:#4d6672}
+.sp-roster-row .sp-roster-name{flex:1;min-width:0;text-align:left;background:none;border:none;color:#0a647e;cursor:pointer;font-weight:600;font-size:.85rem;padding:4px}
+.sp-roster-row .sp-roster-status{flex:0 0 100px;color:#64777d;text-align:right;font-size:.73rem}
+.sp-roster-row input[type=checkbox]{accent-color:#0a8197;min-width:17px;min-height:17px}
+.sp-edit-timing{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+@media(max-width:850px){.sp-layer-grid{grid-template-columns:1fr}}
+@media(max-width:440px){.sp-roster-row .sp-roster-status{display:none}.sp-layer-row{grid-template-columns:minmax(75px,1.25fr) 70px 70px 52px}.sp-layer-row select{font-size:.7rem}.sp-month-panel,.sp-advanced{padding:9px}}
+
 .sp-builder{border:1px solid #b5d9db;background:#f7fcfb;padding:18px;border-radius:16px;margin:18px 0 26px}
 .sp-builder-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
 .sp-builder-grid label{display:flex;flex-direction:column;gap:6px;font-size:.84rem;font-weight:700}
@@ -39,9 +59,71 @@
 <div class="sp">
 <p class="sp-intro"><strong>Planning only.</strong> Sandy Sports isn't an incorporated or operating club. Ideas, venues, events, fundraising and memberships must not be presented as confirmed. Edits stay in this browser; export your plan to keep or share it privately.</p>
 
-<section class="sp-builder" id="sp-builder" aria-labelledby="sp-build-heading">
-  <div class="sp-titlebar"><div><p class="eyebrow">STEP 1 · YOU DECIDE</p><h2 id="sp-build-heading">Build your content strategy</h2></div><span class="sp-tag">Nothing generated until you choose</span></div>
-  <p class="sp-hint">These are starting suggestions, not decisions made for you. Adjust the dials, preview a week, then choose whether to generate the full year.</p>
+<section id="sp-results" aria-labelledby="sp-results-heading">
+<h2 id="sp-results-heading">Sandy Sports social calendar</h2>
+<p class="sp-hint">Your year-round plan. Pick a month, work on it as a batch, or edit an individual post. No publishing or advertising expenditure is connected.</p>
+<div class="sp-top" id="sp-stats" aria-live="polite"></div>
+<div class="sp-controls">
+<label>Month <select id="sp-month" aria-label="Choose calendar month"></select></label>
+<label>Category <select id="sp-cat" aria-label="Filter by category"><option value="all">All categories</option></select></label>
+<label>Channel <select id="sp-channel" aria-label="Filter by channel"><option value="all">All selected channels</option><option value="youtube">YouTube</option><option value="youtube-standard">YouTube long-form</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="noticeboard">Straddie Noticeboard</option></select></label>
+<label>Campaigns <select id="sp-paid"><option value="all">Organic + ad ideas</option><option value="organic">Organic only</option><option value="paid">Paid candidates only</option></select></label>
+<button id="sp-csv" type="button">Export CSV</button><button id="sp-undo" class="secondary" type="button" disabled>Undo last change</button><button id="sp-reset" type="button" class="secondary">Clear local edits</button>
+</div>
+<details class="sp-month-panel" id="sp-month-panel">
+<summary>Plan this month in a few minutes <small>Frequency · topics · audiences · formats · platforms · bulk edits</small></summary>
+<div class="sp-month-form" id="sp-month-form">
+<p class="sp-hint">Preview first, then apply changes to <strong id="sp-config-month-label">this month</strong>. Manually edited and approved posts stay untouched.</p>
+<div class="sp-builder-grid">
+  <label>Base posts per day <select id="sp-m-base"><option value="1">1 daily</option><option value="2">2 daily</option><option value="3">3 daily</option></select></label>
+  <label>Maximum posts per day <select id="sp-m-limit"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option selected>7</option><option>8</option></select></label>
+  <label>Extra weekend posts <select id="sp-m-weekend"><option value="0">None</option><option value="1" selected>+1 per Sat/Sun</option><option value="2">+2 per Sat/Sun</option></select></label>
+  <label>Video share <span class="sp-range"><input type="range" id="sp-m-video" min="0" max="100" step="1" value="67"><output id="sp-m-video-out">67%</output></span></label>
+  <label>Audience area <select id="sp-m-audience"><option value="all">Local, regional and tourists</option><option value="local">Local residents</option><option value="regional">Regional visitors</option><option value="tourist">Tourists and holidaymakers</option></select></label>
+  <label>Membership audience (proposed) <select id="sp-m-member"><option value="all">Everyone / not specified</option><option value="supporters">Interested supporters</option><option value="founders">Potential founding members</option><option value="future-members">Prospective members</option><option value="families">Families</option><option value="volunteers">Prospective volunteers</option><option value="clubs">Partner clubs and organisations</option></select></label>
+  <label>Gender (voluntarily identified) <select id="sp-m-gender"><option value="all">Everyone / not specified</option><option value="women">Women (opt-in)</option><option value="men">Men (opt-in)</option><option value="self-described">Self-described (opt-in)</option></select></label>
+  <label class="sp-m-check"><input type="checkbox" id="sp-m-ads"> Include paid ad ideas (no budget)</label>
+</div>
+<fieldset class="sp-publish-channels"><legend>Publishing platforms</legend>
+ <label><input type="checkbox" id="sp-m-youtube" checked> YouTube</label><label><input type="checkbox" id="sp-m-facebook" checked> Facebook</label><label><input type="checkbox" id="sp-m-instagram" checked> Instagram</label><label><input type="checkbox" id="sp-m-tiktok" checked> TikTok</label><label><input type="checkbox" id="sp-m-noticeboard" checked> Future Straddie Noticeboard</label>
+</fieldset>
+<details class="sp-topic-details" id="sp-layer-details">
+<summary>Pattern layers: frequency, priority and visibility (15 categories)</summary>
+<p class="sp-hint">Enabling and weighting categories affects only suggestions generated for this month. Visibility hides categories from your calendar view without deleting posts.</p>
+<div id="sp-layer-choices" class="sp-layer-grid"></div>
+</details>
+<div class="sp-actions sp-build-actions"><button type="button" id="sp-m-preview">Preview month</button><button type="button" id="sp-m-apply" disabled>Apply to this month</button><button type="button" id="sp-m-undo" class="secondary" disabled>Undo</button></div>
+<div id="sp-month-feedback" class="sp-hint" role="status"></div><div id="sp-month-preview" class="sp-preview" hidden></div>
+<details class="sp-topic-details" id="sp-m-copy-panel"><summary>Copy this month's settings to other months</summary><p class="sp-hint">Copies settings only. It does not change posts in those months until you preview and apply them.</p><div id="sp-copy-month-choices" class="sp-copy-months"></div><button id="sp-copy-months" type="button" class="secondary">Copy settings to selected months</button></details>
+</div></details>
+<div class="sp-legend"><span><i class="sp-dot q"></i>QLD school holidays</span><span><i class="sp-dot n"></i>NSW school holidays</span><span><i class="sp-dot b"></i>Weekend bonus</span><span>Brisbane time · NSW Western Division summer extension included</span></div>
+<div class="sp-layout">
+<section class="sp-calendar" aria-label="Seven-day monthly calendar"><div class="sp-titlebar"><h2 id="sp-month-label">Calendar</h2><span class="sp-hint" id="sp-month-count"></span></div><div class="sp-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div id="sp-grid" class="sp-month"></div></section>
+<aside id="sp-detail" class="sp-detail" aria-live="polite"><h3>Choose a date</h3><p>Select a day to edit titles, captions, times and review status.</p></aside>
+</div>
+<section class="sp-month-roster" aria-label="Month post list and bulk editor">
+<div class="sp-titlebar"><h3>Posts in this month</h3><span class="sp-hint" id="sp-roster-count"></span></div>
+<div class="sp-actions"><button type="button" class="secondary" id="sp-select-all">Select all visible</button><button type="button" class="secondary" id="sp-clear-selected">Clear selection</button><span id="sp-selected-count" class="sp-hint">0 selected</span></div>
+<div id="sp-month-rows" class="sp-month-rows"></div>
+<details class="sp-topic-details" id="sp-bulk-panel"><summary>Bulk edit selected posts</summary>
+<p class="sp-hint">Only checked posts change. Individual exceptions are preserved on subsequent month regenerations.</p>
+<div class="sp-builder-grid">
+ <label>Format <select id="sp-b-format"><option value="">Keep formats</option><option value="video">Video</option><option value="image">Image</option><option value="carousel">Carousel</option><option value="poll">Poll</option><option value="link">Link</option></select></label>
+ <label>Platform <select id="sp-b-platform"><option value="">Keep channels</option><option value="youtube">YouTube only</option><option value="facebook">Facebook only</option><option value="instagram">Instagram only</option><option value="tiktok">TikTok only</option><option value="noticeboard">Noticeboard only</option><option value="all">All suitable selected platforms</option></select></label>
+ <label>Audience area <select id="sp-b-audience"><option value="">Keep audience</option><option value="all">Local, regional and tourists</option><option value="local">Local</option><option value="regional">Regional</option><option value="tourist">Tourist</option></select></label>
+ <label>Membership audience <select id="sp-b-member"><option value="">Keep audience class</option><option value="all">Everyone</option><option value="supporters">Interested supporters</option><option value="founders">Potential founders</option><option value="future-members">Prospective members</option><option value="families">Families</option><option value="volunteers">Volunteers</option><option value="clubs">Partner clubs</option></select></label>
+ <label>Gender (opt-in only) <select id="sp-b-gender"><option value="">Keep</option><option value="all">Everyone</option><option value="women">Women</option><option value="men">Men</option><option value="self-described">Self-described</option></select></label>
+ <label>Status <select id="sp-b-status"><option value="">Keep status</option><option>Idea</option><option>Draft</option><option>For review</option><option>Approved</option><option>Scheduled</option><option>Published</option><option>Rejected</option></select></label>
+ <label>Set posting time (Brisbane) <input type="time" id="sp-b-time"></label>
+ <label>Shift dates by days <input type="number" id="sp-b-shift" min="-14" max="14" step="1" value="0"></label>
+</div>
+<button type="button" id="sp-b-apply">Apply changes to selected posts</button><p class="sp-hint" id="sp-b-feedback" role="status"></p>
+</details>
+</section>
+</section>
+<details id="sp-advanced" class="sp-advanced"><summary>Advanced: change the whole-year strategy</summary><section class="sp-builder" id="sp-builder" aria-labelledby="sp-build-heading">
+  <div class="sp-titlebar"><div><p class="eyebrow">OPTIONAL · ANNUAL DEFAULTS</p><h2 id="sp-build-heading">Full-year strategy controls</h2></div><span class="sp-tag">Calendar stays as it is until you apply</span></div>
+  <p class="sp-hint">Change the defaults used to create a new full-year strategy. For normal planning, use the monthly controls above.</p>
   <div class="sp-builder-grid">
     <label>Start date <input id="sp-start" type="date"></label>
     <label>How often? <select id="sp-volume"><option value="one">One post a day</option><option value="balanced" selected>Daily + weekend extras</option><option value="busy">Daily + busier weekends</option></select></label>
@@ -68,24 +150,7 @@
   <p class="sp-hint" id="sp-strategy-message" role="status">Your choices stay in this browser. Generated ideas remain drafts for your approval.</p>
   <div id="sp-preview" class="sp-preview" hidden aria-live="polite"></div>
 </section>
-<section id="sp-results" hidden aria-labelledby="sp-results-heading">
-<h2 id="sp-results-heading">Step 2 · Your draft calendar</h2>
-<p class="sp-hint">Your chosen strategy generated this draft. You can edit or move individual posts below. Changes to the controls above won't rebuild anything until you press Generate again.</p>
-<div class="sp-top" id="sp-stats" aria-live="polite"></div>
-<div class="sp-controls">
-<label>Month <select id="sp-month" aria-label="Choose calendar month"></select></label>
-<label>Category <select id="sp-cat" aria-label="Filter by category"><option value="all">All categories</option></select></label>
-<label>Channel <select id="sp-channel" aria-label="Filter by channel"><option value="all">All selected channels</option><option value="youtube">YouTube</option><option value="youtube-standard">YouTube long-form</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="noticeboard">Straddie Noticeboard</option></select></label>
-<label>Campaigns <select id="sp-paid"><option value="all">Organic + ad ideas</option><option value="organic">Organic only</option><option value="paid">Paid candidates only</option></select></label>
-<button id="sp-csv" type="button">Export CSV</button><button id="sp-reset" type="button" class="secondary">Clear local edits</button>
-</div>
-<div class="sp-legend"><span><i class="sp-dot q"></i>QLD school holidays</span><span><i class="sp-dot n"></i>NSW school holidays</span><span><i class="sp-dot b"></i>Weekend bonus</span><span>Brisbane time · NSW Western Division summer extension included</span></div>
-<div class="sp-layout">
-<section class="sp-calendar" aria-label="Seven-day monthly calendar"><div class="sp-titlebar"><h2 id="sp-month-label">Calendar</h2><span class="sp-hint" id="sp-month-count"></span></div><div class="sp-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div id="sp-grid" class="sp-month"></div></section>
-<aside id="sp-detail" class="sp-detail" aria-live="polite"><h3>Choose a date</h3><p>Select a day to edit titles, captions, times and review status.</p></aside>
-</div>
-</section>
-<div class="sp-source">
+</details><div class="sp-source">
 <strong>Source and production notes:</strong> This demo uses the Sandy Sports 46-page architecture, plus official <a href="https://education.qld.gov.au/about-us/calendar/future-dates">Queensland 2027 school holidays</a>, <a href="https://education.qld.gov.au/about/Pages/termDates.aspx">Queensland 2026 dates</a> and <a href="https://education.nsw.gov.au/schooling/calendars/2027">NSW 2027 school holidays</a> (<a href="https://education.nsw.gov.au/schooling/calendars/2026">2026</a>). Queensland holidays receive the stronger content boost; NSW provides a smaller secondary boost. Non-government school dates can differ. Future forecasts, events, eligibility, fundraising and platform ad specs require verification before publication. The proposed <a href="https://github.com/auraofintelligence/straddie-noticeboard-cloudflare">Noticeboard Network</a> isn't an operating ad delivery channel. No live accounts, posting integrations or spending authorisation are attached.
 </div>
 </div></main><div data-site-footer></div></body></html>
