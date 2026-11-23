@@ -1,9 +1,39 @@
 import {renderDaySignature,signatureOfficer} from './social-day-signatures.js?v=20261124-office-signatures';
 // Pure, CSP-safe views for the Sandy Sports social workbench. No account or publishing actions.
 export const LAYER_ICONS=Object.freeze({
-  fish:'🐟',bait:'🪝',weather:'🌤️',safety:'🛟',events:'📅',holidays:'🏖️',
-  nswHolidays:'🧳',camping:'🏕️',competition:'🏆',newsletter:'📰',
-  membership:'🤝',raffles:'🎟️',fundraisers:'🎯',wishes:'🎁',community:'💬',surprise:'✨',daily:'📌'
+  "volleyball": "🏐",
+  "other": "🏉",
+  "vision": "💡",
+  "voice": "🗳️",
+  "visitors": "🧳",
+  "places": "🏝️",
+  "facilities": "🏗️",
+  "film": "🎬",
+  "events": "🎪",
+  "skills": "🏅",
+  "funding": "🤝",
+  "safety": "🛟",
+  "volunteers": "🙌",
+  "news": "✉️",
+  "health": "❤️",
+  "flagFootball": "🏈",
+  "beachCricket": "🏏",
+  "beachFootball": "⚽",
+  "beachRugbyLeague": "🏉",
+  "beach5s": "🏉",
+  "airBadminton": "🏸",
+  "beachTennis": "🎾",
+  "ultimate": "🥏",
+  "beachHandball": "🤾",
+  "netball": "🏐",
+  "afl": "🏉",
+  "fitness": "🏃",
+  "islandGames": "✨",
+  "weather": "🌤️",
+  "holidays": "🎒",
+  "nswHolidays": "🧳",
+  "surprise": "✨",
+  "daily": "📌"
 });
 export const STATUS_OPTIONS=Object.freeze(['Idea','Draft','Assets in progress','Ready to review','Reviewed']);
 const formatDate=value=>new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(value+'T00:00:00Z'));
