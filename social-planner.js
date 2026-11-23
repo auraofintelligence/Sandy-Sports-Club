@@ -23,6 +23,7 @@ const holidayRanges=[
 ["NSW","2026-12-18","2027-01-27"],["NSW-W","2027-01-28","2027-02-03"],["NSW","2027-04-12","2027-04-23"],["NSW","2027-07-05","2027-07-16"],["NSW","2027-09-27","2027-10-08"],["NSW","2027-12-21","2028-01-28"],["NSW-W","2028-01-29","2028-02-04"]
 ];
 const formatCycle=["video","video","carousel","video","video","image","video","video","poll","video","video","link"];
+const angleCycle=["Quick explainer","Beginner viewpoint","Family-friendly idea","Visitor perspective","Local community angle","Practical demonstration","Fun challenge","One-minute discussion","Facilities perspective","Three-town idea","What would it take?","Community choice","Behind the scenes","Simple checklist","Myth versus fact","Follow-up question"];
 const $esc=s=>String(s==null?"":s).replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
 const pad=n=>String(n).padStart(2,"0"), add=(s,n)=>new Date(Date.parse(s+"T00:00:00Z")+86400000*n).toISOString().slice(0,10);
 const weekday=s=>(new Date(s+"T00:00:00Z").getUTCDay()+6)%7;
@@ -44,15 +45,15 @@ function brief(post){
  let action="Ask: "+cat.cta;
  let format=style==="video"?"Video structure: 0–3s hook; 3–20s example or practical tip; 20–30s takeaway and invitation. If serialised, overlap 2 seconds between adjacent clips.":style==="poll"?"Use one specific answerable question and a small set of choices.":"Use concise text and one clear illustrative visual.";
  let caveat=cat.id==="safety"?" WEATHER/SAFETY HOLD: obtain and date-stamp verified Bureau of Meteorology or official guidance shortly before publication; never invent a future forecast.":cat.id==="events"?" EVENTS HOLD: mention actual dates or countdowns only after the organiser confirms permissions and the event.":cat.id==="funding"?" FUNDRAISING HOLD: no raffle, donation or grant claim without eligible entity, review and approval.":cat.id==="news"?" PROGRESS HOLD: describe only work actually completed.":" Clearly identify Sandy Sports as a proposal, not an operating club.";
- return open+" "+format+" "+action+caveat;
+ return open+" Creative approach: "+post.angle+". "+format+" "+action+caveat;
 }
 function makePost(date,seq,catIndex,serial,extra){
- const cat=categories[catIndex],topic=cat.topics[(serial*7+seq*3)%cat.topics.length],fmt=formatCycle[serial%formatCycle.length],h=holidays(date);
+ const cat=categories[catIndex],topic=cat.topics[(serial*7+seq*3)%cat.topics.length],fmt=formatCycle[serial%formatCycle.length],h=holidays(date),angle=angleCycle[(serial+catIndex*3)%angleCycle.length];
  const addBoard=["visitors","vision","places","events","volunteers","funding","news"].includes(cat.id)&&serial%4===0;
  let channels=channelFormats[fmt].slice();if(addBoard&&!channels.includes("noticeboard"))channels.push("noticeboard");
  const paid=(seq===0 && serial%7===0)||(h.q&&serial%11===0)||(h.n&&!h.q&&serial%19===0);
  const group=h.both?"QLD/NSW family visitors":h.q?"Queensland school-holiday visitors":h.n?"NSW visitors":cat.id==="funding"?"Potential local partners":"Local residents and interested visitors";
- return {id:date+"-"+seq,date,time:seq===0?"08:30":seq===1?"12:30":seq===2?"17:30":"19:00",cat:catIndex,title:topic,format:fmt,channels,paid,group,brief:"",page:cat.url,dayExtra:extra||"",seq,sourceHold:["safety","events","funding","news"].includes(cat.id)};
+ return {id:date+"-"+seq,date,time:["07:30","09:30","11:30","13:30","15:30","17:30","19:30","20:30"][seq]||"21:00",cat:catIndex,title:topic+" · "+angle,topic,angle,format:fmt,channels,paid,group,brief:"",page:cat.url,dayExtra:extra||"",seq,sourceHold:["safety","events","funding","news"].includes(cat.id)};
 }
 function build(s){
  const r=rand(Number(s.replace(/-/g,""))+18403),pool=[];
@@ -73,13 +74,16 @@ function build(s){
  let serial=0,all=[],dayMap=new Map();
  for(let i=0;i<365;i++){
   const date=add(s,i),wd=weekday(date),h=holidays(date),tom=holidays(add(s,i+1)),entry=[];
-  const create=(cat,extra)=>{entry.push(makePost(date,entry.length,cat,serial++,extra))};
+  const create=(cat,extra,customTitle)=>{const post=makePost(date,entry.length,cat,serial++,extra);if(customTitle){post.topic=customTitle;post.title=customTitle+" · "+post.angle}entry.push(post)};
   create(pool[i],"Daily anchor");
-  let extras=(wd===4?1:wd===5?2:wd===6?1:0);
+  let extras=(wd===4?1:wd===5?2:wd===6?1:0);if([3,4,5].includes(wd))extras+=1;
   if(h.q)extras+=1;if(h.both)extras+=1;else if(h.n&&!h.q&&i%2===0)extras+=1;
-  if((tom.q&&!h.q)||(tom.n&&!h.n))extras+=1;
+  // School-holiday start countdowns are added below as separate, clearly labelled ideas.
   const extraPool=h.q?["visitors","health","voice","safety","other","volleyball"]:h.n?["visitors","voice","other","health"]:wd>=4?["visitors","other","health","voice","safety"]:["vision","volunteers","film","skills","funding","places"];
-  for(let n=0;n<extras;n++){const key=extraPool[(i+n*3+Math.floor(r()*extraPool.length))%extraPool.length];const ci=categories.findIndex(x=>x.id===key);create(ci,n===0&&wd>=4?"Weekend bonus":h.q?"QLD holiday boost":h.n?"NSW holiday boost":"Holiday lead-in")}
+  for(let n=0;n<extras;n++){if(n===0&&[3,4,5].includes(wd)){const word=wd===3?"Thursday weekend outlook":wd===4?"Friday forecast update":"Saturday conditions update";create(categories.findIndex(x=>x.id==="safety"),"Verified weather placeholder",word+" (verify official forecast before posting)");continue}const key=extraPool[(i+n*3+Math.floor(r()*extraPool.length))%extraPool.length];const ci=categories.findIndex(x=>x.id===key);create(ci,n===0&&wd>=4?"Weekend bonus":h.q?"QLD holiday boost":h.n?"NSW holiday boost":"Weekend or holiday lead-in")}
+  if(tom.q&&!h.q)create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","Queensland school holidays start tomorrow: help shape Sandy Sports");
+  if(tom.n&&!h.n)create(categories.findIndex(x=>x.id==="visitors"),"One-day holiday countdown","NSW school holidays start tomorrow: what would you like to play on Straddie?");
+  if(date.endsWith("-01"))create(categories.findIndex(x=>x.id==="news"),"Monthly newsletter draft","Month-start newsletter ideas: confirm progress and invite feedback");
   dayMap.set(date,{date,posts:entry,holiday:h});all.push(...entry);
  }
  return {all,dayMap};
@@ -121,7 +125,7 @@ function renderDetail(){
  for(const p of match){
   const cat=categories[p.cat],override=edits[p.id]||{},status=override.status||"Idea",note=override.note||"",spec=platformText[p.format]+(p.channels.includes("noticeboard")?" Noticeboard adaptation (proposed): static 1920×1080 for TV; 1080×1920 portrait kiosk; responsive web notice with a QR code and expiry.":"");
   const special=p.sourceHold?'<span class="sp-tag warn">Verify before publishing</span>':'';
-  html+='<article class="sp-item" data-item="'+$esc(p.id)+'"><div class="sp-meta">'+$esc(p.time)+' AEST · '+$esc(p.dayExtra)+' · '+$esc(cat.name)+'</div><h4>'+$esc(p.title)+'</h4><span class="sp-tag">'+$esc(p.format.toUpperCase())+'</span>'+special+(p.paid?'<span class="sp-tag ad">Paid ad candidate (not authorised)</span>':"")+'<p><strong>Channels:</strong> '+$esc(channelNames(p))+'</p><p><strong>Asset specs:</strong> '+$esc(spec)+'</p><p><strong>Production:</strong> '+$esc(brief(p))+'</p><p><strong>Suggested copy:</strong> '+$esc("Could Sandy Sports explore "+p.title.charAt(0).toLowerCase()+p.title.slice(1)+"? It is still a community proposal, and your ideas could help shape what comes next. "+cat.cta)+'</p><p><strong>Audience:</strong> '+$esc(p.group)+(p.paid?"; <strong>ad spend:</strong> not set / requires approval":"")+'</p><p><strong>Source:</strong> <a href="'+p.page+'">'+$esc(cat.name)+" page</a></p><label>Status<select class=\"sp-status\" data-id=\""+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label><label>Working notes<textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Edit the hook, final caption, assets, source checks, or approval notes...">'+$esc(note)+'</textarea></label><div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save notes</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
+  html+='<article class="sp-item" data-item="'+$esc(p.id)+'"><div class="sp-meta">'+$esc(p.time)+' AEST · '+$esc(p.dayExtra)+' · '+$esc(cat.name)+'</div><h4>'+$esc(p.title)+'</h4><span class="sp-tag">'+$esc(p.format.toUpperCase())+'</span>'+special+(p.paid?'<span class="sp-tag ad">Paid ad candidate (not authorised)</span>':"")+'<p><strong>Channels:</strong> '+$esc(channelNames(p))+'</p><p><strong>Asset specs:</strong> '+$esc(spec)+'</p><p><strong>Production:</strong> '+$esc(brief(p))+'</p><p><strong>Suggested copy:</strong> '+$esc("Could Sandy Sports explore "+p.topic.charAt(0).toLowerCase()+p.topic.slice(1)+"? It is still a community proposal, and your ideas could help shape what comes next. "+cat.cta)+'</p><p><strong>Audience:</strong> '+$esc(p.group)+(p.paid?"; <strong>ad spend:</strong> not set / requires approval":"")+'</p><p><strong>Source:</strong> <a href="'+p.page+'">'+$esc(cat.name)+" page</a></p><label>Status<select class=\"sp-status\" data-id=\""+$esc(p.id)+'">'+["Idea","Draft","For review","Approved","Scheduled","Published"].map(x=>'<option'+(x===status?" selected":"")+">"+x+"</option>").join("")+'</select></label><label>Working notes<textarea class="sp-note" data-id="'+$esc(p.id)+'" placeholder="Edit the hook, final caption, assets, source checks, or approval notes...">'+$esc(note)+'</textarea></label><div class="sp-actions"><button type="button" data-save="'+$esc(p.id)+'">Save notes</button><button type="button" class="secondary" data-copy="'+$esc(p.id)+'">Copy brief</button></div></article>';
  }
  host.innerHTML=html;
 }
