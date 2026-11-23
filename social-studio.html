@@ -12,6 +12,7 @@
 <script defer src="/site.js"></script>
 <script type="module" src="/studio/sandy-studio-app.js?v=20261124-calendar-density"></script>
 <script type="module" src="/studio/sandy-workflows.js"></script>
+<script type="module" src="/studio/sandy-brainstorm.js?v=20261124-parity"></script>
 </head>
 <body>
 <div data-site-header></div>
@@ -38,7 +39,46 @@
     <span><strong>SIGNALS</strong> · Holidays, events & recaps</span>
   </div>
   <div id="social-planner-desk"><p role="status">Preparing Sandy Sports Social Studio…</p></div>
-  <section class="studio-handoff" id="sandy-handoffs" aria-labelledby="studio-handoff-title">
+  <details class="studio-ideas" id="sandy-ideas">
+  <summary><span>💡 Ideas inbox & brainstorms</span><small>Capture an original idea · review or archive · hand off to production</small></summary>
+  <div class="studio-ideas-inner">
+    <p>PLFC also has a separate brainstorming desk. This is Sandy's browser-local counterpart: no prewritten fishing ideas, no invented events, and no direct publishing. Ideas enter the production register only when you deliberately send them for review.</p>
+    <div class="studio-ideas-layout">
+      <form id="sandy-ideas-form" class="studio-ideas-form">
+        <input type="hidden" id="sandy-idea-id" name="id">
+        <label>Idea or working title <input name="title" maxlength="180" required placeholder="Your idea"></label>
+        <div class="studio-form-pair">
+          <label>Topic <select name="category" id="sandy-idea-category" required></select></label>
+          <label>Possible date <input type="date" name="date"></label>
+        </div>
+        <div class="studio-form-pair">
+          <label>Platform / outlet <select name="channel">
+            <option value="undecided">To decide</option><option value="youtube">YouTube</option><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="noticeboard">Noticeboard Network (proposed)</option><option value="multiple">Multiple</option>
+          </select></label>
+          <label>Planning stage <select name="stage">
+            <option value="idea">Idea</option><option value="developing">Developing</option><option value="review">For committee consideration</option><option value="archived">Archived</option>
+          </select></label>
+        </div>
+        <label>Notes and concept <textarea name="notes" maxlength="4500" rows="3" placeholder="Your own thinking, approach, creative brief, or questions"></textarea></label>
+        <div class="studio-form-pair">
+          <label>Source or inspiration link <input name="source" type="url" maxlength="700" placeholder="https://..."></label>
+          <label>Contributor (self-entered) <input name="author" maxlength="100" placeholder="Not a verified identity"></label>
+        </div>
+        <div class="studio-buttons">
+          <button type="submit" class="button coral">Save idea locally</button>
+          <button type="button" class="button outline" id="sandy-idea-new">New idea</button>
+          <button type="button" class="button outline" id="sandy-idea-export">Export idea register</button>
+        </div>
+        <p id="sandy-ideas-status" class="studio-small" role="status"></p>
+      </form>
+      <aside class="studio-ideas-results">
+        <div class="studio-ideas-heading"><h3>Working ideas</h3><label>Show <select id="sandy-ideas-filter"><option value="open">Open ideas</option><option value="all">All including archived</option><option value="archived">Archived only</option></select></label></div>
+        <div id="sandy-ideas-list"><p>No ideas saved yet.</p></div>
+      </aside>
+    </div>
+  </div>
+</details>
+<section class="studio-handoff" id="sandy-handoffs" aria-labelledby="studio-handoff-title">
     <div class="studio-handoff-head">
       <div><p class="eyebrow">PRODUCTION & APPROVALS</p><h2 id="studio-handoff-title">Commissioning and committee review</h2>
       <p>Move a selected studio draft into a preparation brief. Propose in-house production or a Ready SET Co-op handoff, then collect links and a committee decision reference. Nothing is sent automatically.</p></div>
