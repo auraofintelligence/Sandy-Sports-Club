@@ -163,7 +163,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       '</select></label>'+audience+'</div>'+
       '<p class="annual-small">NSW visits form a separate, smaller wave: two suggestions per week by default versus three for QLD breaks. Western NSW summer extensions receive up to one suggestion per week. Overlap never doubles the daily cap.</p>'+
       '<p class="annual-small">Audience categories guide content, not who can view public posts. Gender is voluntary and never inferred. No automated publishing is enabled.</p>'+
-      '<div class="annual-actions"><button type="button" class="button" data-annual-save'+(busy?' disabled':'')+'>'+(reviewOnly?'Keep trial settings in this tab':'Save committee settings')+'</button>'+
+      '<div class="annual-actions"><button type="button" class="button" data-annual-save'+(busy?' disabled':'')+'>'+(reviewOnly?'Save draft settings in this browser':'Save committee settings')+'</button>'+
       '<button type="button" class="button outline" data-annual-reload'+(busy?' disabled':'')+'>Reload saved settings</button></div></div>';
   }
 
@@ -716,7 +716,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       selectMonth(e.value);
     }
     if(!batchDirty && !settings[overrideBucket()]?.[scopeKey()]){monthDraft=null;batchMonth='';}
-    notice=changed()?(reviewOnly?'Trial changes are unsaved. Keep them in this tab to try another layout.':'Unsaved changes. Select Save committee settings to share them.'):'Settings match the saved version.';
+    notice=changed()?(reviewOnly?'Unsaved browser-only changes. Save this local revision before trying another layout.':'Unsaved changes. Select Save committee settings to share them.'):'Settings match the saved version.';
     draw();
   });
   mount.addEventListener('click',event=>{
