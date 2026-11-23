@@ -59,18 +59,16 @@ async function init(){
    const rows=[...(Array.isArray(source.events)?source.events:[]).map(item=>({...item,source:"event"})),
      ...(Array.isArray(source.meetings)?source.meetings:[]).map(item=>({...item,source:"meeting"}))];
    const valid=rows.filter(item=>/^20\d\d-(0[1-9]|1[0-2])-[0-3]\d$/.test(item.date||"")&&
-     !Number.isNaN(Date.parse(item.date+"T00:00:00Z"))&&item.title?.trim());
+     validCalendarDate(item.date)&&item.title?.trim());
    if(!valid.length){output.textContent="No dated event or meeting drafts were found in this browser's Sandy committee demo.";return}
    if(!window.confirm("Import "+valid.length+" tentative committee demo date(s) into the local Studio? This reloads the saved Studio settings, so save current edits first. Imported dates do not authorise publication."))return;
-   const {importKey}=await import("./social-event-import.js");
+   const {importKey,validCalendarDate}=await import("./social-event-import.js");
    const {defaultCampaignSettings}=await import("./social-campaign-engine.js");
    const next=structuredClone(settings||defaultCampaignSettings());
    const merged=new Map((next.milestones||[]).map(item=>[item.id,item]));
    for(const record of valid.slice(0,80)){
     const id=importKey(record.source,String(record.id||record.title+"|"+record.date));
-    const before=merged.get(id);
-    const changed=before&&(before.title!==record.title||before.date!==record.date);
-    merged.set(id,{id,kind:record.source,title:String(record.title).slice(0,140),date:record.date,sourceUrl:"",confirmed:Boolean(before?.confirmed&&!changed)});
+    merged.set(id,{id,kind:record.source,title:String(record.title).slice(0,140),date:record.date,sourceUrl:"",confirmed:false});
    }
    if(merged.size>80){output.textContent="The Studio has a maximum of 80 planning anchors. Remove older dates before importing.";return}
    next.milestones=[...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
