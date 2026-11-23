@@ -28,6 +28,9 @@
 .sp-pattern-row .sp-visibility{font-size:.74rem;justify-content:flex-end}
 .sp-pattern-row small{font-size:.73rem;color:#5c7480}
 .sp-day.empty .count{opacity:.65}
+.sp-day.preview{border-style:dashed;background:#f4fbff}
+.sp-day.preview.selected{border-style:solid;background:#def7f2}
+.sp-day.preview .count{font-weight:700;color:#086d83}
 .sp-add-slot{margin:12px 0;background:#f3f9f9;padding:12px;border-radius:9px;border:1px solid #d0e3e8}
 .sp-add-slot label{font-weight:700;font-size:.82rem;display:block}
 .sp-add-slot select{width:100%;max-width:300px;min-height:39px;margin:8px 0;border:1px solid #abc6c9;border-radius:7px;padding:6px;background:#fff}
@@ -89,7 +92,7 @@
 <details class="sp-month-panel" id="sp-month-panel" open>
 <summary>Patterns & frequency sliders <small>Everything is off until you choose a pattern</small></summary>
 <div class="sp-month-form" id="sp-month-form">
-<p class="sp-hint"><strong>Start from zero.</strong> Tick the categories you want, set each frequency in posts per week, preview, then apply to <strong id="sp-config-month-label">this month</strong>. No example posts or captions are inserted.</p>
+<p class="sp-hint"><strong>Start from zero.</strong> Tick the categories you want, set each frequency in posts per week, preview, then apply to <strong id="sp-config-month-label">this month</strong>. The calendar updates as a preview when you move a slider. Nothing is committed until you press Apply. No example posts or captions are inserted.</p>
 <details id="sp-layer-details" class="sp-topic-details" open>
 <summary>Content patterns · 15 categories</summary>
 <p class="sp-hint">Switch on a category to activate its slider. Set 1–7 posts per week. The “Show” toggle only changes visibility, never deletes a post.</p>
@@ -118,6 +121,7 @@
 <div class="sp-actions sp-build-actions">
   <button type="button" id="sp-m-preview">Preview this month</button>
   <button type="button" id="sp-m-apply" disabled>Apply patterns to month</button>
+  <button type="button" id="sp-y-apply" class="secondary">Apply these patterns to all 365 days</button>
   <button type="button" id="sp-m-undo" class="secondary" disabled>Undo</button>
 </div>
 <p id="sp-month-feedback" class="sp-hint" role="status">The calendar starts blank. Nothing is scheduled until you enable patterns and apply them.</p>
