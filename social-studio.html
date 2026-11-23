@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102d40">
+<meta name="description" content="Sandy Sports Social Studio: layered 12-month planning, day and week patterns, media formats, timing signals and private production handoff drafts.">
+<title>Social Studio | Sandy Sports proposal</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css">
+<link rel="stylesheet" href="/studio/social-campaigns.css">
+<link rel="stylesheet" href="/studio/sandy-studio.css">
+<script defer src="/site.js"></script>
+<script type="module" src="/studio/sandy-studio-app.js"></script>
+<script type="module" src="/studio/sandy-workflows.js"></script>
+</head>
+<body>
+<div data-site-header></div>
+<main id="main">
+<section class="studio-intro">
+  <div class="studio-intro-copy">
+    <p class="eyebrow">COMMITTEE TOOLS · SANDY SPORTS CLUB PROPOSAL</p>
+    <h1>Social Studio</h1>
+    <p>Plan by day, week or month. Shape 32 sport and community topic layers, timing signals and creative formats. Keep every proposed activity distinct from an approved club event.</p>
+    <div class="studio-quick-links"><a href="/committee.html#social">Committee desk</a><a href="/social-planner.html">Simple pattern calendar</a><a href="/join.html">Expressions of interest</a></div>
+  </div>
+  <img src="/studio/sandy-topic-icons.svg" alt="Sandy Sports activity and community icons" width="300" height="300" loading="eager">
+</section>
+<div class="studio-content">
+  <div class="studio-security" role="note">
+    <strong>Browser-only planning prototype, not an authorised committee system.</strong>
+    <span>Saved plans and revisions stay in this browser. No verified officer identity, shared database, actual approval, publishing connection, member records, SMS or paid advertising is active. Any self-entered authorisation evidence must still be confirmed by a real committee.</span>
+  </div>
+  <div class="studio-highlights" aria-label="Main studio features">
+    <span><strong>DAY</strong> · Individual post schedule</span>
+    <span><strong>WEEK</strong> · Reusable day patterns</span>
+    <span><strong>MONTH</strong> · Pattern sliders & previews</span>
+    <span><strong>SIGNALS</strong> · Holidays, events & recaps</span>
+  </div>
+  <div id="social-planner-desk"><p role="status">Preparing Sandy Sports Social Studio…</p></div>
+  <section class="studio-handoff" id="sandy-handoffs" aria-labelledby="studio-handoff-title">
+    <div class="studio-handoff-head">
+      <div><p class="eyebrow">PRODUCTION & APPROVALS</p><h2 id="studio-handoff-title">Commissioning and committee review</h2>
+      <p>Move a selected studio draft into a preparation brief. Propose in-house production or a Ready SET Co-op handoff, then collect links and a committee decision reference. Nothing is sent automatically.</p></div>
+      <div class="studio-lock"><strong>Local diary only</strong><small>Names and timestamps are self-entered or device-generated. They are not verified signatures.</small></div>
+    </div>
+    <div class="studio-handoff-grid">
+      <form id="sandy-handoff-form" class="studio-handoff-form">
+        <input type="hidden" name="id" id="sandy-handoff-id">
+        <label>Working title <input type="text" name="title" maxlength="160" required placeholder="An item chosen from the Studio or your own title"></label>
+        <div class="studio-form-pair">
+          <label>Proposed date <input type="date" name="date" id="sandy-handoff-date"></label>
+          <label>Brief reference <input type="text" name="reference" maxlength="160" placeholder="Studio post ID / source page"></label>
+        </div>
+        <label>Draft brief <textarea rows="4" name="brief" maxlength="5000" placeholder="What should be made, by whom, and why?"></textarea></label>
+        <div class="studio-form-pair">
+          <label>Production route <select name="producer"><option value="in-house">In-house / volunteer idea</option><option value="ready-set">Ready SET Co-op (proposed handoff)</option><option value="other">Other contractor (proposal only)</option></select></label>
+          <label>Review route <select name="reviewer"><option value="founding">Prospective founding group</option><option value="committee">Committee (when established)</option><option value="secretary">Secretary (when appointed)</option><option value="webmaster">Webmaster (when activated)</option></select></label>
+        </div>
+        <div class="studio-form-pair">
+          <label>Workflow status <select name="status"><option value="draft">Draft brief</option><option value="proposed">Handoff proposed, not sent</option><option value="prepared">Prepared for committee review</option><option value="revision">Changes requested (self-reported)</option><option value="evidence">Decision evidence supplied, not verified</option><option value="closed">Closed / withdrawn</option></select></label>
+          <label>Target delivery date <input type="date" name="due"></label>
+        </div>
+        <div class="studio-form-pair">
+          <label>Prepared by (self-entered) <input name="author" maxlength="100" placeholder="Name or proposed office"></label>
+          <label>Decision attributed to (self-entered) <input name="decisionBy" maxlength="100" placeholder="Reviewer or office, if evidence exists"></label>
+        </div>
+        <div class="studio-form-pair">
+          <label>Decision reference URL <input type="url" name="evidence" placeholder="https://..." maxlength="700"></label>
+          <label>Published post URL (if real) <input type="url" name="publishedUrl" placeholder="https://..." maxlength="700"></label>
+        </div>
+        <label>Committee feedback / production notes <textarea name="notes" rows="3" maxlength="5000"></textarea></label>
+        <p class="studio-small">An entered name, URL or approval status does not prove authority. Formal approvals require future authenticated committee access and a server audit trail.</p>
+        <div class="studio-buttons"><button type="submit" class="button coral">Save draft locally</button><button class="button outline" id="sandy-handoff-clear" type="button">New brief</button><button type="button" class="button outline" id="sandy-handoff-export">Export JSON</button><button type="button" class="button outline" id="sandy-handoff-export-csv">Export CSV</button></div>
+        <p id="sandy-handoff-status" role="status"></p>
+      </form>
+      <aside class="studio-handoff-aside">
+        <h3>Local review register</h3>
+        <p class="studio-small">Drafts can be prepared for the future committee, including a co-operative production route. An actual assignment still requires deliberate contact and the necessary approval.</p>
+        <div id="sandy-handoff-list"><p>No handoff briefs yet.</p></div>
+        <details id="sandy-handoff-history"><summary>Revision and decision references</summary>
+          <p class="studio-small">This is a browser-local diary, not an independently verifiable audit.</p>
+          <div id="sandy-handoff-revisions"></div>
+        </details>
+      </aside>
+    </div>
+  </section>
+  <div class="studio-bottom-links"><a href="/social-planner.html">Simple 365-day pattern calendar</a><a href="/committee.html#social">Committee home</a><a href="/index.html#page-directory">All site pages</a></div>
+</div>
+</main>
+<dialog id="trial-draft" class="studio-dialog" aria-label="Review draft pack"><h2>Draft production pack</h2>
+<p>This is proposed material only. You can copy it, or create a local handoff brief for committee consideration.</p>
+<pre id="trial-draft-body"></pre>
+<div class="studio-buttons"><button id="trial-draft-copy" class="button coral" type="button">Copy draft</button><button id="trial-draft-handoff" class="button outline" type="button">Prepare handoff brief</button><button id="trial-draft-close" class="button outline" type="button">Close</button></div>
+</dialog>
+<div data-site-footer></div>
+</body></html>
