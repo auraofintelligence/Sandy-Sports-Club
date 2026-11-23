@@ -4,8 +4,8 @@ const LABELS={
   nswHolidays:['🧳','NSW school holiday inspiration','A smaller secondary visitor wave'],
   event:['🎪','Confirmed events and competitions','Start invitations before the event'],
   meeting:['📋','Club meetings','Reminder and RSVP lead-ins'],
-  season_open:['🐟','Programme starts','Only use verified programme dates'],
-  season_close:['🛟','Programme ends','Explain verified limits and upcoming changes']
+  programme_open:['🐟','Programme starts','Only use verified programme dates'],
+  programme_close:['🛟','Programme ends','Explain verified limits and upcoming changes']
 };
 const escMap=Object.fromEntries([['&','&amp;'],['<','&lt;'],['>','&gt;'],['"','&quot;'],["'",'&#39;']]);
 const fallbackEsc=value=>String(value??'').replace(/[&<>"']/g,x=>escMap[x]);
