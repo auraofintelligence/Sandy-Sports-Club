@@ -1,4 +1,5 @@
-const here = (location.pathname.split('/').pop() || 'index.html');
+const slug = (location.pathname.split('/').pop() || 'index.html');
+const here = slug.includes('.') ? slug : slug + '.html';
 const pages = [
   ['index.html','Vision'],['sport-mixed-beach-volleyball.html','Beach volleyball'],['sports.html','All sand sports'],['flag-football.html','Flag football'],
   ['places.html','Three towns'],['programme.html','Events'],['film-club.html','Film club'],
