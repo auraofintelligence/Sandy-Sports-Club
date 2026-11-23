@@ -58,7 +58,7 @@ function updateUndoButtons(){
 }
 function editedOrApproved(post){
  const record=edits[post.id]||{};
- return !!Object.keys(record).length || ["Approved","Scheduled","Published"].includes(record.status||"");
+ return !!post.manual || !!Object.keys(record).length || ["Approved","Scheduled","Published"].includes(record.status||"");
 }
 function monthFor(p){return (edits[p.id]?.date||p.date).slice(0,7)}
 function stateFor(p){return edits[p.id]?.status||"Idea"}
@@ -253,136 +253,183 @@ function message(s){$("sp-strategy-message").textContent=s}
 const areaLabels={all:"Local, regional and tourist audiences",local:"Local residents",regional:"Regional visitors",tourist:"Holidaymakers and tourists"};
 const classLabels={all:"Everyone",supporters:"Interested supporters",founders:"Potential founding members","future-members":"Prospective members",families:"Families",volunteers:"Prospective volunteers",clubs:"Partner clubs and organisations"};
 const genderLabels={all:"Everyone / unspecified",women:"Women (opt-in)",men:"Men (opt-in)","self-described":"Self-described (opt-in)"};
+const patternRules=[
+ {id:"weekend",name:"Weekend & Friday lead-in",cat:"visitors",defaultRate:2,max:7,unit:"/wk"},
+ {id:"qld",name:"QLD school holiday posts",cat:"visitors",defaultRate:3,max:7,unit:"/wk"},
+ {id:"nsw",name:"NSW school holiday posts",cat:"visitors",defaultRate:1,max:7,unit:"/wk"},
+ {id:"weather",name:"Thu / Fri / Sat weather checks",cat:"safety",defaultRate:3,max:3,unit:"/wk"},
+ {id:"newsletter",name:"Monthly newsletter",cat:"news",defaultRate:1,max:2,unit:"/month"},
+ {id:"countdown",name:"Day-before holiday reminders",cat:"visitors",defaultRate:1,max:2,unit:"/start"}
+];
 function defaultMonthSettings(){
- return {base:1,limit:7,weekend:1,video:strategy.video,audience:"all",member:"all",gender:"all",ads:false,platforms:strategy.channels.slice(),layers:Object.fromEntries(categories.map(c=>[c.id,{enabled:strategy.topics[c.id]!=="off",frequency:"normal",priority:"normal",visible:true}]))};
+ return {limit:5,video:67,audience:"all",member:"all",gender:"all",ads:false,platforms:platformIds.slice(),
+ layers:Object.fromEntries(categories.map(c=>[c.id,{enabled:false,rate:2,visible:true}])),
+ rules:Object.fromEntries(patternRules.map(x=>[x.id,{enabled:false,rate:x.defaultRate}]))};
 }
-function monthConfig(month){const saved=monthSettings[month]||{},def=defaultMonthSettings();return {...def,...saved,platforms:saved.platforms?.slice()||def.platforms,layers:Object.fromEntries(categories.map(c=>[c.id,{...def.layers[c.id],...(saved.layers?.[c.id]||{})}]))}}
+function monthConfig(month){
+ const saved=monthSettings[month]||{},def=defaultMonthSettings();
+ return {...def,...saved,platforms:saved.platforms?.slice()||def.platforms,
+ layers:Object.fromEntries(categories.map(c=>[c.id,{...def.layers[c.id],...(saved.layers?.[c.id]||{})}])),
+ rules:Object.fromEntries(patternRules.map(x=>[x.id,{...def.rules[x.id],...(saved.rules?.[x.id]||{})}]))};
+}
+function layerRow(c){
+ return '<div class="sp-pattern-row off" data-category="'+c.id+'"><label><input type="checkbox" id="sp-m-on-'+c.id+'"> '+$esc(c.emoji+" "+c.name)+'</label>'+
+ '<div class="sp-frequency"><input type="range" min="1" max="7" step="1" id="sp-m-rate-'+c.id+'" value="2" disabled aria-label="'+$esc(c.name)+' posts per week"><output id="sp-m-rate-out-'+c.id+'">2/wk</output></div>'+
+ '<label class="sp-visibility"><input type="checkbox" id="sp-m-show-'+c.id+'" checked> Show</label></div>';
+}
+function ruleRow(rule){
+ return '<div class="sp-pattern-row off" data-rule="'+rule.id+'"><label><input type="checkbox" id="sp-r-on-'+rule.id+'"> '+$esc(rule.name)+'</label>'+
+ '<div class="sp-frequency"><input type="range" min="1" max="'+rule.max+'" step="1" id="sp-r-rate-'+rule.id+'" value="'+rule.defaultRate+'" disabled aria-label="'+$esc(rule.name)+' frequency"><output id="sp-r-rate-out-'+rule.id+'">'+rule.defaultRate+rule.unit+'</output></div><small>Optional</small></div>';
+}
+function updateSliderLabels(){
+ $("sp-m-video-out").textContent=$("sp-m-video").value+"%";
+ for(const c of categories){
+  const on=$("sp-m-on-"+c.id).checked,range=$("sp-m-rate-"+c.id);
+  range.disabled=!on;$("sp-m-rate-out-"+c.id).textContent=on?range.value+"/wk":"off";
+  const row=range.closest?.(".sp-pattern-row");if(row)row.classList.toggle("off",!on);
+ }
+ for(const rule of patternRules){
+  const on=$("sp-r-on-"+rule.id).checked,range=$("sp-r-rate-"+rule.id);
+  range.disabled=!on;$("sp-r-rate-out-"+rule.id).textContent=on?range.value+rule.unit:"off";
+  const row=range.closest?.(".sp-pattern-row");if(row)row.classList.toggle("off",!on);
+ }
+}
 function setupMonthControls(){
- const root=$("sp-layer-choices");root.innerHTML=categories.map(c=>'<div class="sp-layer-row" data-category="'+c.id+'"><label><input type="checkbox" id="sp-m-on-'+c.id+'"> '+$esc(c.emoji+" "+c.name)+'</label><label><span class="sr-only">Frequency for '+$esc(c.name)+'</span><select id="sp-m-freq-'+c.id+'"><option value="low">Rare</option><option value="normal">Normal</option><option value="high">Frequent</option></select></label><label><span class="sr-only">Priority for '+$esc(c.name)+'</span><select id="sp-m-priority-'+c.id+'"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label><input class="sp-layer-show" type="checkbox" id="sp-m-show-'+c.id+'"> Show</label></div>').join("");
- $("sp-m-video").addEventListener("input",()=>{$("sp-m-video-out").textContent=$("sp-m-video").value+"%"});
- $("sp-month-form").addEventListener("change",e=>{
+ $("sp-layer-choices").innerHTML=categories.map(layerRow).join("");
+ $("sp-rule-choices").innerHTML=patternRules.map(ruleRow).join("");
+ $("sp-month-form").addEventListener("input",e=>{
+  if(e.target.matches?.('input[type="range"]'))updateSliderLabels();
   monthPreview=null;$("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
+ });
+ $("sp-month-form").addEventListener("change",e=>{
+  updateSliderLabels();monthPreview=null;$("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
   if(e.target.classList.contains("sp-layer-show")){
    liveLayerVisibility[viewMonth]={};
    for(const c of categories)liveLayerVisibility[viewMonth][c.id]={visible:$("sp-m-show-"+c.id).checked};
    render();
   }
-  monthMessage("Settings changed. Preview before applying. Current posts are unchanged.");
+  monthMessage("Settings changed. Preview the month to see exactly how many blank slots your selected patterns will place.");
  });
 }
 function hydrateMonthControls(){
  const cfg=monthConfig(viewMonth),label=new Date(viewMonth+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"long",year:"numeric"});
  $("sp-config-month-label").textContent=label;
- $("sp-m-base").value=cfg.base;$("sp-m-limit").value=cfg.limit;$("sp-m-weekend").value=cfg.weekend;
- $("sp-m-video").value=cfg.video;$("sp-m-video-out").textContent=cfg.video+"%";
+ $("sp-m-limit").value=cfg.limit;$("sp-m-video").value=cfg.video;
  $("sp-m-audience").value=cfg.audience;$("sp-m-member").value=cfg.member;$("sp-m-gender").value=cfg.gender;$("sp-m-ads").checked=cfg.ads;
  for(const p of platformIds)$("sp-m-"+p).checked=cfg.platforms.includes(p);
- for(const c of categories){const lay=cfg.layers[c.id];$("sp-m-on-"+c.id).checked=lay.enabled;$("sp-m-freq-"+c.id).value=lay.frequency;$("sp-m-priority-"+c.id).value=lay.priority;$("sp-m-show-"+c.id).checked=lay.visible!==false}
+ for(const c of categories){const lay=cfg.layers[c.id];$("sp-m-on-"+c.id).checked=lay.enabled;$("sp-m-rate-"+c.id).value=lay.rate;$("sp-m-show-"+c.id).checked=lay.visible!==false}
+ for(const rule of patternRules){const cfgRule=cfg.rules[rule.id];$("sp-r-on-"+rule.id).checked=cfgRule.enabled;$("sp-r-rate-"+rule.id).value=cfgRule.rate}
+ updateSliderLabels();
  monthPreview=null;$("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
  liveLayerVisibility[viewMonth]=cfg.layers;
  $("sp-copy-month-choices").innerHTML=monthsList().filter(m=>m!==viewMonth).map(m=>'<label><input type="checkbox" data-copy-month="'+m+'"> '+$esc(new Date(m+"-01T00:00:00Z").toLocaleDateString("en-AU",{timeZone:"UTC",month:"short",year:"numeric"}))+'</label>').join("");
- monthMessage("Month settings are suggestions until you apply them. Approved or edited posts are protected.");
+ monthMessage("All patterns are off until you turn them on. Edited or approved posts stay protected.");
  updateUndoButtons();
 }
 function readMonthControls(){
- const cfg={base:Number($("sp-m-base").value),limit:Number($("sp-m-limit").value),weekend:Number($("sp-m-weekend").value),video:Number($("sp-m-video").value),audience:$("sp-m-audience").value,member:$("sp-m-member").value,gender:$("sp-m-gender").value,ads:$("sp-m-ads").checked,platforms:platformIds.filter(p=>$("sp-m-"+p).checked),layers:{}};
- for(const c of categories)cfg.layers[c.id]={enabled:$("sp-m-on-"+c.id).checked,frequency:$("sp-m-freq-"+c.id).value,priority:$("sp-m-priority-"+c.id).value,visible:$("sp-m-show-"+c.id).checked};
+ const cfg={limit:Number($("sp-m-limit").value),video:Number($("sp-m-video").value),audience:$("sp-m-audience").value,member:$("sp-m-member").value,gender:$("sp-m-gender").value,ads:$("sp-m-ads").checked,platforms:platformIds.filter(p=>$("sp-m-"+p).checked),layers:{},rules:{}};
+ for(const c of categories)cfg.layers[c.id]={enabled:$("sp-m-on-"+c.id).checked,rate:Number($("sp-m-rate-"+c.id).value),visible:$("sp-m-show-"+c.id).checked};
+ for(const rule of patternRules)cfg.rules[rule.id]={enabled:$("sp-r-on-"+rule.id).checked,rate:Number($("sp-r-rate-"+rule.id).value)};
  return cfg;
 }
-function monthMessage(s){$("sp-month-feedback").textContent=s}
+function monthMessage(t){$("sp-month-feedback").textContent=t}
+function anyEnabled(cfg){return categories.some(c=>cfg.layers[c.id].enabled)||patternRules.some(x=>cfg.rules[x.id].enabled)}
 function validateMonth(cfg){
- if(!cfg.platforms.length)return "Choose at least one platform.";
- if(!categories.some(c=>cfg.layers[c.id].enabled))return "Enable at least one category.";
- if(cfg.base>cfg.limit)return "The daily limit must be at least the base posting frequency.";
- if(cfg.video<100&&!cfg.platforms.some(x=>["facebook","instagram","noticeboard"].includes(x)))return "With only YouTube/TikTok, use 100% video or add a channel for images.";
+ if(!cfg.platforms.length&&anyEnabled(cfg))return "Choose at least one publishing platform.";
+ if(cfg.video<100&&anyEnabled(cfg)&&!cfg.platforms.some(x=>["facebook","instagram","noticeboard"].includes(x)))return "With only YouTube/TikTok selected, choose 100% video or add an image-friendly channel.";
+ if(!Number.isInteger(cfg.limit)||cfg.limit<1||cfg.limit>8)return "Choose a daily limit from 1 to 8.";
  return "";
 }
-function monthDates(month){return Array.from(days.keys()).filter(x=>x.startsWith(month))}
+function monthDates(month){return Array.from(days.keys()).filter(date=>date.startsWith(month))}
+function emptySlot(date,catIndex,pattern,cfg,seq,id){
+ const category=categories[catIndex],h=holidays(date);
+ return {id,date,time:["08:30","11:30","14:30","17:30","19:30","20:30","21:30","22:00"][seq%8],cat:catIndex,
+ title:pattern==="Category"?category.name+" · blank post":pattern+" · blank post",topic:"",angle:"",relatedTopic:"",pattern,format:"video",
+ channels:[],paid:false,group:areaLabels[cfg.audience],page:category.url,dayExtra:"User-selected pattern",
+ seq,sourceHold:["safety","funding","events","news"].includes(category.id),
+ audienceRegion:cfg.audience,audienceMember:cfg.member,audienceGender:cfg.gender};
+}
 function proposalForMonth(month,cfg){
- const dates=monthDates(month),old=monthPosts(month),protectedPosts=old.filter(editedOrApproved),replaceable=old.filter(x=>!editedOrApproved(x));
- const keepByDate=new Map(dates.map(d=>[d,protectedPosts.filter(p=>(edits[p.id]?.date||p.date)===d)]));
- const salt=Number(month.replace("-",""))+strategy.mix*233+cfg.base*443+cfg.video*67+cfg.limit*47;
- const batchNonce=Date.now().toString(36)+"-"+Math.floor(Math.random()*1000000).toString(36);
- const random=rand(salt),newPosts=[],limitsExceeded=[],layerWeights=categories.map(c=>{
-  const l=cfg.layers[c.id];if(!l.enabled)return 0;
-  const f={low:.4,normal:1,high:2.5}[l.frequency]||1;
-  const p={low:.7,normal:1,high:1.7}[l.priority]||1;
-  return c.n*f*p;
- });
- const available=categories.map((c,i)=>i).filter(i=>layerWeights[i]>0);
- let serial=0,lastCat=-1;
- const choose=(date)=>{
-  const h=holidays(date);
-  const weights=available.map(i=>{
-   let w=layerWeights[i];
-   if(h.q&&["visitors","health","voice","volleyball"].includes(categories[i].id))w*=1.7;
-   if(h.n&&!h.q&&["visitors","voice","other"].includes(categories[i].id))w*=1.35;
-   if(i===lastCat)w*=.35;
-   return w;
-  });
-  let v=random()*weights.reduce((a,b)=>a+b,0),picked=available[available.length-1];
-  for(let j=0;j<available.length;j++){v-=weights[j];if(v<=0){picked=available[j];break}}
-  lastCat=picked;return picked;
+ const dates=monthDates(month),old=monthPosts(month),protectedPosts=old.filter(editedOrApproved),replaceable=old.filter(p=>!editedOrApproved(p));
+ const countByDate=new Map(dates.map(date=>[date,protectedPosts.filter(p=>(edits[p.id]?.date||p.date)===date).length]));
+ const proposed=[], skipped=[],patternCounts=new Map(),nonce=Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
+ const weekdayOf=weekday;
+ const categoryIndex=id=>categories.findIndex(c=>c.id===id);
+ const addTo=(date,cat,label)=>{
+  if(cat<0||!countByDate.has(date))return false;
+  const n=countByDate.get(date);if(n>=cfg.limit){skipped.push(label+" "+date);return false}
+  const post=emptySlot(date,cat,label,cfg,n,"slot-"+nonce+"-"+proposed.length);
+  proposed.push(post);countByDate.set(date,n+1);patternCounts.set(label,(patternCounts.get(label)||0)+1);return true;
  };
- for(const date of dates){
-  const h=holidays(date),wd=weekday(date),kept=keepByDate.get(date)||[];
-  let wanted=cfg.base;
-  if(wd>=5)wanted+=cfg.weekend;
-  if(h.q&&strategy.qld!=="off")wanted+=strategy.qld==="high"?2:1;
-  if(h.n&&strategy.nsw!=="off")wanted+=strategy.nsw==="high"?2:1;
-  wanted=Math.min(cfg.limit,wanted);
-  if(kept.length>cfg.limit)limitsExceeded.push(date);
-  const count=Math.max(0,wanted-kept.length);
-  const safetyIdx=categories.findIndex(c=>c.id==="safety"),newsIdx=categories.findIndex(c=>c.id==="news"),visitorIdx=categories.findIndex(c=>c.id==="visitors");
-  const tomorrow=holidays(add(date,1));
-  for(let j=0;j<count;j++){
-   let ci=choose(date),special="";
-   if(j===0){
-    if(wd>=3&&wd<=5&&layerWeights[safetyIdx]>0&&!kept.some(p=>p.cat===safetyIdx)){
-     ci=safetyIdx;special=["Thursday","Friday","Saturday"][wd-3]+" weather outlook: verify current official forecast";
-    }else if(date.endsWith("-01")&&layerWeights[newsIdx]>0&&!kept.some(p=>p.cat===newsIdx)){
-     ci=newsIdx;special="Monthly Sandy Sports proposal newsletter: verify actual progress";
-    }else if(visitorIdx>=0&&layerWeights[visitorIdx]>0&&((tomorrow.q&&!h.q)||(tomorrow.n&&!h.n))){
-     ci=visitorIdx;special="School holiday begins tomorrow: invite visiting families to contribute ideas";
-    }
+ const evenly=(eligible,n,cat,label)=>{
+  if(!eligible.length||!n)return;
+  for(let j=0;j<n;j++){
+   const preferred=Math.min(eligible.length-1,Math.floor((j+.5)*eligible.length/n));
+   let placed=false;
+   for(let scan=0;scan<eligible.length;scan++){
+    const k=(preferred+scan)%eligible.length;
+    if(countByDate.get(eligible[k])<cfg.limit){placed=addTo(eligible[k],cat,label);if(placed)break}
    }
-   const p=makePost(date,kept.length+j,ci,serial++,"Monthly suggestion");
-   if(special){p.topic=special;p.title=special+" · "+p.angle}
-   p.id="monthly-"+month+"-"+batchNonce+"-"+date+"-"+j+"-"+serial;
-   p.audienceRegion=cfg.audience;p.audienceMember=cfg.member;p.audienceGender=cfg.gender;
-   p.group=areaLabels[cfg.audience];
-   p.relatedTopic=categories[ci].topics[(Math.floor(random()*categories[ci].topics.length))];
-   newPosts.push(p);
+   if(!placed)skipped.push(label+" (daily capacity full)");
   }
+ };
+ // Explicit date patterns are placed before general categories, so weather and countdowns do not get lost to the daily cap.
+ for(const rule of patternRules){
+  const config=cfg.rules[rule.id];if(!config.enabled)continue;
+  let eligible=dates.filter(d=>{
+   const wd=weekdayOf(d),h=holidays(d),next=holidays(add(d,1));
+   if(rule.id==="weekend")return wd>=4;
+   if(rule.id==="qld")return h.q;
+   if(rule.id==="nsw")return h.n;
+   if(rule.id==="weather")return wd>=3&&wd<=5;
+   if(rule.id==="newsletter")return true;
+   return (next.q&&!h.q)||(next.n&&!h.n);
+  });
+  let count=0;
+  if(rule.id==="newsletter")count=Math.min(config.rate,dates.length);
+  else if(rule.id==="countdown")count=eligible.length*config.rate;
+  else count=Math.round(config.rate*(rule.id==="weather"||rule.id==="weekend"?dates.length:eligible.length)/7);
+  if(rule.id==="weather")count=Math.min(count,eligible.length);
+  if(!count)continue;
+  let label={weekend:"Weekend lead-in",qld:"QLD school holiday",nsw:"NSW school holiday",weather:"Weather check · Thu/Fri/Sat",newsletter:"Monthly newsletter",countdown:"Holiday countdown · day before"}[rule.id];
+  if(rule.id==="newsletter"&&eligible.length>1)eligible=[eligible[0],eligible[Math.floor(eligible.length/2)]];
+  evenly(eligible,count,categoryIndex(rule.cat),label);
  }
- const protectedVideo=protectedPosts.filter(p=>effectivePost(p).format==="video").length;
- const desiredTotal=protectedPosts.length+newPosts.length;
- const wantedVideo=Math.max(0,Math.min(newPosts.length,Math.round(desiredTotal*cfg.video/100)-protectedVideo));
- const indices=shuffle(newPosts.map((_,i)=>i),rand(salt+73)),videoSet=new Set(indices.slice(0,wantedVideo));
- const other=["image","carousel","poll","link"];
- newPosts.forEach((p,i)=>{
-  p.format=videoSet.has(i)?"video":other[i%4];
-  const base=channelFormats[p.format].filter(ch=>cfg.platforms.includes(ch));
-  if(p.format==="video"&&cfg.platforms.includes("youtube")&&i%9===0)base.push("youtube-standard");
-  if(cfg.platforms.includes("noticeboard")&&i%3===0&&!base.includes("noticeboard"))base.push("noticeboard");
-  p.channels=base.length?base:cfg.platforms.filter(x=>channelFormats[p.format].includes(x));
-  if(!p.channels.length){p.format="video";p.channels=cfg.platforms.filter(x=>["youtube","facebook","instagram","tiktok"].includes(x))}
-  if(!p.channels.length){p.format="image";p.channels=["noticeboard"]}
-  p.paid=cfg.ads&&i%9===0&&p.channels.some(x=>["youtube","facebook","instagram","tiktok"].includes(x));
+ // Only the category patterns that the user explicitly switched on produce slots.
+ for(const c of categories){
+  const layer=cfg.layers[c.id];if(!layer.enabled||layer.rate<1)continue;
+  evenly(dates,Math.round(layer.rate*dates.length/7),categoryIndex(c.id),"Category");
+ }
+ const desired=Math.round((protectedPosts.length+proposed.length)*cfg.video/100);
+ const fixedVideo=protectedPosts.filter(p=>effectivePost(p).format==="video").length;
+ const needVideo=Math.max(0,Math.min(proposed.length,desired-fixedVideo));
+ const formatOptions=["image","carousel","poll","link"];
+ const videoSlots=new Set(shuffle(proposed.map((_,i)=>i),rand(Number(month.replace("-",""))+cfg.video*47)).slice(0,needVideo));
+ proposed.forEach((p,i)=>{
+  p.format=videoSlots.has(i)?"video":formatOptions[i%4];
+  p.channels=channelFormats[p.format].filter(x=>cfg.platforms.includes(x));
+  if(p.format==="video"&&cfg.platforms.includes("youtube")&&i%12===0)p.channels.push("youtube-standard");
+  if(!p.channels.length){
+   if(cfg.platforms.some(x=>["youtube","tiktok"].includes(x))){p.format="video";p.channels=channelFormats.video.filter(x=>cfg.platforms.includes(x))}
+   else if(cfg.platforms.includes("noticeboard")){p.format="image";p.channels=["noticeboard"]}
+  }
+  p.paid=!!cfg.ads&&i%9===0&&p.channels.some(x=>["youtube","facebook","instagram","tiktok"].includes(x));
  });
- return {month,cfg,keep:protectedPosts,replaceable,newPosts,limitsExceeded,current:old.length,planned:protectedPosts.length+newPosts.length};
+ return {month,cfg,keep:protectedPosts,replaceable,newPosts:proposed,skipped,patternCounts,current:old.length,planned:protectedPosts.length+proposed.length};
 }
 function previewMonth(){
  const cfg=readMonthControls(),error=validateMonth(cfg);
  if(error){monthMessage(error);return}
- const preview=proposalForMonth(viewMonth,cfg),pr=preview.planned;
- monthPreview=preview;
- const videos=preview.newPosts.filter(p=>p.format==="video").length+preview.keep.filter(p=>effectivePost(p).format==="video").length;
- const holidayDays=monthDates(viewMonth).filter(d=>{const h=holidays(d);return h.q||h.n}).length;
- const rows=preview.newPosts.slice(0,7).map(p=>'<li>'+$esc(p.date+" · "+p.title)+"</li>").join("");
- $("sp-month-preview").innerHTML='<strong>Monthly preview (not applied)</strong><p>'+preview.current+' existing posts → '+pr+' proposed posts ('+preview.keep.length+' protected; '+preview.replaceable.length+' replaceable). '+Math.round(100*videos/Math.max(1,pr))+'% video. '+holidayDays+' QLD/NSW holiday dates in the month.</p><p class="sp-hint">'+preview.newPosts.length+' new suggestions, with '+preview.cfg.platforms.length+' platform(s) and your chosen audiences. '+(preview.limitsExceeded.length?preview.limitsExceeded.length+' date(s) exceed the cap because existing edited/approved posts will be kept.':"")+'</p><ul>'+rows+'</ul>';
+ const preview=proposalForMonth(viewMonth,cfg);monthPreview=preview;
+ const video=preview.newPosts.filter(p=>p.format==="video").length+preview.keep.filter(p=>effectivePost(p).format==="video").length;
+ const breakdown=[...preview.patternCounts.entries()].map(([name,count])=>'<li>'+$esc(name)+": "+count+" blank slots</li>").join("");
+ const datesUsed=new Set(preview.keep.map(x=>effectivePost(x).date).concat(preview.newPosts.map(x=>x.date))).size;
+ $("sp-month-preview").innerHTML='<strong>Preview · no changes made</strong><p>'+preview.current+' existing slots → '+preview.planned+' planned slots across '+datesUsed+' dates. '+Math.round(video*100/Math.max(1,preview.planned))+'% video; '+preview.keep.length+' protected; '+preview.replaceable.length+' replaceable.</p>'+
+ (breakdown?'<ul>'+breakdown+'</ul>':'<p>No patterns enabled: this month will be blank except for any manually edited or approved posts.</p>')+
+ (preview.skipped.length?'<p class="sp-hint">'+preview.skipped.length+' slots could not fit within your daily limit.</p>':'')+
+ '<p class="sp-hint">These are empty content slots. You decide the titles, ideas and captions.</p>';
  $("sp-month-preview").hidden=false;$("sp-m-apply").disabled=false;
- monthMessage("Preview ready. No posts changed. Select Apply to update this month only.");
+ monthMessage("Preview ready. Apply only if this is the pattern mix you want for the month.");
 }
 function applyMonth(){
  if(!monthPreview||monthPreview.month!==viewMonth||JSON.stringify(monthPreview.cfg)!==JSON.stringify(readMonthControls())){monthMessage("Preview the current settings before applying.");return}
@@ -395,7 +442,7 @@ function applyMonth(){
  const ok=saveMonthData();
  selectedIds.clear();monthPreview=null;
  $("sp-m-apply").disabled=true;$("sp-month-preview").hidden=true;
- render();updateUndoButtons();
+ refreshStats();render();updateUndoButtons();
  monthMessage("Month applied: "+created+" suggestions, "+retained+" edited/approved posts preserved. "+(ok?"Saved in this browser.":"Local saving failed: export CSV to preserve this plan."));
 }
 function copyMonthSettings(){
