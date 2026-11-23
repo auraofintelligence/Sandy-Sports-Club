@@ -239,8 +239,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     const limits=dayTypeNames.map(({id,label,icon})=>
       '<fieldset class="annual-limit-pair"><legend>'+icon+' '+esc(label)+'</legend>'+
       '<div class="annual-limit-range-grid">'+
-      range('Minimum','🔽',id+'Min',batch.limits[id+'Min'],12)+
-      range('Maximum','🔼',id,batch.limits[id],12)+'</div>'+
+      range('Minimum','🔽',id+'Min',batch.limits[id+'Min'],20)+
+      range('Maximum','🔼',id,batch.limits[id],20)+'</div>'+
       '<small>'+batch.limits[id+'Min']+'–'+batch.limits[id]+' suggested posts per day</small></fieldset>').join('');
     const layers=CAMPAIGN_LAYERS.map(layer=>{
       const row=batch.layers[layer.id];
@@ -352,7 +352,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       monthName(m)+'<span>'+allVisible.filter(p=>p.date.startsWith(m)).length+' ideas</span></button>').join('')+'</div>'+
       '<label class="annual-start-choice">Year begins <input type="month" data-annual-start min="2026-01" max="2028-02" value="'+startMonth+'"></label></details>'+
       master+
-      '<p class="annual-small annual-footer-guidance">Ideas are drafts. Check dates, permissions, fishing rules and current conditions before publishing.</p></div>';
+      '<p class="annual-small annual-footer-guidance">Ideas are drafts. Check dates, permissions, applicable sport rules and current conditions before publishing.</p></div>';
   }
 
   function markup(){
@@ -768,7 +768,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       const date=pane.querySelector('[data-milestone-date]')?.value;
       const sourceUrl=pane.querySelector('[data-milestone-source]')?.value.trim()||'';
       const confirmed=Boolean(pane.querySelector('[data-milestone-confirm]')?.checked);
-      if(!['event','meeting','season_open','season_close'].includes(kind)||
+      if(!['event','meeting','programme_open','programme_close'].includes(kind)||
         !title||title.length<4||title.length>140||
         !/^20\d\d-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(date||'')||
         (sourceUrl&&!/^https:\/\/[^\s]+$/.test(sourceUrl))){
