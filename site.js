@@ -29,7 +29,7 @@ document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<
 const footerSections = [
   ['Explore',[['sports.html','Sports catalogue'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club']]],
   ['Build & back',[['join.html','Get involved'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
-  ['Clubhouse & tools',[['clubhouse.html','Clubhouse overview'],['members.html','Member demo'],['committee.html','Committee demo'],['social-planner.html','Social planner'],['webmaster.html','Webmaster demo']]]
+  ['Clubhouse & tools',[['clubhouse.html','Clubhouse overview'],['members.html','Member demo'],['committee.html','Committee demo'],['social-studio.html','Social Studio'],['webmaster.html','Webmaster demo']]]
 ];
 const footerNav = footerSections.map(([title,items])=>`<nav aria-label="${title}"><strong>${title}</strong>${items.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`).join('');
 document.querySelector('[data-site-footer]')?.insertAdjacentHTML('afterbegin',`<footer><div class="footer-top"><div><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>CLUB PROPOSAL</small></span></a><p>A proposal for island-wide sand sport, shared facilities, film and community life. No club or venue is yet established.</p></div>${footerNav}</div><div class="footer-bottom"><span>Proposal · No incorporated Sandy Sports Club or confirmed site is asserted.</span><span>Quandamooka Country · Minjerribah / North Stradbroke Island</span></div></footer><button class="guide-button" id="guide-button" aria-expanded="false" aria-controls="guide-panel"><img src="/assets/mozzie.webp" alt=""><span>Ask Mozzie</span></button><aside class="guide-panel" id="guide-panel" hidden><button class="guide-close" id="guide-close" aria-label="Close guide">×</button><img src="/assets/mozzie.webp" alt="Mozzie, Sandy Sports mascot"><h2>G'day, I'm Mozzie.</h2><p>Start with the sport ideas, explore three towns, or have your say on the proposal.</p><a href="/sports.html">Sports catalogue</a><a href="/places.html">Three towns</a><a href="/film-club.html">Film club</a><a href="/clubhouse.html">Clubhouse</a><a href="/join.html">Get involved</a></aside>`);
@@ -51,7 +51,7 @@ const committeeGuide=[
   route('committee-governance','Governance'),route('committee-sport','Sport operations'),
   route('committee-events','Events desk'),route('committee-film','Film governance'),
   route('committee-funding','Funding desk'),route('committee-assets','Asset desk'),
-  route('committee-members','Membership'),route('committee-publishing','Publishing'),route('social-planner','365-day social planner')
+  route('committee-members','Membership'),route('committee-publishing','Publishing'),route('social-studio','Social Studio'),route('social-planner','Simple pattern calendar')
 ];
 // Reading order follows a visitor's journey and includes each actual HTML page once.
 const pageGroups = [
