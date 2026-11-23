@@ -423,11 +423,16 @@ function applyBulk(){
   if(format)patch.format=format;
   if(platform){
    const fmt=format||ov.format||p.format;
-   if(["youtube","tiktok"].includes(platform)&&fmt!=="video"&&!format)patch.format="video";
+   if(["youtube","tiktok"].includes(platform)&&fmt!=="video")patch.format="video";
    if(platform==="all"){
+    const chosen=monthSettings[viewMonth]?.platforms||readMonthControls().platforms;
     const allowed=channelFormats[patch.format||fmt]||[];
-    patch.channels=(monthSettings[viewMonth]?.platforms||readMonthControls().platforms).filter(x=>allowed.includes(x));
-    if(!patch.channels.length)patch.channels=["noticeboard"];
+    patch.channels=chosen.filter(x=>allowed.includes(x));
+    if(!patch.channels.length&&chosen.some(x=>["youtube","tiktok"].includes(x))){
+      patch.format="video";
+      patch.channels=chosen.filter(x=>channelFormats.video.includes(x));
+    }
+    if(!patch.channels.length)patch.channels=chosen.filter(x=>x==="noticeboard");
    }else patch.channels=[platform];
   }
   if(region)patch.audienceRegion=region;if(member)patch.audienceMember=member;if(gender)patch.audienceGender=gender;
