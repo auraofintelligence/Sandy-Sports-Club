@@ -472,7 +472,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       historyRows=null;historyError='';
       try{localStorage.removeItem(offlineKey);}catch{}
       saveState=reviewOnly?'local':'shared';
-      saveMessage=reviewOnly?'Saved on this browser. These settings survive a refresh here; nothing is shared with Sandy Sports.':
+      saveMessage=reviewOnly?'Saved on this browser. The calendar now uses the saved topic switches and posting limits. This is not shared with Sandy Sports.':
         'Saved to the shared Sandy Sports database as version '+row.version+'. You can refresh without losing these settings.';
       notice=saveMessage;
     }catch(e){
