@@ -270,3 +270,34 @@
   .studio-content .annual-date-key strong{font-size:.68rem}
   .studio-content .annual-date-key small{font-size:.63rem}
 }
+
+/* User-led brainstorm. PLFC's separate brainstorming workflow remains optional,
+   with no canned content or implied committee approval. */
+.studio-ideas{background:#f7fbfa;border:1px solid #b8dad9;border-radius:16px;margin:1.4rem 0;overflow:hidden}
+.studio-ideas>summary{display:flex;justify-content:space-between;gap:.5rem 1rem;align-items:center;flex-wrap:wrap;padding:1rem 1.2rem;cursor:pointer;color:#10566a;font-weight:900;font-size:1.04rem}
+.studio-ideas>summary small{color:#5d7480;font-size:.75rem;font-weight:550}
+.studio-ideas[open]>summary{border-bottom:1px solid #d6e8e7;background:#edf7f4}
+.studio-ideas-inner{padding:1.1rem}
+.studio-ideas-inner>p{font-size:.86rem;color:#4e6971;line-height:1.55;margin:.1rem 0 .9rem}
+.studio-ideas-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:1rem}
+.studio-ideas-form,.studio-ideas-results{background:#fff;border:1px solid #d7e9e7;border-radius:11px;padding:1.05rem;min-width:0}
+.studio-ideas-form label{display:block;font-size:.84rem;font-weight:750;margin-bottom:.75rem}
+.studio-ideas-form input,.studio-ideas-form textarea,.studio-ideas-form select{display:block;width:100%;border:1px solid #aec7c7;background:#fff;color:#103e50;border-radius:8px;padding:.55rem;margin-top:.32rem;min-height:39px;font:inherit}
+.studio-ideas-form textarea{min-height:85px;resize:vertical}
+.studio-ideas-form input[type=hidden]{display:none}
+.studio-ideas-heading{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.studio-ideas-heading h3{margin:.15rem 0;font-size:1.1rem}
+.studio-ideas-heading label{font-size:.79rem}
+.studio-ideas-heading select{border:1px solid #aac8c7;border-radius:7px;padding:.36rem .5rem}
+.studio-ideas-results{max-height:650px;overflow:auto}
+.studio-idea-item{border-top:1px solid #deebed;padding:.9rem 0}
+.studio-idea-item-top{display:flex;gap:.4rem 1rem;justify-content:space-between;align-items:start}
+.studio-idea-item-top strong{font-size:.93rem;color:#174c5a}
+.studio-idea-item-top span{font-size:.7rem;background:#e4f2ec;color:#19634d;border-radius:5px;padding:.2rem .4rem;white-space:nowrap}
+.studio-idea-item p{font-size:.81rem;margin:.3rem 0;color:#435d65;overflow-wrap:anywhere}
+.studio-idea-item small{display:block;color:#5a7179;font-size:.72rem;line-height:1.4}
+.studio-idea-item .studio-buttons{gap:.35rem}
+.studio-idea-item button{border:1px solid #a0c4c8;border-radius:7px;color:#0f5969;background:#fff;font-weight:750;font-size:.74rem;cursor:pointer;padding:.35rem .5rem}
+.studio-idea-item button:hover{background:#eaf6f4}
+@media(max-width:850px){.studio-ideas-layout{grid-template-columns:1fr}.studio-ideas-results{max-height:450px}}
+@media(max-width:620px){.studio-ideas-inner{padding:.65rem}.studio-ideas>summary{padding:.8rem}.studio-ideas-form,.studio-ideas-results{padding:.75rem}}
