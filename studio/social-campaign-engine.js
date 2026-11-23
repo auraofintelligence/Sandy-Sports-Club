@@ -1031,7 +1031,7 @@ export function generateCampaignYear(startMonth,settings=defaultCampaignSettings
     const monthSettings=settingsForDate(settings,day);
     if(!monthSettings.layers.nswHolidays?.enabled)continue;
     postsByDay.get(day).push({id:'nsw-holiday-eve-'+day,date:day,layerIds:['nswHolidays'],title:'NSW school holidays start tomorrow: ask visitors what they would play',
-      brief:'Verify NSW term dates and any current ferry, weather and fishing information before publishing.',cta:'Explore the Sandy Sports visitor ideas',
+      brief:'Verify NSW term dates and current ferry, weather and outdoor recreation information before publishing.',cta:'Explore the Sandy Sports visitor ideas',
       audience:monthSettings.layers.nswHolidays.audience,priority:9,sections:['NSW holiday lead-in'],composite:false,status:'suggestion'});
   }
   insertTimingSignals(settings,postsByDay);
