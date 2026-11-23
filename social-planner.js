@@ -225,7 +225,7 @@ function exportCsv(){
  const header=["date","time_AEST","category","title","format","channels","spec_profile_version","dimensions_and_duration","source_page","audience_area","membership_audience","voluntary_gender_audience","paid_candidate","spend_authorised","status","caption","production_brief","working_notes"];
  const quoted=x=>'"'+String(x==null?"":x).replace(/"/g,'""').replace(/\r?\n/g," ")+'"';
  const arr=[header.join(",")];
- for(const original of plan){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),MEDIA_PROFILE_VERSION,specsForPost(p),p.page,areaLabels[p.audienceRegion]||p.group,classLabels[p.audienceMember]||"Everyone",genderLabels[p.audienceGender]||"Everyone",p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
+ for(const original of plan.slice().sort((a,b)=>monthFor(a).localeCompare(monthFor(b))||(edits[a.id]?.date||a.date).localeCompare(edits[b.id]?.date||b.date)||(edits[a.id]?.time||a.time).localeCompare(edits[b.id]?.time||b.time))){const p=effectivePost(original),ov=edits[p.id]||{};arr.push([ov.date||p.date,ov.time||p.time,categories[p.cat].name,ov.title||p.title,p.format,channelNames(p),MEDIA_PROFILE_VERSION,specsForPost(p),p.page,areaLabels[p.audienceRegion]||p.group,classLabels[p.audienceMember]||"Everyone",genderLabels[p.audienceGender]||"Everyone",p.paid?"Yes":"No","No",ov.status||"Idea",ov.caption||suggestedCaption(p),brief(p),ov.note||""].map(quoted).join(","))}
  const blob=new Blob(["\ufeff"+arr.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="sandy-sports-social-"+start+"-365-days.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
 function copyBrief(id){const original=plan.find(x=>x.id===id);if(!original)return;const p=effectivePost(original),ov=edits[id]||{},content=[(ov.date||p.date)+" "+(ov.time||p.time)+" AEST",ov.title||p.title,categories[p.cat].name,p.format,channelNames(p),specsForPost(p),ov.caption||suggestedCaption(p),brief(p),p.page,"Audience: "+(areaLabels[p.audienceRegion]||p.group)+" · "+(classLabels[p.audienceMember]||"Everyone")+" · "+(genderLabels[p.audienceGender]||"Everyone"),p.paid?"Paid candidate: budget not set or approved":"Organic","Status: "+(ov.status||"Idea"),ov.note||""].join("\n\n");if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(content).catch(()=>window.prompt("Copy brief:",content))}else window.prompt("Copy brief:",content)}
@@ -425,7 +425,7 @@ function applyBulk(){
    if(["youtube","tiktok"].includes(platform)&&fmt!=="video"&&!format)patch.format="video";
    if(platform==="all"){
     const allowed=channelFormats[patch.format||fmt]||[];
-    patch.channels=strategy.channels.filter(x=>allowed.includes(x));
+    patch.channels=(monthSettings[viewMonth]?.platforms||readMonthControls().platforms).filter(x=>allowed.includes(x));
     if(!patch.channels.length)patch.channels=["noticeboard"];
    }else patch.channels=[platform];
   }
