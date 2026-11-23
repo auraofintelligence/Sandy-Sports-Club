@@ -49,7 +49,7 @@ export const brisbaneToday=()=>{
 };
 export const postTime=(post,edit)=>edit?.time||post.suggestedTime||'18:00';
 export const isMinuteTime=value=>typeof value==='string'&&/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
-export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),metricsForPost=()=>[]}){
+export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),metricsForPost=()=>[],getPostTime=post=>post.suggestedTime||"08:00"}){
   const [year,m]=month.split('-').map(Number);
   const count=new Date(Date.UTC(year,m,0)).getUTCDate();
   const first=(new Date(Date.UTC(year,m-1,1)).getUTCDay()+6)%7;
@@ -70,14 +70,14 @@ export function renderMonthCalendar({month,days,posts,esc,today=brisbaneToday(),
     if(index<1||index>count){
       html+='<span class="annual-calendar-pad" aria-hidden="true"></span>';
     }else{
-      const date=month+'-'+String(index).padStart(2,'0'),data=cards.get(date),items=byDate.get(date)||[];
+      const date=month+'-'+String(index).padStart(2,'0'),data=cards.get(date),items=(byDate.get(date)||[]).slice().sort((a,b)=>getPostTime(a).localeCompare(getPostTime(b))||a.id.localeCompare(b.id));
       weekCount+=items.length;weekDays++;
       const qld=Boolean(data?.holiday),nsw=Boolean(data?.nswHoliday);
       const publicHoliday=Boolean(data?.publicHoliday),longWeekend=Boolean(data?.longWeekend);
       const temporal=date===today?'today':date<today?'past':'future';
       // One icon represents one post, even when several posts share a topic.
       // The calendar wraps them rather than hiding, sampling or deduplicating.
-      const icons=items.map(post=>({icon:layerIcon(post.layerIds[0]),title:post.title||'Planned post'}));
+      const icons=items.map(post=>({icon:layerIcon(post.layerIds[0]),title:(getPostTime(post)+" · "+(post.title||"Planned post"))}));
       const views=items.reduce((total,post)=>total+metricsForPost(post.id).reduce((n,item)=>n+(item.views??0),0),0);
       const hasLead=items.some(post=>post.timingSignal?.phase==='lead'||post.timingSignal&&!post.timingSignal.phase);
       const hasTentative=items.some(post=>post.timingSignal?.tentative);
