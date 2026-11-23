@@ -34,7 +34,7 @@ const platformIds=["youtube","facebook","instagram","tiktok","noticeboard"],defa
 function loadSettings(){try{return Object.assign(defaultSettings(),JSON.parse(localStorage.getItem("sandy-planner-settings-v3"))||{})}catch{return defaultSettings()}}
 function saveSettings(cfg){try{localStorage.setItem("sandy-planner-settings-v3",JSON.stringify(cfg))}catch{}}
 let strategy=loadSettings(),start=strategy.start,plan=[],days=new Map(),selected="",viewMonth="",edits={},generated=false;
-let monthSettings={},undoStack=[],selectedIds=new Set(),monthPreview=null,monthSalt=0,liveLayerVisibility={};
+let monthSettings={},undoStack=[],selectedIds=new Set(),monthPreview=null,liveLayerVisibility={};
 const storageKey=()=>["sandy-blank-planner-v3",start].join("-");
 function getEdits(){try{return JSON.parse(localStorage.getItem(storageKey()))||{}}catch{return{}}}
 function saveEdits(){try{localStorage.setItem(storageKey(),JSON.stringify(edits));return true}catch{return false}}
@@ -137,7 +137,7 @@ function render(){
   const shown=(showingPreview?previewPosts.filter(p=>p.date===date):postsOn(date).map(effectivePost)).filter(matches);
   monthItems+=shown.length;
   const flags=row.holiday;
-  out+='<button type="button" class="sp-day'+(shown.length?"":" empty")+(showingPreview?" preview":"")+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+(showingPreview?' proposed blank slots':' planned posts')+'" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+shown.length+(showingPreview?" preview":shown.length===1?" post":" posts")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
+  out+='<button type="button" class="sp-day'+(shown.length?"":" empty")+(showingPreview?" preview":"")+(date===selected?" selected":"")+'" data-date="'+date+'" aria-label="'+labelDate(date)+", "+shown.length+(showingPreview?' proposed blank slots':' planned posts')+'" aria-pressed="'+(date===selected?"true":"false")+'"><span class="date">'+d+'</span><span class="count">'+(shown.length?shown.length+(showingPreview?" preview":shown.length===1?" post":" posts"):"")+'</span><span class="markers">'+(flags.q?'<span class="q"></span>':'')+(flags.n?'<span class="n"></span>':'')+(weekday(date)>=4?'<span class="w"></span>':'')+"</span></button>";
  }
  $("sp-grid").innerHTML=out;$("sp-month-count").textContent=monthItems+(showingPreview?" preview slots (not applied)":" planned slots");
  renderDetail();renderMonthRoster();
