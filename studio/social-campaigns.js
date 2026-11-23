@@ -353,7 +353,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       '<label class="annual-calendar-filter">Topic <select data-annual-topic>'+
       '<option value="all">All topics</option>'+CAMPAIGN_LAYERS.map(l=>'<option value="'+l.id+'"'+(topicFilter===l.id?' selected':'')+'>'+
       esc((LAYER_ICONS[l.id]||'📌')+' '+l.label)+'</option>').join('')+'</select></label></div>'+
-      renderMonthCalendar({month:selectedMonth,days:plan.days,posts:current,esc,metricsForPost})+
+      renderMonthCalendar({month:selectedMonth,days:plan.days,posts:current,esc,metricsForPost,
+        getPostTime:post=>postTime(post,getEdit(post.id))})+
       '<div class="annual-calendar-legend"><span class="annual-legend-today">● Today</span>'+
       '<span class="annual-legend-past">◐ Past</span><span class="annual-legend-future">○ Future</span>'+
       '<span class="annual-legend-holiday"><span class="annual-cal-notation ph">PH</span> Public holiday</span>'+
