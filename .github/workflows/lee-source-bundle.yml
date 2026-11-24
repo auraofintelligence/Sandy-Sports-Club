@@ -1,0 +1,37 @@
+name: Package Sandy source for Cloudflare handoff
+on:
+  push:
+    paths:
+      - .github/workflows/lee-source-bundle.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create complete source ZIP (no passwords, git metadata or local secrets)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          source = Path(".")
+          target = Path("/tmp/sandy-sports-full-source.zip")
+          banned = {".git", "node_modules", "__pycache__"}
+          with ZipFile(target, "w", ZIP_DEFLATED, compresslevel=6) as bundle:
+              for path in sorted(source.rglob("*")):
+                  if not path.is_file() or any(part in banned for part in path.parts):
+                      continue
+                  if path.name in {".env", ".dev.vars", "wrangler.full.jsonc"} or path.name.startswith(".dev.vars."):
+                      continue
+                  bundle.write(path, arcname="Sandy-Sports-Club/" + str(path))
+          print(f"Complete Sandy source: {target.stat().st_size} bytes")
+          PY
+      - name: Upload full source for download and attachment to Lee
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandy-sports-full-repository-for-lee
+          path: /tmp/sandy-sports-full-source.zip
+          retention-days: 30
+          if-no-files-found: error
