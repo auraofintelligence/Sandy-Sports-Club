@@ -72,10 +72,29 @@ export async function peopleEndpoint(req,env,path,identity){
   ]);
   return json({ok:true,id:personId,version:1,person:data},201);
  }
- const match=path.match(/^\/api\/people\/([a-f0-9-]{36})(?:\/(revisions))?$/);
+ const match=path.match(/^\/api\/people\/([a-f0-9-]{36})(?:\/(revisions|link-account))?$/);
  if(match){
   const personId=match[1],row=await db.prepare('SELECT * FROM club_people WHERE id=?').bind(personId).first();
   if(!row)fail(404,'No person has that record identifier.','person_not_found');
+  if(match[2]==='link-account'&&req.method==='POST'){
+   requireRole(identity,['webmaster']);
+   if(env.SANDY_CLUB_APPROVALS!=='enabled')
+    fail(409,'Do not activate membership accounts until Sandy Sports has lawful governing authority.','club_not_established');
+   const b=await payload(req,5000),accountId=field(b.accountId,60),expected=version(b.version),at=now();
+   if(expected!==row.version)fail(409,'This person record changed. Reload it.','conflict');
+   const target=await db.prepare("SELECT id,role,state FROM club_accounts WHERE id=? AND role='member' AND state='active'").bind(accountId).first();
+   if(!target)fail(400,'Choose an activated member account.','invalid_account');
+   if(row.account_id&&row.account_id!==accountId)fail(409,'This person is already linked to an account.','already_linked');
+   const [changed]=await db.batch([
+    db.prepare('UPDATE club_people SET account_id=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND (account_id IS NULL OR account_id=?)')
+     .bind(accountId,identity.id,at,personId,expected,accountId),
+    revision(db,{kind:'person',resourceId:personId,resourceVersion:expected+1,action:'account_linked',actor:identity,at,
+      snapshot:{...view(row),accountId},changes:{accountId},guarded:true}),
+    audit(db,identity,'member_account_linked','person',personId,at,true)
+   ]);
+   if(!changed.meta.changes)fail(409,'This person was updated by another officer.','conflict');
+   return json({ok:true,version:expected+1});
+  }
   if(req.method==='GET')return json(match[2]?{revisions:await history(db,personId)}:{person:view(row)});
   if(req.method==='PATCH'&&!match[2]){
    const b=await payload(req,16000),expected=version(b.version),data=clean({...view(row),...b},env),at=now();
