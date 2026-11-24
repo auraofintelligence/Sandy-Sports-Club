@@ -42,6 +42,12 @@ function cleanFields(desk,input){
   if(f.type==='lines'&&trimmed.split(/\r?\n/).length>100)fail(400,'Please keep checklists to 100 lines.','too_many_lines');
   fields[f.key]=trimmed;
  }
+ if(desk.key==='stock'){
+  const onHand=Number(fields.opening||0)+Number(fields.inward||0)-Number(fields.outward||0);
+  if(onHand<0)fail(400,'Stock issued cannot exceed opening stock plus stock received.','negative_stock');
+ }
+ if(desk.key==='meetings'&&fields.startTime&&fields.endTime&&fields.endTime<=fields.startTime)
+  fail(400,'The meeting finish time must be after its start time.','invalid_meeting_time');
  if(JSON.stringify(fields).length>21000)fail(413,'This working draft is too long for one version.','too_large');
  return fields;
 }
