@@ -135,3 +135,50 @@ test('future active member can save only own preferences, contribute interests a
  assert.ok(!JSON.stringify(memberData.data).includes('Founding team planning meeting'));
  env.SANDY_CLUB_APPROVALS='disabled';
 });
+
+test('meeting follow-ups become separately audited to-dos exactly once',async()=>{
+ const draft={title:'Preseason sport planning',status:'draft',
+  fields:{meetingType:'Working group',date:'2027-03-14',startTime:'09:00',endTime:'10:00',
+   followUps:'Ask venue about shade | Secretary | 2027-03-18\nCheck sport equipment | Treasurer | 2027-03-20'}};
+ const created=await call('meetings','POST',draft);
+ const meetingId=created.data.id;
+ async function follow(){
+  const path='/api/suite/meetings/'+meetingId+'/followups';
+  const req=new Request('https://sandy.example'+path,{method:'POST',
+   headers:{'Content-Type':'application/json'},body:JSON.stringify({version:1})});
+  const res=await suiteEndpoint(req,env,path,webmaster);return res.json();
+ }
+ const first=await follow();assert.equal(first.created,2);
+ const second=await follow();assert.equal(second.created,0);assert.equal(second.alreadyPresent,2);
+ const todos=(await call('todos')).data.records;
+ assert.equal(todos.length,2);
+ assert.ok(todos.some(x=>x.fields.owner==='Secretary'));
+ assert.ok(todos.some(x=>x.fields.owner==='Treasurer'));
+ assert.equal(database.prepare("SELECT COUNT(*) AS n FROM club_records WHERE kind='task'").get().n,2);
+});
+test('stock receipts and issues maintain a safe versioned balance',async()=>{
+ const created=await call('stock','POST',{title:'Portable volleyball kits',status:'draft',
+  fields:{sku:'SANDY-VB-01',category:'Sports gear',opening:4,inward:0,outward:0}});
+ assert.equal(created.status,201);
+ const recordId=created.data.id;
+ async function move(version,direction,quantity,role=webmaster){
+  const path='/api/suite/stock/'+recordId+'/movement';
+  const req=new Request('https://sandy.example'+path,{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({version,direction,quantity,note:'Test stock movement'})});
+  return suiteEndpoint(req,env,path,role);
+ }
+ const received=await move(1,'receive',6);
+ const r=await received.json();assert.equal(r.version,2);assert.equal(r.balance,10);
+ const issued=await move(2,'issue',3);
+ assert.equal((await issued.json()).balance,7);
+ const latest=(await call('stock','GET',undefined,webmaster,'/'+recordId)).data.record;
+ assert.equal(latest.version,3);
+ assert.equal(latest.fields.inward,6);assert.equal(latest.fields.outward,3);
+ await assert.rejects(()=>move(2,'issue',1),e=>e.status===409);
+ await assert.rejects(()=>move(3,'issue',100),e=>e.status===409);
+ await assert.rejects(()=>move(3,'receive',1,{role:'committee',id:'committee'}),e=>e.status===403);
+ const history=(await call('stock','GET',undefined,webmaster,'/'+recordId+'/history')).data.history;
+ assert.equal(history.length,3);
+ assert.ok(history.some(h=>h.operation==='stock_issue'));
+ assert.ok(history.some(h=>h.operation==='stock_receive'));
+});
