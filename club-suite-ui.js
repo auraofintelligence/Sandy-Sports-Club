@@ -60,7 +60,7 @@ export function setupSandySuite({api,status,getIdentity}){
  '<button id="suite-new" type="button">New working record</button><button id="suite-export" type="button">Export CSV</button><button id="suite-reload" type="button">Refresh</button></div>'+
  '<p id="suite-notice" role="status" hidden></p><div id="suite-records" class="suite-records" aria-live="polite"></div>'+
  '<section id="suite-editor" class="suite-editor" hidden><header><h4 id="suite-editor-label"></h4><button id="suite-close" type="button">Close</button></header>'+
- '<form id="suite-form"><div class="suite-core"><label>Working title<input name="title" required maxlength="180"></label>'+
+ '<form id="suite-form" novalidate><div class="suite-core"><label>Working title<input name="title" required maxlength="180"></label>'+
  '<label>Working stage<select name="status">'+statusValues.map((v,i)=>'<option value="'+v+'">'+statusNames[i]+'</option>').join('')+'</select></label></div>'+
  '<nav id="suite-steps" class="suite-steps" aria-label="Stages of this working process"></nav>'+
  '<p id="suite-stage-notice">Work through the stages, then explicitly save the shared draft.</p>'+
@@ -101,7 +101,7 @@ export function setupSandySuite({api,status,getIdentity}){
    '><span>'+(i+1)+'</span>'+esc(name)+'</button>').join('');
   root.querySelectorAll('[data-stage]').forEach(area=>{area.hidden=Number(area.dataset.stage)!==step});
   find('suite-previous').disabled=step===0;find('suite-next').disabled=step===desk.steps.length-1;
-  find('suite-stage-notice').textContent='Stage '+(step+1)+' of '+desk.steps.length+'. You can save a partial working draft at any stage.';
+  find('suite-stage-notice').textContent='Stage '+(step+1)+' of '+desk.steps.length+'. Required fields must be completed before saving; unfinished work stays a draft.';
  }
  function close(){editor.hidden=true;editing=null;form.reset();find('suite-save-status').textContent=''}
  function edit(row){
@@ -150,6 +150,13 @@ export function setupSandySuite({api,status,getIdentity}){
   event.preventDefault();if(!desk)return;
   const request={title:form.elements.title.value.trim(),status:form.elements.status.value,fields:collect()};
   if(!request.title){form.elements.title.focus();return}
+  const missing=desk.fields.find(def=>def.required&&!String(request.fields[def.key]??'').trim());
+  if(missing){
+   step=desk.steps.indexOf(missing.step);drawStep();
+   find('suite-save-status').textContent='Complete the required field: '+missing.label+'.';
+   const input=form.elements.namedItem(missing.key);input?.focus({preventScroll:false});
+   return;
+  }
   const button=find('suite-save');button.disabled=true;find('suite-save-status').textContent='Saving to shared database…';
   try{
    const response=editing?await api('/api/suite/'+desk.key+'/'+editing.id,{method:'PATCH',data:{...request,version:editing.version}}):
