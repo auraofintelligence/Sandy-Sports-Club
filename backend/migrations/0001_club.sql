@@ -115,6 +115,15 @@ CREATE TABLE IF NOT EXISTS studio_post_edits(
  updated_by TEXT NOT NULL REFERENCES club_accounts(id),
  updated_utc TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS studio_metrics(
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ version INTEGER NOT NULL CHECK(version>0),
+ metrics_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(metrics_json)),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_utc TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS studio_briefs(
  id TEXT PRIMARY KEY,
  title TEXT NOT NULL,
