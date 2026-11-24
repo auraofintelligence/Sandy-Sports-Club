@@ -83,3 +83,14 @@ test('public proposal and real clubhouse have distinct prominent navigation',()=
  assert.ok(script.includes("sectionLabel.textContent=button?.textContent?.trim()"));
  assert.ok(css.includes('.clubhouse-menu .club-tabs{display:grid'));
 });
+
+test('real PLFC Constitution V1.2 files are referenced for comparison without copying a protected document',()=>{
+ const html=read('../club-admin.html'),builder=read('../constitution.html');
+ for(const source of ['1cV_baU8tf7O4C5gdrP16gaRVFxHF_8mg','1Z1uYKTy3Mi19bub9bG749ZICbjosoW0o']){
+  assert.ok(html.includes(source),'My Clubhouse should link to actual PLFC Drive file');
+  assert.ok(builder.includes(source),'Standalone builder should link to actual PLFC Drive file');
+ }
+ assert.ok(html.includes('Constitution builder'));
+ assert.ok(html.includes('View / download PLFC PDF'));
+ assert.ok(builder.includes('Compare with the original PLFC Constitution V1.2'));
+});
