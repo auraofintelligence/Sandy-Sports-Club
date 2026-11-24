@@ -9,6 +9,7 @@ import {briefsEndpoint,auditEndpoint} from './briefs.mjs';
 import {memberEndpoint} from './member.mjs';
 import {suiteEndpoint} from './suite.mjs';
 import {memberWorkspaceEndpoint} from './member-workspace.mjs';
+import {helpEndpoint} from './help.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -49,6 +50,8 @@ async function handle(req,env){
  if(path==='/api/interest'||path.startsWith('/api/interest/'))
   return interestEndpoint(req,env,path,identity);
  if(path.startsWith('/api/suite/'))return suiteEndpoint(req,env,path,identity);
+ if(path==='/api/webmaster/requests'||path.startsWith('/api/webmaster/requests/'))
+  return helpEndpoint(req,env,path,identity);
  if(path==='/api/people'||path.startsWith('/api/people/'))
   return peopleEndpoint(req,env,path,identity);
  if(path==='/api/records'||path.startsWith('/api/records/')||path==='/api/committee/events'||path==='/api/meetings')
