@@ -87,3 +87,10 @@
 .club-private-actions a{display:inline-flex;min-height:42px;align-items:center;border:1px solid #0d7a88;background:#0d7a88;color:white;padding:.5rem .85rem;border-radius:8px;text-decoration:none;font-weight:750}
 .club-invite-pending{display:block;color:#315f55;font-size:.75rem;line-height:1.35;margin:.25rem 0}
 @media(max-width:650px){.club-tool-frame{min-height:1200px}.club-private-invite{padding:.75rem}}
+
+/* Verified PLFC V1.2 source, visibly separated from Sandy's editable proposed constitution. */
+.club-constitution-reference{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem 1rem;padding:1rem;margin:1rem 0;border:1px solid #b0d3c8;border-radius:12px;background:#f0faf4}
+.club-constitution-reference strong{flex:1 1 100%;font-size:1rem;color:#194f48}
+.club-constitution-reference a{display:inline-flex;align-items:center;min-height:42px;padding:.55rem .85rem;border:1px solid #0a7481;border-radius:8px;background:#0a7481;color:#fff;text-decoration:none;font-weight:750}
+.club-constitution-reference a:hover,.club-constitution-reference a:focus-visible{background:#095c6a;color:#fff}
+.club-constitution-reference small{flex:1 1 100%;color:#55716a;font-size:.79rem}
