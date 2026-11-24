@@ -1,99 +1,83 @@
-// Browser-local Sandy Social Studio adapter, using the current PLFC workbench modules.
-// No club account, identity verification, publishing or shared database is connected.
-const mount=document.querySelector("#social-planner-desk");
-const key="sandy-social-studio-local-revisions-v1";
-const safe=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-let currentDraft=null;
-function copyFallback(text){const box=document.createElement("textarea");box.value=text;document.body.appendChild(box);box.select();try{document.execCommand("copy");return true}catch{return false}finally{box.remove()}}
-async function init(){
+// Sandy Social Studio: authenticated shared API only. No browser-local fallback.
+const mount=document.querySelector('#social-planner-desk');
+const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;',">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+let currentDraft=null,planner=null;
+async function api(path,options={}){
+ const response=await fetch(path,{method:options.method||'GET',credentials:'same-origin',cache:'no-store',
+  headers:options.method==='POST'?{'Content-Type':'application/json'}:undefined,body:options.body});
+ let data={};try{data=await response.json()}catch{}
+ if(!response.ok){const error=new Error(data.error||'Shared club API unavailable ('+response.status+').');error.status=response.status;throw error}
+ return data;
+}
+function notice(message,bad=false){
+ const n=document.querySelector('#studio-shared-status');if(n){n.textContent=message;n.classList.toggle('bad',bad)}
+}
+function copyFallback(text){
+ const field=document.createElement('textarea');field.value=text;document.body.appendChild(field);field.select();
+ try{return document.execCommand('copy')}finally{field.remove()}
+}
+function showUnavailable(message){
+ if(mount)mount.innerHTML='<div class="studio-security"><strong>Shared Social Studio is not active.</strong><span>'+
+  esc(message)+' No official club data is being stored in this browser. <a href="/club-login.html">Secure sign-in and webmaster setup</a> · <a href="/club-admin.html">Shared administration</a></span></div>';
+ notice(message,true);
+ document.querySelector('#sandy-handoffs')?.setAttribute('hidden','');
+ document.querySelector('#sandy-ideas')?.setAttribute('hidden','');
+}
+async function maybeImportLegacy(){
+ const holder=document.querySelector('#studio-legacy-import');if(!holder)return;
+ let old=null;try{old=JSON.parse(localStorage.getItem('sandy-social-studio-local-revisions-v1')||'null')}catch{}
+ if(!old?.settings||!old.version)return;
+ holder.hidden=false;
+ holder.innerHTML='<p><strong>Older browser-only draft found.</strong> This has not been copied into the shared club database.</p>'+
+  '<button type="button" id="studio-legacy-transfer">Review and import the old settings into shared records</button>'+
+  '<small>No automatic import, overwrite or deletion. The existing local copy is preserved.</small>';
+ holder.querySelector('#studio-legacy-transfer')?.addEventListener('click',async()=>{
+  try{
+   const server=await api('/api/committee/social-campaign-settings');
+   if(!window.confirm('Import this older local draft as a NEW shared revision? '+(server.version?'It will replace the current shared setting version '+server.version+'. ':'This will create the first shared plan. ')+'The old browser draft remains unchanged.'))return;
+   const result=await api('/api/committee/social-campaign-settings',{method:'POST',
+    body:JSON.stringify({version:server.version,settings:old.settings})});
+   notice('Imported the old pattern settings into shared D1 as server revision '+result.version+'. Reload the Studio to view them.');
+   if(planner){planner.reset();await planner.open()}
+  }catch(e){notice('Import failed without changing the browser copy: '+e.message,true)}
+ });
+}
+async function launch(){
  try{
-  if(!mount)throw Error("Missing Studio workbench");
-  const {setupAnnualCampaigns}=await import("./social-campaigns.js?v=20261124-temporal-parity");
-  let record=null;
-  try{record=JSON.parse(localStorage.getItem(key)||"null")}catch{}
-  let settings=record?.settings||null,version=record?.version||0,history=Array.isArray(record?.history)?record.history:[];
-  const storageStamp=()=>history[0]?.savedAt||null;
-  const api=async(path,options={})=>{
-   const url=new URL(path,location.origin);
-   if(url.pathname!=="/api/committee/social-campaign-settings")
-    throw Error("This isolated Sandy Studio has no connected committee API.");
-   if(options.method==="POST"){
-    const sent=JSON.parse(options.body||"{}");
-    if(sent.version!==version)throw Object.assign(Error("Another local revision was saved. Reopen the latest version."),{status:409});
-    const next=structuredClone(sent.settings),time=new Date().toISOString(),v=version+1;
-    const changes=[];
-    for(const field of new Set([...Object.keys(settings||{}),...Object.keys(next||{})])){
-     if(JSON.stringify(settings?.[field])!==JSON.stringify(next?.[field]))changes.push({field,before:"Earlier browser version",after:"Updated browser version"});
-    }
-    const entry={version:v,actorId:"browser-local",actorName:"This browser (unverified)",
-     actorOffice:"Sandy local planning",actorRole:"local-only",savedAt:time,
-     changes:{count:changes.length,changes,note:"Unverified local revision, not committee sign-off"},settings:next};
-    const nextHistory=[entry,...history].slice(0,100);
-    localStorage.setItem(key,JSON.stringify({version:v,settings:next,history:nextHistory}));
-    version=v;settings=next;history=nextHistory;
-    return {version,settings:structuredClone(settings),updatedAt:time,
-     updatedByName:"This browser (unverified)",updatedOffice:"Local planning"};
-   }
-   if(url.searchParams.has("history"))return {version,history:history.map(({settings,...rest})=>rest)};
-   if(url.searchParams.has("version")){
-    const item=history.find(h=>h.version===Number(url.searchParams.get("version")));
-    if(!item)throw Object.assign(Error("This local revision is not available."),{status:404});
-    return {revision:structuredClone(item)};
-   }
-   return {version,settings:settings?structuredClone(settings):null,updatedAt:storageStamp(),
-    updatedByName:version?"This browser (unverified)":null,updatedOffice:"Local planning"};
-  };
-  const planner=setupAnnualCampaigns({
-   mount,api,esc:safe,isActive:()=>true,reviewOnly:true,
+  if(!mount)throw Error('Social Studio workbench missing');
+  const session=await api('/api/session');
+  if(!session.storageReady||!session.authReady){showUnavailable('The new Sandy D1 database and authentication are not yet activated.');return}
+  if(!session.authenticated){showUnavailable('Sign in with a real activated club account to review or save committee plans.');return}
+  const role=session.identity?.role;
+  if(!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(role)){
+   showUnavailable('This account is read-only and cannot use live committee Social Studio records.');return;
+  }
+  notice('Signed in as '+session.identity.name+' ('+role+'). Studio settings, day plans and edited posts use the shared database and server-stamped audit history.');
+  const {setupAnnualCampaigns}=await import('./social-campaigns.js?v=20261124-shared-club-v1');
+  planner=setupAnnualCampaigns({
+   mount,api,esc,isActive:()=>true,reviewOnly:false,strictShared:true,
    onUse(draft){
     currentDraft=structuredClone(draft);
-    const output=document.querySelector("#trial-draft-body");if(output)output.textContent=JSON.stringify(draft,null,2);
-    document.querySelector("#trial-draft")?.showModal();
+    document.querySelector('#trial-draft-body').textContent=JSON.stringify(currentDraft,null,2);
+    document.querySelector('#trial-draft')?.showModal();
    }
   });
   mount.innerHTML=planner.markup();
   await planner.open();
-  document.querySelector("#studio-import-demo-events")?.addEventListener("click",async()=>{
-   const output=document.querySelector("#studio-import-events-status");
-   let source={};try{source=JSON.parse(localStorage.getItem("sandy-club-planning-v1")||"{}")}catch{}
-   const rows=[...(Array.isArray(source.events)?source.events:[]).map(item=>({...item,source:"event"})),
-     ...(Array.isArray(source.meetings)?source.meetings:[]).map(item=>({...item,source:"meeting"}))];
-   const valid=rows.filter(item=>/^20\d\d-(0[1-9]|1[0-2])-[0-3]\d$/.test(item.date||"")&&
-     validCalendarDate(item.date)&&item.title?.trim());
-   if(!valid.length){output.textContent="No dated event or meeting drafts were found in this browser's Sandy committee demo.";return}
-   if(!window.confirm("Import "+valid.length+" tentative committee demo date(s) into the local Studio? This reloads the saved Studio settings, so save current edits first. Imported dates do not authorise publication."))return;
-   const {importKey,validCalendarDate}=await import("./social-event-import.js");
-   const {defaultCampaignSettings}=await import("./social-campaign-engine.js");
-   const next=structuredClone(settings||defaultCampaignSettings());
-   const merged=new Map((next.milestones||[]).map(item=>[item.id,item]));
-   for(const record of valid.slice(0,80)){
-    const id=importKey(record.source,String(record.id||record.title+"|"+record.date));
-    merged.set(id,{id,kind:record.source,title:String(record.title).slice(0,140),date:record.date,sourceUrl:"",confirmed:false});
-   }
-   if(merged.size>80){output.textContent="The Studio has a maximum of 80 planning anchors. Remove older dates before importing.";return}
-   next.milestones=[...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
-   const response=await api("/api/committee/social-campaign-settings",{method:"POST",body:JSON.stringify({version,settings:next})});
-   settings=response.settings;version=response.version;
-   planner.reset();await planner.open();
-   output.textContent="Imported "+valid.length+" local demo dates as tentative planning anchors. No event was approved, published or sent.";
-  });
-
-  document.querySelector("#trial-draft-close")?.addEventListener("click",()=>document.querySelector("#trial-draft")?.close());
-  document.querySelector("#trial-draft-copy")?.addEventListener("click",async event=>{
+  await maybeImportLegacy();
+  document.querySelector('#trial-draft-close')?.addEventListener('click',()=>document.querySelector('#trial-draft')?.close());
+  document.querySelector('#trial-draft-copy')?.addEventListener('click',async event=>{
    if(!currentDraft)return;
    const value=JSON.stringify(currentDraft,null,2);
-   let copied=false;try{await navigator.clipboard.writeText(value);copied=true}catch{copied=copyFallback(value)}
-   event.currentTarget.textContent=copied?"Copied draft":"Select the draft text and copy";
+   let success=false;try{await navigator.clipboard.writeText(value);success=true}catch{success=copyFallback(value)}
+   event.currentTarget.textContent=success?'Copied draft':'Select text and copy';
   });
-  document.querySelector("#trial-draft-handoff")?.addEventListener("click",()=>{
+  document.querySelector('#trial-draft-handoff')?.addEventListener('click',()=>{
    if(!currentDraft)return;
-   window.dispatchEvent(new CustomEvent("sandy-studio:handoff",{detail:structuredClone(currentDraft)}));
-   document.querySelector("#trial-draft")?.close();
-   document.querySelector("#sandy-handoffs")?.scrollIntoView({behavior:"smooth"});
+   window.dispatchEvent(new CustomEvent('sandy-studio:handoff',{detail:structuredClone(currentDraft)}));
+   document.querySelector('#trial-draft')?.close();
+   document.querySelector('#sandy-handoffs')?.scrollIntoView?.({behavior:'smooth'});
   });
- }catch(error){
-  if(mount)mount.innerHTML='<p role="alert" class="studio-error">Social Studio could not start: '+safe(error?.message||error)+'. The existing simpler planner remains available.</p>';
-  console.error("Sandy Social Studio loading failed",error);
- }
+ }catch(e){showUnavailable('Could not load authenticated Social Studio: '+e.message)}
 }
-void init();
+void launch();
