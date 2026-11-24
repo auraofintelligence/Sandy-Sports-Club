@@ -1,5 +1,5 @@
 import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
-const types=['event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard'];
+const types=['event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard','social_idea'];
 const states=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const canAccess=(who,kind)=>{
  requireRole(who,STAFF);
