@@ -1,7 +1,7 @@
 import {setupCommitteeRoom} from './club-committee.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','briefs','audit'];
+const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','requests','briefs','audit'];
 let committeeRoom=null;
 let identity=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'—';
@@ -50,7 +50,7 @@ function openTab(tab){
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
- const load={overview:overview,people:loadPeople,interests:loadInterests,committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
+ const load={overview:overview,people:loadPeople,interests:loadInterests,committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
  load?.().catch(e=>status(e.message,true));
  window.dispatchEvent(new CustomEvent('sandy:clubhouse-section-change',{detail:{tab}}));
 }
