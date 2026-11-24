@@ -33,6 +33,19 @@ async function submit(formId,path,redirect=false){
   finally{button.disabled=false}
  });
 }
+// One-time invitation links carry their token in a URL fragment (never sent in HTTP requests).
+// Read it into the activation field, then remove the fragment from the address bar.
+function openPrivateInvitation(){
+ const params=new URLSearchParams(location.hash.slice(1)),token=params.get('invite');
+ if(!token||!/^[a-f0-9]{64}$/i.test(token))return;
+ const panel=$('club-invite-panel'),form=$('club-activate');
+ if(!panel||!form)return;
+ panel.open=true;form.elements.token.value=token.toLowerCase();
+ history.replaceState(null,'',location.pathname+location.search);
+ message('Private officer invitation loaded. Choose your own strong password to activate your account.');
+ panel.scrollIntoView({block:'start'});
+}
+openPrivateInvitation();
 submit('club-login','/api/auth/login',true);
 submit('club-activate','/api/auth/activate');
 submit('club-bootstrap','/api/auth/bootstrap');
