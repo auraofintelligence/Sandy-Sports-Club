@@ -11,13 +11,12 @@ database.prepare("INSERT INTO club_accounts(id,username,role,office_label,displa
 const fakeDB={
  prepare(sql){
   const q=database.prepare(sql);
-  return {bind(...values){
-   return {
-    async first(){return q.get(...values)||null},
-    async all(){return {results:q.all(...values)}},
-    async run(){const r=q.run(...values);return {meta:{changes:Number(r.changes)}}}
-   }
-  }}
+  const args=values=>({
+   async first(){return q.get(...values)||null},
+   async all(){return {results:q.all(...values)}},
+   async run(){const r=q.run(...values);return {meta:{changes:Number(r.changes)}}}
+  });
+  return {...args([]),bind(...values){return args(values)}};
  },
  withSession(){return this},
  async batch(stmts){
