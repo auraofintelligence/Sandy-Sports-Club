@@ -112,3 +112,44 @@
 .club-island-links-items a span{display:flex;flex-direction:column;gap:.2rem;min-width:0}
 @media(max-width:1100px){.club-island-links-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.club-island-links-items{grid-template-columns:1fr}.club-island-links-items a img{width:44px;height:44px}}
+
+
+/* PLFC-style committee room: one predictable menu, functional D1-backed working records. */
+.committee-room-heading{margin:0 0 1.25rem}
+.committee-room-heading h2{margin:.3rem 0 .55rem}
+.committee-room-heading>p{max-width:88ch}
+.committee-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:.9rem;margin:1.25rem 0}
+.committee-tools-group{border:1px solid #c7dfdc;border-radius:12px;background:#f9fcfb;padding:.9rem;min-width:0}
+.committee-tools-group h3{font-size:.86rem;font-weight:800;letter-spacing:.035em;color:#225765;margin:.2rem 0 .75rem}
+.committee-tools-group>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.committee-tools-group button{width:100%;min-height:52px;border:1px solid #c5dfdb;border-radius:9px;background:#fff;color:#115765;text-align:left;line-height:1.3;font-size:.83rem;font-weight:750;padding:.65rem;cursor:pointer}
+.committee-tools-group button:hover,.committee-tools-group button:focus-visible{border-color:#0c7e8d;background:#e6f5f1}
+.committee-tools-group button[aria-current=page]{background:#075f6d;color:white;border-color:#075f6d}
+.committee-tools-group button:disabled{cursor:not-allowed;opacity:.55}
+.committee-workbench{padding:1.15rem;border:1px solid #accbc9;border-radius:12px;background:#f6faf9;margin:1rem 0}
+.committee-workbench-heading{display:flex;align-items:start;justify-content:space-between;gap:1rem}
+.committee-workbench-heading h3{margin:0 .2rem .4rem 0;font-size:1.2rem}
+.committee-workbench-heading p{max-width:65ch;margin:0}
+.committee-workbench-heading>button,.committee-list-head>button,.committee-desk-item-actions button,.committee-desk-related button,.committee-form-actions button{border:1px solid #087485;border-radius:8px;background:#0b7b89;color:white;padding:.6rem .8rem;font-weight:700;cursor:pointer}
+.committee-workbench-heading>button{white-space:nowrap}
+.committee-desk-related{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;margin:.8rem 0}
+.committee-desk-related a{padding:.6rem .8rem;border:1px solid #adcbc5;border-radius:8px;text-decoration:underline;font-weight:700}
+.committee-workbench .club-panel{margin:.9rem 0;background:#fff}
+.committee-workbench .club-panel form{display:grid;gap:.8rem}
+.committee-workbench .club-panel form>label{display:grid;gap:.35rem;font-size:.87rem;font-weight:700}
+.committee-workbench textarea{min-width:0;width:100%;padding:.65rem;border:1px solid #b7cfca;border-radius:8px}
+.committee-form-actions{display:flex;gap:.65rem;flex-wrap:wrap}
+.committee-list-head{display:flex;align-items:center;justify-content:space-between;margin:.95rem 0 .65rem}
+.committee-list-head h4{font-size:1rem;margin:0}
+.committee-desk-list{display:grid;gap:.7rem}
+.committee-desk-item{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:.85rem;padding:1rem;border:1px solid #ccdedb;border-radius:11px;background:white}
+.committee-desk-item>div:first-child{flex:1 1 22rem;min-width:0}
+.committee-desk-item strong{display:block;color:#124f60;font-size:1rem}
+.committee-desk-item p{margin:.35rem 0;font-size:.86rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.committee-desk-item-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.committee-desk-item .committee-desk-history{width:100%;padding:.65rem 1rem;border-radius:9px;background:#eff7f4}
+.committee-desk-item .committee-desk-history h4{font-size:.9rem}
+.committee-desk-item .committee-desk-history p{padding:.35rem 0;border-bottom:1px solid #d7e5e0}
+.committee-empty{padding:1.2rem;margin:0;background:white;border:1px dashed #afccc5;border-radius:9px}
+@media(max-width:950px){.committee-tools{grid-template-columns:1fr}.committee-workbench-heading{flex-direction:column;align-items:stretch}}
+@media(max-width:560px){.committee-tools-group>div{grid-template-columns:1fr}.committee-tools-group button{min-height:45px}.committee-workbench{padding:.7rem}.committee-desk-item{padding:.75rem}}
