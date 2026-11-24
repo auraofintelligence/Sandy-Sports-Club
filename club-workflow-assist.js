@@ -39,7 +39,7 @@ function listChecklist(f,title){
 }
 const special={
  meetings:{heading:'Agenda, minutes and meeting follow-up',description:'Use the actual agenda, notes and decisions to prepare a reviewable minutes draft. Never assume a recorded vote or quorum.',
-  buttons:[['minutes','Prepare draft minutes'],['agenda','Download agenda'],['print','Print meeting summary']]},
+  buttons:[['minutes','Prepare draft minutes'],['agenda','Download agenda'],['print','Print meeting summary'],['record-start','Record audio locally'],['record-stop','Stop and download audio']]},
  news:{heading:'Newsletter issue production',description:'Preview an A4 newsletter from your own editorial notes. Download HTML for committee review. No mailing list or delivery service is connected.',
   buttons:[['newsletter','Preview newsletter'],['newsletter-export','Download newsletter HTML']]},
  equipment:{heading:'Equipment loan and condition sheet',description:'Produce a printable equipment checkout/return checklist, including holder, expected return date and condition.',
@@ -78,6 +78,7 @@ const special={
 export function setupWorkflowAssist({root,getDesk,getValues,getTitle}){
  const panel=document.createElement('section');panel.id='suite-special';panel.className='suite-special';
  const forms=root.querySelector('#suite-form');
+ let recording=null,stream=null,chunks=[];
  const actions=root.querySelector('.suite-actions');
  forms.insertBefore(panel,actions);
  const notify=msg=>{const node=panel.querySelector('[data-special-status]');if(node)node.textContent=msg};
@@ -87,14 +88,38 @@ export function setupWorkflowAssist({root,getDesk,getValues,getTitle}){
   panel.innerHTML='<header><h4>'+safe(entry.heading)+'</h4><p>'+safe(entry.description)+'</p></header>'+
    '<div class="suite-special-actions">'+entry.buttons.map(([act,label])=>
     '<button type="button" data-special="'+act+'">'+safe(label)+'</button>').join('')+'</div>'+
+   (d.key==='meetings'?'<label class="suite-record-consent"><input type="checkbox" id="suite-record-consent"> Everyone present agreed to this local audio recording. Nothing will be uploaded by the recorder.</label>':'')+
    '<div id="suite-special-preview" hidden></div><p data-special-status role="status"></p>';
  }
- panel.addEventListener('click',event=>{
+ panel.addEventListener('click',async event=>{
   const b=event.target.closest('button[data-special]');if(!b)return;
   const action=b.dataset.special,d=getDesk(),f=getValues(),title=getTitle()||d.title;
   const slug=String(d.key||'working-record').replace(/[^a-z0-9-]/g,'-');
   try{
-   if(action==='minutes'){
+   if(action==='record-start'){
+    const consent=panel.querySelector('#suite-record-consent');
+    if(!consent?.checked)throw Error('Confirm that everyone present has agreed to recording before starting.');
+    if(recording&&recording.state!=='inactive')throw Error('Audio recording is already running.');
+    if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined')
+     throw Error('This browser does not support local audio recording.');
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mime=MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus')?'audio/webm;codecs=opus':undefined;
+    recording=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+    chunks=[];
+    recording.addEventListener('dataavailable',ev=>{if(ev.data?.size)chunks.push(ev.data)});
+    recording.addEventListener('stop',()=>{
+     const type=recording?.mimeType||'audio/webm',audio=new Blob(chunks,{type});
+     if(audio.size)save('sandy-meeting-consented-audio.'+(type.includes('ogg')?'ogg':'webm'),audio,type);
+     stream?.getTracks().forEach(track=>track.stop());
+     stream=null;recording=null;chunks=[];
+     notify('Recording stopped and the audio file was downloaded privately. Nothing was uploaded or transcribed.');
+    },{once:true});
+    recording.start(1000);
+    notify('Recording locally with consent. Choose Stop and download audio to keep it on this device.');
+   }else if(action==='record-stop'){
+    if(!recording||recording.state==='inactive')throw Error('No local audio recording is running.');
+    recording.stop();
+   }else if(action==='minutes'){
     const minutes=formatMeeting(f,title);
     const field=forms.elements.namedItem('draftMinutes');
     if(!field)throw Error('Minutes field is missing.');
