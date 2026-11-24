@@ -59,12 +59,14 @@ export async function authEndpoint(req,env,path,identity){
   if(count?.n>0)fail(409,'The first webmaster has already been created. Use the normal sign-in flow.','already_configured');
   if(!constantEqual(await hash(key),await hash(env.SANDY_BOOTSTRAP_KEY)))fail(403,'The private bootstrap key is incorrect.','invalid_bootstrap');
   const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),user=id(),at=now();
-  const result=await db.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc,activated_utc) SELECT ?,?,'webmaster','Webmaster',?,'active',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM club_accounts)")
-   .bind(user,username,field(b.displayName,100)||username,salt,pass,at,at).run();
+  const [result]=await db.batch([
+   db.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc,activated_utc) SELECT ?,?,'webmaster','Webmaster',?,'active',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM club_accounts)")
+    .bind(user,username,field(b.displayName,100)||username,salt,pass,at,at),
+   revision(db,{kind:'account',resourceId:user,resourceVersion:1,action:'webmaster_bootstrapped',
+    actor:{id:user,role:'webmaster',office_label:'Webmaster'},at,snapshot:{username,role:'webmaster',state:'active'},guarded:true}),
+   audit(db,{id:user,role:'webmaster'},'webmaster_bootstrapped','account',user,at,true)
+  ]);
   if(result.meta.changes!==1)fail(409,'Webmaster setup was completed elsewhere.','already_configured');
-  await db.batch([revision(db,{kind:'account',resourceId:user,resourceVersion:1,action:'webmaster_bootstrapped',
-   actor:{id:user,role:'webmaster',office_label:'Webmaster'},at,snapshot:{username,role:'webmaster',state:'active'}}),
-   audit(db,{id:user,role:'webmaster'},'webmaster_bootstrapped','account',user,at)]);
   return json({ok:true,username,notice:'Remove SANDY_BOOTSTRAP_KEY from Cloudflare secrets after setup.'},201);
  }
  if(path==='/api/auth/activate'&&req.method==='POST'){
