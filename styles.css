@@ -26,3 +26,19 @@
  .site-header .brand small{font-size:.53rem}
  .site-header .menu-toggle{padding:.45rem .55rem}
 }
+
+
+/* PLFC Finnius-style guided steps for Sandy's existing Mozzie mascot. */
+.guide-panel:has(.mozzie-club-guide){width:min(420px,calc(100vw - 1.2rem));max-height:min(78vh,760px)}
+.mozzie-club-guide{margin:.9rem 0 0}
+.mozzie-topic-label{display:block;font-size:.84rem;font-weight:800;margin-bottom:.3rem;color:#205465}
+.mozzie-club-guide select{width:100%;padding:.65rem;border-radius:8px;border:1px solid #9dbbc0;background:#fff;font:inherit;color:#174757}
+.mozzie-tour-card{border:1px solid #d4e6e2;border-radius:11px;padding:.85rem;margin-top:.7rem;background:#f5fbf8}
+.mozzie-tour-card h3{font-size:1.05rem;margin:.35rem 0;line-height:1.3}
+.mozzie-tour-card>p{font-size:.88rem;line-height:1.5;margin:.45rem 0}
+.mozzie-tour-card .mozzie-progress{color:#115f67;font-weight:800;font-size:.77rem}
+.mozzie-tour-actions{display:flex;gap:.65rem;margin:.85rem 0}
+.mozzie-tour-actions button{flex:1;min-height:42px;border:1px solid #0d7784;border-radius:8px;padding:.5rem;background:#0c6d7b;color:#fff;font-weight:750;cursor:pointer}
+.mozzie-tour-actions button:disabled{opacity:.45;cursor:default}
+.guide-panel .mozzie-tour-card>a{background:#ffbf4f;color:#102d40;text-align:center}
+.mozzie-guide-footnote{font-size:.73rem;line-height:1.5;color:#536972;margin:.85rem 0 0}
