@@ -31,6 +31,8 @@ function openTab(tab){
  const button=document.querySelector('[data-tab="'+tab+'"]');
  if(button?.hidden){openTab('overview');return}
  current=tab;
+ const sectionLabel=$('clubhouse-current');
+ if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
  const load={overview:overview,people:loadPeople,interests:loadInterests,records:loadRecords,accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
  load?.().catch(e=>status(e.message,true));
@@ -126,7 +128,10 @@ async function loadAudit(){
   '<p>'+esc(r.kind+' / '+r.resourceId)+'</p></article>').join('')||'<p>No server-stamped changes yet.</p>';
 }
 function bind(){
- document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab)));
+ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
+  openTab(b.dataset.tab);
+  const menu=$('clubhouse-menu');if(menu)menu.open=false;
+ }));
  $('club-logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',data:{}})}finally{location.href='/club-login.html'}});
  $('club-view-role').addEventListener('change',previewMode);
  $('people-search-btn').addEventListener('click',()=>{page=0;loadPeople().catch(e=>status(e.message,true))});
