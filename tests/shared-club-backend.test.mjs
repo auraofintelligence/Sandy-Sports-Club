@@ -107,3 +107,32 @@ test('private Sandy clubhouse pages show the real favicon and island project lin
  assert.ok(home.includes('class="club-island-links"'));
  assert.equal((home.match(/<img src="https?:\/\/[^\"]+" width="56" height="56"/g)||[]).length,4);
 });
+
+test('PLFC committee room desks are available as real shared drafts with attribution and safe gates',()=>{
+ const html=read('../club-admin.html'),menu=read('../club-committee.js'),admin=read('../club-admin.js');
+ const labels=['Committee notices','To-do lists','Newsletter desk','Social Studio','Officer handover',
+  'Meetings','Events and fundraising','Club assets and loans','Sponsors and supporters','Grant register',
+  'Results, prizes and sponsors','Member age and permissions','AGM jobs','Applications',
+  'Invite returning members','Membership automations','Ready SETCO decisions','Documents','Manage club access',
+  'Shop, stock and prices'];
+ for(const label of labels)assert.ok(menu.includes("label:'"+label+"'"),label);
+ assert.ok(html.includes('id="club-committee"'));
+ assert.ok(admin.includes("setupCommitteeRoom({api,esc,status,openTab,getIdentity:()=>identity})"));
+ assert.ok(admin.includes("committee:()=>committeeRoom?.open()"));
+ assert.ok(menu.includes("api('/api/records?kind='"));
+ assert.ok(menu.includes("method:'PATCH'"));
+ assert.ok(menu.includes("method:'POST'"));
+ assert.ok(menu.includes("'/revisions'"));
+ assert.ok(menu.includes("key:'safety'"));
+ assert.ok(menu.includes("kind:'safeguard',restricted:true"));
+ assert.ok(!menu.includes("localStorage.setItem"));
+});
+test('Mozzie offers guided clubhouse tours without claiming live AI or sending content to services',()=>{
+ const source=read('../club-mozzie.js'),site=read('../site.js');
+ for(const label of ['Your Clubhouse','Committee room','Social Media Hub','Constitution builder','Officer invitations','Connected island projects'])
+  assert.ok(source.includes("title:'"+label+"'"));
+ assert.ok(source.includes('no live AI conversation'));
+ assert.ok(source.includes("document.getElementById('guide-panel')"));
+ assert.ok(site.includes("helper.src='/club-mozzie.js"));
+ assert.ok(!source.includes('fetch('));
+});
