@@ -21,12 +21,12 @@ function previewMode(){
  if(memberPreview)memberPreview.hidden=!['member','webmaster_demo'].includes(chosen);
  const access={
   webmaster:allTabs,
-  president:['overview','people','interests','committee','records','social','constitution','briefs','audit'],
-  vice_president:['overview','committee','records','social','constitution','briefs'],
-  secretary:['overview','people','interests','committee','records','social','constitution','briefs','audit'],
-  assistant_secretary:['overview','people','interests','committee','records','social','constitution','briefs'],
-  treasurer:['overview','people','interests','committee','records','social','constitution','briefs'],
-  committee:['overview','committee','records','social','constitution','briefs'],
+  president:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs','audit'],
+  vice_president:['overview','committee','records','social','constitution' ,'requests','briefs'],
+  secretary:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs','audit'],
+  assistant_secretary:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs'],
+  treasurer:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs'],
+  committee:['overview','committee','records','social','constitution' ,'requests','briefs'],
   member:['overview'],
   webmaster_demo:['overview']
  };
