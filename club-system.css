@@ -240,3 +240,18 @@
 .suite-stock-move button{background:#096d79;color:#fff;border:0;border-radius:7px;padding:.6rem;font:inherit;font-weight:800;min-height:42px}
 @media(max-width:850px){.suite-stock-move{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.suite-special{padding:.65rem}.suite-stock-move{grid-template-columns:1fr}}
+
+
+/* Private Webmaster requests, with a real D1 inbox rather than a demonstration counter. */
+#club-requests .club-panel{padding:1rem;border:1px solid #c8dcd8;border-radius:11px;background:#f8fcfa}
+#club-requests .club-panel label{display:grid;gap:.35rem;min-width:0;margin:.5rem 0;font-weight:750;font-size:.85rem}
+#club-requests .club-panel textarea,#club-requests .club-panel select,#club-requests .club-panel input{width:100%;min-height:42px;padding:.65rem;border:1px solid #b9d5d0;border-radius:8px;font:inherit}
+#club-requests .club-panel button,.webmaster-help-item button{display:inline-block;border:1px solid #087886;border-radius:8px;background:#0d7380;color:#fff;padding:.65rem .85rem;font-weight:800;cursor:pointer}
+#webmaster-help-count{font-size:.8rem;color:#135b6b}
+.webmaster-help-item{padding:.7rem 1rem;margin:.65rem 0;border:1px solid #ceded9;border-radius:10px;background:white}
+.webmaster-help-item summary{font-size:.89rem;cursor:pointer;line-height:1.5}
+.webmaster-help-item>p{padding:.7rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.webmaster-help-item small{color:#536c70}
+.webmaster-help-item form{display:grid;gap:.6rem;margin:.65rem 0}
+.webmaster-help-item form label{display:grid;gap:.3rem;font-weight:700;font-size:.82rem}
+.webmaster-help-item form textarea,.webmaster-help-item form select{width:100%;padding:.65rem;border:1px solid #b8d4ce;border-radius:8px;font:inherit}
