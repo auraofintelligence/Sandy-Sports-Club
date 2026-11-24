@@ -2,6 +2,7 @@
 // Every create/change is attributed to the real signed-in user and audited; no approval/payment/email is triggered.
 import {ApiError,fail,json,now,id,dbFor,payload,field,dateField,https,version,requireRole,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
+import {suiteActionEndpoint} from './suite-actions.mjs';
 const statuses=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const exactDate=value=>dateField(value||'',true);
 const isRecordId=value=>/^[a-f0-9-]{36}$/.test(value||'');
@@ -109,6 +110,8 @@ async function create(db,desk,identity,request){
  return json({ok:true,id:recordId,version:1,updatedBy:identity.id,updatedOffice:identity.office_label,updatedAt:at},201);
 }
 export async function suiteEndpoint(req,env,path,identity){
+ if(/^\/api\/suite\/(meetings|stock)\/[a-f0-9-]{36}\/(followups|movement)$/.test(path))
+  return suiteActionEndpoint(req,env,path,identity);
  if(path==='/api/suite/desks'&&req.method==='GET'){
   requireRole(identity,['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee']);
   return json({desks:SUITE_DESKS.filter(d=>d.roles.includes(identity.role)).map(d=>({
