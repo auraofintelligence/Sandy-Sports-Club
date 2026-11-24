@@ -8,7 +8,7 @@ const pages = [
   ['clubhouse.html','Clubhouse'],['members.html','Members'],['committee.html','Committee'],
   ['webmaster.html','Webmaster'],['constitution.html','Constitution'],['sources.html','Sources']
 ];
-// The full 47-page directory stays in the footer, not the top menu.
+// The full page directory stays in the footer; the top navigation remains compact.
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
   ['facilities.html','Facilities'],['programme.html','Events & film'],
@@ -30,7 +30,7 @@ document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<
 const footerSections = [
   ['Explore',[['sports.html','Sports catalogue'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club']]],
   ['Build & back',[['join.html','Get involved'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
-  ['Clubhouse & tools',[['clubhouse.html','Clubhouse overview'],['members.html','Member demo'],['committee.html','Committee demo'],['social-studio.html','Social Studio'],['webmaster.html','Webmaster demo']]]
+  ['Clubhouse & tools',[['clubhouse.html','Clubhouse overview'],['members.html','Member demo'],['club-admin.html','Shared club administration'],['club-login.html','Secure sign-in'],['committee.html','Legacy planning demo'],['social-studio.html','Social Studio'],['webmaster.html','Webmaster demo']]]
 ];
 const footerNav = footerSections.map(([title,items])=>`<nav aria-label="${title}"><strong>${title}</strong>${items.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`).join('');
 document.querySelector('[data-site-footer]')?.insertAdjacentHTML('afterbegin',`<footer><div class="footer-top"><div><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>CLUB PROPOSAL</small></span></a><p>A proposal for island-wide sand sport, shared facilities, film and community life. No club or venue is yet established.</p></div>${footerNav}</div><div class="footer-bottom"><span>Proposal · No incorporated Sandy Sports Club or confirmed site is asserted.</span><span>Quandamooka Country · Minjerribah / North Stradbroke Island</span></div></footer><button class="guide-button" id="guide-button" aria-expanded="false" aria-controls="guide-panel"><img src="/assets/mozzie.webp" alt=""><span>Ask Mozzie</span></button><aside class="guide-panel" id="guide-panel" hidden><button class="guide-close" id="guide-close" aria-label="Close guide">×</button><img src="/assets/mozzie.webp" alt="Mozzie, Sandy Sports mascot"><h2>G'day, I'm Mozzie.</h2><p>Start with the sport ideas, explore three towns, or have your say on the proposal.</p><a href="/sports.html">Sports catalogue</a><a href="/places.html">Three towns</a><a href="/film-club.html">Film club</a><a href="/clubhouse.html">Clubhouse</a><a href="/join.html">Get involved</a></aside>`);
@@ -60,7 +60,7 @@ const pageGroups = [
   ['Places and facilities',[pages[4],pages[7],pages[8],route('assets','Asset wish list')]],
   ['Events, film and backing',[pages[5],pages[6],pages[9],pages[10],pages[11]]],
   ['Member clubhouse',[pages[12],pages[13],...memberGuide]],
-  ['Committee and governance',[pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17]]]
+  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17]]]
 ];
 const allPages = pageGroups.flatMap(([,items])=>items);
 const pageLink = ([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`;
