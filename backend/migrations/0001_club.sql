@@ -178,3 +178,28 @@ CREATE TABLE IF NOT EXISTS club_audit(
  context_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(context_json))
 );
 CREATE INDEX IF NOT EXISTS club_audit_time ON club_audit(occurred_utc DESC);
+
+CREATE TABLE IF NOT EXISTS studio_handoffs(
+ id TEXT PRIMARY KEY,
+ brief_id TEXT NOT NULL REFERENCES studio_briefs(id),
+ decision_id TEXT REFERENCES studio_decisions(id),
+ producer TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('proposed','authorised','delivered','withdrawn')),
+ requested_delivery_on TEXT,
+ return_links_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(return_links_json)),
+ issued_by TEXT REFERENCES club_accounts(id),
+ issued_utc TEXT,
+ updated_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_handoffs_brief ON studio_handoffs(brief_id);
+CREATE TABLE IF NOT EXISTS studio_post_links(
+ id TEXT PRIMARY KEY,
+ brief_id TEXT NOT NULL REFERENCES studio_briefs(id),
+ decision_id TEXT NOT NULL REFERENCES studio_decisions(id),
+ platform TEXT NOT NULL CHECK(platform IN ('youtube','facebook','instagram','tiktok','noticeboard')),
+ published_url TEXT NOT NULL,
+ published_utc TEXT,
+ recorded_by TEXT NOT NULL REFERENCES club_accounts(id),
+ recorded_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_links_brief ON studio_post_links(brief_id);
