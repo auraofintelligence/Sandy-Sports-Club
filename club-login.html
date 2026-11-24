@@ -1,0 +1,28 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#102d40">
+<title>Shared club sign-in | Sandy Sports proposal</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css">
+<script defer src="/site.js"></script><script type="module" src="/club-login.js"></script></head>
+<body><div data-site-header></div><main class="club-app" id="main"><div class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB SERVICES</p>
+<h1>Secure club sign-in</h1><p>For the future webmaster, reserved office holders and authorised club members. Sandy Sports remains a proposal; no accounts or memberships are automatically activated.</p></div>
+<div id="auth-state" role="status" class="club-status">Checking whether the shared club service is connected…</div>
+<div class="club-auth-layout">
+<section class="club-panel"><h2>Sign in</h2><form id="club-login">
+<label>Username<input name="username" autocomplete="username" maxlength="80" required></label>
+<label>Password<input type="password" name="password" autocomplete="current-password" minlength="12" required></label>
+<button type="submit">Sign in</button></form>
+<p class="club-note">Only activated accounts can sign in. There is no public sign-up or automatic invitation service.</p></section>
+<details class="club-panel"><summary>Activate a reserved account</summary><p>Only use a one-time invitation issued separately by the authorised webmaster. Invitations are currently disabled by default.</p>
+<form id="club-activate"><label>Private activation token<input name="token" autocomplete="off" spellcheck="false" pattern="[a-fA-F0-9]{64}" minlength="64" maxlength="64" required></label>
+<label>Choose a strong password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>
+<button type="submit">Activate account</button></form></details>
+<details class="club-panel"><summary>First webmaster setup (one time only)</summary>
+<p>Requires a new Sandy database and a bootstrap key entered as a Cloudflare secret. Do not put bootstrap credentials in GitHub or publish them.</p>
+<form id="club-bootstrap">
+<label>Webmaster username<input name="username" minlength="3" maxlength="80" autocomplete="off" required></label>
+<label>Display name<input name="displayName" maxlength="100" autocomplete="off"></label>
+<label>Private bootstrap key<input name="bootstrapKey" type="password" autocomplete="off" required></label>
+<label>New password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>
+<button type="submit">Create first webmaster securely</button></form></details>
+</div><p><a href="/club-admin.html">Go to shared administration</a> · <a href="/social-studio.html">Open Social Studio</a> · <a href="/clubhouse.html">Clubhouse proposal</a></p>
+</main><div data-site-footer></div></body></html>
