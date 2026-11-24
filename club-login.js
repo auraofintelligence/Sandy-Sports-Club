@@ -28,7 +28,7 @@ async function submit(formId,path,redirect=false){
    const result=await request(path,input);form.reset();
    message(path.endsWith('/bootstrap')?'First webmaster reserved and activated. Remove the bootstrap Cloudflare secret. Then sign in.':
      path.endsWith('/activate')?'Account activated. You may now sign in.':'Signed in. Opening shared club administration.');
-   if(redirect)location.href='/club-admin.html';
+   if(redirect){const session=await request('/api/session');location.href=session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
   }catch(error){message(error.message,true)}
   finally{button.disabled=false}
  });
