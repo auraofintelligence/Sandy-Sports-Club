@@ -151,6 +151,12 @@ async function loadAudit(){
 }
 function bind(){
  committeeRoom=setupCommitteeRoom({api,esc,status,openTab,getIdentity:()=>identity});
+ window.addEventListener('hashchange',()=>{
+  if(!identity)return;
+  const hash=location.hash.slice(1);
+  const tab=hash.startsWith('committee/')?'committee':hash;
+  if(allTabs.includes(tab))openTab(tab);
+ });
  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   openTab(b.dataset.tab);
   const menu=$('clubhouse-menu');if(menu)menu.open=false;
