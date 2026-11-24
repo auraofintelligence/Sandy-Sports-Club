@@ -41,7 +41,7 @@ async function handle(req,env){
   return peopleEndpoint(req,env,path,identity);
  if(path==='/api/records'||path.startsWith('/api/records/')||path==='/api/committee/events'||path==='/api/meetings')
   return recordsEndpoint(req,env,path,identity);
- if(path==='/api/committee/social-campaign-settings'||path==='/api/committee/social-post-edits')
+ if(path==='/api/committee/social-campaign-settings'||path==='/api/committee/social-post-edits'||path==='/api/committee/social-metrics')
   return socialEndpoint(req,env,path,identity);
  if(path==='/api/studio/briefs'||path.startsWith('/api/studio/briefs/'))
   return briefsEndpoint(req,env,path,identity);
