@@ -188,7 +188,7 @@ function bind(){
    $('club-summary').innerHTML=preview.records.map(r=>'<div class="club-panel">'+esc(r.name)+' · '+esc(r.town)+'</div>').join('');
    $('club-console').hidden=false;
    for(const t of allTabs){const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.hidden=t!=='overview'}
-   openTab('overview');return;
+   current='overview';for(const t of allTabs){$('club-'+t).hidden=t!=='overview';const tab=document.querySelector('[data-tab="'+t+'"]');if(tab)tab.setAttribute('aria-current',t==='overview'?'page':'false')}return;
   }
   if(!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(identity.role)){
    status('This member account does not have committee access. Membership views will be added after the club establishes its policies.');return;
