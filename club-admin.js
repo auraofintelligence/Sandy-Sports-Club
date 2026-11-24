@@ -1,6 +1,8 @@
+import {setupCommitteeRoom} from './club-committee.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const allTabs=['overview','people','interests','records','social','constitution','accounts','briefs','audit'];
+const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','briefs','audit'];
+let committeeRoom=null;
 let identity=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'—';
 function status(msg,bad=false){$('club-status').textContent=msg;$('club-status').className='club-status'+(bad?' bad':'')}
@@ -31,10 +33,12 @@ function openTab(tab){
  const button=document.querySelector('[data-tab="'+tab+'"]');
  if(button?.hidden){openTab('overview');return}
  current=tab;
+ const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee/'+(committeeRoom?.currentDesk||'notices')):tab;
+ history.replaceState(null,'',location.pathname+location.search+'#'+route);
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
- const load={overview:overview,people:loadPeople,interests:loadInterests,records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
+ const load={overview:overview,people:loadPeople,interests:loadInterests,committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
  load?.().catch(e=>status(e.message,true));
 }
 async function overview(){
@@ -145,6 +149,7 @@ async function loadAudit(){
   '<p>'+esc(r.kind+' / '+r.resourceId)+'</p></article>').join('')||'<p>No server-stamped changes yet.</p>';
 }
 function bind(){
+ committeeRoom=setupCommitteeRoom({api,esc,status,openTab,getIdentity:()=>identity});
  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   openTab(b.dataset.tab);
   const menu=$('clubhouse-menu');if(menu)menu.open=false;
@@ -257,6 +262,8 @@ function bind(){
   if(identity.role!=='webmaster')document.querySelector('[data-tab="accounts"]').hidden=true;
   if(!['webmaster','president','secretary'].includes(identity.role))document.querySelector('[data-tab="audit"]').hidden=true;
   status('Connected to Sandy shared club records. Proposals are not legal club approvals.');
-  openTab('overview');
+  const hash=location.hash.slice(1);
+  const initial=hash.startsWith('committee/')?'committee':allTabs.includes(hash)?hash:'overview';
+  openTab(initial);
  }catch(e){status('Shared club access is not yet configured: '+e.message,true)}
 })();
