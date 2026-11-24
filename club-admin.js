@@ -1,4 +1,5 @@
 import {setupCommitteeRoom} from './club-committee.js';
+import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','requests','briefs','audit'];
@@ -15,6 +16,19 @@ async function api(path,{method='GET',data}={}){
 }
 const formData=form=>Object.fromEntries(new FormData(form));
 const maySeePeople=()=>identity&&['webmaster','president','secretary','assistant_secretary','treasurer'].includes(identity.role);
+
+function filterQuickDesks(role){
+ document.querySelectorAll('.clubhouse-quick-grid a').forEach(link=>{
+  const route=(link.getAttribute('href')||'').replace(/^#/,'');
+  if(route.startsWith('committee/')){
+   const desk=SUITE_BY_KEY[route.slice('committee/'.length)];
+   link.hidden=Boolean(desk&&!desk.roles.includes(role));
+  }else if(route==='accounts')link.hidden=role!=='webmaster';
+  else if(route==='requests')link.hidden=['member','webmaster_demo'].includes(role);
+  else if(route==='constitution')link.hidden=['member','webmaster_demo'].includes(role);
+ });
+}
+
 function previewMode(){
  const chosen=$('club-view-role').value;
  const memberPreview=$('member-preview-link');
@@ -36,6 +50,7 @@ function previewMode(){
   if(button)button.hidden=!visible.includes(tab);
  }
  document.body.dataset.previewRole=chosen;
+ filterQuickDesks(chosen);
  if(!visible.includes(current))openTab('overview');
  if(chosen!=='webmaster')status('Previewing the '+chosen.replace(/_/g,' ')+' layout as the real Webmaster. This is not impersonation. Return to Webmaster for actual administration.');
  else status('Real Webmaster view restored. You remain signed in with your own account.');
@@ -264,6 +279,7 @@ function bind(){
   if(!session.storageReady||!session.authReady){status('The shared Worker and Sandy D1 database are not yet activated. No club records will be stored in this browser.',true);return}
   if(!session.authenticated){status('Sign in to the shared Sandy club system.');$('club-user').innerHTML='<a href="/club-login.html">Sign in</a>';return}
   identity=session.identity;$('club-user').textContent=identity.name+' · '+identity.role;
+  filterQuickDesks(identity.role);
   if(identity.role==='webmaster_demo'){
    const preview=await api('/api/demo');
    status('View-only synthetic webmaster demo. No live member or committee data is exposed.');
