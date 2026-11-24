@@ -27,6 +27,10 @@ async function handle(req,env){
  if(!path.startsWith('/api/'))return env.ASSETS?.fetch(req)||new Response('Static assets not configured.',{status:503});
  if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
  if(!['GET','HEAD'].includes(req.method))verifySameOrigin(req);
+ if(path==='/api/public-config'&&req.method==='GET')
+  return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
+   publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   turnstileSiteKey:env.SANDY_TURNSTILE_SITE_KEY||null,invitationSendingEnabled:false});
  if(path==='/api/health'&&req.method==='GET')
   return respond({service:'sandy-club',storageConfigured:Boolean(env.DB?.prepare),
    authConfigured:Boolean(env.SANDY_AUTH_PEPPER?.length>=32),operationalApprovals:env.SANDY_CLUB_APPROVALS==='enabled',
