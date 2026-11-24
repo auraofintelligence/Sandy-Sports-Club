@@ -139,6 +139,7 @@ export async function authEndpoint(req,env,path,identity){
   if(!target||target.role==='webmaster')fail(404,'This reserved account is unavailable.','account_not_found');
   const at=now();
   if(action==='invite'){
+   if(env.SANDY_INVITES_ENABLED!=='enabled')fail(409,'Invitation generation remains disabled until explicitly activated for the club.','invitations_paused');
    if(target.state!=='reserved')fail(409,'Only reserved accounts may be activated by invitation.','account_not_reserved');
    const token=random(32),digest=await hash(token),expiry=nowSec()+48*3600;
    await db.batch([
