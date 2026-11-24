@@ -12,7 +12,7 @@ const pages = [
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
   ['facilities.html','Facilities'],['programme.html','Events & film'],
-  ['grants.html','Funding'],['clubhouse.html','Clubhouse'],['club-login.html','Club sign-in']
+  ['grants.html','Funding'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
 ];
 const mainSectionFor = page => {
   if(page==='index.html')return 'index.html';
@@ -22,15 +22,30 @@ const mainSectionFor = page => {
   if(['programme.html','film-club.html'].includes(page))return 'programme.html';
   if(['grants.html','donate.html'].includes(page))return 'grants.html';
   if(page==='join.html')return 'join.html';
+  if(['club-admin.html','club-login.html','member-home.html','social-studio.html'].includes(page))return 'club-admin.html';
   return 'clubhouse.html';
 };
 const nav = primaryPages.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':mainSectionFor(here)===url?'data-section-active="true"':''}>${label}</a>`).join('');
-document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-signin" href="/club-login.html" ${here==='club-login.html'?'aria-current="page"':''}>Sign in</a><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
+document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-signin" id="club-header-account" href="/club-login.html" ${here==='club-login.html'?'aria-current="page"':''}>Sign in</a><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
+// PLFC-style private clubhouse entry: show the actual dashboard when a real session exists.
+// The endpoint checks the HttpOnly session cookie; nothing about the role is cached locally.
+fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
+ .then(response=>response.ok?response.json():null)
+ .then(session=>{
+  const entry=document.getElementById('club-header-account');
+  if(!entry||!session?.authenticated)return;
+  entry.href='/club-admin.html';
+  entry.textContent='My Clubhouse';
+  entry.setAttribute('aria-label','Open your signed-in clubhouse workspace');
+  if(here==='club-admin.html')entry.setAttribute('aria-current','page');
+  else entry.removeAttribute('aria-current');
+ })
+ .catch(()=>{});
 // Shared navigation is assembled once for every page.
 const footerSections = [
   ['Explore',[['sports.html','Sports catalogue'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club']]],
   ['Build & back',[['join.html','Get involved'],['interest.html','Express interest'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
-  ['Clubhouse & tools',[['clubhouse.html','Clubhouse overview'],['member-home.html','My membership (future)'],['members.html','Member demo'],['club-admin.html','Shared club administration'],['club-login.html','Secure sign-in'],['committee.html','Legacy planning demo'],['social-studio.html','Social Studio'],['social-studio-preview.html','Earlier browser drafts'],['webmaster.html','Webmaster demo']]]
+  ['Clubhouse & tools',[['clubhouse.html','Club proposal (illustrated)'],['member-home.html','My membership (future)'],['members.html','Member demo'],['club-admin.html','My Clubhouse (working dashboard)'],['club-login.html','Secure sign-in'],['committee.html','Legacy planning demo'],['social-studio.html','Social Studio'],['social-studio-preview.html','Earlier browser drafts'],['webmaster.html','Webmaster demo']]]
 ];
 const footerNav = footerSections.map(([title,items])=>`<nav aria-label="${title}"><strong>${title}</strong>${items.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`).join('');
 document.querySelector('[data-site-footer]')?.insertAdjacentHTML('afterbegin',`<footer><div class="footer-top"><div><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>CLUB PROPOSAL</small></span></a><p>A proposal for island-wide sand sport, shared facilities, film and community life. No club or venue is yet established.</p></div>${footerNav}</div><div class="footer-bottom"><span>Proposal · No incorporated Sandy Sports Club or confirmed site is asserted.</span><span>Quandamooka Country · Minjerribah / North Stradbroke Island</span></div></footer><button class="guide-button" id="guide-button" aria-expanded="false" aria-controls="guide-panel"><img src="/assets/mozzie.webp" alt=""><span>Ask Mozzie</span></button><aside class="guide-panel" id="guide-panel" hidden><button class="guide-close" id="guide-close" aria-label="Close guide">×</button><img src="/assets/mozzie.webp" alt="Mozzie, Sandy Sports mascot"><h2>G'day, I'm Mozzie.</h2><p>Start with the sport ideas, explore three towns, or have your say on the proposal.</p><a href="/sports.html">Sports catalogue</a><a href="/places.html">Three towns</a><a href="/film-club.html">Film club</a><a href="/clubhouse.html">Clubhouse</a><a href="/join.html">Get involved</a></aside>`);
@@ -69,7 +84,7 @@ const currentIndex = allPages.findIndex(([url])=>url===here);
 const previous = currentIndex>0?allPages[currentIndex-1]:null;
 const next = currentIndex>=0&&currentIndex<allPages.length-1?allPages[currentIndex+1]:null;
 const footer=document.querySelector('footer');
-if(currentIndex>=0){
+if(currentIndex>=0&&!['club-admin.html','club-login.html','member-home.html','social-studio.html'].includes(here)){
   const cycleSide = (page,direction)=>{
     const group=pageGroupFor(page[0]);
     const sameGroup=group===pageGroupFor(here);
