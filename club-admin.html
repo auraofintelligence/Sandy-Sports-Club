@@ -1,0 +1,112 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#102d40">
+<title>Shared club administration | Sandy Sports proposal</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css">
+<script defer src="/site.js"></script><script type="module" src="/club-admin.js"></script></head>
+<body><div data-site-header></div><main class="club-app" id="main">
+<header class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB WORKSPACE</p>
+<h1>Club administration</h1><p>One shared register for founding interest, prospective members, future officers, committee work and Social Studio records. This is a club-formation workspace, not an assertion that Sandy Sports already operates.</p>
+<div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>Preview view as <select id="club-view-role">
+<option value="webmaster">Webmaster</option><option value="committee">Committee</option><option value="secretary">Secretary</option>
+<option value="treasurer">Treasurer</option><option value="member">Member</option></select></label>
+<button type="button" id="club-logout">Sign out</button></div></header>
+<div class="club-status" role="status" id="club-status">Connecting to server…</div>
+<div id="club-console" hidden>
+<nav class="club-tabs" aria-label="Club administration sections">
+<button data-tab="overview" aria-current="page">Overview</button>
+<button data-tab="people">People & memberships</button>
+<button data-tab="interests">Holiday visitor interest</button>
+<button data-tab="records">Committee & events</button>
+<button data-tab="accounts">Office holders</button>
+<button data-tab="briefs">Production briefs</button>
+<button data-tab="audit">Audit history</button>
+</nav>
+<section id="club-overview" class="club-section">
+<h2>Formation and shared records</h2><p>Records below are held in the shared Sandy D1 database when the backend is provisioned. Nothing here is a fabricated operating-club membership, approved event or real payment.</p>
+<div class="club-summary" id="club-summary"></div>
+<div class="club-grid-two">
+<article class="club-panel"><h3>Webmaster / committee</h3>
+<p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The webmaster may preview what other roles can see, but does not impersonate their identity.</p>
+<p><a href="/social-studio.html">Social Studio</a> · <a href="/committee.html">Legacy proposal tools</a></p></article>
+<article class="club-panel"><h3>Review and publication</h3><p>Proposals, committee records and video briefs need identified reviewers and server-stamped decisions. No content is published and no advertising spend is authorised here.</p>
+<p><a href="/studio/PLFC-PARITY.md">PLFC comparison and production requirements</a></p></article></div>
+</section>
+<section id="club-people" class="club-section" hidden>
+<h2>People and prospective memberships</h2><p class="club-note">Sensitive member information is available only to authorised roles. Joining and renewal dates are records, not evidence of a payment or an established club. Gender is optional and voluntarily provided.</p>
+<div class="club-toolbar">
+<label>Search <input id="people-search" type="search" placeholder="Name, town, email"></label>
+<label>Town <input id="people-town" placeholder="All towns"></label>
+<label>Class <select id="people-class"><option value="">All</option><option>interested</option><option>founding</option><option>adult</option><option>youth</option><option>family</option><option>social</option><option>volunteer</option><option>supporter</option><option>organisation</option><option>honorary</option><option>other</option></select></label>
+<label>Status <select id="people-status"><option value="">All</option><option>interested</option><option>founder_prospect</option><option>applicant</option><option>pending</option><option>active</option><option>lapsed</option><option>inactive</option><option>withdrawn</option></select></label>
+<label>Gender <select id="people-gender"><option value="">All / not specified</option><option>Woman</option><option>Man</option><option>Non-binary</option><option>Self-described</option><option>Prefer not to say</option></select></label>
+<label>Origin <select id="people-region"><option value="">All</option><option value="local">Local</option><option value="regional">Regional</option><option value="tourist">Tourist</option><option value="other">Other</option></select></label>
+<button type="button" id="people-search-btn">Filter</button><button type="button" id="people-new">Add person</button>
+</div>
+<div class="club-table-scroll"><table id="people-table"><thead><tr>
+<th><button data-sort="name">Name</button></th><th><button data-sort="class">Class</button></th><th><button data-sort="status">Status</button></th>
+<th><button data-sort="joined">Joined</button></th><th><button data-sort="renewal">Renewal</button></th>
+<th><button data-sort="gender">Gender</button></th><th><button data-sort="town">Town</button></th>
+<th><button data-sort="region">Audience</button></th><th>Open</th>
+</tr></thead><tbody id="people-rows"></tbody></table></div>
+<p id="people-paging"></p>
+<details class="club-panel" id="person-editor" hidden><summary>Person record</summary><form id="people-form">
+<input type="hidden" name="id"><input type="hidden" name="version">
+<div class="club-form-grid">
+<label>Full name<input name="name" maxlength="120" required></label>
+<label>Preferred name<input name="preferredName" maxlength="100"></label>
+<label>Email<input name="email" type="email" maxlength="254"></label>
+<label>Phone<input name="mobile" maxlength="40"></label>
+<label>Membership class<select name="membershipClass"><option>interested</option><option>founding</option><option>adult</option><option>youth</option><option>family</option><option>social</option><option>volunteer</option><option>supporter</option><option>organisation</option><option>honorary</option><option>other</option></select></label>
+<label>Status<select name="status"><option>interested</option><option>founder_prospect</option><option>applicant</option><option>pending</option><option>active</option><option>lapsed</option><option>inactive</option><option>withdrawn</option></select></label>
+<label>Joining date<input type="date" name="joinedOn"></label>
+<label>Renewal date<input type="date" name="renewalOn"></label>
+<label>Gender (voluntary)<input name="gender" maxlength="60" placeholder="Leave blank if not provided"></label>
+<label>Town / locality<input name="town" maxlength="100"></label>
+<label>Audience origin<select name="audienceRegion"><option value="">Unspecified</option><option value="local">Local</option><option value="regional">Regional</option><option value="tourist">Tourist</option><option value="other">Other</option></select></label>
+<label>Source<input name="source" maxlength="150" placeholder="Referral, local conversation, application"></label>
+</div><div class="club-checks"><label><input type="checkbox" name="contactConsent"> Agreed to be contacted</label>
+<label><input type="checkbox" name="publicationConsent"> Gave publication consent</label></div>
+<label>Private notes<textarea name="notes" maxlength="4000" rows="3"></textarea></label>
+<button type="submit">Save to shared directory</button><button type="button" id="person-cancel">Cancel</button></form></details>
+</section>
+<section id="club-interests" class="club-section" hidden><h2>Holidaymaker and community interest</h2>
+<p>Confirmed public responses are prospective supporters, not memberships. An expression of interest is only accepted after consent and abuse protection are configured.</p>
+<div class="club-table-scroll"><table><thead><tr><th>Date</th><th>Name</th><th>Town</th><th>Region</th><th>Topics</th><th>Status</th></tr></thead><tbody id="interest-rows"></tbody></table></div></section>
+<section id="club-records" class="club-section" hidden><h2>Committee and project register</h2>
+<div class="club-toolbar"><label>Type <select id="record-kind"><option value="">All</option>
+<option value="event">Events</option><option value="meeting">Meetings</option><option value="task">Tasks</option><option value="calendar">Annual calendar</option>
+<option value="grant">Grants</option><option value="asset">Assets</option><option value="equipment">Equipment</option><option value="fundraising">Fundraising</option>
+<option value="film">Film</option><option value="sponsor">Sponsors</option><option value="partner">Partners</option><option value="volunteer">Volunteers</option>
+<option value="newsletter">Newsletters</option><option value="notice">Notices</option><option value="governance">Governance</option><option value="production">Production</option>
+<option value="safeguard">Safeguarding</option><option value="social_idea">Social ideas</option></select></label>
+<button type="button" id="record-refresh">Refresh records</button><button type="button" id="record-new">Add proposal</button></div>
+<div id="records-list" class="club-list"></div>
+<details id="record-editor" class="club-panel" hidden><summary>Shared committee record</summary>
+<form id="record-form"><input name="id" type="hidden"><input name="version" type="hidden">
+<div class="club-form-grid"><label>Category <select name="kind" id="record-edit-kind"></select></label>
+<label>Working title<input name="title" maxlength="180" required></label>
+<label>Planned date<input type="date" name="eventDate"></label>
+<label>Status<select name="status"><option>proposal</option><option>draft</option><option>review</option><option>scheduled</option><option>completed</option><option>archived</option><option>rejected</option></select></label></div>
+<label>Working details (JSON object)<textarea name="body" rows="5" placeholder='{"description":"Proposed activity; details to confirm"}'></textarea></label>
+<button type="submit">Save shared record</button><button id="record-cancel" type="button">Cancel</button></form></details>
+</section>
+<section id="club-accounts" class="club-section" hidden><h2>Office-holder and account reservations</h2>
+<p>Account reservations are real shared records but not invitations or appointments. No emails or invitations will be issued by these forms.</p>
+<div class="club-table-scroll"><table><thead><tr><th>Username</th><th>Proposed office</th><th>Role</th><th>State</th><th>Activated</th></tr></thead><tbody id="account-rows"></tbody></table></div>
+<details class="club-panel"><summary>Reserve an account (no invitation)</summary>
+<form id="account-form"><div class="club-form-grid"><label>Username<input name="username" minlength="3" maxlength="80" required></label>
+<label>Display name<input name="displayName" maxlength="100"></label>
+<label>Role<select name="role"><option value="president">President</option><option value="vice_president">Vice President</option><option value="secretary">Secretary</option>
+<option value="assistant_secretary">Assistant Secretary</option><option value="treasurer">Treasurer</option><option value="committee">Committee</option>
+<option value="member">Future member</option><option value="webmaster_demo">View-only webmaster demo</option></select></label>
+<label>Office label<input name="office" maxlength="100" placeholder="Prospective role"></label></div>
+<button type="submit">Reserve (do not invite)</button></form></details>
+</section>
+<section id="club-briefs" class="club-section" hidden><h2>Shared production and Social Studio handoffs</h2>
+<p>Production briefs can be prepared for internal work or a possible Ready SET Co-op arrangement. No production is commissioned without a separately authorised decision.</p>
+<div id="brief-rows" class="club-list"></div>
+<p><a href="/social-studio.html">Plan content in Social Studio</a></p>
+</section>
+<section id="club-audit" class="club-section" hidden><h2>Server-stamped audit trail</h2><p class="club-note">Changes are recorded by the server under the signed-in account, not self-entered names or local browser clocks.</p>
+<div id="audit-rows" class="club-list"></div></section>
+</div></main><div data-site-footer></div></body></html>
