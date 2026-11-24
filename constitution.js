@@ -81,3 +81,81 @@ form?.addEventListener('input',()=>{const d=Object.fromEntries(new FormData(form
 form?.addEventListener('submit',e=>{e.preventDefault();if(form.reportValidity())render()});
 document.querySelector('#download-constitution')?.addEventListener('click',()=>{if(!form.reportValidity())return;render();const blob=new Blob([output.textContent],{type:'text/markdown;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sandy-sports-constitution-working-draft.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Working draft downloaded.'});
 document.querySelector('#print-constitution')?.addEventListener('click',()=>{if(!form.reportValidity())return;render();window.print()});
+
+
+/* Authenticated Sandy constitution drafts: same D1 record/revision/audit system as committee records.
+   Keep the old browser draft and export tools, but require an explicit button for server writes. */
+async function constitutionApi(path,method='GET',data){
+ const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+  ...(data===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
+ let result={};try{result=await response.json()}catch{}
+ if(!response.ok)throw Error(result.error||'Shared club API error ('+response.status+')');
+ return result;
+}
+async function setupSharedConstitution(){
+ if(!form)return;
+ let session;
+ try{session=await constitutionApi('/api/session')}catch{return}
+ if(!session?.authenticated||!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(session.identity?.role))return;
+ const box=document.createElement('section');
+ box.className='club-shared-constitution';
+ box.innerHTML='<h3>Shared Sandy constitution draft</h3><p>Your changes remain local until you deliberately save them here. D1 records each edit with your authenticated account and revision number. This does not approve or register a constitution.</p>'+
+ '<div class="shared-actions"><button type="button" data-shared-constitution="save">Save to shared club records</button>'+
+ '<button type="button" data-shared-constitution="load">Load latest shared draft</button></div>'+
+ '<p data-shared-constitution-state role="status">Checking the shared constitution register…</p>';
+ form.insertAdjacentElement('afterend',box);
+ const notice=box.querySelector('[data-shared-constitution-state]');
+ let saved=null;
+ async function refresh(){
+  const data=await constitutionApi('/api/records?kind=governance');
+  const rows=(data.records||[]).filter(row=>row.body?.source==='sandy-constitution-builder');
+  saved=rows[0]||null;
+  notice.textContent=saved?'Shared draft: revision '+saved.version+', edited '+new Date(saved.updatedAt).toLocaleString('en-AU')+
+   '. Loading it is optional and replaces the current form contents.':'No shared constitution draft exists yet. The current browser draft is untouched.';
+ }
+ try{await refresh()}catch(e){notice.textContent='Could not check shared draft: '+e.message}
+ box.addEventListener('click',async ev=>{
+  const button=ev.target.closest('button[data-shared-constitution]');
+  if(!button)return;
+  const operation=button.dataset.sharedConstitution;
+  button.disabled=true;
+  try{
+   if(operation==='load'){
+    await refresh();
+    if(!saved){notice.textContent='There is no shared constitution draft to load.';return}
+    if(!window.confirm('Load the latest shared constitution draft? This will replace the fields currently on screen.'))return;
+    const latest=(await constitutionApi('/api/records/'+saved.id)).record;
+    const fields=latest.body?.fields||{};
+    form.reset();
+    for(const [name,value] of Object.entries(fields)){
+     const input=form.elements.namedItem(name);
+     if(input&&typeof value==='string')input.value=value;
+    }
+    saved=latest;
+    localStorage.setItem('sandy-constitution-draft',JSON.stringify(fields));
+    render();
+    notice.textContent='Loaded shared revision '+latest.version+' into the editor. No new server revision was saved.';
+   }else if(operation==='save'){
+    if(!form.reportValidity())return;
+    render();
+    const fields=Object.fromEntries(new FormData(form));
+    const body={source:'sandy-constitution-builder',fields,markdown:output.textContent};
+    const request={kind:'governance',title:(val('name')+' constitution working draft').slice(0,180),
+     status:'draft',eventDate:null,body};
+    let result;
+    if(saved){
+     result=await constitutionApi('/api/records/'+saved.id,'PATCH',{...request,version:saved.version});
+    }else{
+     result=await constitutionApi('/api/records','POST',request);
+    }
+    const fresh=(await constitutionApi('/api/records/'+result.id)).record;
+    saved=fresh;
+    notice.textContent='Saved to Sandy D1 as working constitution revision '+fresh.version+
+     '. The server recorded your account and update time. No adoption or publication occurred.';
+    status.textContent='Shared constitution working draft saved. Revision '+fresh.version+'.';
+   }
+  }catch(e){notice.textContent='Shared '+operation+' failed without changing the saved draft: '+e.message}
+  finally{button.disabled=false}
+ });
+}
+void setupSharedConstitution();
