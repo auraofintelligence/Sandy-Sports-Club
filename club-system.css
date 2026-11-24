@@ -203,3 +203,24 @@
 #suite-notice.bad{background:#fff1e1;color:#8b3f19}
 @media(max-width:760px){.suite-core,.suite-field-grid{grid-template-columns:1fr}.suite-heading{flex-direction:column}.suite-field:has(textarea){grid-column:auto}}
 @media(max-width:520px){.committee-suite{padding:.6rem}.suite-filters button{flex:1 1 auto}.suite-actions button{flex:1 1 100%}.suite-editor{padding:.65rem}}
+
+/* Sandy's real member workspace and single synthetic preview profile. */
+.member-workspace-nav{display:flex;gap:.5rem;flex-wrap:wrap;padding:.8rem;margin:1rem 0;background:#edf7f2;border:1px solid #b9d8d2;border-radius:11px}
+.member-workspace-nav button{min-height:44px;flex:1 1 130px;border:1px solid #b8d5cf;border-radius:8px;padding:.65rem .8rem;background:#fff;color:#145660;text-align:left;font-weight:800;cursor:pointer}
+.member-workspace-nav button[aria-current=page]{background:#075f6d;color:white;border-color:#075f6d}
+.member-workspace-section{margin:.85rem 0}
+.member-workspace-section h3{margin:.9rem 0;font-size:1.14rem}
+.member-workspace-form{display:grid;gap:.8rem;margin:1rem 0}
+.member-workspace-form>label{display:grid;gap:.3rem;font-size:.87rem;font-weight:700}
+.member-workspace-form input:not([type=checkbox]),.member-workspace-form select,.member-workspace-form textarea{width:100%;padding:.65rem;border:1px solid #b8d3cc;border-radius:8px;font:inherit;color:#133d45}
+.member-workspace-form>label:has([type=checkbox]){display:flex;gap:.65rem;align-items:start;font-weight:600}
+.member-workspace-form fieldset{margin:0;border:1px solid #bfd8d0;border-radius:10px;padding:.75rem}
+.member-workspace-form legend{font-weight:800;padding:.3rem}
+#member-sport-options,#member-time-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+#member-sport-options label,#member-time-options label{display:flex;gap:.6rem;align-items:center;padding:.6rem;border:1px solid #d7e9e2;border-radius:7px;font-size:.88rem}
+.member-workspace-form input[type=checkbox]{width:20px;height:20px;accent-color:#0a7481}
+.member-workspace-form button,#member-export,.club-member-preview-link{border:1px solid #0b7180;border-radius:8px;background:#0b7180;color:white;padding:.7rem .95rem;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}
+.member-workspace-form button:disabled{opacity:.4;cursor:not-allowed}
+.member-item{display:flex;justify-content:space-between;gap:1rem;padding:.7rem;border-bottom:1px solid #d4e8dc}
+.club-member-preview-link{font-size:.8rem;min-height:40px}
+@media(max-width:660px){#member-sport-options,#member-time-options{grid-template-columns:1fr}.member-workspace-nav{padding:.5rem}.member-workspace-nav button{flex:1 1 100%}}
