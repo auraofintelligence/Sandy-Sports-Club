@@ -10,9 +10,62 @@
 <div id="member-state" class="club-status" role="status">Checking account and shared club storage…</div>
 <div id="member-panel" hidden>
 <div class="club-summary" id="member-summary"></div>
-<section class="club-panel"><h2>Your member record</h2><div id="member-profile"></div>
-<p class="club-note">Contact the authorised committee to update private member information. Payments and renewals are not activated by this proposal system.</p></section>
-<section class="club-panel"><h2>Confirmed club events</h2><div id="member-events"></div><p>Proposed activities remain proposals until duly authorised.</p></section>
-<button type="button" id="member-logout">Sign out</button></div>
+<nav class="member-workspace-nav" aria-label="My membership areas">
+ <button type="button" data-member-tab="home" aria-current="page">My Clubhouse</button>
+ <button type="button" data-member-tab="sports">Sport &amp; training</button>
+ <button type="button" data-member-tab="calendar">Calendar &amp; events</button>
+ <button type="button" data-member-tab="volunteer">Helping out</button>
+ <button type="button" data-member-tab="film">Film club</button>
+ <button type="button" data-member-tab="notices">Notices &amp; newsletters</button>
+ <button type="button" data-member-tab="privacy">My privacy &amp; data</button>
+</nav>
+<section class="club-panel member-workspace-section" id="member-home" data-member-section="home">
+ <h2>Your member record</h2><div id="member-profile"></div>
+ <p class="club-note">Your member rights and fees are determined by authorised club records, not this preview. The club is still a proposal.</p>
+ <h3>Your recent interests</h3><div id="member-interest-list"></div>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="sports" hidden>
+ <h2>Sports and training interests</h2><p>Choose the sports and times you would like to hear about. Preferences are private and are never treated as a paid booking.</p>
+ <form id="member-sport-preferences" class="member-workspace-form"><div id="member-sport-options"></div>
+  <fieldset><legend>When you might be available</legend><div id="member-time-options"></div></fieldset>
+  <button type="submit">Save my choices</button><p role="status" id="member-sport-status"></p>
+ </form>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="calendar" hidden>
+ <h2>Confirmed events and club dates</h2><div id="member-events"></div><p class="club-note">Only duly approved events appear. Tentative planning dates are excluded.</p>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="volunteer" hidden>
+ <h2>Volunteering and equipment interests</h2><p>Submit a suggestion privately if the club's member service has been activated. This is not a work assignment.</p>
+ <form id="member-wish-form" class="member-workspace-form">
+  <label>Interest category<select name="area"><option value="equipment">Equipment</option><option value="sport">Sport or team</option><option value="training">Training</option><option value="film">Film or screen</option><option value="volunteer">Volunteering</option></select></label>
+  <label>Short description<input name="request" maxlength="400" required></label>
+  <label>Additional detail<textarea name="details" maxlength="1200" rows="3"></textarea></label>
+  <button type="submit">Send to my private member register</button><p id="member-wish-status" role="status"></p>
+ </form>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="film" hidden>
+ <h2>Film and community media</h2><p>Choose whether you are interested in film nights or helping with their production. Actual screenings, licensing and participation still require agreed arrangements.</p>
+ <div id="member-film-interests"></div>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="notices" hidden>
+ <h2>Member notices and newsletters</h2><div id="member-notices"></div><div id="member-newsletters"></div>
+ <p class="club-note">Only records expressly approved for members are shown. Draft committee messages are private.</p>
+</section>
+<section class="club-panel member-workspace-section" data-member-section="privacy" hidden>
+ <h2>Your privacy and membership data</h2>
+ <p>This is your personal account, not the committee's directory. Download your own record and preferences when available.</p>
+ <form id="member-privacy-form" class="member-workspace-form">
+  <label><input type="checkbox" name="filmClub"> Interested in film club opportunities</label>
+  <label><input type="checkbox" name="volunteer"> Interested in volunteering opportunities</label>
+  <label><input type="checkbox" name="communityEvents"> Interested in island community events</label>
+  <label>Preferred contact<select name="contactPreference"><option value="no_contact">No new contact</option><option value="email_when_consented">Email, only with consent</option><option value="phone_when_consented">Phone, only with consent</option></select></label>
+  <label><input type="checkbox" name="publicationConsent"> I give optional permission to publish agreed material (separate event consent may still be required)</label>
+  <label>My general preferences<textarea name="notes" maxlength="1600" rows="3"></textarea></label>
+  <button type="submit">Save privacy and interest choices</button><p id="member-privacy-status" role="status"></p>
+ </form>
+ <p><button id="member-export" type="button">Download my own membership data</button></p>
+</section>
+<button type="button" id="member-logout">Sign out</button>
+</div>
 <p><a href="/club-login.html">Secure sign-in</a> · <a href="/interest.html">Register an expression of interest when available</a> · <a href="/clubhouse.html">The proposed clubhouse</a></p>
 </main><div data-site-footer></div></body></html>
