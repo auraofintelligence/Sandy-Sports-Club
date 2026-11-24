@@ -1,5 +1,5 @@
 import {ApiError,fail,json,now,epoch,id,dbFor,payload,field,requireRole,revision,audit} from './shared.mjs';
-const enc=new TextEncoder(),COOKIE='__Host-sandy_session',SESSION_HOURS=8,PBKDF2=120000;
+const enc=new TextEncoder(),COOKIE='__Host-sandy_session',SESSION_HOURS=8,PBKDF2=100000;
 const nowSec=()=>epoch();
 const bytes=n=>crypto.getRandomValues(new Uint8Array(n));
 const hex=buf=>Array.from(new Uint8Array(buf),x=>x.toString(16).padStart(2,'0')).join('');
