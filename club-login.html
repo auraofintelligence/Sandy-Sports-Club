@@ -12,7 +12,7 @@
 <label>Password<input type="password" name="password" autocomplete="current-password" minlength="12" required></label>
 <button type="submit">Sign in</button></form>
 <p class="club-note">Only activated accounts can sign in. There is no public sign-up or automatic invitation service.</p></section>
-<details class="club-panel"><summary>Activate a reserved account</summary><p>Only use a one-time invitation issued separately by the authorised webmaster. Invitations are currently disabled by default.</p>
+<details class="club-panel" id="club-invite-panel"><summary>Activate a reserved account</summary><p>Only use a one-time invitation issued separately by the authorised webmaster. Invitations are currently disabled by default.</p>
 <form id="club-activate"><label>Private activation token<input name="token" autocomplete="off" spellcheck="false" pattern="[a-fA-F0-9]{64}" minlength="64" maxlength="64" required></label>
 <label>Choose a strong password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>
 <button type="submit">Activate account</button></form></details>
