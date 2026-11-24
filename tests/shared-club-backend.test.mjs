@@ -94,3 +94,14 @@ test('real PLFC Constitution V1.2 files are referenced for comparison without co
  assert.ok(html.includes('View / download PLFC PDF'));
  assert.ok(builder.includes('Compare with the original PLFC Constitution V1.2'));
 });
+
+test('private Sandy clubhouse pages show the real favicon and island project links',()=>{
+ const home=read('../club-admin.html'),login=read('../club-login.html'),member=read('../member-home.html');
+ for(const html of [home,login,member])assert.ok(html.includes('href="/favicon.png" type="image/png"'), 'favicon link missing');
+ for(const url of [
+  'https://auraofintelligence.github.io/ready-set-co-op-trust-hub/',
+  'https://auraofintelligence.github.io/minjerribah-screen-media-network/',
+  'https://auraofintelligence.github.io/straddie-noticeboard-network/'
+ ])assert.ok(home.includes(url),url);
+ assert.ok(home.includes('class="club-island-links"'));
+});
