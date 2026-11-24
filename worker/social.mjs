@@ -90,7 +90,7 @@ function validateSettings(c){
 }
 const officeLabel=identity=>identity.office_label||identity.role;
 async function one(db,table){
- return db.prepare('SELECT version,'+(table==='studio_settings'?'settings_json':'edits_json')+' AS data,updated_utc AS updatedAt,updated_by AS updatedBy FROM '+table+' WHERE id=1').first();
+ return db.prepare('SELECT version,'+(table==='studio_settings'?'settings_json':table==='studio_metrics'?'metrics_json':'edits_json')+' AS data,updated_utc AS updatedAt,updated_by AS updatedBy FROM '+table+' WHERE id=1').first();
 }
 async function history(db,kind,rev=null){
  const where=rev===null?'':" AND resource_version=?";
@@ -101,9 +101,9 @@ async function history(db,kind,rev=null){
  return (q.results||[]).map(row=>({...row,changes:JSON.parse(row.changes),...(row.settings?{settings:JSON.parse(row.settings)}:{})}));
 }
 export async function socialEndpoint(req,env,path,identity){
- requireRole(identity,STAFF);const db=dbFor(env),url=new URL(req.url),isEdits=path==='/api/committee/social-post-edits';
- if(!isEdits&&path!=='/api/committee/social-campaign-settings')fail(404,'This Social Studio endpoint does not exist.','not_found');
- const table=isEdits?'studio_post_edits':'studio_settings',kind=isEdits?'social-edits':'social-settings';
+ requireRole(identity,STAFF);const db=dbFor(env),url=new URL(req.url),isEdits=path==='/api/committee/social-post-edits',isMetrics=path==='/api/committee/social-metrics';
+ if(!isEdits&&!isMetrics&&path!=='/api/committee/social-campaign-settings')fail(404,'This Social Studio endpoint does not exist.','not_found');
+ const table=isEdits?'studio_post_edits':isMetrics?'studio_metrics':'studio_settings',kind=isEdits?'social-edits':isMetrics?'social-metrics':'social-settings';
  const present=await one(db,table);
  if(req.method==='GET'){
   if(url.searchParams.get('history')==='1'){
@@ -118,17 +118,22 @@ export async function socialEndpoint(req,env,path,identity){
   }
   const result=present?JSON.parse(present.data):null;
   return json({version:present?.version||0,
-   ...(isEdits?{edits:result||{}}:{settings:result}),
+   ...(isEdits?{edits:result||{}}:isMetrics?{metrics:result||[]}:{settings:result}),
    updatedAt:present?.updatedAt||null,updatedBy:present?.updatedBy||null,
    updatedByName:present?.updatedBy||null,updatedOffice:present?officeLabel(identity):null});
  }
  if(req.method!=='POST')fail(405,'Use GET or POST for shared planning records.','method_not_allowed');
  if(identity.role==='webmaster_demo')fail(403,'The demo webmaster cannot save shared club data.','read_only');
- const b=await payload(req,isEdits?450000:1050000),previous=present?JSON.parse(present.data):null;
+ const b=await payload(req,isMetrics?800000:isEdits?450000:1050000),previous=present?JSON.parse(present.data):null;
  const expected=version(b.version);
  if((present?.version||0)!==expected)fail(409,'Another officer saved a newer version. Reload before editing.','revision_conflict');
  let next;
- if(isEdits){
+ if(isMetrics){
+  if(!Array.isArray(b.metrics)||b.metrics.length>10000||JSON.stringify(b.metrics).length>750000||
+     b.metrics.some(item=>!obj(item)||Object.keys(item).length>35||Object.values(item).some(v=>typeof v==='string'&&v.length>1200)))
+    fail(400,'The imported performance metrics are invalid or too large.','invalid_metrics');
+  next=b.metrics;
+ }else if(isEdits){
   if(!obj(b.edits)||JSON.stringify(b.edits).length>400000||Object.keys(b.edits).length>10000)
    fail(400,'The post edit register is too large or invalid.','invalid_post_edits');
   for(const [key,edit] of Object.entries(b.edits)){
@@ -143,9 +148,9 @@ export async function socialEndpoint(req,env,path,identity){
  }
  const at=now(),encoded=JSON.stringify(next),newVersion=expected+1;
  const write=expected===0?
-  db.prepare('INSERT INTO '+table+'(id,version,'+(isEdits?'edits_json':'settings_json')+',updated_by,updated_utc) SELECT 1,1,?,?,? WHERE NOT EXISTS(SELECT 1 FROM '+table+' WHERE id=1)')
+  db.prepare('INSERT INTO '+table+'(id,version,'+(isEdits?'edits_json':isMetrics?'metrics_json':'settings_json')+',updated_by,updated_utc) SELECT 1,1,?,?,? WHERE NOT EXISTS(SELECT 1 FROM '+table+' WHERE id=1)')
    .bind(encoded,identity.id,at):
-  db.prepare('UPDATE '+table+' SET version=version+1,'+(isEdits?'edits_json':'settings_json')+'=?,updated_by=?,updated_utc=? WHERE id=1 AND version=?')
+  db.prepare('UPDATE '+table+' SET version=version+1,'+(isEdits?'edits_json':isMetrics?'metrics_json':'settings_json')+'=?,updated_by=?,updated_utc=? WHERE id=1 AND version=?')
    .bind(encoded,identity.id,at,expected);
  const [result]=await db.batch([
   write,
@@ -154,7 +159,7 @@ export async function socialEndpoint(req,env,path,identity){
   audit(db,identity,'shared_social_saved',kind,'sandy-social',at,true)
  ]);
  if(!result.meta.changes)fail(409,'The shared plan changed during saving. Refresh its latest version.','revision_conflict');
- return json({version:newVersion,...(isEdits?{edits:next}:{settings:next}),
+ return json({version:newVersion,...(isEdits?{edits:next}:isMetrics?{metrics:next}:{settings:next}),
   updatedAt:at,updatedBy:identity.id,updatedByName:identity.name,updatedOffice:officeLabel(identity),
   lastChange:changeSummary(previous||{},next)});
 }
