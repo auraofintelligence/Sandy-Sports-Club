@@ -1,6 +1,6 @@
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const allTabs=['overview','people','interests','records','accounts','briefs','audit'];
+const allTabs=['overview','people','interests','records','social','constitution','accounts','briefs','audit'];
 let identity=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'—';
 function status(msg,bad=false){$('club-status').textContent=msg;$('club-status').className='club-status'+(bad?' bad':'')}
@@ -34,7 +34,7 @@ function openTab(tab){
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
- const load={overview:overview,people:loadPeople,interests:loadInterests,records:loadRecords,accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
+ const load={overview:overview,people:loadPeople,interests:loadInterests,records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,briefs:loadBriefs,audit:loadAudit}[tab];
  load?.().catch(e=>status(e.message,true));
 }
 async function overview(){
@@ -106,12 +106,29 @@ function editRecord(r){
  $('record-editor').hidden=false;$('record-editor').open=true;
  $('record-editor').scrollIntoView({behavior:'smooth',block:'start'});
 }
+function loadEmbeddedTool(tool){
+ const frame=document.querySelector('iframe[data-tool="'+tool+'"]');
+ if(frame&&!frame.hasAttribute('src'))frame.setAttribute('src',frame.dataset.src);
+}
 async function loadAccounts(){
  if(identity?.role!=='webmaster'){status('Only the real webmaster can manage reserved accounts.',true);return}
  const result=await api('/api/accounts');
- $('account-rows').innerHTML=result.accounts.map(a=>
-  '<tr><td>'+esc(a.username)+'</td><td>'+esc(a.office)+'</td><td>'+esc(a.role)+'</td><td>'+esc(a.state)+'</td><td>'+esc(a.activatedAt||'Not activated')+'</td></tr>'
- ).join('')||'<tr><td colspan="5">No accounts reserved.</td></tr>';
+ const officeRoles=['president','vice_president','secretary','assistant_secretary','treasurer','committee'];
+ $('account-rows').innerHTML=result.accounts.map(a=>{
+  let invitation='—';
+  if(a.state==='reserved'&&officeRoles.includes(a.role)){
+   const pending=Boolean(a.inviteExpiresAt);
+   invitation='<button type="button" data-office-invite="'+esc(a.id)+'" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace setup link':'Prepare invite')+'</button>'+
+    (pending?'<small class="club-invite-pending">Pending until '+esc(new Date(a.inviteExpiresAt).toLocaleString('en-AU'))+'</small>':'');
+  }
+  return '<tr><td>'+esc(a.username)+'</td><td>'+esc(a.office)+'</td><td>'+esc(a.role)+'</td><td>'+esc(a.state)+'</td><td>'+esc(a.activatedAt||'Not activated')+'</td><td>'+invitation+'</td></tr>';
+ }).join('')||'<tr><td colspan="6">No accounts reserved.</td></tr>';
+}
+function hidePrivateInvite(){
+ $('club-invitation-link').value='';
+ $('club-invite-email').removeAttribute('href');
+ $('club-invitation-result').hidden=true;
+ $('club-invitation-message').textContent='';
 }
 async function loadBriefs(){
  const result=await api('/api/studio/briefs');
@@ -134,6 +151,42 @@ function bind(){
  }));
  $('club-logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',data:{}})}finally{location.href='/club-login.html'}});
  $('club-view-role').addEventListener('change',previewMode);
+ // The tool frame belongs to the same site. Only accept size messages from that exact frame.
+ window.addEventListener('message',ev=>{
+  if(ev.origin!==location.origin||ev.data?.type!=='sandy-club-frame-height')return;
+  const frame=document.querySelector('iframe[data-tool="'+ev.data.tool+'"]');
+  if(!frame||ev.source!==frame.contentWindow)return;
+  const h=Number(ev.data.height);
+  if(Number.isFinite(h)&&h>300)frame.style.height=Math.min(24000,Math.ceil(h)+30)+'px';
+ });
+ $('account-rows').addEventListener('click',async ev=>{
+  const b=ev.target.closest('button[data-office-invite]');
+  if(!b||identity?.role!=='webmaster')return;
+  if(b.dataset.pending==='true'&&!confirm('Replace the existing private setup link? The earlier invitation will stop working.'))return;
+  b.disabled=true;
+  hidePrivateInvite();
+  try{
+   const result=await api('/api/accounts/'+b.dataset.officeInvite+'/invite',{method:'POST',data:{manual:true}});
+   const link=location.origin+'/club-login.html#invite='+result.token;
+   $('club-invitation-link').value=link;
+   $('club-invite-email').href='mailto:?subject='+encodeURIComponent('Sandy Sports Club private officer account setup')+
+    '&body='+encodeURIComponent('A prospective Sandy Sports office account has been reserved for '+result.username+
+     '. If you agree to activate it, use this one-time private link to set your own password (expires in 48 hours):\n\n'+link+
+     '\n\nSandy Sports is a proposed club. This invitation does not confer an elected office or active membership.');
+   $('club-invitation-result').hidden=false;
+   $('club-invitation-message').textContent='Prepared for '+result.username+'. This private link has NOT been sent.';
+   status('Private officer invitation prepared. Choose Copy setup link or Prepare email. Nothing has been sent automatically.');
+   await loadAccounts();
+   $('club-invitation-result').scrollIntoView({block:'nearest'});
+  }catch(e){status(e.message,true)}
+  finally{b.disabled=false}
+ });
+ $('club-invite-copy').addEventListener('click',async()=>{
+  const input=$('club-invitation-link'),value=input.value;if(!value)return;
+  try{await navigator.clipboard.writeText(value);$('club-invitation-message').textContent='Link copied. Send it only to the intended prospective officer.'}
+  catch{input.focus();input.select();$('club-invitation-message').textContent='Select the highlighted link and press Ctrl+C to copy.'}
+ });
+ $('club-invite-clear').addEventListener('click',hidePrivateInvite);
  $('people-search-btn').addEventListener('click',()=>{page=0;loadPeople().catch(e=>status(e.message,true))});
  $('people-new').addEventListener('click',()=>editPerson(null));
  $('people-table').addEventListener('click',ev=>{
