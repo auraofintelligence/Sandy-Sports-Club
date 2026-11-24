@@ -8,6 +8,7 @@ import {socialEndpoint} from './social.mjs';
 import {briefsEndpoint,auditEndpoint} from './briefs.mjs';
 import {memberEndpoint} from './member.mjs';
 import {suiteEndpoint} from './suite.mjs';
+import {memberWorkspaceEndpoint} from './member-workspace.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -41,6 +42,8 @@ async function handle(req,env){
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
+ if(['/api/member/preview','/api/member/workspace','/api/member/preferences','/api/member/interest','/api/member/data-export'].includes(path))
+  return memberWorkspaceEndpoint(req,env,path,identity);
  if(path==='/api/member/me'||path==='/api/member/events')
   return memberEndpoint(req,env,path,identity);
  if(path==='/api/interest'||path.startsWith('/api/interest/'))
