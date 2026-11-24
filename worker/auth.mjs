@@ -43,7 +43,8 @@ async function rateLimit(req,db,key){
  if(row?.count>8)fail(429,'Too many login attempts. Try again later.','rate_limited');
 }
 function safeAccount(row){return {id:row.id,username:row.username,displayName:row.display_name||'',role:row.role,
- office:row.office_label||'',state:row.state,createdAt:row.created_utc,activatedAt:row.activated_utc||null};}
+ office:row.office_label||'',state:row.state,createdAt:row.created_utc,activatedAt:row.activated_utc||null,
+ inviteExpiresAt:row.invite_expires_epoch?new Date(row.invite_expires_epoch*1000).toISOString():null};}
 export async function authEndpoint(req,env,path,identity){
  if(path==='/api/session'&&req.method==='GET')return json({authenticated:Boolean(identity),
   storageReady:Boolean(env.DB?.prepare),authReady:Boolean(env.SANDY_AUTH_PEPPER&&env.SANDY_AUTH_PEPPER.length>=32),
@@ -116,7 +117,7 @@ export async function authEndpoint(req,env,path,identity){
  }
  if(path==='/api/accounts'&&req.method==='GET'){
   requireRole(identity,['webmaster']);
-  const rows=await db.prepare('SELECT id,username,role,office_label,display_name,state,created_utc,activated_utc FROM club_accounts ORDER BY CASE WHEN role=? THEN 0 ELSE 1 END,username').bind('webmaster').all();
+  const rows=await db.prepare('SELECT a.id,a.username,a.role,a.office_label,a.display_name,a.state,a.created_utc,a.activated_utc,(SELECT MAX(i.expires_epoch) FROM club_invites i WHERE i.account_id=a.id AND i.redeemed_epoch IS NULL AND i.expires_epoch>?) AS invite_expires_epoch FROM club_accounts a ORDER BY CASE WHEN a.role=? THEN 0 ELSE 1 END,a.username').bind(nowSec(),'webmaster').all();
   return json({accounts:(rows.results||[]).map(safeAccount)});
  }
  if(path==='/api/accounts'&&req.method==='POST'){
@@ -141,16 +142,21 @@ export async function authEndpoint(req,env,path,identity){
   if(!target||target.role==='webmaster')fail(404,'This reserved account is unavailable.','account_not_found');
   const at=now();
   if(action==='invite'){
-   if(env.SANDY_INVITES_ENABLED!=='enabled')fail(409,'Invitation generation remains disabled until explicitly activated for the club.','invitations_paused');
+   // This one-time manual invitation is created only by an authenticated webmaster action.
+   // The disabled SANDY_INVITES_ENABLED switch still prevents unattended invitation workflows.
+   const b=await payload(req,2048);
+   if(b.manual!==true)fail(409,'Automatic invitation generation is disabled. The webmaster must explicitly issue a private link.','manual_invite_required');
+   if(!['president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(target.role))
+    fail(403,'Manual invitations are available only for reserved prospective committee officers.','office_only');
    if(target.state!=='reserved')fail(409,'Only reserved accounts may be activated by invitation.','account_not_reserved');
    const token=random(32),digest=await hash(token),expiry=nowSec()+48*3600;
    await db.batch([
     db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL').bind(accountId),
     db.prepare('INSERT INTO club_invites(digest,account_id,issued_by,created_epoch,expires_epoch) VALUES(?,?,?,?,?)').bind(digest,accountId,identity.id,nowSec(),expiry),
-    audit(db,identity,'invitation_prepared_not_sent','account',accountId,at)
+    audit(db,identity,'manual_officer_invitation_created_not_sent','account',accountId,at)
    ]);
    return json({token,username:target.username,expiresAt:new Date(expiry*1000).toISOString(),sent:false,
-    instruction:'Copy this once-only activation token privately. No email or invitation has been sent.'},201);
+    instruction:'One-time link prepared. Copy it or open a draft email to send it privately. No message was sent automatically.'},201);
   }
   if(action==='disable'){
    const [result]=await db.batch([
