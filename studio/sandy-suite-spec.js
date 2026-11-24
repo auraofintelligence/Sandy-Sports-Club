@@ -112,8 +112,8 @@ const F=[
  txt('reviewer','Assigned reviewer','Review'),list('checks','Safeguarding, consent and policy checks','Review'),
  notes('decisionNotes','Review and follow-up notes, not an authorised membership decision','Review')]},
  {key:'returning',title:'Member return and renewal planning',kind:'volunteer',group:'Membership',purpose:'Plan voluntary renewal outreach and eligibility. No real member is automatically invited or charged.',fields:[
- choice('path','Pathway',['Membership renewal','Lapsed member return','Founding supporter follow-up','New event interest'],'Review'),
- txt('memberRef','Member directory reference (not password)','Review'),day('targetDate','Target follow-up date','Review'),
+ choice('path','Pathway',['Membership renewal','Lapsed member return','Founding supporter follow-up','New event interest'],'Outreach'),
+ txt('memberRef','Member directory reference (not password)','Outreach'),day('targetDate','Target follow-up date','Outreach'),
  notes('terms','Proposed terms and consent','Review'),txt('assigned','Responsible officer','Review'),
  check('permission','Individual contact permission verified','Review')]},
  {key:'member-packs',title:'Member packs and onboarding',kind:'governance',group:'Membership',purpose:'Prepare a member welcome pack and handover checklist without assuming membership has been approved.',fields:[
