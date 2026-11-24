@@ -15,7 +15,7 @@ test('production handoffs preserve a deliberate unsent assignment step',()=>{
   assert.ok(handoffs.includes("'/api/studio/briefs'"));
   assert.ok(handoffs.includes("/handoff"));
   assert.ok(handoffs.includes('authorised:false'));
-  assert.ok(handoffs.includes('No assignment'));
+  assert.ok(handoffs.includes('Not commissioned and no message sent.'));
   assert.ok(!handoffs.includes('localStorage.setItem'));
 });
 test('existing browser-only ideas can be imported only after confirmation',()=>{
