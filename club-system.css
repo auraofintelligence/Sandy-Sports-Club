@@ -58,3 +58,21 @@
 .club-app-toolbar select{border:1px solid #a9cbcb;border-radius:8px;padding:.45rem;background:#fff}
 @media(max-width:980px){.club-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.club-auth-layout{grid-template-columns:1fr 1fr}.club-grid-two{grid-template-columns:1fr}}
 @media(max-width:650px){.club-app{padding:1rem .7rem 2.4rem}.club-tabs{flex-wrap:nowrap;overflow-x:auto}.club-tabs button{white-space:nowrap;flex:0 0 auto;font-size:.77rem}.club-section{padding:.8rem}.club-form-grid,.club-auth-layout{grid-template-columns:1fr}.club-record-card{flex-wrap:wrap}.club-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* One PLFC-style clubhouse navigation surface, instead of scattered wrapping tabs. */
+.clubhouse-menu{margin:1rem 0;border:1px solid #b5d1d0;border-radius:14px;background:#f5faf8;overflow:hidden}
+.clubhouse-menu>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem;min-height:60px;padding:.9rem 1.1rem;cursor:pointer;color:#174f58}
+.clubhouse-menu>summary::-webkit-details-marker{display:none}
+.clubhouse-menu>summary>span:first-child{display:grid;gap:.15rem}
+.clubhouse-menu>summary strong{font-size:1rem}
+.clubhouse-menu>summary small{font-size:.76rem;color:#5d7274;font-weight:500}
+.clubhouse-menu>summary #clubhouse-current{font-size:.88rem;font-weight:800;text-align:right;color:#075f6d}
+.clubhouse-menu>summary #clubhouse-current:after{content:'  ▾';white-space:pre;color:#075f6d}
+.clubhouse-menu[open]>summary #clubhouse-current:after{content:'  ▴'}
+.clubhouse-menu .club-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin:0;padding:1rem;border:0;border-top:1px solid #d4e4df;border-radius:0;background:white;overflow:visible}
+.clubhouse-menu .club-tabs button{border:1px solid #d7e5e4;background:#f8fbfa;color:#244e56;min-width:0;min-height:48px;padding:.75rem .85rem;text-align:left;white-space:normal;line-height:1.3;font-size:.88rem}
+.clubhouse-menu .club-tabs button:hover,.clubhouse-menu .club-tabs button:focus-visible{background:#e7f4f0;border-color:#77a9a4}
+.clubhouse-menu .club-tabs button[aria-current=page]{background:#075f6d;border-color:#075f6d;color:#fff}
+.clubhouse-menu .club-tabs button[hidden]{display:none!important}
+@media(max-width:900px){.clubhouse-menu .club-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:510px){.clubhouse-menu .club-tabs{grid-template-columns:1fr}.clubhouse-menu>summary{padding:.8rem}}
