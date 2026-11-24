@@ -1,4 +1,6 @@
 // PLFC-inspired Sandy committee room. Real draft data, server roles, revisions and audit; no fake approvals.
+import {SUITE_BY_KEY,SUITE_DESKS} from './studio/sandy-suite-spec.js';
+import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
  {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
  {key:'todos',group:'Communications',label:'To-do lists',kind:'task',description:'Record an accountable next step, owner and due date.'},
@@ -22,15 +24,22 @@ const DESKS=[
  {key:'applications',group:'Members and safeguards',label:'Applications',kind:'volunteer',description:'Record application-process tasks. Actual people records belong in People & memberships.',related:[['people','People & memberships']]},
  {key:'returning',group:'Members and safeguards',label:'Invite returning members',kind:'volunteer',description:'Plan possible re-engagement; no live member invitations are issued.',related:[['people','People & memberships']]}
 ];
+for(const spec of SUITE_DESKS){
+ if(DESKS.some(x=>x.key===spec.key))continue;
+ DESKS.push({key:spec.key,group:spec.group,label:spec.title,kind:spec.kind,description:spec.purpose});
+}
 const $=id=>document.getElementById(id);
 const niceDate=value=>value?String(value).slice(0,10):'Not dated';
 export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const nav=$('committee-tools'),form=$('committee-desk-form'),list=$('committee-desk-list');
  if(!nav||!form||!list)return {open(){},showDesk(){}};
+ const suite=setupSandySuite({api,status,getIdentity});
+ const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='notices',currentRecords=[];
  const canUse=desk=>{
   const role=getIdentity()?.role;
+  if(SUITE_BY_KEY[desk.key]&&!SUITE_BY_KEY[desk.key].roles.includes(role))return false;
   if(desk.webmaster&&role!=='webmaster')return false;
   if(desk.restricted&&!['webmaster','president','secretary'].includes(role))return false;
   return true;
@@ -105,6 +114,14 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
+  if(SUITE_BY_KEY[key]){
+   oldWorkbench.hidden=true;
+   suiteRoot.hidden=false;
+   await suite.open(key);
+   return;
+  }
+  suiteRoot.hidden=true;
+  oldWorkbench.hidden=false;
   await load();
  }
  function edit(record){
