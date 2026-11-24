@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {suiteEndpoint} from '../worker/suite.mjs';
+import {memberWorkspaceEndpoint} from '../worker/member-workspace.mjs';
 const database=new DatabaseSync(':memory:');
 database.exec(readFileSync(new URL('../backend/migrations/0001_club.sql',import.meta.url),'utf8'));
 const webId='11111111-1111-4111-8111-111111111111';
@@ -86,4 +87,52 @@ test('no unsupported approvals or unexpected fields can be inserted',async()=>{
  assert.equal(checks.data.disabled.approvals,true);
  assert.equal(checks.data.disabled.livePayments,true);
  assert.equal(checks.data.disabled.livePublishing,true);
+});
+
+test('member portal uses a synthetic preview and excludes member writes until lawful activation',async()=>{
+ const preview=await memberWorkspaceEndpoint(new Request('https://sandy.example/api/member/preview'),env,
+  '/api/member/preview',webmaster);
+ const sample=await preview.json();
+ assert.equal(sample.synthetic,true);
+ assert.match(sample.notice,/synthetic/i);
+ const candidate={id:'66666666-6666-4666-8666-666666666666',role:'member',office_label:'Member',username:'prospective'};
+ const before=await memberWorkspaceEndpoint(new Request('https://sandy.example/api/member/workspace'),env,
+  '/api/member/workspace',candidate);
+ assert.equal((await before.json()).active,false);
+ const req=new Request('https://sandy.example/api/member/preferences',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({sports:['Mixed beach volleyball']})});
+ await assert.rejects(()=>memberWorkspaceEndpoint(req,env,'/api/member/preferences',candidate),e=>e.status===409);
+ await assert.rejects(()=>memberWorkspaceEndpoint(new Request('https://sandy.example/api/member/preview'),env,
+  '/api/member/preview',candidate),e=>e.status===403);
+});
+test('future active member can save only own preferences, contribute interests and export only own data',async()=>{
+ const memberId='77777777-7777-4777-8777-777777777777';
+ const member={id:memberId,role:'member',office_label:'Member',username:'examplemember'};
+ database.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc) VALUES(?,?,'member','Member','Example Member','active','fake-salt','fake-hash',?)").run(memberId,'examplemember','2026-11-24T09:00:00Z');
+ database.prepare("INSERT INTO club_people(id,account_id,full_name,membership_class,status,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,'Example Member','adult','active',1,?,?,?,?)")
+  .run('88888888-8888-4888-8888-888888888888',memberId,webId,webId,'2026-11-24T09:00:00Z','2026-11-24T09:00:00Z');
+ env.SANDY_CLUB_APPROVALS='enabled';
+ async function portal(path,method='GET',body){
+  const req=new Request('https://sandy.example'+path,{method,headers:{'Content-Type':'application/json'},
+   ...(body?{body:JSON.stringify(body)}:{})});
+  const res=await memberWorkspaceEndpoint(req,env,path,member);
+  return {status:res.status,data:await res.json()};
+ }
+ const saved=await portal('/api/member/preferences','POST',{version:0,sports:['Mixed beach volleyball','Beach cricket','Unlisted sport'],
+  availability:['Weekend morning'],filmClub:true,contactPreference:'no_contact'});
+ assert.equal(saved.status,201);
+ assert.equal(saved.data.version,1);
+ const w=await portal('/api/member/workspace');
+ assert.equal(w.data.active,true);
+ assert.deepEqual(w.data.preferences.fields.sports,['Mixed beach volleyball','Beach cricket']);
+ const newer=await portal('/api/member/preferences','POST',{version:1,sports:['Flag football'],publicationConsent:false});
+ assert.equal(newer.data.version,2);
+ const interest=await portal('/api/member/interest','POST',{area:'equipment',request:'Portable volleyball net'});
+ assert.equal(interest.status,201);
+ const memberData=await portal('/api/member/data-export');
+ assert.equal(memberData.data.profile.full_name,'Example Member');
+ assert.equal(memberData.data.wishes.length,1);
+ assert.equal(memberData.data.preferences.fields.sports[0],'Flag football');
+ assert.ok(!JSON.stringify(memberData.data).includes('Founding team planning meeting'));
+ env.SANDY_CLUB_APPROVALS='disabled';
 });
