@@ -37,7 +37,7 @@ export async function recordsEndpoint(req,env,path,identity){
   canAccess(identity,'meeting');
   const records=await list(db,'meeting');
   return json({meetings:records.map(r=>({id:r.id,title:r.title,date:r.eventDate,
-    location:r.body.location||'',status:r.status==='completed'?'approved':'draft'}))});
+    location:r.body.location||'',status:r.status==='approved'?'approved':'draft'}))});
  }
  if(path==='/api/records'&&req.method==='GET'){
   const kind=field(url.searchParams.get('kind'),40);
