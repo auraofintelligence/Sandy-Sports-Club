@@ -47,13 +47,16 @@ export async function peopleEndpoint(req,env,path,identity){
  const db=dbFor(env),url=new URL(req.url);
  if(path==='/api/people'&&req.method==='GET'){
   const sort=columns[url.searchParams.get('sort')]||'full_name',direction=url.searchParams.get('direction')==='desc'?'DESC':'ASC';
-  const q=field(url.searchParams.get('q'),90),town=field(url.searchParams.get('town'),100),status=field(url.searchParams.get('status'),30);
+  const q=field(url.searchParams.get('q'),90),town=field(url.searchParams.get('town'),100),status=field(url.searchParams.get('status'),30),gender=field(url.searchParams.get('gender'),60),membershipClass=field(url.searchParams.get('class'),40),region=field(url.searchParams.get('region'),20);
   const size=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||50)||50));
   const page=Math.max(0,Math.min(10000,Number(url.searchParams.get('page')||0)||0));
   let where='WHERE 1=1',values=[];
   if(q){where+=" AND (full_name LIKE ? OR email LIKE ? OR town LIKE ?)";values.push(...Array(3).fill('%'+q.replace(/[%_]/g,'')+'%'));}
   if(town){where+=' AND town=?';values.push(town)}
   if(status&&states.includes(status)){where+=' AND status=?';values.push(status)}
+  if(gender){where+=' AND gender=?';values.push(gender)}
+  if(membershipClass){where+=' AND membership_class=?';values.push(membershipClass)}
+  if(region&&regions.includes(region)){where+=' AND audience_region=?';values.push(region)}
   const rows=await db.prepare('SELECT * FROM club_people '+where+' ORDER BY '+sort+' '+direction+',id ASC LIMIT ? OFFSET ?')
     .bind(...values,size,page*size).all();
   const count=await db.prepare('SELECT COUNT(*) AS total FROM club_people '+where).bind(...values).first();
