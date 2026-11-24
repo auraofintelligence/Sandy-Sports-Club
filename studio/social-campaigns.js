@@ -23,7 +23,7 @@ const monthName=value=>new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',month:'sh
 const audienceText=selection=>Object.values(selection||{}).map(values=>values.join(', ')).join(' · ');
 const csvDate=value=>value.slice(0,10);
 
-export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=false}){
+export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=false,strictShared=false}){
   let settings=defaultCampaignSettings(),saved=JSON.stringify(settings),version=0,loaded=false,busy=false,notice='';
   let sharedSettingsReady=true;
   let saveState='idle',saveMessage='',latestSave=null,historyRows=null,historyError='',historyLoading=false;
@@ -74,14 +74,37 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     }
   };
   const editKey=()=> 'sandy-social-post-edits-v1:'+startMonth+':'+(reviewOnly?'review':'committee');
-  function loadEdits(){
+  let editVersion=0,lastSavedEdits={},editSaveQueue=Promise.resolve();
+  async function loadEdits(){
+    if(strictShared){
+      const row=await api('/api/committee/social-post-edits',{cache:'no-store'});
+      editVersion=row.version||0;postEdits=row.edits&&typeof row.edits==='object'?row.edits:{};
+      lastSavedEdits=structuredClone(postEdits);return true;
+    }
     try{
       const item=JSON.parse(localStorage.getItem(editKey())||'{}');
       postEdits=item&&typeof item==='object'&&!Array.isArray(item)?item:{};
     }catch{postEdits={};}
+    return true;
   }
   function persistEdits(){
-    try{localStorage.setItem(editKey(),JSON.stringify(postEdits));return true;}catch{return false;}
+    if(!strictShared){
+      try{localStorage.setItem(editKey(),JSON.stringify(postEdits));return Promise.resolve(true)}
+      catch{return Promise.resolve(false)}
+    }
+    editSaveQueue=editSaveQueue.then(async()=>{
+      const copy=structuredClone(postEdits);
+      try{
+        const result=await api('/api/committee/social-post-edits',{
+          method:'POST',body:JSON.stringify({version:editVersion,edits:copy})});
+        editVersion=result.version;lastSavedEdits=copy;return true;
+      }catch(error){
+        postEdits=structuredClone(lastSavedEdits);
+        notice='Post edits were NOT saved to the shared database: '+(error?.message||'connection failed')+'. Reload before editing again.';
+        return false;
+      }
+    });
+    return editSaveQueue;
   }
   const getEdit=id=>postEdits[id]||{};
   const overrideBucket=()=>({day:'dayOverrides',week:'weekOverrides',month:'monthOverrides'})[planningScope];
@@ -312,7 +335,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
   }
 
   function preview(){
-    if(!loaded)return '<p class="annual-loading" role="status">Preparing your calendar…</p>';
+    if(!loaded)return saveState==='error'?'<p class="annual-loading" role="alert">'+esc(saveMessage||'Shared club records unavailable. No changes have been saved.')+'</p>':
+      '<p class="annual-loading" role="status">Preparing your calendar…</p>';
     const months=Array.from({length:12},(_,i)=>nextMonth(startMonth,i));
     if(!months.includes(selectedMonth))selectMonth(months[0]);
     const scoped=previewSettings();
@@ -434,9 +458,9 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       if(!isActive())return;
       version=row.version;
       const remote=normaliseSettings(row.settings||defaultCampaignSettings());
-      const local=!reviewOnly?browserDraft():null;
+      const local=!reviewOnly&&!strictShared?browserDraft():null;
       settings=local||remote;saved=JSON.stringify(remote);sharedSettingsReady=true;
-      loaded=true;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;loadEdits();importMetrics();
+      loaded=true;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();importMetrics();
       latestSave={version:row.version,updatedAt:row.updatedAt,updatedByName:row.updatedByName,updatedOffice:row.updatedOffice};
       historyRows=null;historyError='';
       saveState=local||reviewOnly?'local':row.version>0?'shared':'idle';
@@ -446,10 +470,10 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       notice=saveMessage;
     }catch(e){
       if(!isActive())return;
-      if(e.status>=500){
+      if(!strictShared&&e.status>=500){
         settings=browserDraft()||normaliseSettings(defaultCampaignSettings());
         saved=JSON.stringify(settings);loaded=true;sharedSettingsReady=false;
-        version=0;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;loadEdits();importMetrics();
+        version=0;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();importMetrics();
         latestSave=null;saveState='local';historyRows=null;
         saveMessage='The club database is unavailable. Changes can be kept in this browser, but not shared yet.';
         notice=saveMessage;
@@ -461,6 +485,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
   async function save(){
     if(busy||!loaded||!isActive())return;
     if(!sharedSettingsReady){
+      if(strictShared){saveState='error';saveMessage='Cannot save: the shared club database is unavailable. No browser-local substitute will be used.';notice=saveMessage;draw();return;}
       if(saveBrowserDraft()){
         saved=JSON.stringify(settings);
         saveState='local';saveMessage='Saved on this browser only. Retry the connection before treating this as shared with Sandy Sports.';
@@ -484,7 +509,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
         'Saved to the shared Sandy Sports database as version '+row.version+'. You can refresh without losing these settings.';
       notice=saveMessage;
     }catch(e){
-      const draftKept=saveBrowserDraft();
+      const draftKept=strictShared?false:saveBrowserDraft();
       if(e.status>=500)sharedSettingsReady=false;
       saveState=draftKept?'local':'error';
       saveMessage=(e.status===409?'Another officer saved a newer version. ':
@@ -744,7 +769,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     notice=changed()?(reviewOnly?'Unsaved browser-only changes. Save this local revision before trying another layout.':'Unsaved changes. Select Save committee settings to share them.'):'Settings match the saved version.';
     draw();
   });
-  mount.addEventListener('click',event=>{
+  mount.addEventListener('click',async event=>{
     const b=event.target.closest('button');if(!b||!b.closest('[data-annual-root]')||!isActive())return;
     if(b.hasAttribute('data-events-fetch')){void loadClubAnnualEvents();return;}
     if(b.hasAttribute('data-events-select-all')){
@@ -830,7 +855,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       const exists=(postEdits[postId].externalRefs||[]).some(x=>
         x.platform===ref.platform&&x.externalId===ref.externalId&&x.postUrl===ref.postUrl);
       if(!exists)postEdits[postId].externalRefs=[...(postEdits[postId].externalRefs||[]),ref];
-      persistEdits();storeMetrics();
+      const persisted=await persistEdits();if(!persisted){draw();return;}
+      storeMetrics();
       metricsNotice='Linked a '+record.platform+' report row to '+target.date+'.';draw();return;
     }
     if(b.hasAttribute('data-analytics-export')){
@@ -871,7 +897,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     if(b.hasAttribute('data-calendar-copy-creation')){void copyMonthlyCreationBrief();return;}
     if(b.hasAttribute('data-calendar-restore')){
       for(const record of Object.values(postEdits))delete record.hidden;
-      persistEdits();notice='Restored removed calendar suggestions.';draw();return;
+      const persisted=await persistEdits();notice=persisted?'Restored removed suggestions in shared records.':'Could not save restored suggestions.';draw();return;
     }
     if(b.hasAttribute('data-calendar-add')){
       const day=b.dataset.calendarAdd;
@@ -885,8 +911,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       if(!visiblePosts.some(post=>post.id===id&&post.date===modalDay))return;
       if(!window.confirm('Remove this generated suggestion from your browser view? Club-saved posts are unaffected.'))return;
       postEdits[id]={...getEdit(id),hidden:true};
-      persistEdits();modalView='day';modalPostId=null;
-      notice='Removed a suggested idea from this browser. Restore removed suggestions if needed.';
+      const persisted=await persistEdits();modalView='day';modalPostId=null;
+      notice=persisted?'Removed the suggestion from the shared draft view.':'Could not save the removed suggestion to the shared records.';
       draw();return;
     }
     if(b.hasAttribute('data-day-apply-pattern')){
@@ -1019,8 +1045,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       const time=modal?.querySelector('[data-post-time]')?.value;
       if(!title||!brief||!isMinuteTime(time)){modal?.querySelector(!title?'[data-post-title]':!brief?'[data-post-brief]':'[data-post-time]')?.focus();return;}
       postEdits[id]={title,brief,notes,status,time};
-      const persisted=persistEdits();
-      notice=persisted?'Post edits saved in this browser.':'Edit saved for this visit only; your browser blocked local storage.';
+      const persisted=await persistEdits();
+      notice=persisted?(strictShared?'Post edit saved to shared D1 with a server revision.':'Post edit saved in this browser.'):'Post edit NOT saved; check the shared connection.';
       modalView='detail';modalPostId=id;draw();return;
     }
     if(b.hasAttribute('data-annual-today')){
