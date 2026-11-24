@@ -13,6 +13,34 @@
 <script type="module" src="/studio/sandy-studio-app.js?v=20261124-shared-api"></script>
 <script type="module" src="/studio/sandy-workflows.js?v=20261124-shared-api"></script>
 <script type="module" src="/studio/sandy-brainstorm.js?v=20261124-shared-api"></script>
+<style>
+.club-workspace-embedded [data-site-header],.club-workspace-embedded [data-site-footer],
+.club-workspace-embedded .studio-intro,.club-workspace-embedded .studio-bottom-links,
+.club-workspace-embedded .guide-button,.club-workspace-embedded .guide-panel,
+.club-workspace-embedded .back-to-top,.club-workspace-embedded body:after{display:none!important}
+.club-workspace-embedded body{background:transparent;margin:0}
+.club-workspace-embedded main{min-height:0;margin:0;padding:0}
+.club-workspace-embedded .studio-content{margin:0;max-width:none;padding:.5rem}
+</style>
+<script>
+(()=>{
+ if(new URLSearchParams(location.search).get('workspace')!=='1')return;
+ document.documentElement.classList.add('club-workspace-embedded');
+ addEventListener('DOMContentLoaded',()=>{
+  const main=document.querySelector('main');if(!main||window.parent===window)return;
+  let last=0;
+  const report=()=>{
+   const height=Math.max(700,main.scrollHeight,Math.ceil(main.getBoundingClientRect().height));
+   if(Math.abs(height-last)<2)return;
+   last=height;
+   window.parent.postMessage({type:'sandy-club-frame-height',tool:'social',height},location.origin);
+  };
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(report).observe(main);
+  addEventListener('load',report);
+  report();
+ });
+})();
+</script>
 </head>
 <body>
 <div data-site-header></div>
