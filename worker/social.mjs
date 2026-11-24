@@ -90,7 +90,10 @@ function validateSettings(c){
 }
 const officeLabel=identity=>identity.office_label||identity.role;
 async function one(db,table){
- return db.prepare('SELECT version,'+(table==='studio_settings'?'settings_json':table==='studio_metrics'?'metrics_json':'edits_json')+' AS data,updated_utc AS updatedAt,updated_by AS updatedBy FROM '+table+' WHERE id=1').first();
+ const column=table==='studio_settings'?'settings_json':table==='studio_metrics'?'metrics_json':'edits_json';
+ return db.prepare('SELECT t.version,t.'+column+' AS data,t.updated_utc AS updatedAt,t.updated_by AS updatedBy,'+
+  'a.display_name AS updatedByName,a.username AS updatedUsername,a.office_label AS updatedOffice FROM '+table+
+  ' t LEFT JOIN club_accounts a ON a.id=t.updated_by WHERE t.id=1').first();
 }
 async function history(db,kind,rev=null){
  const where=rev===null?'':" AND resource_version=?";
@@ -120,7 +123,7 @@ export async function socialEndpoint(req,env,path,identity){
   return json({version:present?.version||0,
    ...(isEdits?{edits:result||{}}:isMetrics?{metrics:result||[]}:{settings:result}),
    updatedAt:present?.updatedAt||null,updatedBy:present?.updatedBy||null,
-   updatedByName:present?.updatedBy||null,updatedOffice:present?officeLabel(identity):null});
+   updatedByName:present?(present.updatedByName||present.updatedUsername||present.updatedBy):null,updatedOffice:present?.updatedOffice||null});
  }
  if(req.method!=='POST')fail(405,'Use GET or POST for shared planning records.','method_not_allowed');
  if(identity.role==='webmaster_demo')fail(403,'The demo webmaster cannot save shared club data.','read_only');
