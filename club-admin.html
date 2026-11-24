@@ -18,7 +18,8 @@
 <button data-tab="overview" aria-current="page">Overview</button>
 <button data-tab="people">People & memberships</button>
 <button data-tab="interests">Holiday visitor interest</button>
-<button data-tab="records">Committee & events</button>
+<button data-tab="committee">Committee room</button>
+<button data-tab="records">Advanced register</button>
 <button data-tab="social">Social Media Hub</button>
 <button data-tab="constitution">Constitution builder</button>
 <button data-tab="accounts">Office holders & invitations</button>
@@ -98,6 +99,42 @@
 <section id="club-interests" class="club-section" hidden><h2>Holidaymaker and community interest</h2>
 <p>Confirmed public responses are prospective supporters, not memberships. An expression of interest is only accepted after consent and abuse protection are configured.</p>
 <div class="club-table-scroll"><table><thead><tr><th>Date</th><th>Name</th><th>Town</th><th>Region</th><th>Topics</th><th>Status</th></tr></thead><tbody id="interest-rows"></tbody></table></div></section>
+<section id="club-committee" class="club-section" hidden aria-labelledby="club-committee-title">
+ <header class="committee-room-heading">
+  <p class="eyebrow">SANDY SPORTS · COMMITTEE WORKSPACE</p>
+  <h2 id="club-committee-title">Committee room</h2>
+  <p>PLFC-style desks, adapted for Sandy. Choose a desk to work on real shared drafts and follow-ups, each stamped with the signed-in officer and revision history.</p>
+  <p class="club-note">This first shared committee workbench records plans and actions, not legal approvals, membership payments, email distribution or automatically published content. Specialised PLFC workflows are marked where they still need implementation.</p>
+ </header>
+ <nav id="committee-tools" class="committee-tools" aria-label="Committee work desks"></nav>
+ <section id="committee-workbench" class="committee-workbench" aria-labelledby="committee-desk-title">
+  <div class="committee-workbench-heading"><div><h3 id="committee-desk-title">Committee notices</h3><p id="committee-desk-summary">Working notices and agenda items for future officers.</p></div>
+   <button type="button" id="committee-desk-new">New working record</button></div>
+  <p id="committee-desk-explainer" class="club-note">Only saved working records are held in Sandy D1. Formal publishing remains disabled.</p>
+  <div id="committee-desk-related" class="committee-desk-related" aria-label="Related working areas"></div>
+  <details id="committee-desk-editor" class="club-panel" hidden>
+   <summary id="committee-editor-summary">Create a working record</summary>
+   <form id="committee-desk-form">
+    <input name="id" type="hidden"><input name="version" type="hidden">
+    <div class="club-form-grid">
+     <label>Working title<input name="title" maxlength="180" required></label>
+     <label>Planned or due date<input name="eventDate" type="date"></label>
+     <label>Officer / next owner<input name="owner" maxlength="100" placeholder="Assigned person or office"></label>
+     <label>Stage<select name="status"><option value="proposal">Proposal</option><option value="draft">Draft</option><option value="review">For review</option><option value="scheduled">Scheduled (not approved)</option><option value="completed">Completed (recorded)</option><option value="archived">Archived</option><option value="rejected">Not proceeding</option></select></label>
+    </div>
+    <label>Working notes<textarea name="notes" rows="5" maxlength="9500" placeholder="What is proposed, what was discussed, and what still needs a decision?"></textarea></label>
+    <div class="club-form-grid">
+     <label>Next action<input name="nextStep" maxlength="500" placeholder="What needs doing next?"></label>
+     <label>Supporting HTTPS reference<input name="reference" type="url" maxlength="700" placeholder="https://..."></label>
+    </div>
+    <div class="committee-form-actions"><button type="submit">Save with revision history</button><button type="button" id="committee-desk-cancel">Cancel</button></div>
+    <p id="committee-desk-save-status" role="status"></p>
+   </form>
+  </details>
+  <div class="committee-list-head"><h4>Shared working records</h4><button type="button" id="committee-desk-refresh">Refresh</button></div>
+  <div id="committee-desk-list" class="committee-desk-list" role="region" aria-live="polite"></div>
+ </section>
+</section>
 <section id="club-records" class="club-section" hidden><h2>Committee and project register</h2>
 <div class="club-toolbar"><label>Type <select id="record-kind"><option value="">All</option>
 <option value="event">Events</option><option value="meeting">Meetings</option><option value="task">Tasks</option><option value="calendar">Annual calendar</option>
