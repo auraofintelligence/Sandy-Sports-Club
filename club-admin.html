@@ -26,6 +26,7 @@
 <button data-tab="social">Social Media Hub</button>
 <button data-tab="constitution">Constitution builder</button>
 <button data-tab="accounts">Office holders & invitations</button>
+<button data-tab="requests">Webmaster requests</button>
 <button data-tab="briefs">Production briefs</button>
 <button data-tab="audit">Audit history</button>
 </nav></details>
@@ -193,6 +194,23 @@
 </div>
 <p><a href="/constitution.html">Open constitution builder as a full page</a> or continue below.</p>
 <iframe class="club-tool-frame" data-tool="constitution" data-src="/constitution.html?workspace=1" title="Sandy shared constitution drafting builder" loading="lazy"></iframe>
+</section>
+<section id="club-requests" class="club-section" hidden>
+<h2>Webmaster requests <small id="webmaster-help-count"></small></h2>
+<p class="club-note">An actual private inbox for office-holder access questions, website bugs and club administration requests. Submitting saves a shared, attributed record. It does not send an email, SMS or external notification.</p>
+<form id="webmaster-help-form" class="club-panel">
+ <div class="club-form-grid">
+  <label>Category<select name="category" required>
+   <option value="Access or password">Access or password</option><option value="Site or account issue">Site or account issue</option>
+   <option value="Member or safety concern">Member or safety concern</option><option value="Committee workflow">Committee workflow</option>
+   <option value="Sports or events">Sports or events</option><option value="Media or notices">Media or notices</option>
+   <option value="Other">Other</option></select></label>
+  <label>Working subject<input name="subject" maxlength="160" required></label>
+ </div>
+ <label>What should the Webmaster know?<textarea name="message" rows="4" maxlength="5000" required></textarea></label>
+ <button type="submit">Save private request</button><p id="webmaster-help-status" role="status"></p>
+</form>
+<div id="webmaster-help-list" class="club-list" aria-live="polite"></div>
 </section>
 <section id="club-briefs" class="club-section" hidden><h2>Shared production and Social Studio handoffs</h2>
 <p>Production briefs can be prepared for internal work or a possible Ready SET Co-op arrangement. No production is commissioned without a separately authorised decision.</p>
