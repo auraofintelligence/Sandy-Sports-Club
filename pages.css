@@ -67,3 +67,11 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .page-cycle>.cycle-end-link{border-color:#a9a5a0}
 @media(max-width:1100px){.footer-top{grid-template-columns:repeat(2,minmax(0,1fr));gap:2rem}}
 @media(max-width:620px){.footer-top{grid-template-columns:1fr;gap:1.4rem}.page-cycle>.cycle-edge{min-height:auto}.cycle-count{white-space:normal}}
+
+/* The public clubhouse illustration must never obscure the entrance to the real system. */
+.clubhouse-entry{display:flex;align-items:center;justify-content:space-between;gap:1.25rem;padding:1rem max(1.2rem,calc((100vw - 1320px)/2));border-bottom:2px solid #80b9b3;background:#e7f6ef;color:#164a51}
+.clubhouse-entry>div{display:grid;gap:.2rem;min-width:0}
+.clubhouse-entry strong{font-size:1.08rem;line-height:1.3}
+.clubhouse-entry span{font-size:.89rem;line-height:1.5}
+.clubhouse-entry .button{flex:none}
+@media(max-width:760px){.clubhouse-entry{flex-direction:column;align-items:stretch;gap:.85rem}.clubhouse-entry .button{text-align:center}}
