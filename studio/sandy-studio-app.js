@@ -18,7 +18,7 @@ function copyFallback(text){
 }
 function showUnavailable(message){
  if(mount)mount.innerHTML='<div class="studio-security"><strong>Shared Social Studio is not active.</strong><span>'+
-  esc(message)+' No official club data is being stored in this browser. <a href="/club-login.html">Secure sign-in and webmaster setup</a> · <a href="/club-admin.html">Shared administration</a></span></div>';
+  esc(message)+' No official club data is being stored in this browser. <a href="/club-login.html">Secure sign-in and webmaster setup</a> · <a href="/club-admin.html">Shared administration</a> · <a href="/social-studio-preview.html">Earlier browser drafts</a></span></div>';
  notice(message,true);
  document.querySelector('#sandy-handoffs')?.setAttribute('hidden','');
  document.querySelector('#sandy-ideas')?.setAttribute('hidden','');
