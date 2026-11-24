@@ -99,9 +99,11 @@ test('private Sandy clubhouse pages show the real favicon and island project lin
  const home=read('../club-admin.html'),login=read('../club-login.html'),member=read('../member-home.html');
  for(const html of [home,login,member])assert.ok(html.includes('href="/favicon.png" type="image/png"'), 'favicon link missing');
  for(const url of [
-  'https://auraofintelligence.github.io/ready-set-co-op-trust-hub/',
+  'https://ready-setco.auraofintelligence.workers.dev/index.html',
   'https://auraofintelligence.github.io/minjerribah-screen-media-network/',
-  'https://auraofintelligence.github.io/straddie-noticeboard-network/'
+  'https://straddie-noticeboard-cloudflare.auraofintelligence.workers.dev/',
+  'https://auraofintelligence.github.io/strange-but-true/index.html'
  ])assert.ok(home.includes(url),url);
  assert.ok(home.includes('class="club-island-links"'));
+ assert.equal((home.match(/<img src="https?:\/\/[^\"]+" width="56" height="56"/g)||[]).length,4);
 });
