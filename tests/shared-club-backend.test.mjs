@@ -44,11 +44,30 @@ test('no Sandy authenticated Studio path writes official records to localStorage
  assert.ok(!ideas.includes('localStorage.setItem'));
  assert.ok(!handoffs.includes('localStorage.setItem'));
 });
-test('office invitations and publication require separate gating',()=>{
+test('manual committee invites require real webmaster action and do not enable automatic invitations or publication',()=>{
  const auth=read('../worker/auth.mjs'),worker=read('../worker/index.mjs'),briefs=read('../worker/briefs.mjs');
- assert.ok(auth.includes("SANDY_INVITES_ENABLED!=='enabled'"));
+ const wrangler=JSON.parse(read('../wrangler.jsonc'));
+ assert.ok(auth.includes("if(b.manual!==true)"));
+ assert.ok(auth.includes("requireRole(identity,['webmaster'])"));
+ assert.ok(auth.includes("target.role"));
+ assert.ok(auth.includes("return json({token,username:target.username"));
+ assert.ok(wrangler.vars.SANDY_INVITES_ENABLED==='disabled');
+ assert.ok(worker.includes('invitationSendingEnabled:false'));
  assert.ok(briefs.includes('ensureApprover(identity,env)'));
  assert.ok(!worker.includes('sendSMS('));
+});
+test('Social Media Hub, constitution builder and officer invites live inside Sandy Clubhouse',()=>{
+ const html=read('../club-admin.html'),code=read('../club-admin.js');
+ const builder=read('../constitution.js'),login=read('../club-login.js');
+ for(const key of ['club-social','club-constitution','club-invitation-result','club-invitation-link'])
+  assert.ok(html.includes('id="'+key+'"'),key);
+ assert.ok(code.includes("loadEmbeddedTool('social')"));
+ assert.ok(code.includes("loadEmbeddedTool('constitution')"));
+ assert.ok(code.includes("data:{manual:true}"));
+ assert.ok(code.includes("encodeURIComponent('Sandy Sports Club private officer account setup')"));
+ assert.ok(builder.includes('setupSharedConstitution()'));
+ assert.ok(builder.includes("'/api/records?kind=governance'"));
+ assert.ok(login.includes('openPrivateInvitation()'));
 });
 
 test('public proposal and real clubhouse have distinct prominent navigation',()=>{
