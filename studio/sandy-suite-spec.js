@@ -170,9 +170,23 @@ const F=[
  notes('data','Data shared and privacy conditions','Safeguards'),url('source','Provider terms / guidance link','Safeguards'),
  check('humanControl','Human review and withdrawal process identified','Safeguards'),notes('approval','Committee consideration and next steps','Review')]}
 ];
+const restrictedRoles={
+ meetings:['webmaster','president','secretary','assistant_secretary'],
+ news:['webmaster','president','secretary','assistant_secretary'],
+ 'member-notice':['webmaster','president','secretary','assistant_secretary'],
+ 'member-packs':['webmaster','president','secretary','assistant_secretary','treasurer'],
+ 'member-types':['webmaster','president','secretary','treasurer'],
+ 'email-queue':['webmaster','president','secretary','assistant_secretary'],
+ birthday:['webmaster','president','secretary','treasurer'],
+ stock:['webmaster','treasurer'],
+ agm:['webmaster','president','secretary','assistant_secretary'],
+ documents:['webmaster','president','secretary','assistant_secretary'],
+ automations:['webmaster','president','secretary','assistant_secretary'],
+ safety:['webmaster','president','secretary']
+};
 export const SUITE_DESKS=Object.freeze(F.map(entry=>Object.freeze({...entry,
  fields:Object.freeze(entry.fields.map(f=>Object.freeze(f))),
  steps:Object.freeze([...new Set(entry.fields.map(f=>f.step))]),
- roles:Object.freeze(entry.roles||['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'])
+ roles:Object.freeze(entry.roles||restrictedRoles[entry.key]||['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'])
 })));
 export const SUITE_BY_KEY=Object.freeze(Object.fromEntries(SUITE_DESKS.map(s=>[s.key,s])));
