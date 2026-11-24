@@ -1,0 +1,2707 @@
+SANDY SPORTS CLUB — EXACT DEPLOYMENT SOURCE BUNDLE
+Repository: https://github.com/auraofintelligence/Sandy-Sports-Club
+Source commit: 6c7b35442a305cf1b20d1dfc3d2880c03c6f2bd5
+Generated for handoff to Lee (Cloudflare AI).
+This is SOURCE CODE, NOT deployed state. Do not execute this document as a script.
+The live Worker is still static-assets-only until D1, secrets, migration, and tested deploy are complete.
+Existing Sandy D1 candidate supplied by Lee: sandy-sports-clubhouse / ada9c7fc-a138-4158-8986-8d6d6e8bfa94
+Inspect & back up candidate DB before changing it. Do not create a third DB without need.
+The full Cloudflare configuration has an explicit placeholder database ID; fill with the verified Sandy DB UUID.
+PLFC's database and credentials must remain entirely separate. No invitations, approvals, messages, payments, SMS, publishing, spending.
+All files between BEGIN/END delimiters are literal repository contents, preserved in their named paths.
+The entire static site (HTML/assets) is NOT included here. Do not replace the existing public site's assets with an incomplete deployment.
+Use the full GitHub source archive for static assets if deployment tools require them.
+
+FILE COUNT: 16
+1. backend/README.md (7493 characters)
+2. backend/migrations/0001_club.sql (9141 characters)
+3. wrangler.full.example.jsonc (580 characters)
+4. .assetsignore (345 characters)
+5. wrangler.jsonc (162 characters)
+6. worker/index.mjs (4010 characters)
+7. worker/shared.mjs (4917 characters)
+8. worker/auth.mjs (12794 characters)
+9. worker/people.mjs (11357 characters)
+10. worker/records.mjs (7922 characters)
+11. worker/social.mjs (11288 characters)
+12. worker/briefs.mjs (9970 characters)
+13. worker/member.mjs (1761 characters)
+14. studio/social-campaign-engine.js (52670 characters)
+15. studio/social-placements.js (11856 characters)
+16. studio/social-holiday-calendar.js (3382 characters)
+
+
+===== BEGIN FILE backend/README.md =====
+# Sandy Sports Club — activating shared Cloudflare records
+
+**Status:** the Worker API, D1 migration, sign-in, member/committee screens and Social Studio client have been prepared in this repository. **They are not live merely because GitHub has these files.** The currently deployed \`wrangler.jsonc\` remains assets-only until the required Sandy database and secrets are provisioned.
+
+Sandy Sports is still a proposal. Do not insert real members, appoint unapproved office holders, send invitations, accept payments, commission Ready SET Co-op or enable formal publication decisions.
+
+## Cloudflare setup required
+
+Use a **new, independent D1 database** for Sandy. Do not reuse PLFC's database, account keys or roles.
+
+1. Create the database in the same Cloudflare account as the Sandy Worker. Example: \`npx wrangler d1 create sandy-sports-club\`. Copy its D1 **database UUID** (not a password).
+2. Copy \`wrangler.full.example.jsonc\` to a temporary \`wrangler.full.jsonc\`, replacing \`REPLACE_WITH_NEW_SANDY_D1_UUID\`. Its Worker name is \`sandy-sports-club\`, with \`DB\` bound only to this new database.
+3. Apply \`backend/migrations/0001_club.sql\` using Wrangler D1 migrations against the **remote Sandy DB**: \`npx wrangler d1 migrations apply DB --remote --config wrangler.full.jsonc\`. Review the target name and backup before applying.
+4. Set two independently generated high-entropy secrets on the *Sandy* Worker, via Cloudflare's dashboard or \`npx wrangler secret put SANDY_AUTH_PEPPER\` and \`npx wrangler secret put SANDY_BOOTSTRAP_KEY\`. Each must be at least 32 characters. **Never put these values in GitHub, chats or exported reports.**
+5. Keep \`SANDY_CLUB_APPROVALS="disabled"\` and \`SANDY_INVITES_ENABLED="disabled"\`. Do not enable them as an installation step.
+6. Replace the live repository's \`wrangler.jsonc\` with the reviewed full configuration **only after** steps 1–5 have succeeded and the tests pass. The existing public files remain in their current root and \`.assetsignore\` excludes Worker source, database schema, tests and secrets from static delivery.
+7. Verify \`/api/health\` reports \`storageConfigured:true\` and \`authConfigured:true\`. Confirm \`/api/session\` does not report any identity when signed out.
+8. Visit \`/club-login.html\`, open "First webmaster setup", and use the private bootstrap key to create the actual webmaster username/password. This is permitted **once only** while the accounts table is empty. Remove \`SANDY_BOOTSTRAP_KEY\` from Cloudflare secrets immediately afterward.
+9. Log in at \`/club-login.html\` and visit \`/club-admin.html\`. Reserve desired office-holder accounts without issuing invitations. Create a \`webmaster_demo\` reserved account only when needed; the server exposes synthetic, view-only demo information to that role.
+10. Visit \`/social-studio.html\` while signed in. The Studio uses authenticated D1 settings, revisions, per-post edits and imported performance metrics. Older browser-local drafts may be explicitly imported by the webmaster, **never automatically**. Review their contents before bringing them into the shared record.
+
+Official configuration reference: https://developers.cloudflare.com/workers/static-assets/binding/ and https://developers.cloudflare.com/d1/reference/migrations/
+
+## Optional visitor interest collection
+
+The public \`/interest.html\` form remains disabled until both Cloudflare Turnstile credentials are configured:
+
+- Add a Turnstile widget for the Sandy Worker origin, set the public site key as \`SANDY_TURNSTILE_SITE_KEY\` in the Worker variables.
+- Add \`SANDY_TURNSTILE_SECRET\` as a private Worker secret.
+- Confirm that \`/api/public-config\` reports \`publicInterestReady:true\` before sharing the QR/landing page.
+
+The form requests explicit contact consent and stores **expressions of interest**, not memberships. No automatic emails, invites, advertising or fundraising are initiated.
+
+## Roles and permissions
+
+| Role | Access |
+|---|---|
+| Real webmaster | Full authenticated administration; can reserve accounts; cannot claim legal club approval while approvals disabled |
+| President / secretary | Committee records; sensitive directory (where permitted); decision authority only after governing activation |
+| Vice-president / assistant secretary / treasurer | Committee records; selected directory access per the API |
+| Committee | Shared proposals, events and Social Studio; not private membership directory by default |
+| Member | No committee authority; member portal activation requires final policies and account linking |
+| Webmaster demo | Synthetic view-only preview; never has access to real member or committee data |
+
+Accounts are **reserved**, not invited, by default. The standalone webmaster may preview different interface layouts but cannot forge the logged-in identity of another officer. Every real write records the authenticated actor ID, office, role, UTC timestamp and version. Sensitive read permissions are enforced by the API, not only by hidden buttons.
+
+## Data and approval rules
+
+- The club-formation system has **no seeded member records, payments, assumed office appointments, approved events or invitations**.
+- Shared membership records track names, classes, joining/renewal dates, voluntary gender, town, origin and consent. Only designated staff can read them.
+- Committee proposals cover events, meetings, tasks, annual calendar, grants, equipment, assets, sponsorship, volunteering, newsletters, governance and media.
+- Each record has an optimistic version to prevent silent overwrites and an append-only server revision.
+- Social Studio Day/Week/Month settings, individual post edits and performance CSV import results have separate server version history.
+- A proposed Ready SET Co-op production brief is not a contract. Authorised commissioning, committee decisions and publishing links require a separate role-gated workflow.
+- Formal approvals are disabled until the club is properly established and its actual delegation arrangements are adopted. They cannot be enabled by a browser toggle.
+- No SMS, automated social publishing, payment processing or advertising expenditure is connected.
+- Put backup, retention, privacy, consent, safeguarding, Cloudflare Access/MFA and operator account recovery policies in place before admitting real sensitive member data. Password sign-in alone is not a substitute for those organisational controls.
+
+## Validation before activation
+
+The repository includes:
+- \`tests/schema-check.py\` for applying the D1 SQL migration to a clean SQLite database and confirming that it seeds no fake club records.
+- \`tests/shared-club-backend.test.mjs\` for access and deployment safety checks.
+- Existing Sandy calendar, media layout and time-of-day regression tests.
+- GitHub workflow \`.github/workflows/validate.yml\` that checks server JavaScript syntax, database migration and unit tests.
+
+Do not enable the Worker API if any validation fails. If any shared endpoint returns an error, do not treat a browser-local backup as a successful database save.
+
+## Deployment boundary
+
+The actual Cloudflare account administrator must create the database, set the secrets, apply the migration and switch the deployment configuration. A GitHub commit cannot invent those Cloudflare resources or create a functioning authenticated service. Until then the existing live static site remains the safe public version and the full shared club system is **staged, not deployed**.
+
+===== END FILE backend/README.md =====
+
+===== BEGIN FILE backend/migrations/0001_club.sql =====
+-- Sandy Sports Club: isolated shared Cloudflare D1 schema.
+-- Proposed club: no active members, confirmed officers or approvals are seeded.
+-- Apply only to a NEW Sandy D1 database, never PLFC's database.
+PRAGMA foreign_keys=ON;
+
+CREATE TABLE IF NOT EXISTS club_accounts(
+ id TEXT PRIMARY KEY,
+ username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+ role TEXT NOT NULL CHECK(role IN ('webmaster','webmaster_demo','president','vice_president','secretary','assistant_secretary','treasurer','committee','member')),
+ office_label TEXT NOT NULL DEFAULT '',
+ display_name TEXT NOT NULL DEFAULT '',
+ person_id TEXT,
+ state TEXT NOT NULL DEFAULT 'reserved' CHECK(state IN ('reserved','active','disabled')),
+ password_salt TEXT,
+ password_verifier TEXT,
+ created_utc TEXT NOT NULL,
+ activated_utc TEXT,
+ last_login_utc TEXT,
+ CHECK(state!='active' OR (password_salt IS NOT NULL AND password_verifier IS NOT NULL))
+);
+CREATE TABLE IF NOT EXISTS club_sessions(
+ digest TEXT PRIMARY KEY,
+ account_id TEXT NOT NULL REFERENCES club_accounts(id),
+ created_epoch INTEGER NOT NULL,
+ expires_epoch INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS club_sessions_owner ON club_sessions(account_id,expires_epoch);
+CREATE TABLE IF NOT EXISTS club_invites(
+ digest TEXT PRIMARY KEY,
+ account_id TEXT NOT NULL REFERENCES club_accounts(id),
+ issued_by TEXT NOT NULL REFERENCES club_accounts(id),
+ created_epoch INTEGER NOT NULL,
+ expires_epoch INTEGER NOT NULL,
+ redeemed_epoch INTEGER
+);
+CREATE INDEX IF NOT EXISTS club_invites_owner ON club_invites(account_id,expires_epoch);
+CREATE TABLE IF NOT EXISTS club_login_attempts(
+ key TEXT PRIMARY KEY,
+ count INTEGER NOT NULL DEFAULT 0,
+ expires_epoch INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS club_people(
+ id TEXT PRIMARY KEY,
+ account_id TEXT REFERENCES club_accounts(id),
+ full_name TEXT NOT NULL,
+ preferred_name TEXT NOT NULL DEFAULT '',
+ email TEXT NOT NULL DEFAULT '',
+ mobile TEXT NOT NULL DEFAULT '',
+ membership_class TEXT NOT NULL DEFAULT 'interested',
+ status TEXT NOT NULL DEFAULT 'interested' CHECK(status IN ('interested','founder_prospect','applicant','pending','active','lapsed','inactive','withdrawn')),
+ joined_on TEXT,
+ renewal_on TEXT,
+ gender TEXT NOT NULL DEFAULT '',
+ town TEXT NOT NULL DEFAULT '',
+ audience_region TEXT NOT NULL DEFAULT '' CHECK(audience_region IN ('','local','regional','tourist','other')),
+ consent_contact INTEGER NOT NULL DEFAULT 0 CHECK(consent_contact IN (0,1)),
+ consent_publication INTEGER NOT NULL DEFAULT 0 CHECK(consent_publication IN (0,1)),
+ source TEXT NOT NULL DEFAULT '',
+ notes TEXT NOT NULL DEFAULT '',
+ version INTEGER NOT NULL DEFAULT 1,
+ created_by TEXT NOT NULL,
+ updated_by TEXT NOT NULL,
+ created_utc TEXT NOT NULL,
+ updated_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS club_people_join ON club_people(joined_on);
+CREATE INDEX IF NOT EXISTS club_people_renewal ON club_people(renewal_on);
+CREATE INDEX IF NOT EXISTS club_people_town ON club_people(town,status);
+CREATE INDEX IF NOT EXISTS club_people_class ON club_people(membership_class,status);
+CREATE INDEX IF NOT EXISTS club_people_email ON club_people(email);
+CREATE TABLE IF NOT EXISTS club_interest(
+ id TEXT PRIMARY KEY,
+ created_utc TEXT NOT NULL,
+ first_name TEXT NOT NULL DEFAULT '',
+ email TEXT NOT NULL DEFAULT '',
+ town TEXT NOT NULL DEFAULT '',
+ audience_region TEXT NOT NULL DEFAULT 'other',
+ interests_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(interests_json)),
+ comments TEXT NOT NULL DEFAULT '',
+ contact_consent INTEGER NOT NULL CHECK(contact_consent IN (0,1)),
+ source TEXT NOT NULL DEFAULT '',
+ reviewed_utc TEXT,
+ reviewed_by TEXT
+);
+CREATE INDEX IF NOT EXISTS club_interest_date ON club_interest(created_utc);
+
+CREATE TABLE IF NOT EXISTS club_records(
+ id TEXT PRIMARY KEY,
+ kind TEXT NOT NULL CHECK(kind IN ('event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard','social_idea')),
+ title TEXT NOT NULL,
+ body_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(body_json)),
+ status TEXT NOT NULL DEFAULT 'proposal' CHECK(status IN ('proposal','draft','review','approved','scheduled','completed','archived','rejected')),
+ event_date TEXT,
+ version INTEGER NOT NULL DEFAULT 1,
+ created_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ created_utc TEXT NOT NULL,
+ updated_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS club_records_kind_date ON club_records(kind,event_date);
+CREATE INDEX IF NOT EXISTS club_records_status ON club_records(status);
+
+CREATE TABLE IF NOT EXISTS studio_settings(
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ version INTEGER NOT NULL CHECK(version>0),
+ settings_json TEXT NOT NULL CHECK(json_valid(settings_json)),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_utc TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS studio_post_edits(
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ version INTEGER NOT NULL CHECK(version>0),
+ edits_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(edits_json)),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_utc TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS studio_metrics(
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ version INTEGER NOT NULL CHECK(version>0),
+ metrics_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(metrics_json)),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_utc TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS studio_briefs(
+ id TEXT PRIMARY KEY,
+ title TEXT NOT NULL,
+ date TEXT,
+ source_post_id TEXT NOT NULL DEFAULT '',
+ source_url TEXT NOT NULL DEFAULT '',
+ brief TEXT NOT NULL DEFAULT '',
+ producer TEXT NOT NULL DEFAULT 'in-house',
+ reviewer TEXT NOT NULL DEFAULT 'founding',
+ status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published')),
+ due TEXT,
+ author_note TEXT NOT NULL DEFAULT '',
+ decision_by_note TEXT NOT NULL DEFAULT '',
+ evidence TEXT NOT NULL DEFAULT '',
+ published_url TEXT NOT NULL DEFAULT '',
+ notes TEXT NOT NULL DEFAULT '',
+ version INTEGER NOT NULL DEFAULT 1,
+ created_by TEXT NOT NULL REFERENCES club_accounts(id),
+ updated_by TEXT NOT NULL REFERENCES club_accounts(id),
+ created_utc TEXT NOT NULL,
+ updated_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_briefs_date ON studio_briefs(date,status);
+CREATE TABLE IF NOT EXISTS studio_decisions(
+ id TEXT PRIMARY KEY,
+ entity_type TEXT NOT NULL CHECK(entity_type IN ('record','studio_brief','studio_post')),
+ entity_id TEXT NOT NULL,
+ entity_version INTEGER NOT NULL,
+ decision TEXT NOT NULL CHECK(decision IN ('approved','rejected','returned','publish_authorised')),
+ scope_json TEXT NOT NULL CHECK(json_valid(scope_json)),
+ evidence_url TEXT NOT NULL,
+ authorised_actor TEXT NOT NULL REFERENCES club_accounts(id),
+ authorised_office TEXT NOT NULL,
+ decided_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_decisions_entity ON studio_decisions(entity_type,entity_id,decided_utc);
+
+CREATE TABLE IF NOT EXISTS club_revisions(
+ id TEXT PRIMARY KEY,
+ resource_kind TEXT NOT NULL,
+ resource_id TEXT NOT NULL,
+ resource_version INTEGER NOT NULL,
+ operation TEXT NOT NULL,
+ actor_id TEXT NOT NULL REFERENCES club_accounts(id),
+ actor_role TEXT NOT NULL,
+ actor_office TEXT NOT NULL,
+ at_utc TEXT NOT NULL,
+ changes_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(changes_json)),
+ snapshot_json TEXT NOT NULL CHECK(json_valid(snapshot_json)),
+ UNIQUE(resource_kind,resource_id,resource_version)
+);
+CREATE INDEX IF NOT EXISTS club_revisions_entity ON club_revisions(resource_kind,resource_id,resource_version DESC);
+CREATE TABLE IF NOT EXISTS club_audit(
+ id TEXT PRIMARY KEY,
+ actor_id TEXT NOT NULL REFERENCES club_accounts(id),
+ actor_role TEXT NOT NULL,
+ action TEXT NOT NULL,
+ resource_kind TEXT NOT NULL,
+ resource_id TEXT NOT NULL,
+ occurred_utc TEXT NOT NULL,
+ context_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(context_json))
+);
+CREATE INDEX IF NOT EXISTS club_audit_time ON club_audit(occurred_utc DESC);
+
+CREATE TABLE IF NOT EXISTS studio_handoffs(
+ id TEXT PRIMARY KEY,
+ brief_id TEXT NOT NULL REFERENCES studio_briefs(id),
+ decision_id TEXT REFERENCES studio_decisions(id),
+ producer TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('proposed','authorised','delivered','withdrawn')),
+ requested_delivery_on TEXT,
+ return_links_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(return_links_json)),
+ issued_by TEXT REFERENCES club_accounts(id),
+ issued_utc TEXT,
+ updated_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_handoffs_brief ON studio_handoffs(brief_id);
+CREATE TABLE IF NOT EXISTS studio_post_links(
+ id TEXT PRIMARY KEY,
+ brief_id TEXT NOT NULL REFERENCES studio_briefs(id),
+ decision_id TEXT NOT NULL REFERENCES studio_decisions(id),
+ platform TEXT NOT NULL CHECK(platform IN ('youtube','facebook','instagram','tiktok','noticeboard')),
+ published_url TEXT NOT NULL,
+ published_utc TEXT,
+ recorded_by TEXT NOT NULL REFERENCES club_accounts(id),
+ recorded_utc TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS studio_links_brief ON studio_post_links(brief_id);
+
+===== END FILE backend/migrations/0001_club.sql =====
+
+===== BEGIN FILE wrangler.full.example.jsonc =====
+{
+  "name": "sandy-sports-club",
+  "main": "./worker/index.mjs",
+  "compatibility_date": "2026-11-24",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sandy-sports-club",
+      "database_id": "REPLACE_WITH_NEW_SANDY_D1_UUID",
+      "migrations_dir": "backend/migrations"
+    }
+  ],
+  "vars": {
+    "SANDY_CLUB_APPROVALS": "disabled",
+    "SANDY_INVITES_ENABLED": "disabled"
+  }
+}
+
+===== END FILE wrangler.full.example.jsonc =====
+
+===== BEGIN FILE .assetsignore =====
+.git/
+.github/
+README.md
+LICENSE.md
+wrangler.jsonc
+.assetsignore
+build_pages.py
+polish.py
+
+# Server code, private operations and tests must never be uploaded as static assets.
+backend/
+worker/
+tests/
+scripts/
+studio/backend/
+node_modules/
+package.json
+package-lock.json
+wrangler.full.example.jsonc
+wrangler.full.jsonc
+.dev.vars
+.dev.vars.*
+.env
+
+===== END FILE .assetsignore =====
+
+===== BEGIN FILE wrangler.jsonc =====
+{
+  "name": "sandy-sports-club",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": {"directory": "./", "not_found_handling": "404-page"}
+}
+
+===== END FILE wrangler.jsonc =====
+
+===== BEGIN FILE worker/index.mjs =====
+// Sandy Sports shared club backend. Deploy only after NEW D1 binding and auth
+// secrets have been provisioned; this is separate from PLFC's live database.
+import {ApiError,json,verifySameOrigin} from './shared.mjs';
+import {identityFor,authEndpoint} from './auth.mjs';
+import {peopleEndpoint,interestEndpoint} from './people.mjs';
+import {recordsEndpoint} from './records.mjs';
+import {socialEndpoint} from './social.mjs';
+import {briefsEndpoint,auditEndpoint} from './briefs.mjs';
+import {memberEndpoint} from './member.mjs';
+
+const defaults={
+ 'Cache-Control':'no-store, private',
+ 'X-Content-Type-Options':'nosniff',
+ 'Referrer-Policy':'no-referrer',
+ 'Cross-Origin-Resource-Policy':'same-origin',
+ 'X-Frame-Options':'DENY'
+};
+const respond=(data,status=200)=>new Response(JSON.stringify(data),{
+ status,headers:{...defaults,'Content-Type':'application/json; charset=utf-8'}
+});
+function safePath(req){
+ const url=new URL(req.url);
+ if(url.pathname.length>300)throw new ApiError(414,'This endpoint path is too long.','invalid_path');
+ return url.pathname;
+}
+async function handle(req,env){
+ const path=safePath(req);
+ if(!path.startsWith('/api/'))return env.ASSETS?.fetch(req)||new Response('Static assets not configured.',{status:503});
+ if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
+ if(!['GET','HEAD'].includes(req.method))verifySameOrigin(req);
+ if(path==='/api/public-config'&&req.method==='GET')
+  return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
+   publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   turnstileSiteKey:env.SANDY_TURNSTILE_SITE_KEY||null,invitationSendingEnabled:false});
+ if(path==='/api/health'&&req.method==='GET')
+  return respond({service:'sandy-club',storageConfigured:Boolean(env.DB?.prepare),
+   authConfigured:Boolean(env.SANDY_AUTH_PEPPER?.length>=32),operationalApprovals:env.SANDY_CLUB_APPROVALS==='enabled',
+   livePublishing:false,smsEnabled:false,paymentsEnabled:false});
+ const identity=await identityFor(req,env);
+ if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
+  path.startsWith('/api/accounts/')||path==='/api/demo')
+  return authEndpoint(req,env,path,identity);
+ if(path==='/api/member/me'||path==='/api/member/events')
+  return memberEndpoint(req,env,path,identity);
+ if(path==='/api/interest'||path.startsWith('/api/interest/'))
+  return interestEndpoint(req,env,path,identity);
+ if(path==='/api/people'||path.startsWith('/api/people/'))
+  return peopleEndpoint(req,env,path,identity);
+ if(path==='/api/records'||path.startsWith('/api/records/')||path==='/api/committee/events'||path==='/api/meetings')
+  return recordsEndpoint(req,env,path,identity);
+ if(path==='/api/committee/social-campaign-settings'||path==='/api/committee/social-post-edits'||path==='/api/committee/social-metrics')
+  return socialEndpoint(req,env,path,identity);
+ if(path==='/api/studio/briefs'||path.startsWith('/api/studio/briefs/'))
+  return briefsEndpoint(req,env,path,identity);
+ if(path==='/api/audit')return auditEndpoint(req,env,identity);
+ throw new ApiError(404,'No club service exists at this address.','not_found');
+}
+export default {
+ async fetch(req,env,ctx){
+  try{
+   const response=await handle(req,env);
+   if(!new URL(req.url).pathname.startsWith('/api/'))return response;
+   const headers=new Headers(response.headers);
+   for(const [name,value] of Object.entries(defaults))headers.set(name,value);
+   return new Response(response.body,{status:response.status,headers});
+  }catch(error){
+   if(!(error instanceof ApiError))console.error('Sandy API failure:',String(error?.message||error).slice(0,240));
+   const status=error instanceof ApiError?error.status:500;
+   return respond({error:error instanceof ApiError?error.message:'The shared club service could not complete this request.',
+    code:error instanceof ApiError?error.code:'server_error'},status);
+  }
+ }
+};
+
+===== END FILE worker/index.mjs =====
+
+===== BEGIN FILE worker/shared.mjs =====
+// Sandy Sports server-only utilities. Not a public-browser module.
+export const STAFF=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
+export const APPROVERS=['webmaster','president','secretary'];
+const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
+export class ApiError extends Error{
+ constructor(status,message,code='request_failed'){super(message);this.status=status;this.code=code}
+}
+export const fail=(status,message,code)=>{throw new ApiError(status,message,code)};
+export const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{...headers,...extra}});
+export const now=()=>new Date().toISOString();
+export const epoch=()=>Math.floor(Date.now()/1000);
+export const id=()=>crypto.randomUUID();
+export const dbFor=env=>{
+ if(!env.DB?.prepare)fail(503,'Shared Sandy database is not configured. No committee data was saved.','database_unavailable');
+ return env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
+};
+export const staff=identity=>Boolean(identity&&STAFF.includes(identity.role));
+export function requireRole(identity,roles=STAFF){
+ if(!identity)fail(401,'Sign in to access shared club records.','login_required');
+ if(identity.role==='webmaster'&&roles.includes('webmaster'))return identity;
+ if(!roles.includes(identity.role))fail(403,'Your account cannot access this record.','forbidden');
+ return identity;
+}
+export function ensureMemberData(identity){
+ requireRole(identity,['webmaster','president','secretary','assistant_secretary','treasurer']);
+}
+export function ensureWriter(identity){
+ requireRole(identity,STAFF);
+}
+export function ensureApprover(identity,env){
+ requireRole(identity,APPROVERS);
+ if(env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Formal club approval is disabled until the club has lawful governing authority. Record a proposal instead.','club_not_established');
+}
+export async function payload(req,max=65536){
+ const size=Number(req.headers.get('content-length')||0);
+ if(size>max)fail(413,'The submission is too large.','too_large');
+ const type=req.headers.get('content-type')||'';
+ if(!type.toLowerCase().includes('application/json'))fail(415,'Send a JSON request.','invalid_content_type');
+ const raw=await req.text();
+ if(raw.length>max)fail(413,'The submission is too large.','too_large');
+ try{
+  const obj=JSON.parse(raw);
+  if(obj===null||typeof obj!=='object'||Array.isArray(obj))throw Error('invalid JSON');
+  return obj;
+ }catch{fail(400,'The request body must be a JSON object.','invalid_json')}
+}
+export const field=(value,max=200)=>typeof value==='string'?value.trim().slice(0,max):'';
+export function dateField(value,nullable=true){
+ const s=field(value,10);
+ if(!s&&nullable)return null;
+ if(!/^20\d\d-(0[1-9]|1[0-2])-[0-3]\d$/.test(s)||!Number.isFinite(Date.parse(s+'T00:00:00Z'))||
+   new Date(s+'T00:00:00Z').toISOString().slice(0,10)!==s)
+  fail(400,'Enter a valid YYYY-MM-DD date.','invalid_date');
+ return s;
+}
+export const bool=x=>x===true||x===1;
+export const https=x=>{
+ const s=field(x,700);
+ if(!s)return '';
+ try{const url=new URL(s);if(url.protocol!=='https:')throw Error('insecure');return url.href}catch{fail(400,'Use a valid HTTPS link.','invalid_url')}
+};
+export function version(value){
+ if(!Number.isInteger(value)||value<0||value>2147483000)fail(400,'Refresh the record before saving its current version.','invalid_version');
+ return value;
+}
+export function verifySameOrigin(req){
+ const origin=req.headers.get('origin'),url=new URL(req.url);
+ if(origin!==url.origin)fail(403,'This change must come from the Sandy Sports website.','origin_required');
+}
+export function changeSummary(before,after){
+ const changes=[];for(const k of new Set([...Object.keys(before||{}),...Object.keys(after||{})]))
+  if(JSON.stringify(before?.[k])!==JSON.stringify(after?.[k]))changes.push(k);
+ return {fields:changes.slice(0,40),count:changes.length};
+}
+export function revision(db,{kind,resourceId,resourceVersion,action,actor,at,snapshot,changes={},guarded=false}){
+ const sql='INSERT INTO club_revisions(id,resource_kind,resource_id,resource_version,operation,actor_id,actor_role,actor_office,at_utc,changes_json,snapshot_json) '+
+  'SELECT ?,?,?,?,?,?,?,?,?,?,?'+(guarded?' WHERE changes()=1':'');
+ return db.prepare(sql).bind(id(),kind,resourceId,resourceVersion,action,actor.id,actor.role,actor.office_label||actor.role,at,
+  JSON.stringify(changes),JSON.stringify(snapshot));
+}
+export function audit(db,identity,action,kind,resourceId,at,guarded=false){
+ const sql='INSERT INTO club_audit(id,actor_id,actor_role,action,resource_kind,resource_id,occurred_utc,context_json) '+
+   "SELECT ?,?,?,?,?,?,?,'{}'"+(guarded?' WHERE changes()=1':'');
+ return db.prepare(sql).bind(id(),identity.id,identity.role,action,kind,resourceId,at);
+}
+
+===== END FILE worker/shared.mjs =====
+
+===== BEGIN FILE worker/auth.mjs =====
+import {ApiError,fail,json,now,epoch,id,dbFor,payload,field,requireRole,revision,audit} from './shared.mjs';
+const enc=new TextEncoder(),COOKIE='__Host-sandy_session',SESSION_HOURS=8,PBKDF2=120000;
+const nowSec=()=>epoch();
+const bytes=n=>crypto.getRandomValues(new Uint8Array(n));
+const hex=buf=>Array.from(new Uint8Array(buf),x=>x.toString(16).padStart(2,'0')).join('');
+const random=n=>hex(bytes(n));
+const hash=async value=>hex(await crypto.subtle.digest('SHA-256',enc.encode(value)));
+const cookie=(value,age)=>COOKIE+'='+value+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age='+age;
+const name=x=>field(x,80).toLowerCase();
+const validName=x=>/^[a-z0-9][a-z0-9._+-]{2,79}$/.test(x);
+const ROLES=['webmaster','webmaster_demo','president','vice_president','secretary','assistant_secretary','treasurer','committee','member'];
+const strong=x=>typeof x==='string'&&x.length>=12&&x.length<=256;
+function constantEqual(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;
+ let v=0;for(let i=0;i<a.length;i++)v|=a.charCodeAt(i)^b.charCodeAt(i);return v===0;}
+async function verifier(password,salt,secret){
+ const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const source=await crypto.subtle.sign('HMAC',key,enc.encode(password));
+ const pass=await crypto.subtle.importKey('raw',source,'PBKDF2',false,['deriveBits']);
+ return hex(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(salt),iterations:PBKDF2},pass,256));
+}
+function requireCrypto(env){
+ if(typeof env.SANDY_AUTH_PEPPER!=='string'||env.SANDY_AUTH_PEPPER.length<32)
+  fail(503,'Authentication is not configured for this club.','auth_not_configured');
+}
+const sessionToken=req=>(req.headers.get('cookie')||'').match(/(?:^|;\s*)__Host-sandy_session=([a-f0-9]{64})(?:;|$)/)?.[1]||null;
+export async function identityFor(req,env){
+ if(!env.DB?.prepare||!env.SANDY_AUTH_PEPPER)return null;
+ const token=sessionToken(req);if(!token)return null;
+ const db=dbFor(env),digest=await hash(token);
+ const row=await db.prepare('SELECT a.id,a.username,a.role,a.office_label,a.display_name,a.state FROM club_sessions s JOIN club_accounts a ON a.id=s.account_id WHERE s.digest=? AND s.expires_epoch>? AND a.state=?')
+  .bind(digest,nowSec(),'active').first();
+ if(!row)return null;
+ return {id:row.id,username:row.username,name:row.display_name||row.username,role:row.role,office_label:row.office_label||row.role};
+}
+async function rateLimit(req,db,key){
+ const bucket=Math.floor(nowSec()/900);
+ const ip=req.headers.get('cf-connecting-ip')||'local';
+ const digest=await hash('auth-try/'+bucket+'/'+ip+'/'+key);
+ const expiry=(bucket+1)*900;
+ await db.prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN expires_epoch<=? THEN 1 ELSE count+1 END,expires_epoch=?')
+  .bind(digest,expiry,nowSec(),expiry).run();
+ const row=await db.prepare('SELECT count FROM club_login_attempts WHERE key=?').bind(digest).first();
+ if(row?.count>8)fail(429,'Too many login attempts. Try again later.','rate_limited');
+}
+function safeAccount(row){return {id:row.id,username:row.username,displayName:row.display_name||'',role:row.role,
+ office:row.office_label||'',state:row.state,createdAt:row.created_utc,activatedAt:row.activated_utc||null};}
+export async function authEndpoint(req,env,path,identity){
+ if(path==='/api/session'&&req.method==='GET')return json({authenticated:Boolean(identity),
+  storageReady:Boolean(env.DB?.prepare),authReady:Boolean(env.SANDY_AUTH_PEPPER&&env.SANDY_AUTH_PEPPER.length>=32),
+  identity:identity?{id:identity.id,username:identity.username,name:identity.name,role:identity.role,office:identity.office_label}:null,
+  mode:'shared-worker',sharedRecords:!!env.DB?.prepare,clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled'});
+ const db=dbFor(env);
+ if(path==='/api/auth/bootstrap'&&req.method==='POST'){
+  requireCrypto(env);
+  if(!env.SANDY_BOOTSTRAP_KEY||env.SANDY_BOOTSTRAP_KEY.length<32)fail(503,'Webmaster bootstrap has not been enabled in Cloudflare secrets.','bootstrap_not_configured');
+  const b=await payload(req,8192),username=name(b.username),key=field(b.bootstrapKey,500);
+  if(!validName(username)||!strong(b.password))fail(400,'Enter a valid webmaster username and password of at least 12 characters.','invalid_setup');
+  const count=await db.prepare('SELECT COUNT(*) AS n FROM club_accounts').first();
+  if(count?.n>0)fail(409,'The first webmaster has already been created. Use the normal sign-in flow.','already_configured');
+  if(!constantEqual(await hash(key),await hash(env.SANDY_BOOTSTRAP_KEY)))fail(403,'The private bootstrap key is incorrect.','invalid_bootstrap');
+  const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),user=id(),at=now();
+  const [result]=await db.batch([
+   db.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc,activated_utc) SELECT ?,?,'webmaster','Webmaster',?,'active',?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM club_accounts)")
+    .bind(user,username,field(b.displayName,100)||username,salt,pass,at,at),
+   revision(db,{kind:'account',resourceId:user,resourceVersion:1,action:'webmaster_bootstrapped',
+    actor:{id:user,role:'webmaster',office_label:'Webmaster'},at,snapshot:{username,role:'webmaster',state:'active'},guarded:true}),
+   audit(db,{id:user,role:'webmaster'},'webmaster_bootstrapped','account',user,at,true)
+  ]);
+  if(result.meta.changes!==1)fail(409,'Webmaster setup was completed elsewhere.','already_configured');
+  return json({ok:true,username,notice:'Remove SANDY_BOOTSTRAP_KEY from Cloudflare secrets after setup.'},201);
+ }
+ if(path==='/api/auth/activate'&&req.method==='POST'){
+  requireCrypto(env);
+  const b=await payload(req,8192),token=field(b.token,200);
+  if(!/^[a-f0-9]{64}$/.test(token)||!strong(b.password))fail(400,'Use a valid one-time invitation and a strong password.','invalid_activation');
+  await rateLimit(req,db,'activation');
+  const digest=await hash(token),t=nowSec();
+  const record=await db.prepare('SELECT i.account_id,a.username,a.role,a.state FROM club_invites i JOIN club_accounts a ON a.id=i.account_id WHERE i.digest=? AND i.redeemed_epoch IS NULL AND i.expires_epoch>?')
+   .bind(digest,t).first();
+  if(!record||record.state!=='reserved')fail(400,'This invitation is unavailable or has expired.','invalid_activation');
+  const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),at=now();
+  const [updated]=await db.batch([
+   db.prepare("UPDATE club_accounts SET password_salt=?,password_verifier=?,state='active',activated_utc=? WHERE id=? AND state='reserved' AND EXISTS(SELECT 1 FROM club_invites WHERE digest=? AND redeemed_epoch IS NULL AND expires_epoch>?)").bind(salt,pass,at,record.account_id,digest,t),
+   db.prepare('UPDATE club_invites SET redeemed_epoch=? WHERE digest=? AND redeemed_epoch IS NULL AND changes()=1').bind(t,digest),
+   audit(db,{id:record.account_id,role:record.role},'account_activated','account',record.account_id,at,true)
+  ]);
+  if(updated.meta.changes!==1)fail(409,'This invitation has already been redeemed.','invite_conflict');
+  return json({ok:true,username:record.username});
+ }
+ if(path==='/api/auth/login'&&req.method==='POST'){
+  requireCrypto(env);
+  const b=await payload(req,8192),username=name(b.username);
+  if(!validName(username)||typeof b.password!=='string'||b.password.length>256)fail(400,'Enter a username and password.','invalid_credentials');
+  await rateLimit(req,db,'login/'+username);
+  const user=await db.prepare('SELECT id,username,role,state,password_salt,password_verifier FROM club_accounts WHERE username=?').bind(username).first();
+  const salted=user?.password_salt||'invalid-sandy-account';
+  const expected=await verifier(b.password,salted,env.SANDY_AUTH_PEPPER);
+  if(!user||user.state!=='active'||!constantEqual(expected,user.password_verifier||'0'.repeat(64)))
+   fail(401,'The username or password is incorrect.','invalid_credentials');
+  const token=random(32),at=now(),until=nowSec()+SESSION_HOURS*3600;
+  await db.batch([
+   db.prepare('INSERT INTO club_sessions(digest,account_id,created_epoch,expires_epoch) VALUES(?,?,?,?)').bind(await hash(token),user.id,nowSec(),until),
+   db.prepare('UPDATE club_accounts SET last_login_utc=? WHERE id=?').bind(at,user.id),
+   audit(db,{id:user.id,role:user.role},'login','account',user.id,at)]);
+  return json({ok:true},200,{'Set-Cookie':cookie(token,SESSION_HOURS*3600)});
+ }
+ if(path==='/api/auth/logout'&&req.method==='POST'){
+  const token=sessionToken(req);
+  if(token&&env.DB?.prepare)await db.prepare('DELETE FROM club_sessions WHERE digest=?').bind(await hash(token)).run();
+  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
+ }
+ if(path==='/api/demo'&&req.method==='GET'){
+  if(identity?.role!=='webmaster'&&identity?.role!=='webmaster_demo')fail(identity?403:401,'Demo access requires a permitted view-only account.','forbidden');
+  return json({synthetic:true,records:[{name:'Illustrative demo member',town:'Example locality',joinedOn:null,renewalOn:null,membershipClass:'illustrative',status:'demo'}],
+   roles:['member','committee','secretary','treasurer','webmaster'],notice:'Synthetic preview only; not real memberships or committee records.'});
+ }
+ if(path==='/api/accounts'&&req.method==='GET'){
+  requireRole(identity,['webmaster']);
+  const rows=await db.prepare('SELECT id,username,role,office_label,display_name,state,created_utc,activated_utc FROM club_accounts ORDER BY CASE WHEN role=? THEN 0 ELSE 1 END,username').bind('webmaster').all();
+  return json({accounts:(rows.results||[]).map(safeAccount)});
+ }
+ if(path==='/api/accounts'&&req.method==='POST'){
+  requireRole(identity,['webmaster']);
+  const b=await payload(req,8192),username=name(b.username),role=field(b.role,30);
+  if(!validName(username)||!ROLES.includes(role)||role==='webmaster')fail(400,'Choose an unused username and a permitted prospective account role.','invalid_account');
+  const at=now(),newId=id(),office=field(b.office,100)||role,display=field(b.displayName,100);
+  try{
+   await db.batch([
+    db.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,created_utc) VALUES(?,?,?,?,?,'reserved',?)").bind(newId,username,role,office,display,at),
+    revision(db,{kind:'account',resourceId:newId,resourceVersion:1,action:'account_reserved',actor:identity,at,snapshot:{username,role,office,state:'reserved'}}),
+    audit(db,identity,'account_reserved','account',newId,at)
+   ]);
+  }catch(e){if(/UNIQUE|constraint/i.test(String(e.message)))fail(409,'That username is already reserved.','account_exists');throw e}
+  return json({ok:true,account:{id:newId,username,role,office,state:'reserved'},invitationSent:false},201);
+ }
+ const match=path.match(/^\/api\/accounts\/([a-f0-9-]{36})\/(invite|disable)$/);
+ if(match&&req.method==='POST'){
+  requireRole(identity,['webmaster']);
+  const [_,accountId,action]=match;
+  const target=await db.prepare('SELECT id,username,role,state FROM club_accounts WHERE id=?').bind(accountId).first();
+  if(!target||target.role==='webmaster')fail(404,'This reserved account is unavailable.','account_not_found');
+  const at=now();
+  if(action==='invite'){
+   if(env.SANDY_INVITES_ENABLED!=='enabled')fail(409,'Invitation generation remains disabled until explicitly activated for the club.','invitations_paused');
+   if(target.state!=='reserved')fail(409,'Only reserved accounts may be activated by invitation.','account_not_reserved');
+   const token=random(32),digest=await hash(token),expiry=nowSec()+48*3600;
+   await db.batch([
+    db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL').bind(accountId),
+    db.prepare('INSERT INTO club_invites(digest,account_id,issued_by,created_epoch,expires_epoch) VALUES(?,?,?,?,?)').bind(digest,accountId,identity.id,nowSec(),expiry),
+    audit(db,identity,'invitation_prepared_not_sent','account',accountId,at)
+   ]);
+   return json({token,username:target.username,expiresAt:new Date(expiry*1000).toISOString(),sent:false,
+    instruction:'Copy this once-only activation token privately. No email or invitation has been sent.'},201);
+  }
+  if(action==='disable'){
+   const [result]=await db.batch([
+    db.prepare("UPDATE club_accounts SET state='disabled' WHERE id=? AND state!='disabled'").bind(accountId),
+    db.prepare('DELETE FROM club_sessions WHERE account_id=?').bind(accountId),
+    audit(db,identity,'account_disabled','account',accountId,at)
+   ]);
+   if(!result.meta.changes)fail(409,'This account was already disabled.','already_disabled');
+   return json({ok:true});
+  }
+ }
+ fail(404,'This account operation does not exist.','not_found');
+}
+
+===== END FILE worker/auth.mjs =====
+
+===== BEGIN FILE worker/people.mjs =====
+import {fail,json,now,id,dbFor,payload,field,dateField,bool,version,ensureMemberData,requireRole,revision,audit} from './shared.mjs';
+const classes=['interested','founding','adult','youth','family','social','volunteer','supporter','organisation','honorary','other'];
+const states=['interested','founder_prospect','applicant','pending','active','lapsed','inactive','withdrawn'];
+const regions=['','local','regional','tourist','other'];
+const columns={
+ name:'full_name',joined:'joined_on',renewal:'renewal_on',gender:'gender',town:'town',class:'membership_class',
+ status:'status',created:'created_utc',region:'audience_region'
+};
+const view=(row)=>({
+ id:row.id,accountId:row.account_id||null,name:row.full_name,preferredName:row.preferred_name,
+ email:row.email,mobile:row.mobile,membershipClass:row.membership_class,status:row.status,
+ joinedOn:row.joined_on,renewalOn:row.renewal_on,gender:row.gender,town:row.town,
+ audienceRegion:row.audience_region,contactConsent:!!row.consent_contact,publicationConsent:!!row.consent_publication,
+ source:row.source,notes:row.notes,version:row.version,
+ createdAt:row.created_utc,updatedAt:row.updated_utc
+});
+function clean(b,env){
+ const fullName=field(b.name,120),email=field(b.email,254),mobile=field(b.mobile,40);
+ const membershipClass=field(b.membershipClass,40)||'interested',status=field(b.status,30)||'interested';
+ const audienceRegion=field(b.audienceRegion,20);
+ if(!fullName||!classes.includes(membershipClass)||!states.includes(status)||!regions.includes(audienceRegion))
+  fail(400,'Provide a name and valid membership, status and audience categories.','invalid_member');
+ if(email&&(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||email.length>254))
+  fail(400,'Enter a valid email or leave it blank.','invalid_email');
+ if(status==='active'&&env.SANDY_CLUB_APPROVALS!=='enabled')
+  fail(409,'Memberships cannot be activated before the club is established. Record an interested or pending person instead.','club_not_established');
+ return {
+  name:fullName,preferredName:field(b.preferredName,100),email,mobile,membershipClass,status,
+  joinedOn:dateField(b.joinedOn),renewalOn:dateField(b.renewalOn),
+  gender:field(b.gender,60),town:field(b.town,100),audienceRegion,
+  contactConsent:bool(b.contactConsent),publicationConsent:bool(b.publicationConsent),
+  source:field(b.source,150),notes:field(b.notes,4000)
+ };
+}
+function editColumns(data){
+ return [data.name,data.preferredName,data.email,data.mobile,data.membershipClass,data.status,data.joinedOn,data.renewalOn,data.gender,data.town,data.audienceRegion,
+  data.contactConsent?1:0,data.publicationConsent?1:0,data.source,data.notes];
+}
+const sqlFields='full_name,preferred_name,email,mobile,membership_class,status,joined_on,renewal_on,gender,town,audience_region,consent_contact,consent_publication,source,notes';
+async function history(db,entityId){
+ const rows=await db.prepare("SELECT resource_version AS version,operation,actor_role AS role,actor_office AS office,at_utc AS at,changes_json AS changes FROM club_revisions WHERE resource_kind='person' AND resource_id=? ORDER BY resource_version DESC LIMIT 80")
+  .bind(entityId).all();
+ return (rows.results||[]).map(r=>({...r,changes:JSON.parse(r.changes)}));
+}
+export async function peopleEndpoint(req,env,path,identity){
+ ensureMemberData(identity);
+ const db=dbFor(env),url=new URL(req.url);
+ if(path==='/api/people'&&req.method==='GET'){
+  const sort=columns[url.searchParams.get('sort')]||'full_name',direction=url.searchParams.get('direction')==='desc'?'DESC':'ASC';
+  const q=field(url.searchParams.get('q'),90),town=field(url.searchParams.get('town'),100),status=field(url.searchParams.get('status'),30),gender=field(url.searchParams.get('gender'),60),membershipClass=field(url.searchParams.get('class'),40),region=field(url.searchParams.get('region'),20);
+  const size=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||50)||50));
+  const page=Math.max(0,Math.min(10000,Number(url.searchParams.get('page')||0)||0));
+  let where='WHERE 1=1',values=[];
+  if(q){where+=" AND (full_name LIKE ? OR email LIKE ? OR town LIKE ?)";values.push(...Array(3).fill('%'+q.replace(/[%_]/g,'')+'%'));}
+  if(town){where+=' AND town=?';values.push(town)}
+  if(status&&states.includes(status)){where+=' AND status=?';values.push(status)}
+  if(gender){where+=' AND gender=?';values.push(gender)}
+  if(membershipClass){where+=' AND membership_class=?';values.push(membershipClass)}
+  if(region&&regions.includes(region)){where+=' AND audience_region=?';values.push(region)}
+  const rows=await db.prepare('SELECT * FROM club_people '+where+' ORDER BY '+sort+' '+direction+',id ASC LIMIT ? OFFSET ?')
+    .bind(...values,size,page*size).all();
+  const count=await db.prepare('SELECT COUNT(*) AS total FROM club_people '+where).bind(...values).first();
+  return json({people:(rows.results||[]).map(view),total:count.total,page,limit:size,sort,direction});
+ }
+ if(path==='/api/people'&&req.method==='POST'){
+  const b=await payload(req,16000),data=clean(b,env),at=now(),personId=id();
+  await db.batch([
+   db.prepare('INSERT INTO club_people(id,'+sqlFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
+    .bind(personId,...editColumns(data),identity.id,identity.id,at,at),
+   revision(db,{kind:'person',resourceId:personId,resourceVersion:1,action:'created',actor:identity,at,snapshot:data}),
+   audit(db,identity,'person_created','person',personId,at)
+  ]);
+  return json({ok:true,id:personId,version:1,person:data},201);
+ }
+ const match=path.match(/^\/api\/people\/([a-f0-9-]{36})(?:\/(revisions|link-account))?$/);
+ if(match){
+  const personId=match[1],row=await db.prepare('SELECT * FROM club_people WHERE id=?').bind(personId).first();
+  if(!row)fail(404,'No person has that record identifier.','person_not_found');
+  if(match[2]==='link-account'&&req.method==='POST'){
+   requireRole(identity,['webmaster']);
+   if(env.SANDY_CLUB_APPROVALS!=='enabled')
+    fail(409,'Do not activate membership accounts until Sandy Sports has lawful governing authority.','club_not_established');
+   const b=await payload(req,5000),accountId=field(b.accountId,60),expected=version(b.version),at=now();
+   if(expected!==row.version)fail(409,'This person record changed. Reload it.','conflict');
+   const target=await db.prepare("SELECT id,role,state FROM club_accounts WHERE id=? AND role='member' AND state='active'").bind(accountId).first();
+   if(!target)fail(400,'Choose an activated member account.','invalid_account');
+   if(row.account_id&&row.account_id!==accountId)fail(409,'This person is already linked to an account.','already_linked');
+   const [changed]=await db.batch([
+    db.prepare('UPDATE club_people SET account_id=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND (account_id IS NULL OR account_id=?)')
+     .bind(accountId,identity.id,at,personId,expected,accountId),
+    revision(db,{kind:'person',resourceId:personId,resourceVersion:expected+1,action:'account_linked',actor:identity,at,
+      snapshot:{...view(row),accountId},changes:{accountId},guarded:true}),
+    audit(db,identity,'member_account_linked','person',personId,at,true)
+   ]);
+   if(!changed.meta.changes)fail(409,'This person was updated by another officer.','conflict');
+   return json({ok:true,version:expected+1});
+  }
+  if(req.method==='GET')return json(match[2]?{revisions:await history(db,personId)}:{person:view(row)});
+  if(req.method==='PATCH'&&!match[2]){
+   const b=await payload(req,16000),expected=version(b.version),data=clean({...view(row),...b},env),at=now();
+   if(expected!==row.version)fail(409,'This person was updated by another officer. Refresh before saving.','conflict');
+   const [result]=await db.batch([
+    db.prepare('UPDATE club_people SET '+sqlFields.split(',').map(k=>k+'=?').join(',')+',version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
+      .bind(...editColumns(data),identity.id,at,personId,expected),
+    revision(db,{kind:'person',resourceId:personId,resourceVersion:expected+1,action:'updated',actor:identity,at,snapshot:data,
+      changes:{updatedFields:Object.keys(b).filter(k=>k!=='version')},guarded:true}),
+    audit(db,identity,'person_updated','person',personId,at,true)
+   ]);
+   if(!result.meta.changes)fail(409,'This record changed while saving. Reload it.','conflict');
+   return json({ok:true,id:personId,version:expected+1});
+  }
+ }
+ fail(404,'Unknown membership-directory operation.','not_found');
+}
+async function verifyTurnstile(token,req,secret){
+ try{
+  const data=new URLSearchParams({secret,response:token,remoteip:req.headers.get('cf-connecting-ip')||''});
+  const response=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:data,signal:AbortSignal.timeout(8000)});
+  const result=await response.json();return result.success===true;
+ }catch{return false}
+}
+export async function interestEndpoint(req,env,path,identity){
+ const db=dbFor(env),at=now();
+ if(path==='/api/interest'&&req.method==='POST'){
+  if(!env.SANDY_TURNSTILE_SECRET)fail(503,'Public interest registration is not yet activated.','registration_not_ready');
+  const b=await payload(req,8500);
+  if(!bool(b.contactConsent))fail(400,'Explicit consent is required before recording contact information.','consent_required');
+  if(!await verifyTurnstile(field(b.turnstileToken,2000),req,env.SANDY_TURNSTILE_SECRET))fail(403,'Complete the verification before submitting.','verification_required');
+  const name=field(b.firstName,80),email=field(b.email,254),town=field(b.town,100),region=field(b.audienceRegion,20)||'other';
+  if(!name||!email||!email.includes('@')||!regions.includes(region))fail(400,'Enter your name, email and visitor or locality category.','invalid_interest');
+  const interests=Array.isArray(b.interests)?b.interests.filter(x=>typeof x==='string').slice(0,20).map(x=>field(x,60)):[];
+  const leadId=id();
+  await db.prepare('INSERT INTO club_interest(id,created_utc,first_name,email,town,audience_region,interests_json,comments,contact_consent,source) VALUES(?,?,?,?,?,?,?,?,1,?)')
+   .bind(leadId,at,name,email,town,region,JSON.stringify(interests),field(b.comments,1800),field(b.source,100)).run();
+  return json({ok:true,notice:'Expression of interest recorded. It is not a club membership or automatic invitation.'},201);
+ }
+ ensureMemberData(identity);
+ if(path==='/api/interest'&&req.method==='GET'){
+  const rows=await db.prepare('SELECT id,created_utc AS createdAt,first_name AS firstName,email,town,audience_region AS audienceRegion,interests_json AS interests,comments,reviewed_utc AS reviewedAt FROM club_interest ORDER BY created_utc DESC LIMIT 300').all();
+  return json({interests:(rows.results||[]).map(r=>({...r,interests:JSON.parse(r.interests)}))});
+ }
+ const match=path.match(/^\/api\/interest\/([a-f0-9-]{36})\/review$/);
+ if(match&&req.method==='POST'){
+  const [result]=await db.batch([
+   db.prepare('UPDATE club_interest SET reviewed_utc=?,reviewed_by=? WHERE id=? AND reviewed_utc IS NULL').bind(at,identity.id,match[1]),
+   audit(db,identity,'interest_reviewed','interest',match[1],at,true)
+  ]);
+  if(!result.meta.changes)fail(409,'This interest was already reviewed or is missing.','conflict');
+  return json({ok:true});
+ }
+ fail(404,'Unknown expression-of-interest operation.','not_found');
+}
+
+===== END FILE worker/people.mjs =====
+
+===== BEGIN FILE worker/records.mjs =====
+import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+const types=['event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard','social_idea'];
+const states=['proposal','draft','review','scheduled','completed','archived','rejected'];
+const canAccess=(who,kind)=>{
+ requireRole(who,STAFF);
+ if(kind==='safeguard'&&!['webmaster','president','secretary'].includes(who.role))fail(403,'Sensitive safeguarding records require designated access.','forbidden');
+};
+const convert=row=>({
+ id:row.id,kind:row.kind,title:row.title,body:JSON.parse(row.body_json),status:row.status,eventDate:row.event_date,
+ version:row.version,createdBy:row.created_by,updatedBy:row.updated_by,createdAt:row.created_utc,updatedAt:row.updated_utc
+});
+function validate(body){
+ const kind=field(body.kind,40),title=field(body.title,180),status=field(body.status,30)||'proposal';
+ if(!types.includes(kind)||!title||!states.includes(status))fail(400,'Choose a recognised club record type, title and planning status.','invalid_record');
+ if(body.body&& (typeof body.body!=='object'||Array.isArray(body.body)))fail(400,'Working details must be a JSON object.','invalid_record');
+ const data=body.body||{};
+ const size=JSON.stringify(data);
+ if(size.length>24000)fail(413,'Working details are too large.','too_large');
+ // An imported object may contain untrusted text but is never executed as HTML.
+ return {kind,title,status,eventDate:dateField(body.eventDate),body:data};
+}
+async function list(db,kind=''){
+ const where=kind?' WHERE kind=?':'',args=kind?[kind]:[];
+ const records=await db.prepare('SELECT * FROM club_records'+where+' ORDER BY COALESCE(event_date,created_utc) DESC,id DESC LIMIT 300')
+  .bind(...args).all();
+ return (records.results||[]).map(convert);
+}
+export async function recordsEndpoint(req,env,path,identity){
+ const db=dbFor(env),at=now(),url=new URL(req.url);
+ if(path==='/api/committee/events'&&req.method==='GET'){
+  canAccess(identity,'event');
+  const records=await list(db,'event');
+  return json({events:records.map(r=>({id:r.id,title:r.title,date:r.eventDate,
+    goal:r.body.goal||r.body.description||'',status:r.status==='archived'?'closed':'open'}))});
+ }
+ if(path==='/api/meetings'&&req.method==='GET'){
+  canAccess(identity,'meeting');
+  const records=await list(db,'meeting');
+  return json({meetings:records.map(r=>({id:r.id,title:r.title,date:r.eventDate,
+    location:r.body.location||'',status:r.status==='approved'?'approved':'draft'}))});
+ }
+ if(path==='/api/records'&&req.method==='GET'){
+  const kind=field(url.searchParams.get('kind'),40);
+  if(kind&&!types.includes(kind))fail(400,'Unknown record category.','invalid_kind');
+  if(kind)canAccess(identity,kind);else requireRole(identity,STAFF);
+  const records=(await list(db,kind)).filter(row=>row.kind!=='safeguard'||['webmaster','president','secretary'].includes(identity.role));
+  return json({records,kinds:types});
+ }
+ if(path==='/api/records'&&req.method==='POST'){
+  const b=await payload(req,30000),record=validate(b);canAccess(identity,record.kind);
+  if(record.status==='approved')fail(400,'A planning edit cannot approve a club record.','approval_required');
+  const recordId=id();
+  await db.batch([
+   db.prepare('INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,1,?,?,?,?)')
+    .bind(recordId,record.kind,record.title,JSON.stringify(record.body),record.status,record.eventDate,identity.id,identity.id,at,at),
+   revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'created',actor:identity,at,snapshot:record}),
+   audit(db,identity,'record_created','record',recordId,at)
+  ]);
+  return json({ok:true,id:recordId,version:1},201);
+ }
+ const match=path.match(/^\/api\/records\/([a-f0-9-]{36})(?:\/(revisions|decision))?$/);
+ if(match){
+  const recordId=match[1],row=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
+  if(!row)fail(404,'No club record exists with that identifier.','record_not_found');
+  canAccess(identity,row.kind);
+  if(match[2]==='revisions'&&req.method==='GET'){
+   const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 80")
+    .bind(recordId).all();
+   return json({revisions:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
+  }
+  if(!match[2]&&req.method==='GET')return json({record:convert(row)});
+  if(!match[2]&&req.method==='PATCH'){
+   const b=await payload(req,30000),expected=version(b.version),before=convert(row);
+   if(row.version!==expected)fail(409,'Another officer updated this record. Refresh before editing.','conflict');
+   if(row.status==='approved')fail(409,'An approved record must be formally reviewed before changing it.','approval_locked');
+   const record=validate({...before,...b,kind:row.kind});
+   if(record.status==='approved')fail(400,'Use an authorised decision rather than changing a status field.','approval_required');
+   const [result]=await db.batch([
+    db.prepare('UPDATE club_records SET title=?,body_json=?,status=?,event_date=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND status!=?')
+     .bind(record.title,JSON.stringify(record.body),record.status,record.eventDate,identity.id,at,recordId,expected,'approved'),
+    revision(db,{kind:'record',resourceId:recordId,resourceVersion:expected+1,action:'edited',actor:identity,at,snapshot:record,
+     changes:{changed:Object.keys(b).filter(k=>k!=='version')},guarded:true}),
+    audit(db,identity,'record_edited','record',recordId,at,true)
+   ]);
+   if(!result.meta.changes)fail(409,'The record changed during saving.','conflict');
+   return json({ok:true,id:recordId,version:expected+1});
+  }
+  if(match[2]==='decision'&&req.method==='POST'){
+   ensureApprover(identity,env);
+   const b=await payload(req,8192),decision=field(b.decision,32);
+   if(!['approved','rejected','returned'].includes(decision))fail(400,'Choose approve, reject or return for changes.','invalid_decision');
+   if(row.version!==version(b.version))fail(409,'Review the latest record version before deciding.','conflict');
+   const evidence=https(b.evidence);
+   if(!evidence)fail(400,'Record a supporting HTTPS decision reference.','evidence_required');
+   const newStatus=decision==='approved'?'approved':decision==='rejected'?'rejected':'review';
+   const newVersion=row.version+1;
+   const decisionId=id();
+   const [saved]=await db.batch([
+    db.prepare('UPDATE club_records SET status=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
+     .bind(newStatus,identity.id,at,recordId,row.version),
+    db.prepare("INSERT INTO studio_decisions(id,entity_type,entity_id,entity_version,decision,scope_json,evidence_url,authorised_actor,authorised_office,decided_utc) SELECT ?,'record',?,?,?,?,?,?,?,? WHERE changes()=1")
+     .bind(decisionId,recordId,newVersion,decision,JSON.stringify({kind:row.kind,title:row.title}),evidence,identity.id,identity.office_label,at),
+    revision(db,{kind:'record',resourceId:recordId,resourceVersion:newVersion,action:'decision_'+decision,actor:identity,at,
+      snapshot:{...convert(row),status:newStatus,version:newVersion},changes:{decision,evidence},guarded:true}),
+    audit(db,identity,'record_decision_'+decision,'record',recordId,at,true)
+   ]);
+   if(!saved.meta.changes)fail(409,'This record was already decided or changed.','conflict');
+   return json({ok:true,id:recordId,version:newVersion,decisionId,decision,decidedAt:at});
+  }
+ }
+ fail(404,'Unknown committee record operation.','not_found');
+}
+
+===== END FILE worker/records.mjs =====
+
+===== BEGIN FILE worker/social.mjs =====
+import {CAMPAIGN_LAYERS,defaultCampaignSettings} from '../studio/social-campaign-engine.js';
+import {fail,json,now,dbFor,payload,field,version,requireRole,STAFF,revision,audit,changeSummary} from './shared.mjs';
+const LAYER_IDS=CAMPAIGN_LAYERS.map(x=>x.id),LAYER_SET=new Set(LAYER_IDS);
+const roles=['all','interested','supporters','founders','future-members','families','volunteers','clubs','member','adult','youth'];
+const places=['all','local','regional','tourist','other'];
+const genders=['all','women','men','self-described'];
+const destinations=['youtube','facebook','instagram','tiktok','noticeboard'];
+const dayTypes=['weekday','friday','weekend','longWeekend','publicHoliday','holiday'];
+const date=s=>typeof s==='string'&&/^20\d\d-(0[1-9]|1[0-2])-[0-3]\d$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s;
+const month=s=>typeof s==='string'&&/^20\d\d-(0[1-9]|1[0-2])$/.test(s);
+const time=s=>s==='auto'||typeof s==='string'&&/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(s);
+const obj=o=>o!==null&&typeof o==='object'&&!Array.isArray(o);
+const uniqueAllowed=(values,allowed)=>Array.isArray(values)&&values.length>0&&values.length<=allowed.length&&
+ new Set(values).size===values.length&&values.every(x=>allowed.includes(x))&&(!values.includes('all')||values.length===1);
+function validSchedule(c){
+ if(!obj(c)||!Number.isInteger(c.videoShare)||c.videoShare<0||c.videoShare>100||!time(c.postingTime))return false;
+ if(!obj(c.limits)||!dayTypes.every(k=>{
+  const a=c.limits[k+'Min'],b=c.limits[k];
+  return Number.isInteger(a)&&a>=1&&a<=20&&Number.isInteger(b)&&b>=a&&b<=20;
+ }))return false;
+ if(!obj(c.layers)||Object.keys(c.layers).length!==LAYER_IDS.length)return false;
+ for(const key of LAYER_IDS){
+  const p=c.layers[key];if(!obj(p)||typeof p.enabled!=='boolean'||typeof p.visible!=='boolean'||!Number.isInteger(p.weekly)||p.weekly<0||p.weekly>7)return false;
+  if(!obj(p.audience)||!uniqueAllowed(p.audience.membership,roles)||!uniqueAllowed(p.audience.gender,genders)||!uniqueAllowed(p.audience.place,places))return false;
+ }
+ if(!obj(c.delivery)||typeof c.delivery.paidPlanning!=='boolean')return false;
+ for(const k of ['organic','paid'])if(!Array.isArray(c.delivery[k])||new Set(c.delivery[k]).size!==c.delivery[k].length||
+  c.delivery[k].some(x=>!destinations.includes(x)))return false;
+ return true;
+}
+function cleanSignatures(next,previous,identity,at){
+ for(const [dateKey,day] of Object.entries(next.dayPlans||{})){
+  const before=previous?.dayPlans?.[dateKey];
+  const same=before&&JSON.stringify({patternId:before.patternId,items:before.items})===
+   JSON.stringify({patternId:day.patternId,items:day.items});
+  if(same&&before.signature){day.signature=before.signature;continue}
+  if(same){delete day.signature;continue}
+  const previousSignature=before?.signature;
+  day.signature={
+   preparedBy:previousSignature?.preparedBy||identity.name,
+   preparedOffice:previousSignature?.preparedOffice||identity.office_label,
+   preparedAt:previousSignature?.preparedAt||at,
+   editedBy:identity.name,editedOffice:identity.office_label,editedAt:at
+  };
+ }
+}
+function validateSettings(c){
+ const invalid=()=>fail(400,'The campaign settings are incomplete or contain an invalid pattern.','invalid_settings');
+ if(!obj(c)||JSON.stringify(c).length>950000||!validSchedule(c))invalid();
+ for(const [kind,max,check] of [
+  ['monthOverrides',24,month],
+  ['weekOverrides',80,s=>date(s)&&new Date(s+'T00:00:00Z').getUTCDay()===1],
+  ['dayOverrides',366,date]]){
+  if(!obj(c[kind])||Object.keys(c[kind]).length>max)invalid();
+  for(const [key,config] of Object.entries(c[kind]))if(!check(key)||!validSchedule(config))invalid();
+ }
+ if(!obj(c.timingSignals)||Object.keys(c.timingSignals).length>12)invalid();
+ const signalKinds=['holidays','nswHolidays','event','meeting','programme_open','programme_close'];
+ for(const [name,signal] of Object.entries(c.timingSignals)){
+  if(!signalKinds.includes(name)||!obj(signal)||typeof signal.enabled!=='boolean'||!Array.isArray(signal.leadDays)||
+   signal.leadDays.length>12||new Set(signal.leadDays).size!==signal.leadDays.length||
+   signal.leadDays.some(n=>!Number.isInteger(n)||n<1||n>365))invalid();
+ }
+ if(!Array.isArray(c.milestones)||c.milestones.length>80)invalid();
+ const seen=new Set();
+ for(const m of c.milestones){
+  if(!obj(m)||typeof m.id!=='string'||m.id.length>96||seen.has(m.id)||!signalKinds.includes(m.kind)||
+   typeof m.title!=='string'||m.title.length<3||m.title.length>140||!date(m.date)||typeof m.confirmed!=='boolean'||
+   typeof m.sourceUrl!=='string'||m.sourceUrl.length>700)invalid();
+  if(m.sourceUrl&&(!m.sourceUrl.startsWith('https://')||/\s/.test(m.sourceUrl)))invalid();
+  seen.add(m.id);
+ }
+ if(!obj(c.dayPlans)||Object.keys(c.dayPlans).length>366)invalid();
+ const slotsOk=items=>Array.isArray(items)&&items.length>=1&&items.length<=20&&new Set(items.map(i=>i.id)).size===items.length&&
+  items.every(x=>obj(x)&&typeof x.id==='string'&&x.id.length<=60&&LAYER_SET.has(x.layerId)&&
+   ['video','image','carousel','link'].includes(x.format)&&time(x.time)&&x.time!=='auto'&&
+   typeof x.title==='string'&&x.title.length>0&&x.title.length<=180&&
+   typeof x.brief==='string'&&x.brief.length<=4000);
+ for(const [key,plan] of Object.entries(c.dayPlans)){
+  if(!date(key)||!obj(plan)||typeof plan.patternId!=='string'||plan.patternId.length>100||!slotsOk(plan.items))invalid();
+  delete plan.signature; // supplied officer signatures are NEVER accepted from the browser.
+ }
+ if(!obj(c.dayArchetypes)||Object.keys(c.dayArchetypes).length>6)invalid();
+ for(const [key,presets] of Object.entries(c.dayArchetypes)){
+  if(!dayTypes.includes(key)||!Array.isArray(presets)||presets.length>8)invalid();
+  for(const preset of presets)if(!obj(preset)||typeof preset.id!=='string'||preset.id.length>90||
+    typeof preset.name!=='string'||preset.name.length>75||!slotsOk(preset.items))invalid();
+ }
+ return c;
+}
+const officeLabel=identity=>identity.office_label||identity.role;
+async function one(db,table){
+ const column=table==='studio_settings'?'settings_json':table==='studio_metrics'?'metrics_json':'edits_json';
+ return db.prepare('SELECT t.version,t.'+column+' AS data,t.updated_utc AS updatedAt,t.updated_by AS updatedBy,'+
+  'a.display_name AS updatedByName,a.username AS updatedUsername,a.office_label AS updatedOffice FROM '+table+
+  ' t LEFT JOIN club_accounts a ON a.id=t.updated_by WHERE t.id=1').first();
+}
+async function history(db,kind,rev=null){
+ const where=rev===null?'':" AND resource_version=?";
+ const q=await db.prepare('SELECT resource_version AS version,at_utc AS savedAt,actor_id AS actorId,actor_role AS actorRole,actor_office AS actorOffice,changes_json AS changes'+
+  (rev!==null?',snapshot_json AS settings':'')+
+  " FROM club_revisions WHERE resource_kind=? AND resource_id='sandy-social'"+where+' ORDER BY resource_version DESC LIMIT '+(rev!==null?1:50))
+   .bind(...(rev===null?[kind]:[kind,rev])).all();
+ return (q.results||[]).map(row=>({...row,changes:JSON.parse(row.changes),...(row.settings?{settings:JSON.parse(row.settings)}:{})}));
+}
+export async function socialEndpoint(req,env,path,identity){
+ requireRole(identity,STAFF);const db=dbFor(env),url=new URL(req.url),isEdits=path==='/api/committee/social-post-edits',isMetrics=path==='/api/committee/social-metrics';
+ if(!isEdits&&!isMetrics&&path!=='/api/committee/social-campaign-settings')fail(404,'This Social Studio endpoint does not exist.','not_found');
+ const table=isEdits?'studio_post_edits':isMetrics?'studio_metrics':'studio_settings',kind=isEdits?'social-edits':isMetrics?'social-metrics':'social-settings';
+ const present=await one(db,table);
+ if(req.method==='GET'){
+  if(url.searchParams.get('history')==='1'){
+   return json({version:present?.version||0,history:await history(db,kind)});
+  }
+  const revisionRequested=url.searchParams.get('version');
+  if(revisionRequested){
+   const requested=version(Number(revisionRequested));if(!requested)fail(400,'Use a positive revision number.','invalid_version');
+   const rows=await history(db,kind,requested);
+   if(!rows.length)fail(404,'That server revision was not found.','missing_revision');
+   return json({revision:rows[0]});
+  }
+  const result=present?JSON.parse(present.data):null;
+  return json({version:present?.version||0,
+   ...(isEdits?{edits:result||{}}:isMetrics?{metrics:result||[]}:{settings:result}),
+   updatedAt:present?.updatedAt||null,updatedBy:present?.updatedBy||null,
+   updatedByName:present?(present.updatedByName||present.updatedUsername||present.updatedBy):null,updatedOffice:present?.updatedOffice||null});
+ }
+ if(req.method!=='POST')fail(405,'Use GET or POST for shared planning records.','method_not_allowed');
+ if(identity.role==='webmaster_demo')fail(403,'The demo webmaster cannot save shared club data.','read_only');
+ const b=await payload(req,isMetrics?800000:isEdits?450000:1050000),previous=present?JSON.parse(present.data):null;
+ const expected=version(b.version);
+ if((present?.version||0)!==expected)fail(409,'Another officer saved a newer version. Reload before editing.','revision_conflict');
+ let next;
+ if(isMetrics){
+  if(!Array.isArray(b.metrics)||b.metrics.length>10000||JSON.stringify(b.metrics).length>750000||
+     b.metrics.some(item=>!obj(item)||Object.keys(item).length>35||Object.values(item).some(v=>typeof v==='string'&&v.length>1200)))
+    fail(400,'The imported performance metrics are invalid or too large.','invalid_metrics');
+  next=b.metrics;
+ }else if(isEdits){
+  if(!obj(b.edits)||JSON.stringify(b.edits).length>400000||Object.keys(b.edits).length>10000)
+   fail(400,'The post edit register is too large or invalid.','invalid_post_edits');
+  for(const [key,edit] of Object.entries(b.edits)){
+   if(key.length>180||!obj(edit)||Object.keys(edit).length>12||
+    Object.values(edit).some(x=>typeof x==='string'&&x.length>6000))
+    fail(400,'Invalid post edit record.','invalid_post_edit');
+  }
+  next=b.edits;
+ }else{
+  next=validateSettings(b.settings);
+  cleanSignatures(next,previous,identity,now());
+ }
+ const at=now(),encoded=JSON.stringify(next),newVersion=expected+1;
+ const write=expected===0?
+  db.prepare('INSERT INTO '+table+'(id,version,'+(isEdits?'edits_json':isMetrics?'metrics_json':'settings_json')+',updated_by,updated_utc) SELECT 1,1,?,?,? WHERE NOT EXISTS(SELECT 1 FROM '+table+' WHERE id=1)')
+   .bind(encoded,identity.id,at):
+  db.prepare('UPDATE '+table+' SET version=version+1,'+(isEdits?'edits_json':isMetrics?'metrics_json':'settings_json')+'=?,updated_by=?,updated_utc=? WHERE id=1 AND version=?')
+   .bind(encoded,identity.id,at,expected);
+ const [result]=await db.batch([
+  write,
+  revision(db,{kind,resourceId:'sandy-social',resourceVersion:newVersion,action:'saved',actor:identity,at,snapshot:next,
+   changes:changeSummary(previous||{},next),guarded:true}),
+  audit(db,identity,'shared_social_saved',kind,'sandy-social',at,true)
+ ]);
+ if(!result.meta.changes)fail(409,'The shared plan changed during saving. Refresh its latest version.','revision_conflict');
+ return json({version:newVersion,...(isEdits?{edits:next}:isMetrics?{metrics:next}:{settings:next}),
+  updatedAt:at,updatedBy:identity.id,updatedByName:identity.name,updatedOffice:officeLabel(identity),
+  lastChange:changeSummary(previous||{},next)});
+}
+
+===== END FILE worker/social.mjs =====
+
+===== BEGIN FILE worker/briefs.mjs =====
+import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+const states=['draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published'];
+const mutable=['draft','proposed','prepared','revision','evidence','closed'];
+const writers=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
+const publicFields=['title','date','sourcePostId','sourceUrl','brief','producer','reviewer','status','due','author','decisionBy','evidence','publishedUrl','notes'];
+const toView=row=>({
+ id:row.id,version:row.version,title:row.title,date:row.date,sourcePostId:row.source_post_id,sourceUrl:row.source_url,
+ brief:row.brief,producer:row.producer,reviewer:row.reviewer,status:row.status,due:row.due,
+ author:row.author_note,decisionBy:row.decision_by_note,evidence:row.evidence,publishedUrl:row.published_url,
+ notes:row.notes,createdBy:row.created_by,updatedBy:row.updated_by,createdAt:row.created_utc,updatedAt:row.updated_utc
+});
+function clean(b){
+ const state=field(b.status,30)||'draft',title=field(b.title,180);
+ if(!title||!mutable.includes(state))fail(400,'Enter a title and a valid draft, review or withdrawn state. Formal approvals require a separate decision.','invalid_brief');
+ return {title,date:dateField(b.date),sourcePostId:field(b.sourcePostId||b.reference,180),sourceUrl:https(b.sourceUrl),
+  brief:field(b.brief,6000),producer:field(b.producer,100)||'in-house',reviewer:field(b.reviewer,100)||'founding',
+  status:state,due:dateField(b.due),author:field(b.author,100),decisionBy:field(b.decisionBy,100),
+  evidence:https(b.evidence),publishedUrl:https(b.publishedUrl),notes:field(b.notes,6000)};
+}
+const saveFields='title,date,source_post_id,source_url,brief,producer,reviewer,status,due,author_note,decision_by_note,evidence,published_url,notes';
+const values=b=>[b.title,b.date,b.sourcePostId,b.sourceUrl,b.brief,b.producer,b.reviewer,b.status,b.due,b.author,b.decisionBy,b.evidence,b.publishedUrl,b.notes];
+async function briefs(db){
+ const r=await db.prepare('SELECT * FROM studio_briefs ORDER BY updated_utc DESC LIMIT 300').all();
+ return (r.results||[]).map(toView);
+}
+export async function briefsEndpoint(req,env,path,identity){
+ requireRole(identity,STAFF);const db=dbFor(env),at=now();
+ if(path==='/api/studio/briefs'&&req.method==='GET')return json({briefs:await briefs(db)});
+ if(path==='/api/studio/briefs'&&req.method==='POST'){
+  const b=clean(await payload(req,20000)),briefId=id();
+  await db.batch([
+   db.prepare('INSERT INTO studio_briefs(id,'+saveFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
+    .bind(briefId,...values(b),identity.id,identity.id,at,at),
+   revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:1,action:'created',actor:identity,at,snapshot:b}),
+   audit(db,identity,'production_brief_created','studio-brief',briefId,at)
+  ]);
+  return json({ok:true,id:briefId,version:1},201);
+ }
+ const match=path.match(/^\/api\/studio\/briefs\/([a-f0-9-]{36})(?:\/(revisions|decision|handoff|publish-link))?$/);
+ if(!match)fail(404,'Unknown production brief operation.','not_found');
+ const briefId=match[1],row=await db.prepare('SELECT * FROM studio_briefs WHERE id=?').bind(briefId).first();
+ if(!row)fail(404,'The production brief does not exist.','brief_not_found');
+ if(req.method==='GET'){
+  if(match[2]==='revisions'){
+   const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_role AS role,actor_office AS office,changes_json AS changes FROM club_revisions WHERE resource_kind='studio-brief' AND resource_id=? ORDER BY resource_version DESC LIMIT 80").bind(briefId).all();
+   return json({revisions:(q.results||[]).map(r=>({...r,changes:JSON.parse(r.changes)}))});
+  }
+  if(!match[2])return json({brief:toView(row)});
+ }
+ if(!match[2]&&req.method==='PATCH'){
+  const b=await payload(req,20000),expected=version(b.version);
+  if(row.version!==expected)fail(409,'Another officer updated this production brief. Reload it.','conflict');
+  if(!mutable.includes(row.status))fail(409,'Authorised production records cannot be silently edited. Open a new revision for review.','approved_locked');
+  const data=clean({...toView(row),...b});
+  const [result]=await db.batch([
+   db.prepare('UPDATE studio_briefs SET '+saveFields.split(',').map(f=>f+'=?').join(',')+',version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
+    .bind(...values(data),identity.id,at,briefId,expected),
+   revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:expected+1,action:'updated',actor:identity,at,
+    snapshot:data,changes:{changed:Object.keys(b).filter(x=>x!=='version')},guarded:true}),
+   audit(db,identity,'production_brief_updated','studio-brief',briefId,at,true)
+  ]);
+  if(!result.meta.changes)fail(409,'This brief changed before the update completed.','conflict');
+  return json({ok:true,id:briefId,version:expected+1});
+ }
+ if(match[2]==='decision'&&req.method==='POST'){
+  ensureApprover(identity,env);
+  const b=await payload(req,8192),expected=version(b.version),decision=field(b.decision,32),evidence=https(b.evidence);
+  if(row.version!==expected)fail(409,'Review the latest brief revision first.','conflict');
+  if(!evidence||!['approved','rejected','returned','publish_authorised'].includes(decision))
+   fail(400,'Select a valid decision and add a supporting HTTPS reference.','invalid_decision');
+  if(decision==='publish_authorised'&&row.status!=='approved')fail(409,'The brief must be approved before publication may be authorised.','not_approved');
+  const newStatus=decision==='returned'?'revision':decision==='publish_authorised'?'approved':decision,newVersion=row.version+1;
+  const decisionId=id();
+  const [result]=await db.batch([
+   db.prepare('UPDATE studio_briefs SET status=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
+    .bind(newStatus,identity.id,at,briefId,expected),
+   db.prepare("INSERT INTO studio_decisions(id,entity_type,entity_id,entity_version,decision,scope_json,evidence_url,authorised_actor,authorised_office,decided_utc) SELECT ?,'studio_brief',?,?,?,?,?,?,?,? WHERE changes()=1")
+    .bind(decisionId,briefId,newVersion,decision,JSON.stringify({title:row.title,producer:row.producer}),evidence,identity.id,identity.office_label,at),
+   revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:newVersion,action:'decision_'+decision,actor:identity,at,
+    snapshot:{...toView(row),status:newStatus,version:newVersion},changes:{decision,evidence},guarded:true}),
+   audit(db,identity,'studio_decision_'+decision,'studio-brief',briefId,at,true)
+  ]);
+  if(!result.meta.changes)fail(409,'This brief changed while recording the decision.','conflict');
+  return json({ok:true,decisionId,version:newVersion});
+ }
+ if(match[2]==='handoff'&&req.method==='POST'){
+  const b=await payload(req,8192),producer=field(b.producer,100),due=dateField(b.due);
+  if(!producer)fail(400,'Choose a prospective production provider.','invalid_producer');
+  const authorised=env.SANDY_CLUB_APPROVALS==='enabled'&&b.authorised===true;
+  if(authorised)ensureApprover(identity,env); // a proposed provider isn't automatically contracted
+  const decision=authorised?await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='approved' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first():null;
+  if(authorised&&!decision)fail(409,'A signed committee approval must exist before commissioning work.','approval_required');
+  const handoffId=id();
+  await db.batch([
+   db.prepare('INSERT INTO studio_handoffs(id,brief_id,decision_id,producer,status,requested_delivery_on,updated_utc,issued_by,issued_utc) VALUES(?,?,?,?,?,?,?,?,?)')
+    .bind(handoffId,briefId,decision?.id||null,producer,authorised?'authorised':'proposed',due,at,authorised?identity.id:null,authorised?at:null),
+   audit(db,identity,authorised?'handoff_authorised':'handoff_proposed','studio-brief',briefId,at)
+  ]);
+  return json({ok:true,handoffId,state:authorised?'authorised':'proposed',sent:false},201);
+ }
+ if(match[2]==='publish-link'&&req.method==='POST'){
+  const b=await payload(req,8192),url=https(b.url),platform=field(b.platform,30);
+  if(!url||!['youtube','facebook','instagram','tiktok','noticeboard'].includes(platform))fail(400,'Provide a verified platform and HTTPS post link.','invalid_publication_link');
+  const decision=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='publish_authorised' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first();
+  if(!decision)fail(409,'Publishing has not been authorised. The link cannot be recorded as approved.','publication_not_authorised');
+  const linkId=id();
+  await db.batch([
+   db.prepare('INSERT INTO studio_post_links(id,brief_id,decision_id,platform,published_url,published_utc,recorded_by,recorded_utc) VALUES(?,?,?,?,?,?,?,?)')
+    .bind(linkId,briefId,decision.id,platform,url,dateField(b.publishedOn)?dateField(b.publishedOn)+'T00:00:00+10:00':null,identity.id,at),
+   audit(db,identity,'published_link_recorded','studio-brief',briefId,at)
+  ]);
+  return json({ok:true,linkId},201);
+ }
+ fail(404,'Unsupported production brief operation.','not_found');
+}
+export async function auditEndpoint(req,env,identity){
+ requireRole(identity,['webmaster','president','secretary']);
+ if(req.method!=='GET')fail(405,'Audit history is read-only.','method_not_allowed');
+ const db=dbFor(env),r=await db.prepare('SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 300').all();
+ return json({audit:r.results||[]});
+}
+
+===== END FILE worker/briefs.mjs =====
+
+===== BEGIN FILE worker/member.mjs =====
+import {fail,json,dbFor,requireRole} from './shared.mjs';
+export async function memberEndpoint(req,env,path,identity){
+ requireRole(identity,['member','webmaster','president','secretary']);
+ if(req.method!=='GET')fail(405,'Member details are read-only until the club is established.','method_not_allowed');
+ const db=dbFor(env);
+ if(path==='/api/member/me'){
+  let profile=null;
+  if(identity.role==='member'){
+   const p=await db.prepare('SELECT id,full_name,preferred_name,membership_class,status,joined_on,renewal_on,town,consent_contact,consent_publication FROM club_people WHERE account_id=? LIMIT 1').bind(identity.id).first();
+   if(p)profile={id:p.id,name:p.full_name,preferredName:p.preferred_name,membershipClass:p.membership_class,status:p.status,
+    joinedOn:p.joined_on,renewalOn:p.renewal_on,town:p.town,contactConsent:!!p.consent_contact,publicationConsent:!!p.consent_publication};
+  }
+  return json({identity:{name:identity.name,role:identity.role,office:identity.office_label},
+   clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',profile,
+   notice:profile?'Your own recorded profile; no payment or current club status is implied.':
+   'No current membership profile is linked to this account. The club is still a proposal.'});
+ }
+ if(path==='/api/member/events'){
+  const rows=await db.prepare("SELECT id,title,event_date AS date,status FROM club_records WHERE kind='event' AND status='approved' AND event_date>=date('now','+10 hours') ORDER BY event_date,id LIMIT 35").all();
+  return json({events:env.SANDY_CLUB_APPROVALS==='enabled'?(rows.results||[]):[],
+   notice:'Only explicitly approved events are visible here. No proposals or tentative dates are promoted.'});
+ }
+ fail(404,'That member service does not exist.','not_found');
+}
+
+===== END FILE worker/member.mjs =====
+
+===== BEGIN FILE studio/social-campaign-engine.js =====
+import {creativeVariantsFor} from './social-placements.js';
+import {calendarDaySignals} from './social-holiday-calendar.js';
+export const CAMPAIGN_LAYERS = [
+  {
+    "id": "volleyball",
+    "label": "Beach volleyball",
+    "frequency": 3,
+    "priority": 10,
+    "topics": [
+      "Why mixed beach volleyball leads Sandy Sports",
+      "Serving for absolute beginners",
+      "How a beach volleyball rally works",
+      "Mixed doubles and communication",
+      "The difference between beach and indoor volleyball",
+      "A beginner-friendly passing drill",
+      "Beach volleyball footwork on sand",
+      "Setting the ball in windy conditions",
+      "Court dimensions and boundaries",
+      "Doubles versus four-a-side social play",
+      "A fun cooperative rally challenge",
+      "Volleyball warm-ups and gradual progression",
+      "How teams rotate and score",
+      "What would a friendly mixed league look like?",
+      "Choosing a volleyball for outdoor play",
+      "Net height and age-appropriate formats",
+      "Beach volleyball as an Olympic sport",
+      "Why courts need safe run-off space",
+      "How to welcome first-time players",
+      "Local versus visiting team possibilities",
+      "What coaches and officials contribute",
+      "What equipment could be shared across towns",
+      "A visitor-friendly volleyball introduction",
+      "Imagining an island-wide volleyball festival"
+    ],
+    "cta": "Which volleyball format would you enjoy?",
+    "url": "/sport-mixed-beach-volleyball.html",
+    "group": "Sport",
+    "emoji": "🏐"
+  },
+  {
+    "id": "other",
+    "label": "Other sand sports",
+    "frequency": 4,
+    "priority": 6,
+    "topics": [
+      "Flag football in 30 seconds",
+      "What makes flag football non-contact?",
+      "Learning to throw a spiral pass",
+      "Five-on-five flag football basics",
+      "Flag pulling without contact",
+      "Why LA 2028 matters to flag football",
+      "An island flag-football introduction concept",
+      "Beach cricket with a small group",
+      "Beach cricket batting basics",
+      "A beach cricket catching challenge",
+      "Safe boundaries for beach cricket",
+      "A family-friendly beach cricket variation",
+      "Beach football and ball control",
+      "Beach football dribbling challenge",
+      "Small-sided beach soccer concepts",
+      "Footwork differences between grass and sand",
+      "Beach rugby league skills without full contact",
+      "How a rugby club could use a sand session",
+      "A beach rugby league skills relay",
+      "Beach 5s explained",
+      "Adapting rugby formats to different ages",
+      "AirBadminton explained",
+      "Outdoor shuttle skills in a breeze",
+      "Would you try AirBadminton?",
+      "Beach tennis rally challenge",
+      "Other portable net games for a shared space",
+      "Ultimate frisbee in a nutshell",
+      "A flying-disc passing challenge",
+      "Ultimate and spirit of the game",
+      "Beach handball quick introduction",
+      "A beach handball passing challenge",
+      "Netball crossover footwork",
+      "A modified netball skills relay",
+      "AFL marking practice on soft surfaces",
+      "AFL handpassing challenge",
+      "Sand-based fitness with qualified supervision",
+      "Movement games for different ability levels",
+      "Roundnet as an island-made possibility",
+      "Design your own island sport",
+      "Which sport needs the biggest field?",
+      "How equipment can switch from one sport to another",
+      "What could a three-town sport sampler include?",
+      "How junior sport can share facilities",
+      "Why rules vary between beach and field formats",
+      "Two-person versus team-based sports",
+      "A beginner's guide to modified games",
+      "Planning a sports try-out without promising an event"
+    ],
+    "cta": "Which sport should Sandy Sports explore next?",
+    "url": "/sports.html",
+    "group": "Sport",
+    "emoji": "🏉"
+  },
+  {
+    "id": "vision",
+    "label": "Why establish the club?",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "One island three towns many arenas",
+      "Why a new club could complement existing clubs",
+      "A proposal rather than an operating club",
+      "What should happen before a founding meeting?",
+      "Why start with shared spaces and equipment?",
+      "How could sport and culture support each other?",
+      "What is the case for island-wide coordination?",
+      "From an idea to a community decision",
+      "Why flexibility matters on an island",
+      "Should a club be local first and welcoming to visitors?",
+      "What is a sporting legacy beyond a big event?",
+      "What would success look like after one year?",
+      "Could shared sport facilities reduce duplication?",
+      "What would make Sandy Sports different?",
+      "A proposed pathway from interest to participation",
+      "How can a new club respect existing organisations?",
+      "What might the club need before its first programme?",
+      "What needs local agreement rather than assumptions?"
+    ],
+    "cta": "What would make a new club worthwhile to you?",
+    "url": "/index.html",
+    "group": "Community",
+    "emoji": "💡"
+  },
+  {
+    "id": "voice",
+    "label": "Community voice and polls",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Vote for your first sport to try",
+      "Which town needs more recreation opportunities?",
+      "What is missing from local sport?",
+      "Choose a family-friendly activity",
+      "What time of day suits community sport?",
+      "Would you join a beginner skills session?",
+      "What should come first: shade courts or changing rooms?",
+      "Choose a new island-made game idea",
+      "Would you volunteer one day a month?",
+      "Which facilities should be movable?",
+      "What should a family weekend include?",
+      "What should future participation leaderboards reward?",
+      "Would a film night complement sports?",
+      "What matters most to inclusive facilities?",
+      "What makes an event worth attending?",
+      "Tell us your top three priorities",
+      "Suggest a practical way to help build a club"
+    ],
+    "cta": "Share your preference through the proposal site.",
+    "url": "/join.html",
+    "group": "Community",
+    "emoji": "🗳️"
+  },
+  {
+    "id": "visitors",
+    "label": "Holidaymakers and visitors",
+    "frequency": 2,
+    "priority": 8,
+    "topics": [
+      "A 20-second introduction to Sandy Sports",
+      "Beach games for a family holiday",
+      "What sport would you try on holiday?",
+      "A visiting team's dream island itinerary concept",
+      "The value of QR expressions of interest",
+      "How to stay involved after your holiday",
+      "A simple movement game with no equipment",
+      "Weekend sports inspiration for visitors",
+      "Visitors versus locals friendly challenge idea",
+      "Would a sports and cinema day appeal?",
+      "What makes a memorable island holiday?",
+      "A beginner-friendly sand game to share",
+      "A packing checklist for outdoor recreation",
+      "Camping and holiday planning: verify official bookings and local rules",
+      "What could holiday sports look like across three towns?",
+      "Share your favourite sport memory",
+      "School-holiday countdown: choose an activity",
+      "What to do when it is too windy for a beach game",
+      "A summer visitor survey",
+      "An island sports sampler concept",
+      "Why visiting families' ideas matter"
+    ],
+    "cta": "Visiting Straddie? Tell us what you would love to play.",
+    "url": "/join.html",
+    "group": "Community",
+    "emoji": "🧳"
+  },
+  {
+    "id": "places",
+    "label": "Three towns and site options",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Why a three-town network?",
+      "Goompi and its potential sport spaces",
+      "Pulan and neighbourhood recreation",
+      "Mulumba and visitor-facing sport",
+      "The 10-12 Ballow Road site concept",
+      "Why Ballow Road's slope matters",
+      "Cunningham Street as a separate flat option",
+      "How existing users shape a site decision",
+      "Why land approval cannot be assumed",
+      "Linking venues across towns",
+      "Would portable courts be more resilient?",
+      "Transport considerations for a future club",
+      "Safe access and accessible pathways",
+      "How site choices affect outdoor cinema",
+      "Shade wind and water at proposed sites",
+      "What should a future site assessment include"
+    ],
+    "cta": "Which location or feature should be studied?",
+    "url": "/places.html",
+    "group": "Community",
+    "emoji": "🏝️"
+  },
+  {
+    "id": "facilities",
+    "label": "Facilities and equipment",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "What goes into a safe sand court?",
+      "Shade and seating for spectators",
+      "Net posts and portable boundaries",
+      "Why different sports need different footprints",
+      "A modular clubhouse concept",
+      "Inclusive toilets showers and changing rooms",
+      "Storage and equipment custody",
+      "Lighting and neighbour considerations",
+      "Water stations and hydration",
+      "Drainage and sand maintenance",
+      "How a portable court could be packed",
+      "A shared field conversion kit",
+      "Keeping assets working across three towns",
+      "An accessible path through a sports precinct",
+      "What belongs on the equipment wish list"
+    ],
+    "cta": "Which facility should be researched first?",
+    "url": "/facilities.html",
+    "group": "Community",
+    "emoji": "🏗️"
+  },
+  {
+    "id": "film",
+    "label": "Film, screens and media",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "A film club inside a sports club?",
+      "What could an outdoor screen show?",
+      "Filming a short sport technique lesson",
+      "How to caption videos for everyone",
+      "Who owns the rights to community footage?",
+      "Why consent matters for filming children",
+      "Mobile versus permanent LED screens",
+      "How one screen might serve several venues",
+      "Could a short-film showcase support local talent?",
+      "Beginner camera and editing skills",
+      "Behind the scenes of a 30-second sports video",
+      "A proposed local interview series",
+      "A sound and microphone basics tip",
+      "A film crew volunteer opportunity",
+      "Why screen hire needs a real operating plan"
+    ],
+    "cta": "What would you like an island film club to create?",
+    "url": "/film-club.html",
+    "group": "Community",
+    "emoji": "🎬"
+  },
+  {
+    "id": "events",
+    "label": "Events and cultural programmes",
+    "frequency": 1,
+    "priority": 9,
+    "topics": [
+      "What makes a good community sports day?",
+      "A proposed cross-sport festival",
+      "Outdoor movie night concept",
+      "A sports market and makers day concept",
+      "Sport and cultural exchange possibilities",
+      "How to plan for weather cancellations",
+      "The value of clear event run sheets",
+      "What must be approved before a public event?",
+      "Designing accessible family events",
+      "A short-game tournament format",
+      "Could local clubs share a demonstration day?",
+      "A sports plus film afternoon idea",
+      "What should an island visitor programme feature?",
+      "An event countdown only after approval",
+      "Keeping events enjoyable for volunteers"
+    ],
+    "cta": "Which event concept would you want explored?",
+    "url": "/programme.html",
+    "group": "Community",
+    "emoji": "🎪"
+  },
+  {
+    "id": "skills",
+    "label": "Skills, youth and inclusion",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "Coaching basics and qualified supervision",
+      "How to welcome shy beginners",
+      "Inclusive team selection ideas",
+      "Junior sport and family participation",
+      "Learning to referee a game",
+      "A camera skills pathway for young people",
+      "Volunteering as practical learning",
+      "Intergenerational sports formats",
+      "What accessible coaching can look like",
+      "Peer-to-peer skills sharing",
+      "Helping someone try a new sport",
+      "How to make rules easy to understand",
+      "Sports leadership without exclusion",
+      "A beginners-first activity proposal"
+    ],
+    "cta": "What could you teach or learn through the proposed club?",
+    "url": "/member-training.html",
+    "group": "Community",
+    "emoji": "🏅"
+  },
+  {
+    "id": "funding",
+    "label": "Funding and partnerships",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "What should a grant application prove?",
+      "The equipment wish list explained",
+      "Could a business sponsor a court concept?",
+      "In-kind support versus a cash contribution",
+      "What does an auspice arrangement mean?",
+      "A funding idea is not an awarded grant",
+      "How quotes and approvals protect supporters",
+      "Could a portable screen help fund shared equipment?",
+      "A proposed raffles policy needs legal checks",
+      "Why a capital asset needs maintenance funding",
+      "Potential partner clubs without claimed agreements",
+      "Transparent fundraising before asking for money",
+      "Why local business interests matter",
+      "A volunteer's skills as practical support"
+    ],
+    "cta": "Can you suggest a partner, asset or practical contribution?",
+    "url": "/grants.html",
+    "group": "Community",
+    "emoji": "🤝"
+  },
+  {
+    "id": "safety",
+    "label": "Weather, safety and environment",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "Forecast slot: verify weekend weather before publishing",
+      "Forecast slot: Thursday weekend outlook",
+      "Forecast slot: Friday activity conditions",
+      "Forecast slot: Saturday conditions update",
+      "UV protection for outdoor sport",
+      "Shade breaks and hydration",
+      "Warm-up ideas for movement on sand",
+      "Recognising changing wind conditions",
+      "Thunderstorms and the need to stop play",
+      "First-aid planning for recreation",
+      "Respecting dunes and wildlife",
+      "Keeping pathways accessible and safe",
+      "What to include in a venue risk review",
+      "Why emergency information must come from authorities",
+      "Planning a wet-weather alternative"
+    ],
+    "cta": "Check official conditions and plan safely.",
+    "url": "/facilities.html",
+    "group": "Community",
+    "emoji": "🛟"
+  },
+  {
+    "id": "volunteers",
+    "label": "Volunteers and governance",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "What might a founding volunteer do?",
+      "A proposed women-led committee option",
+      "Why governance starts before membership opens",
+      "What a secretary actually helps organise",
+      "What a treasurer needs to protect",
+      "Proposed sport and film leadership roles",
+      "Writing a constitution for community review",
+      "Making decisions transparently",
+      "Volunteer workloads and realistic expectations",
+      "Why officer appointments cannot be assumed",
+      "A proposed founding meeting checklist",
+      "How a webmaster can support safe publishing"
+    ],
+    "cta": "Would you consider helping develop the proposal?",
+    "url": "/committee.html",
+    "group": "Community",
+    "emoji": "🙌"
+  },
+  {
+    "id": "news",
+    "label": "Newsletters and progress",
+    "frequency": 1,
+    "priority": 6,
+    "topics": [
+      "Monthly proposal roundup: verify actual progress",
+      "Three questions we're exploring next",
+      "How to report consultation feedback accurately",
+      "What's new on the Sandy Sports website?",
+      "Newsletter signup and permission choices",
+      "A seasonal ideas digest",
+      "The latest questions from potential supporters",
+      "A proposed next-steps update",
+      "What should the first real newsletter cover?"
+    ],
+    "cta": "What progress or decision would you like an update on?",
+    "url": "/clubhouse.html",
+    "group": "Community",
+    "emoji": "✉️"
+  },
+  {
+    "id": "health",
+    "label": "Health and wellbeing",
+    "frequency": 3,
+    "priority": 6,
+    "topics": [
+      "Enjoyable movement as part of a healthy week",
+      "Social sport and a sense of belonging",
+      "Outdoor recreation and stress management",
+      "Movement and mood: what evidence suggests",
+      "Beach volleyball and coordination",
+      "Agility and gradual fitness progression",
+      "Healthy ageing through adaptable activity",
+      "Balance practice with appropriate supervision",
+      "Friendships formed around shared interests",
+      "How team sport can help social connection",
+      "Welcoming people who have never joined a club",
+      "Family play and intergenerational connection",
+      "Movement games for children",
+      "Confidence through learning a new skill",
+      "Beginner-friendly exercise and realistic goals",
+      "Why recovery days matter",
+      "Rest and hydration for outdoor athletes",
+      "Sun safety while staying active",
+      "How to avoid overstating health benefits",
+      "Supporting inclusion for different abilities",
+      "Social connection for people new to the island",
+      "Low-pressure activities for casual participants",
+      "Teamwork and positive communication",
+      "Fun and play as legitimate outcomes",
+      "Choosing the right level of challenge",
+      "Modified sport and accessibility",
+      "Coordination as a learnable skill",
+      "Movement breaks during holidays",
+      "How outdoor environments can support enjoyment",
+      "When to seek individual medical advice",
+      "Why sports safety matters as much as fitness",
+      "Could a weekly activity help community connection?",
+      "What does a welcoming recreation space feel like?",
+      "Why the club should celebrate participation too"
+    ],
+    "cta": "How could inclusive sport support wellbeing on Straddie?",
+    "url": "/sports.html",
+    "group": "Community",
+    "emoji": "❤️"
+  },
+  {
+    "id": "flagFootball",
+    "label": "Flag football",
+    "frequency": 2,
+    "priority": 8,
+    "topics": [
+      "Flag football: how it works",
+      "Flag football: beginner skills and a simple challenge",
+      "Flag football: equipment and facilities to explore",
+      "Flag football: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Flag football proposal",
+    "url": "/flag-football.html",
+    "group": "Sport",
+    "emoji": "🏈"
+  },
+  {
+    "id": "beachCricket",
+    "label": "Beach cricket",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach cricket: how it works",
+      "Beach cricket: beginner skills and a simple challenge",
+      "Beach cricket: equipment and facilities to explore",
+      "Beach cricket: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach cricket proposal",
+    "url": "/sport-beach-cricket.html",
+    "group": "Sport",
+    "emoji": "🏏"
+  },
+  {
+    "id": "beachFootball",
+    "label": "Beach football",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach football: how it works",
+      "Beach football: beginner skills and a simple challenge",
+      "Beach football: equipment and facilities to explore",
+      "Beach football: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach football proposal",
+    "url": "/sport-beach-football.html",
+    "group": "Sport",
+    "emoji": "⚽"
+  },
+  {
+    "id": "beachRugbyLeague",
+    "label": "Beach rugby league",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach rugby league: how it works",
+      "Beach rugby league: beginner skills and a simple challenge",
+      "Beach rugby league: equipment and facilities to explore",
+      "Beach rugby league: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach rugby league proposal",
+    "url": "/sport-beach-rugby-league.html",
+    "group": "Sport",
+    "emoji": "🏉"
+  },
+  {
+    "id": "beach5s",
+    "label": "Beach 5s rugby",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach 5s rugby: how it works",
+      "Beach 5s rugby: beginner skills and a simple challenge",
+      "Beach 5s rugby: equipment and facilities to explore",
+      "Beach 5s rugby: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach 5s rugby proposal",
+    "url": "/sport-beach-5s-rugby.html",
+    "group": "Sport",
+    "emoji": "🏉"
+  },
+  {
+    "id": "airBadminton",
+    "label": "AirBadminton",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "AirBadminton: how it works",
+      "AirBadminton: beginner skills and a simple challenge",
+      "AirBadminton: equipment and facilities to explore",
+      "AirBadminton: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the AirBadminton proposal",
+    "url": "/sport-airbadminton.html",
+    "group": "Sport",
+    "emoji": "🏸"
+  },
+  {
+    "id": "beachTennis",
+    "label": "Beach tennis and net games",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach tennis and net games: how it works",
+      "Beach tennis and net games: beginner skills and a simple challenge",
+      "Beach tennis and net games: equipment and facilities to explore",
+      "Beach tennis and net games: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach tennis and net games proposal",
+    "url": "/sport-beach-tennis-and-net-games.html",
+    "group": "Sport",
+    "emoji": "🎾"
+  },
+  {
+    "id": "ultimate",
+    "label": "Ultimate and flying disc",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Ultimate and flying disc: how it works",
+      "Ultimate and flying disc: beginner skills and a simple challenge",
+      "Ultimate and flying disc: equipment and facilities to explore",
+      "Ultimate and flying disc: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Ultimate and flying disc proposal",
+    "url": "/sport-ultimate-and-flying-disc.html",
+    "group": "Sport",
+    "emoji": "🥏"
+  },
+  {
+    "id": "beachHandball",
+    "label": "Beach handball",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Beach handball: how it works",
+      "Beach handball: beginner skills and a simple challenge",
+      "Beach handball: equipment and facilities to explore",
+      "Beach handball: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Beach handball proposal",
+    "url": "/sport-beach-handball.html",
+    "group": "Sport",
+    "emoji": "🤾"
+  },
+  {
+    "id": "netball",
+    "label": "Netball crossover",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Netball crossover: how it works",
+      "Netball crossover: beginner skills and a simple challenge",
+      "Netball crossover: equipment and facilities to explore",
+      "Netball crossover: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Netball crossover proposal",
+    "url": "/sport-netball-crossover.html",
+    "group": "Sport",
+    "emoji": "🏐"
+  },
+  {
+    "id": "afl",
+    "label": "AFL crossover",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "AFL crossover: how it works",
+      "AFL crossover: beginner skills and a simple challenge",
+      "AFL crossover: equipment and facilities to explore",
+      "AFL crossover: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the AFL crossover proposal",
+    "url": "/sport-afl-crossover.html",
+    "group": "Sport",
+    "emoji": "🏉"
+  },
+  {
+    "id": "fitness",
+    "label": "Fitness and movement",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Fitness and movement: how it works",
+      "Fitness and movement: beginner skills and a simple challenge",
+      "Fitness and movement: equipment and facilities to explore",
+      "Fitness and movement: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Fitness and movement proposal",
+    "url": "/sport-fitness-and-movement.html",
+    "group": "Sport",
+    "emoji": "🏃"
+  },
+  {
+    "id": "islandGames",
+    "label": "Island-made games",
+    "frequency": 2,
+    "priority": 6,
+    "topics": [
+      "Island-made games: how it works",
+      "Island-made games: beginner skills and a simple challenge",
+      "Island-made games: equipment and facilities to explore",
+      "Island-made games: could Sandy Sports offer this?"
+    ],
+    "cta": "Explore the Island-made games proposal",
+    "url": "/sport-island-made-formats.html",
+    "group": "Sport",
+    "emoji": "✨"
+  },
+  {
+    "id": "weather",
+    "label": "Weather and outdoor conditions (Thu/Fri/Sat)",
+    "frequency": 3,
+    "priority": 10,
+    "topics": [
+      "Thursday: verify weekend forecast and site conditions",
+      "Friday: revise weather and plan safe activities",
+      "Saturday: day-of verified outdoor conditions"
+    ],
+    "cta": "Check the official Bureau of Meteorology forecast",
+    "url": "/facilities.html",
+    "group": "Seasonal",
+    "emoji": "🌤️"
+  },
+  {
+    "id": "holidays",
+    "label": "Queensland school-holiday visitors",
+    "frequency": 3,
+    "priority": 10,
+    "holidayOnly": true,
+    "topics": [
+      "School holiday: what could we play together?",
+      "Visitors: help shape Sandy Sports",
+      "Family sport and wellbeing on Straddie",
+      "A holiday activity idea, subject to real approval"
+    ],
+    "cta": "Explore ways to help create Sandy Sports",
+    "url": "/join.html",
+    "group": "Seasonal",
+    "emoji": "🎒"
+  },
+  {
+    "id": "nswHolidays",
+    "label": "NSW school-holiday visitor wave",
+    "frequency": 2,
+    "priority": 8,
+    "holidayOnly": true,
+    "topics": [
+      "NSW families: exploring Straddie sports",
+      "A visitor's guide to the proposed club",
+      "What would a NSW holiday visitor like to play?",
+      "A NSW holiday family sport idea"
+    ],
+    "cta": "Share your visitor ideas",
+    "url": "/join.html",
+    "group": "Seasonal",
+    "emoji": "🧳"
+  },
+  {
+    "id": "surprise",
+    "label": "Spontaneous island stories",
+    "frequency": 1,
+    "priority": 2,
+    "topics": [
+      "A surprise local sporting moment (verify details)",
+      "Unexpected community contributions",
+      "Photo or video challenge with permission",
+      "A playful sport quiz"
+    ],
+    "cta": "Share a story or suggestion",
+    "url": "/join.html",
+    "group": "Community",
+    "emoji": "✨"
+  }
+];
+
+// Queensland Department of Education state-school dates (check independent school variations):
+// https://education.qld.gov.au/about-us/calendar/term-dates
+// https://education.qld.gov.au/about-us/calendar/future-dates
+export const QLD_SCHOOL_HOLIDAYS = [
+  ['2026-12-12','2027-01-26'],['2027-03-26','2027-04-11'],
+  ['2027-06-26','2027-07-11'],['2027-09-18','2027-10-04'],
+  ['2027-12-11','2028-01-23'],['2028-04-01','2028-04-17'],
+  ['2028-06-24','2028-07-09'],['2028-09-16','2028-10-02'],
+  ['2028-12-09','2029-01-21']
+];
+// NSW Department of Education: Eastern division dates lead the main visitor wave.
+// The Western division has an additional summer extension; it receives a lighter tail.
+// https://education.nsw.gov.au/schooling/calendars/2027
+// https://education.nsw.gov.au/schooling/calendars/future-and-past-nsw-term-and-vacation-dates
+export const NSW_SCHOOL_HOLIDAYS_EASTERN = [
+  ['2026-12-18','2027-01-27'],['2027-04-12','2027-04-23'],
+  ['2027-07-05','2027-07-16'],['2027-09-27','2027-10-08'],
+  ['2027-12-21','2028-01-28'],['2028-04-10','2028-04-21'],
+  ['2028-07-10','2028-07-21'],['2028-10-03','2028-10-13'],
+  ['2028-12-22','2029-01-25']
+];
+export const NSW_SCHOOL_HOLIDAYS_WESTERN_EXTENSIONS = [
+  ['2027-01-28','2027-02-03'],['2028-01-29','2028-02-04'],
+  ['2029-01-26','2029-02-02']
+];
+const MS = 86400000;
+const dayMs = day => Date.parse(day+'T00:00:00Z');
+const iso = ms => new Date(ms).toISOString().slice(0,10);
+const weekday = day => new Date(dayMs(day)).getUTCDay();
+const numberHash = value => {let h=2166136261; for(const c of value){h=Math.imul(h^c.charCodeAt(0),16777619);} return h>>>0;};
+const inHoliday = day => QLD_SCHOOL_HOLIDAYS.some(([a,b])=>day>=a && day<=b);
+const inNSWEasternHoliday = day => NSW_SCHOOL_HOLIDAYS_EASTERN.some(([a,b])=>day>=a && day<=b);
+const inNSWWesternExtension = day => NSW_SCHOOL_HOLIDAYS_WESTERN_EXTENSIONS.some(([a,b])=>day>=a && day<=b);
+const inNSWHoliday = day => inNSWEasternHoliday(day)||inNSWWesternExtension(day);
+export const holidayInfluences = day => ({qld:inHoliday(day),nswEastern:inNSWEasternHoliday(day),nswWestern:inNSWWesternExtension(day)});
+const dayBeforeHoliday = day => QLD_SCHOOL_HOLIDAYS.some(([a])=>iso(dayMs(a)-MS)===day);
+const dayBeforeNSW = day => NSW_SCHOOL_HOLIDAYS_EASTERN.some(([a])=>iso(dayMs(a)-MS)===day);
+export const defaultCampaignSettings = () => ({
+  monthOverrides:{},weekOverrides:{},dayOverrides:{},dayPlans:{},dayArchetypes:{},
+  timingSignals:{
+    holidays:{enabled:false,leadDays:[84,56,42,28,14,7]},
+    nswHolidays:{enabled:true,leadDays:[84,42,14,7]},
+    event:{enabled:true,leadDays:[28,14,7,3,1]},
+    meeting:{enabled:true,leadDays:[14,7,1]},
+    programme_open:{enabled:true,leadDays:[42,28,14,7]},
+    programme_close:{enabled:true,leadDays:[28,14,7,1]}
+  },
+  milestones:[],
+  videoShare:67, postingTime:'auto', limits:{
+    weekdayMin:2,weekday:6,fridayMin:2,friday:8,weekendMin:2,weekend:10,
+    longWeekendMin:3,longWeekend:12,publicHolidayMin:3,publicHoliday:14,
+    holidayMin:3,holiday:12
+  },
+  delivery:{
+    organic:['youtube','facebook','instagram','tiktok','noticeboard'],
+    paid:['youtube','facebook','instagram','tiktok','noticeboard'],
+    paidPlanning:false
+  },
+  layers:Object.fromEntries(CAMPAIGN_LAYERS.map(layer=>[layer.id,{enabled:false,visible:true,weekly:layer.frequency,
+    audience:{membership:['all'],gender:['all'],place:layer.id==='nswHolidays'?['tourist','regional']:['all']}}]))
+});
+export const monthSettingsFor=(settings,month)=>settings.monthOverrides?.[month.slice(0,7)]||settings;
+export const weekStart=day=>iso(dayMs(day)-((weekday(day)+6)%7)*MS);
+export const settingsForDate=(settings,day)=>settings.dayOverrides?.[day]||
+  settings.weekOverrides?.[weekStart(day)]||monthSettingsFor(settings,day);
+export const scopeSettingsFor=(settings,scope,key)=>scope==='day'?
+  settings.dayOverrides?.[key]||settingsForDate({...settings,dayOverrides:{}},key):
+  scope==='week'?(settings.weekOverrides?.[key]||monthSettingsFor(settings,key)):
+  monthSettingsFor(settings,key);
+export const POSTING_DAY_TYPES=Object.freeze([
+  {id:'weekday',label:'Weekday (Mon–Thu)',icon:'☀️'},
+  {id:'friday',label:'Friday',icon:'✨'},
+  {id:'weekend',label:'Weekend (Sat–Sun)',icon:'🏖️'},
+  {id:'longWeekend',label:'Long weekend',icon:'🧳'},
+  {id:'publicHoliday',label:'Public holiday',icon:'🎉'},
+  {id:'holiday',label:'QLD school holidays',icon:'🎒'}
+]);
+// Queensland-local, editorial time-of-day slots. A proposed time is not a platform scheduling action.
+const AUTO_TIME_WINDOWS=Object.freeze({
+ weekday:['08:00','18:15','12:15','16:45','20:00','10:30','14:45','07:15','09:30','11:45','13:30','15:30','17:30','19:15','21:00','22:00','06:45','08:45','10:15','13:00'],
+ friday:['07:30','17:30','12:15','19:30','15:30','09:30','21:00','11:00','14:00','18:30','08:30','10:15','13:15','16:15','20:30','22:00','06:45','09:45','11:45','14:45'],
+ weekend:['08:00','17:30','11:00','19:30','13:30','09:15','15:15','20:45','07:15','10:00','12:15','14:30','16:30','18:30','21:30','06:45','08:45','10:45','12:45','22:00'],
+ holiday:['08:15','17:45','11:30','15:00','19:15','09:30','13:30','20:30','07:00','10:30','12:30','14:30','16:45','18:45','21:15','22:00','07:45','08:45','11:00','13:00']
+});
+function suggestedTimeOfDay(day,index,bounds,post,anchor){
+ if(anchor!=='auto'){
+  const base=Number(anchor.slice(0,2))*60+Number(anchor.slice(3));
+  const interval=60;
+  const minute=Math.min(22*60+45,base+index*interval);
+  return {time:String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0'),reason:'User-selected base time, spaced by one hour'};
+ }
+ const type=bounds.category;
+ const times=AUTO_TIME_WINDOWS[type]||AUTO_TIME_WINDOWS.weekday;
+ let time=times[index%times.length];
+ const layer=post.layerIds?.[0]||'';
+ if(layer==='weather')time='07:15';
+ if(post.id.startsWith('holiday-eve-')||post.id.startsWith('nsw-holiday-eve-'))time='17:15';
+ if(post.timingSignal?.phase==='follow')time='18:15';
+ const hour=Number(time.slice(0,2));
+ const window=hour<11?'morning':hour<16?'midday/afternoon':'evening';
+ return {time,window,reason:(layer==='weather'?'Morning official-forecast review':post.timingSignal?.phase==='follow'?'Post-event recap placeholder':type+' editorial '+window+' window')};
+}
+export const DEFAULT_DAILY_LIMITS=Object.freeze({
+  weekdayMin:2,weekday:6,fridayMin:2,friday:8,weekendMin:2,weekend:10,
+  longWeekendMin:3,longWeekend:12,publicHolidayMin:3,publicHoliday:14,
+  holidayMin:3,holiday:12
+});
+export function normaliseDailyLimits(existing={}){
+  const output={...DEFAULT_DAILY_LIMITS};
+  const legacy=Object.keys(existing).sort().join(',')==='friday,holiday,weekday,weekend';
+  for(const {id} of POSTING_DAY_TYPES){
+    const max=existing[id],min=existing[id+'Min'];
+    if(Number.isInteger(max))output[id]=Math.max(1,Math.min(20,id==='weekday'&&legacy&&max===2?4:max));
+    if(Number.isInteger(min))output[id+'Min']=Math.max(1,Math.min(20,min));
+    output[id]=Math.max(output[id],output[id+'Min']);
+  }
+  return output;
+}
+export function dayPostingBounds(day,limits){
+  const signals=calendarDaySignals(day);
+  const category=signals.publicHoliday?'publicHoliday':
+    signals.longWeekend?'longWeekend':inHoliday(day)?'holiday':
+    signals.weekday===5?'friday':[0,6].includes(signals.weekday)?'weekend':'weekday';
+  const current=normaliseDailyLimits(limits);
+  return {category,min:current[category+'Min'],max:current[category],...signals};
+}
+export const copyMonthSettings=settings=>structuredClone({
+  videoShare:settings.videoShare,postingTime:settings.postingTime||'auto',
+  limits:normaliseDailyLimits(settings.limits),delivery:settings.delivery,layers:settings.layers
+});
+function basePost(layer,day,weekKey,index){
+  const topic=layer.id==='weather'?
+    layer.topics[weekday(day)-4]:layer.topics[numberHash(layer.id+weekKey+day+index)%layer.topics.length];
+  const weather=layer.id==='weather';
+  const text=weather?'Use a freshly verified outdoor weather forecast and official safety advice. Never present a future forecast as already verified.':
+    ['events','funding','facilities','volunteers','news'].includes(layer.id)?'Verify the real club record, dates, permissions and current status before publishing.':'Sandy Sports is only a proposal. Confirm any date, sport rule, safety claim, permission or image before publishing.';
+  return {id:layer.id+'-'+day,date:day,layerIds:[layer.id],title:topic,brief:text,cta:layer.cta,
+    audience:null,priority:layer.priority,composite:false,sections:[topic],status:'suggestion'};
+}
+function assignWeek(days,settings,postsByDay){
+  // Preserve the normal week's pattern for every unaffected day. Individual day,
+  // Monday-start week and month overrides only replace their selected dates.
+  const baseline=new Map(days.map(day=>[day,[]]));
+  assignSegment(days,settings,baseline);
+  const groups=new Map();
+  for(const day of days){
+    const selected=settingsForDate(settings,day);
+    if(selected===settings){postsByDay.get(day).push(...baseline.get(day));continue;}
+    if(!groups.has(selected))groups.set(selected,[]);
+    groups.get(selected).push(day);
+  }
+  for(const [config,scopedDays] of groups){
+    const scoped=new Map(scopedDays.map(day=>[day,[]]));
+    assignSegment(scopedDays,config,scoped);
+    for(const day of scopedDays)postsByDay.get(day).push(...scoped.get(day));
+  }
+}
+function assignSegment(days,settings,postsByDay){
+  const key=days[0].slice(0,7)+'-'+days[0];
+  for(const layer of CAMPAIGN_LAYERS){
+    const preference=settings.layers[layer.id];
+    if(!preference?.enabled || !preference.weekly) continue;
+    let eligible=days.filter(day=>!layer.holidayOnly||(layer.id==='nswHolidays'?inNSWHoliday(day):inHoliday(day)));
+    if(layer.id==='weather')eligible=eligible.filter(day=>[4,5,6].includes(weekday(day)));
+    const isQLDWeek=days.some(inHoliday),isNSWWeek=days.some(inNSWHoliday);
+    const boost=isQLDWeek && ['volleyball','other','safety','visitors','voice','health'].includes(layer.id)?1:
+      !isQLDWeek && isNSWWeek && layer.id==='visitors'?1:0;
+    const westernOnly=layer.id==='nswHolidays' && eligible.every(day=>!inNSWEasternHoliday(day));
+    const weekly=days.length>=7?preference.weekly:Math.ceil(preference.weekly*days.length/7);
+    const frequency=Math.min(eligible.length,westernOnly?Math.min(weekly,1):weekly+boost);
+    eligible.sort((a,b)=>{
+      const weight=day=>(layer.id==='nswHolidays' && inNSWHoliday(day) && !inHoliday(day)?70:0)+
+        (inHoliday(day)?45:0)+([5,6,0].includes(weekday(day))?20:0)+(weekday(day)===5?10:0);
+      return weight(b)-weight(a) || numberHash(layer.id+key+a)%100-numberHash(layer.id+key+b)%100;
+    });
+    const chosen=layer.id==='weather' ? eligible.sort((a,b)=>weekday(a)-weekday(b)).slice(0,frequency) : eligible.slice(0,frequency);
+    for(const day of chosen){const post=basePost(layer,day,key,chosen.indexOf(day));post.audience=preference.audience;postsByDay.get(day).push(post);}
+  }
+}
+const signalTitles={
+  holidays:'QLD school holiday',
+  nswHolidays:'NSW school holiday',
+  event:'Confirmed club event',
+  meeting:'Confirmed club meeting',
+  programme_open:'Confirmed sport programme opening',
+  programme_close:'Confirmed sport programme closing'
+};
+function insertTimingSignals(settings,postsByDay){
+  const rules=settings.timingSignals||{};
+  const events=[
+    ...QLD_SCHOOL_HOLIDAYS.map(([date])=>({kind:'holidays',date,title:'Queensland school holidays'})),
+    ...NSW_SCHOOL_HOLIDAYS_EASTERN.map(([date])=>({kind:'nswHolidays',date,title:'NSW school holidays'})),
+    ...(settings.milestones||[]).filter(e=>e.confirmed===true||String(e.id||'').startsWith('m-import-'))
+  ];
+  for(const event of events){
+    const rule=rules[event.kind];
+    if(!rule?.enabled)continue;
+    const imported=String(event.id||'').startsWith('m-import-');
+    const tentative=imported&&!event.confirmed;
+    const layer=event.kind==='holidays'?'holidays':event.kind==='nswHolidays'?'nswHolidays':
+      event.kind==='meeting'?'events':event.kind.startsWith('programme_')?'events':'events';
+    if(tentative){
+      // A working committee calendar should inform private content preparation,
+      // but a tentative date must never become a public invitation by default.
+      const chosen=rule.leadDays.filter(n=>n>=7).sort((a,b)=>a-b)[0]||7;
+      const draftDate=iso(dayMs(event.date)-chosen*MS);
+      const config=settingsForDate(settings,draftDate);
+      if(postsByDay.has(draftDate)&&config.layers[layer]?.enabled){
+        postsByDay.get(draftDate).push({
+          id:'anchor-planning-'+event.id+'-'+event.date,
+          date:draftDate,layerIds:[layer],
+          title:'Tentative event planning: '+event.title,
+          brief:'Internal draft only. Ask the committee to confirm the event date, permissions and promotional wording before publishing any announcement. Keep room for unexpected opportunities.',
+          cta:'Confirm the committee event calendar',audience:config.layers[layer].audience,
+          priority:11,sections:['Provisional planning only'],composite:false,status:'suggestion',
+          timingSignal:{kind:event.kind,title:event.title,targetDate:event.date,leadDays:chosen,
+            tentative:true,phase:'planning',importedCalendar:true,sourceUrl:''}
+        });
+      }
+      continue;
+    }
+    for(const leadDays of rule.leadDays){
+      const date=iso(dayMs(event.date)-leadDays*MS);
+      if(!postsByDay.has(date))continue;
+      const selected=settingsForDate(settings,date);
+      if(!selected.layers[layer]?.enabled)continue;
+      const topic=event.title||signalTitles[event.kind]||'Confirmed milestone';
+      const label=leadDays>=7?Math.round(leadDays/7)+' weeks':leadDays+' days';
+      const title=event.kind==='holidays'||event.kind==='nswHolidays'?
+        'Holiday inspiration: '+label+' before '+topic:
+        label+' until '+topic+': prepare an informative club update';
+      const brief=event.kind==='holidays'||event.kind==='nswHolidays'?
+        'Early visitor inspiration and trip-planning ideas. Verify travel, bookings and local conditions; do not imply confirmed club events.':
+        'A lead-in idea linked to a user-confirmed milestone. Verify dates, permissions, rules and the source again before posting.';
+      postsByDay.get(date).push({
+        id:'signal-'+event.kind+'-'+event.date+'-'+leadDays+'-'+(event.id||'standard'),
+        date,layerIds:[layer],title,brief,
+        cta:event.kind==='holidays'||event.kind==='nswHolidays'?'Explore Sandy Sports visitor ideas':'Check verified Sandy Sports progress',
+        audience:selected.layers[layer].audience,priority:leadDays<=7?10:6,sections:[title],
+        composite:false,status:'suggestion',
+        timingSignal:{kind:event.kind,title:topic,targetDate:event.date,leadDays,
+          phase:'lead',importedCalendar:imported,tentative:false,sourceUrl:event.sourceUrl||''}
+      });
+    }
+    if(imported&&['event','meeting'].includes(event.kind)){
+      for(const [offset,phase] of [[0,'day'],[1,'follow']]){
+        const postingDate=iso(dayMs(event.date)+offset*MS),config=settingsForDate(settings,postingDate);
+        if(!postsByDay.has(postingDate)||!config.layers[layer]?.enabled)continue;
+        const title=phase==='day'?'Event day: '+event.title:'After '+event.title+': prepare a careful recap';
+        const brief=phase==='day'?
+          'Prepare a day-of post using only the confirmed time, access, event details and permission from the club. Re-check immediately before posting.':
+          'Prepare a thank-you or recap only after verifying what actually happened, results, photographs and participant permission. Do not invent attendance, winners or outcomes.';
+        postsByDay.get(postingDate).push({
+          id:'anchor-'+phase+'-'+event.id+'-'+event.date,
+          date:postingDate,layerIds:[layer],title,brief,cta:'Check confirmed club event information',
+          audience:config.layers[layer].audience,priority:phase==='day'?13:7,
+          sections:[title],composite:false,status:'suggestion',
+          timingSignal:{kind:event.kind,title:event.title,targetDate:event.date,
+            phase,importedCalendar:true,tentative:false,leadDays:0,sourceUrl:event.sourceUrl||''}
+        });
+      }
+    }
+  }
+}
+
+function combine(candidates,cap){
+  if(!cap)return {posts:[],omitted:candidates.length};
+  const selected=candidates.slice(0,cap);
+  const overflow=candidates.slice(cap);
+  // A short roundup can carry two additional subjects, reducing posting pressure.
+  if(overflow.length && selected.length){
+    // Never put tentative calendar dates into a public-facing multi-topic roundup.
+    const target=selected.find(p=>!p.timingSignal&&p.layerIds[0]!=='safety')||
+      selected.find(p=>!p.timingSignal);
+    // Do not silently mix targeted member, gender or visitor groups in one post.
+    const additions=[];
+    for(let i=0;i<overflow.length && additions.length<2;){
+      if(target&&!overflow[i].timingSignal&&JSON.stringify(overflow[i].audience)===JSON.stringify(target.audience))
+        additions.push(...overflow.splice(i,1));
+      else i++;
+    }
+    if(target){
+      target.layerIds.push(...additions.flatMap(p=>p.layerIds));
+      target.sections.push(...additions.map(p=>p.title));
+    }
+    if(target&&additions.length){
+      target.composite=true;
+      target.title='30-second Sandy Sports sports-and-community roundup: '+target.sections[0];
+      target.brief+=' Include concise segments from the other sources; verify every claim.';
+    }
+  }
+  return {posts:selected,omitted:overflow.length};
+}
+export function generateCampaignYear(startMonth,settings=defaultCampaignSettings()){
+  if(!/^20\d\d-(0[1-9]|1[0-2])$/.test(startMonth))throw new Error('Use a YYYY-MM start month.');
+  const first=dayMs(startMonth+'-01');
+  if(!Number.isFinite(first))throw new Error('Invalid start month.');
+  const endDate=new Date(Date.UTC(Number(startMonth.slice(0,4)),Number(startMonth.slice(5))-1+12,1)).getTime();
+  const days=[];for(let ms=first;ms<endDate;ms+=MS)days.push(iso(ms));
+  const postsByDay=new Map(days.map(day=>[day,[]]));
+  let week=[];
+  for(const day of days){if(week.length && weekday(day)===1){assignWeek(week,settings,postsByDay);week=[];}week.push(day);}
+  if(week.length)assignWeek(week,settings,postsByDay);
+  for(const day of days.filter(dayBeforeHoliday)){
+    const monthSettings=settingsForDate(settings,day);
+    if(!monthSettings.layers.holidays?.enabled)continue;
+    postsByDay.get(day).push({id:'holiday-eve-'+day,date:day,layerIds:['holidays'],title:'Queensland school holidays start tomorrow: invite feedback on the proposal',
+      brief:'Confirm Queensland state school holiday dates and local conditions before publishing.',cta:'Explore the Sandy Sports proposal',
+      audience:monthSettings.layers.holidays.audience,priority:11,sections:['Holiday countdown'],composite:false,status:'suggestion'});
+  }
+  for(const day of days.filter(dayBeforeNSW)){
+    const monthSettings=settingsForDate(settings,day);
+    if(!monthSettings.layers.nswHolidays?.enabled)continue;
+    postsByDay.get(day).push({id:'nsw-holiday-eve-'+day,date:day,layerIds:['nswHolidays'],title:'NSW school holidays start tomorrow: ask visitors what they would play',
+      brief:'Verify NSW term dates and current ferry, weather and outdoor recreation information before publishing.',cta:'Explore the Sandy Sports visitor ideas',
+      audience:monthSettings.layers.nswHolidays.audience,priority:9,sections:['NSW holiday lead-in'],composite:false,status:'suggestion'});
+  }
+  insertTimingSignals(settings,postsByDay);
+  const anchorsByDay=new Map();
+  for(const milestone of settings.milestones||[]){
+    if(!milestone.confirmed&&!String(milestone.id||'').startsWith('m-import-'))continue;
+    if(!anchorsByDay.has(milestone.date))anchorsByDay.set(milestone.date,[]);
+    anchorsByDay.get(milestone.date).push({
+      id:milestone.id,title:milestone.title,kind:milestone.kind,confirmed:milestone.confirmed
+    });
+  }
+  const dayCards=[],posts=[];
+  for(const [day,candidates] of postsByDay){
+    const effective=settingsForDate(settings,day);
+    const bounds=dayPostingBounds(day,effective.limits);
+    const eligible=CAMPAIGN_LAYERS.filter(layer=>effective.layers[layer.id]?.enabled&&
+      effective.layers[layer.id]?.weekly>0&&
+      (!layer.holidayOnly||(layer.id==='nswHolidays'?inNSWHoliday(day):inHoliday(day)))&&
+      (layer.id!=='weather'||[4,5,6].includes(weekday(day))));
+    // Every day must reach its configured minimum. Use different enabled topics
+    // before repeating a layer, and never fabricate official conditions or club events.
+    for(let i=candidates.length;eligible.length&&i<bounds.min;i++){
+      const present=new Set(candidates.flatMap(post=>post.layerIds));
+      const pool=eligible.filter(layer=>!present.has(layer.id));
+      const options=pool.length?pool:eligible;
+      const picked=options.sort((a,b)=>numberHash(day+'-'+i+'-'+a.id)-numberHash(day+'-'+i+'-'+b.id))[0];
+      if(picked){
+        const post=basePost(picked,day,'minimum-'+day,i);
+        post.id='minimum-'+picked.id+'-'+day+'-'+i;
+        post.priority=1;post.audience=effective.layers[picked.id].audience;
+        candidates.push(post);
+      }else{
+        candidates.push({id:'daily-'+day+'-'+i,date:day,layerIds:['daily'],
+          title:'Choose Sandy Sports topic '+(i+1)+' for today',
+          brief:'Write a genuine sport, wellbeing or community idea using confirmed information. This is an editable planning placeholder.',
+          cta:'Visit the club website',audience:{membership:['all'],gender:['all'],place:['all']},
+          priority:0,composite:false,sections:['One relevant daily club update'],status:'suggestion'});
+      }
+    }
+    candidates.sort((a,b)=>b.priority-a.priority||numberHash(a.id)-numberHash(b.id));
+    // Keep an editorial slot for regular/whimsical content when several annual
+    // event reminders coincide. A curated day can intentionally override this.
+    if(bounds.max>1){
+      const anchors=candidates.filter(p=>p.timingSignal?.importedCalendar);
+      const other=candidates.filter(p=>!p.timingSignal?.importedCalendar);
+      if(anchors.length>=bounds.max&&other.length){
+        candidates.splice(0,candidates.length,...anchors.slice(0,bounds.max-1),
+          other[0],...anchors.slice(bounds.max-1),...other.slice(1));
+      }
+    }
+    const dayPlan=settings.dayPlans?.[day];
+    // A curated day replaces generated suggestions, not the other way around.
+    // The club retains full control even when a monthly pattern is later changed.
+    const manual=Array.isArray(dayPlan?.items)&&dayPlan.items.length>0;
+    const result=manual?{omitted:0,posts:dayPlan.items.map((slot,index)=>{
+      const layer=CAMPAIGN_LAYERS.find(item=>item.id===slot.layerId)||CAMPAIGN_LAYERS.find(item=>item.id==='community');
+      return {id:'curated-'+day+'-'+slot.id,date:day,layerIds:[layer.id],
+        title:slot.title,brief:slot.brief,cta:layer.cta,
+        audience:effective.layers[layer.id].audience,priority:20,composite:false,
+        sections:[slot.title],status:'suggestion',curated:true,
+        requestedFormat:slot.format,requestedTime:slot.time};
+    })}:combine(candidates,bounds.max);
+    const {posts:chosen,omitted}=result;
+    dayCards.push({date:day,holiday:inHoliday(day),nswHoliday:inNSWHoliday(day),nswWesternOnly:inNSWWesternExtension(day),
+      publicHoliday:bounds.publicHoliday,publicHolidayName:bounds.publicHolidayName,
+      partialPublicHoliday:bounds.partialPublicHoliday,longWeekend:bounds.longWeekend,
+      postingCategory:bounds.category,minimum:bounds.min,maximum:bounds.max,
+      eventAnchors:anchorsByDay.get(day)||[],
+      manualPlan:manual,signature:manual?(dayPlan.signature||null):null,omitted,count:chosen.length});
+    posts.push(...chosen);
+  }
+  const composites=posts.filter(p=>p.composite);
+  const videoIds=new Set();
+  // Monthly ratios are independent. Composites take precedence, then evenly-seeded candidates.
+  for(const month of [...new Set(posts.map(p=>p.date.slice(0,7)))]){
+    const current=posts.filter(p=>p.date.startsWith(month)&&!p.curated);
+    const groups=new Map();
+    for(const post of current){
+      const effective=settingsForDate(settings,post.date);
+      if(!groups.has(effective))groups.set(effective,[]);
+      groups.get(effective).push(post);
+    }
+    for(const [effective,group] of groups){
+      const count=Math.round(group.length*effective.videoShare/100);
+      const composite=group.filter(p=>p.composite),other=group.filter(p=>!p.composite)
+        .sort((a,b)=>numberHash('video-'+a.id)-numberHash('video-'+b.id));
+      for(const p of [...composite,...other.slice(0,Math.max(0,count-composite.length))])videoIds.add(p.id);
+    }
+  }
+  for(const p of posts){
+    p.format=p.curated?(p.requestedFormat==='video'?'30-second vertical video':p.requestedFormat):
+      videoIds.has(p.id)?'30-second vertical video':['image','carousel','link'][numberHash('format-'+p.id)%3];
+    p.aspectRatio=p.format.startsWith('30-second')?'9:16':p.format==='link'?'1.91:1':'4:5';
+    p.size=p.format.startsWith('30-second')?'1080×1920':p.format==='link'?'1200×630':'1080×1350';
+    p.durationSeconds=p.format.startsWith('30-second')?30:null;
+    const anchor=settingsForDate(settings,p.date).postingTime||'auto';
+    const index=posts.filter(other=>other.date===p.date).indexOf(p);
+    const timing=suggestedTimeOfDay(p.date,index,dayPostingBounds(p.date,settingsForDate(settings,p.date).limits),p,anchor);
+    p.suggestedTime=p.curated?p.requestedTime:timing.time;
+    p.timeOfDaySignal={window:timing.window||'user-selected',reason:timing.reason,timeZone:'Australia/Brisbane'};
+    p.creativeVariants=creativeVariantsFor(p,settingsForDate(settings,p.date).delivery);
+    p.destinations=[...new Set(p.creativeVariants.filter(v=>v.distribution==='organic').map(v=>v.platform))];
+    // The existing social post editor supports only the four connected club channels.
+    // The Noticeboard is a separate, unconnected pilot and is never sent there.
+    p.channels=p.destinations.filter(id=>id!=='noticeboard');
+    p.storyboard=p.durationSeconds? p.sections.length>1?['0–3s: Hook',...p.sections.map((s,i)=>'Segment '+(i+1)+': '+s),'Final 3s: Club link / call to action']:['0–3s: Hook','3–24s: '+p.sections[0],'24–30s: Call to action']:[];
+  }
+  return {startMonth,posts,days:dayCards,totals:{posts:posts.length,videos:posts.filter(p=>p.durationSeconds).length,combined:composites.length,omitted:dayCards.reduce((n,d)=>n+d.omitted,0)}};
+}
+
+===== END FILE studio/social-campaign-engine.js =====
+
+===== BEGIN FILE studio/social-placements.js =====
+// Versioned Sandy Sports production guidance. Resolutions are export presets, not universal upload requirements.
+// Review the destination's native placement preview before publishing or approving paid ads.
+// Live Straddie Noticeboard outlet formats are web, tv and kiosk; paid inventory and video are proposals only.
+export const CREATIVE_SPEC_VERSION=Object.freeze({
+  id:'2026-11-23.2',reviewedOn:'2026-11-23',
+  policy:'Working export presets, not upload minimums. Recheck official placement specs before buying ads.'
+});
+export const PUBLISHING_DESTINATIONS=Object.freeze([
+  {id:'facebook',label:'Facebook',status:'existing'},
+  {id:'instagram',label:'Instagram',status:'existing'},
+  {id:'youtube',label:'YouTube',status:'existing'},
+  {id:'tiktok',label:'TikTok',status:'existing'},
+  {id:'noticeboard',label:'Straddie Noticeboard Network',status:'proposed',publicUrl:'https://straddie-noticeboard-cloudflare.auraofintelligence.workers.dev/'}
+]);
+export const MASTER_ASSET_PRESETS=Object.freeze([
+  {id:'vertical-short',label:'Vertical short video',width:1080,height:1920,ratio:'9:16',media:'video'},
+  {id:'premium-vertical-ad',label:'Premium Meta vertical advertisement',width:1440,height:2560,ratio:'9:16',media:'video'},
+  {id:'premium-meta-feed',label:'Premium Meta Feed image or video',width:1440,height:1800,ratio:'4:5',media:'both'},
+  {id:'instagram-organic-photo',label:'Organic Instagram portrait photo',width:1080,height:1440,ratio:'3:4',media:'image'},
+  {id:'square-carousel',label:'Square image carousel',width:1080,height:1080,ratio:'1:1',media:'image'},
+  {id:'widescreen-video',label:'Widescreen video',width:1920,height:1080,ratio:'16:9',media:'video'},
+  {id:'youtube-video-thumbnail',label:'YouTube standard-video thumbnail',width:3840,height:2160,ratio:'16:9',media:'image'},
+  {id:'youtube-shorts-thumbnail',label:'YouTube Shorts thumbnail',width:2160,height:3840,ratio:'9:16',media:'image'}
+]);
+export const placementSources=Object.freeze({
+  meta:'https://www.facebook.com/business/ads-guide',
+  metaCrossCheck:'https://tofuads.com/resources/meta-ad-sizes-safe-zones-feed-stories-reels-b2b',
+  youtube:'https://support.google.com/youtube/answer/15424877?hl=en',
+  youtubeThumbnails:'https://support.google.com/youtube/answer/72431?hl=en',
+  googleAds:'https://support.google.com/google-ads/answer/13547298?hl=en',
+  tiktok:'https://ads.tiktok.com/resources/help/article/tiktok-auction-in-feed-ads?lang=en-GB',
+  tiktokCarousel:'https://ads.tiktok.com/resources/help/article/specifications-for-carousel-ads?lang=en',
+  noticeboard:'https://straddie-noticeboard-cloudflare.auraofintelligence.workers.dev/how-it-works.html'
+});
+// Meta full-screen 9:16: intentionally conservative text/logo clearances, not a platform guarantee.
+const metaSafe=Object.freeze({top:.14,bottom:.35,sides:.06,label:'Conservative text/logo safe-zone guide; verify in Meta placement preview'});
+const platformSafe=Object.freeze({label:'Review caption, icons and CTA overlays in the native placement preview'});
+const candidate=(id,platform,placement,distribution,kind,width,height,ratio,more={})=>Object.freeze({
+  id,platform,placement,distribution,kind,width,height,ratio,
+  sourceKey:platform==='noticeboard'?'noticeboard':platform==='youtube'?'googleAds':platform==='tiktok'?'tiktok':'meta',
+  reviewOn:'2026-11-23',fileFormats:kind==='image'||kind==='poster'?['JPG','PNG']:['MP4','MOV'],
+  safeZone:platformSafe,provisional:false,note:'Production preset; verify actual placement requirements.',
+  ...more
+});
+export const CREATIVE_PRESETS=Object.freeze([
+  candidate('facebook-feed','facebook','Feed organic image or video','organic','both',1080,1350,'4:5',
+    {note:'Common optional organic Feed export, not a mandatory or paid-only format.'}),
+  candidate('facebook-reels','facebook','Reels / Stories','organic','video',1080,1920,'9:16',
+    {safeZone:metaSafe,note:'Full-screen vertical; inspect caption and controls before posting.'}),
+  candidate('facebook-feed-ad','facebook','Feed image/video ad','paid','both',1440,1800,'4:5',
+    {note:'Recommended Meta Feed advertising export; approval before spending.'}),
+  candidate('facebook-reels-ad','facebook','Reels / Stories ad','paid','video',1440,2560,'9:16',
+    {safeZone:metaSafe,note:'9:16 paid Meta ad export; review safe zones and preview.'}),
+  candidate('facebook-carousel-ad','facebook','Feed image carousel ad','paid','image',1080,1080,'1:1',
+    {note:'Square carousel artwork; check actual card count and CTA in Ads Manager.'}),
+
+  candidate('instagram-feed','instagram','Feed organic image or video','organic','both',1080,1350,'4:5',
+    {note:'Common Feed production preset; other organic ratios can be used.'}),
+  candidate('instagram-photo-3x4','instagram','Feed photo, portrait 3:4','organic','image',1080,1440,'3:4',
+    {note:'Optional native 3:4 organic portrait photo.'}),
+  candidate('instagram-reels','instagram','Reels / Stories','organic','video',1080,1920,'9:16',
+    {safeZone:metaSafe,note:'Vertical original, subtitles and placement-safe titles.'}),
+  candidate('instagram-feed-image-ad','instagram','Feed image advertisement','paid','image',1440,1800,'4:5',
+    {note:'4:5 Feed image-ad recommendation; differs from Feed video-ad recommendation.'}),
+  candidate('instagram-feed-video-ad','instagram','Feed video advertisement','paid','video',1080,1920,'9:16',
+    {safeZone:metaSafe,note:'Meta Ads Guide Feed video ad recommendation: 9:16, distinct from 4:5 Feed image ads.'}),
+  candidate('instagram-reels-ad','instagram','Reels / Stories video ad','paid','video',1440,2560,'9:16',
+    {safeZone:metaSafe,note:'High-resolution vertical ad production; captions and rights review.'}),
+  candidate('instagram-carousel-ad','instagram','Feed image carousel ad','paid','image',1080,1080,'1:1',
+    {note:'Square carousel artwork; verify creative slots for the selected Meta objective.'}),
+
+  candidate('youtube-shorts','youtube','Shorts','organic','video',1080,1920,'9:16',
+    {durationMaxSeconds:180,thumbnailPreset:'youtube-shorts-thumbnail',
+      sourceKey:'youtube',note:'Organic Shorts allow up to three minutes; 30 seconds remains the Sandy Sports default.'}),
+  candidate('youtube-standard','youtube','Standard long-form video','organic','video',1920,1080,'16:9',
+    {thumbnailPreset:'youtube-video-thumbnail',sourceKey:'youtubeThumbnails',
+      note:'Produce a real landscape edit and accompanying 3840 × 2160 thumbnail.'}),
+  candidate('youtube-shorts-ad','youtube','Shorts video ad','paid','video',1080,1920,'9:16',
+    {recommendedDurationSeconds:30,thumbnailPreset:'youtube-shorts-thumbnail',sourceKey:'googleAds',
+      note:'Short, purposeful paid creative; 30 seconds is a creative target, not an upload limit.'}),
+  candidate('youtube-instream-ad','youtube','In-stream landscape video ad','paid','video',1920,1080,'16:9',
+    {recommendedDurationSeconds:30,sourceKey:'googleAds',thumbnailPreset:'youtube-video-thumbnail',
+      note:'Different campaign products have different duration and skip conditions.'}),
+
+  candidate('tiktok-feed','tiktok','Organic vertical video','organic','video',1080,1920,'9:16',
+    {note:'Vertical original; include clear on-screen captions and sound-off comprehension.'}),
+  candidate('tiktok-carousel','tiktok','Organic photo carousel','organic','image',1080,1920,'9:16',
+    {note:'Optional high-resolution vertical photo slides, not paid-carousel technical specifications.'}),
+  candidate('tiktok-infeed-ad','tiktok','Auction in-feed video ad','paid','video',1080,1920,'9:16',
+    {durationMaxSeconds:600,maxFileMB:500,sourceKey:'tiktok',
+      note:'Working export exceeds 540 × 960 Non-Spark minimum; check dynamic TikTok safe zone.'}),
+  candidate('tiktok-standard-carousel-ad','tiktok','Standard vertical Carousel ad','paid','image',720,1280,'9:16',
+    {carousel:{min:2,max:35,requiresMusic:true},fileFormats:['JPG','PNG'],sourceKey:'tiktokCarousel',
+      note:'TikTok Standard Carousel vertical specification, not the organic photo carousel.'}),
+
+  candidate('noticeboard-web','noticeboard','Web/mobile responsive notice','organic','poster',1200,630,'responsive',
+    {provisional:true,note:'Proposed source artwork; responsive live board does not mandate one image dimension.'}),
+  candidate('noticeboard-tv','noticeboard','Venue/onboard landscape notice','organic','poster',1920,1080,'16:9',
+    {provisional:true,note:'Proposed still adaptation for 16:9 displays; no live video delivery.'}),
+  candidate('noticeboard-kiosk','noticeboard','Touchscreen portrait notice','organic','poster',1080,1920,'9:16',
+    {provisional:true,note:'Proposed still adaptation for 9:16 kiosks; no live video delivery.'}),
+  candidate('noticeboard-web-ad','noticeboard','Proposed sponsored web notice','paid','poster',1200,630,'responsive',
+    {provisional:true,note:'Requires advertising inventory, pricing, disclosure and human notice approval.'}),
+  candidate('noticeboard-tv-ad','noticeboard','Proposed sponsored TV notice','paid','poster',1920,1080,'16:9',
+    {provisional:true,note:'Still-ad concept only; no purchased slots, screen-video playback or automation.'}),
+  candidate('noticeboard-kiosk-ad','noticeboard','Proposed sponsored kiosk notice','paid','poster',1080,1920,'9:16',
+    {provisional:true,note:'Still-ad concept only; requires host and publisher approval.'})
+]);
+const isVideo=post=>Number(post.durationSeconds)>0;
+export function creativeVariantsFor(post,delivery={}){
+  const video=isVideo(post);
+  const organic=delivery.organic||['facebook','instagram','youtube','tiktok','noticeboard'];
+  const paid=delivery.paid||[];
+  const paidPlanning=Boolean(delivery.paidPlanning);
+  return CREATIVE_PRESETS.filter(p=>{
+    const selected=p.distribution==='organic'?organic.includes(p.platform):paidPlanning&&paid.includes(p.platform);
+    const suitable=p.kind==='poster'||p.kind==='both'||(video?p.kind==='video':p.kind==='image');
+    return selected&&suitable;
+  }).map(p=>{
+    const asset=p.kind==='poster'?'Still-image adaptation':p.kind==='image'?'Image / carousel':video?'Video':'Image';
+    const fileFormats=p.kind==='both'&&!video?['JPG','PNG']:p.fileFormats;
+    const safeZone=p.safeZone&&Number.isFinite(p.safeZone.top)?{
+      topPercent:Math.round(p.safeZone.top*100),bottomPercent:Math.round(p.safeZone.bottom*100),
+      sidePercent:Math.round(p.safeZone.sides*100),
+      topPixels:Math.ceil(p.height*p.safeZone.top),bottomPixels:Math.ceil(p.height*p.safeZone.bottom),
+      sidePixels:Math.ceil(p.width*p.safeZone.sides),label:p.safeZone.label
+    }:{label:p.safeZone.label};
+    const thumb=MASTER_ASSET_PRESETS.find(t=>t.id===p.thumbnailPreset);
+    return {
+      id:p.id,platform:p.platform,placement:p.placement,distribution:p.distribution,
+      width:p.width,height:p.height,ratio:p.ratio,size:p.width+' × '+p.height,
+      asset,provisional:Boolean(p.provisional),note:p.note,
+      specVersion:CREATIVE_SPEC_VERSION.id,reviewedOn:p.reviewOn,sourceUrl:placementSources[p.sourceKey],
+      fileFormats,maximumDurationSeconds:p.durationMaxSeconds??null,
+      recommendedDurationSeconds:p.recommendedDurationSeconds??(video?30:null),
+      maxFileMB:p.maxFileMB??null,carousel:p.carousel||null,safeZone,
+      thumbnail:thumb?{label:thumb.label,width:thumb.width,height:thumb.height,ratio:thumb.ratio}:null,
+      checklist:video?['Master footage','Platform-specific edit','Captions/subtitles','Sound/music rights','Safe zone and CTA preview','Thumbnail if supported','Final approval']:
+        ['Original artwork','Platform-specific crop','Legible text and alt text','Image rights','CTA and link check','Final approval'],
+      approval:p.distribution==='paid'?'Requires explicit ad budget, targeting and launch approval':'Editorial approval before posting',
+      status:p.distribution==='paid'?'Unapproved paid creative':'Organic creative suggestion'
+    };
+  });
+}
+
+===== END FILE studio/social-placements.js =====
+
+===== BEGIN FILE studio/social-holiday-calendar.js =====
+// Queensland-wide public holidays with the appointed City of Redland show holiday.
+// Sources: https://www.qld.gov.au/recreation/travel/holidays/public
+// and https://www.qld.gov.au/recreation/travel/holidays/show
+// Show holidays are regional appointments: never infer Redland dates for unpublished years.
+// Christmas Eve is a PART-DAY holiday from 18:00; it is displayed as a notice only,
+// not treated as a full-day holiday for daily posting targets.
+const entries=[
+  ['2026-01-01',"New Year's Day"],['2026-01-26','Australia Day'],
+  ['2026-04-03','Good Friday'],['2026-04-04','The day after Good Friday'],
+  ['2026-04-05','Easter Sunday'],['2026-04-06','Easter Monday'],
+  ['2026-04-25','Anzac Day'],['2026-05-04','Labour Day'],
+  ['2026-08-10','Royal Queensland Show (City of Redland)'],
+  ['2026-10-05',"King's Birthday"],['2026-12-25','Christmas Day'],
+  ['2026-12-26','Boxing Day'],['2026-12-28','Additional Boxing Day holiday'],
+  ['2027-01-01',"New Year's Day"],['2027-01-26','Australia Day'],
+  ['2027-03-26','Good Friday'],['2027-03-27','The day after Good Friday'],
+  ['2027-03-28','Easter Sunday'],['2027-03-29','Easter Monday'],
+  ['2027-04-26','Anzac Day observed'],['2027-05-03','Labour Day'],
+  ['2027-08-09','Royal Queensland Show (City of Redland)'],
+  ['2027-10-04',"King's Birthday"],['2027-12-25','Christmas Day'],
+  ['2027-12-26','Boxing Day'],['2027-12-27','Additional Christmas Day holiday'],
+  ['2027-12-28','Additional Boxing Day holiday'],
+  ['2028-01-01',"New Year's Day"],['2028-01-03',"Additional New Year's Day holiday"],
+  ['2028-01-26','Australia Day'],['2028-04-14','Good Friday'],
+  ['2028-04-15','The day after Good Friday'],['2028-04-16','Easter Sunday'],
+  ['2028-04-17','Easter Monday'],['2028-04-25','Anzac Day'],
+  ['2028-05-01','Labour Day'],['2028-10-02',"King's Birthday"],
+  ['2028-12-25','Christmas Day'],['2028-12-26','Boxing Day'],
+  ['2029-01-01',"New Year's Day"],['2029-01-26','Australia Day'],
+  ['2029-03-30','Good Friday'],['2029-03-31','The day after Good Friday'],
+  ['2029-04-01','Easter Sunday'],['2029-04-02','Easter Monday'],
+  ['2029-04-25','Anzac Day'],['2029-05-07','Labour Day'],
+  ['2029-10-01',"King's Birthday"],['2029-12-25','Christmas Day'],
+  ['2029-12-26','Boxing Day']
+];
+export const QLD_REDLAND_PUBLIC_HOLIDAYS=Object.freeze(Object.fromEntries(entries));
+const publicHoliday=new Map(entries);
+const oneDay=86400000;
+const asDate=day=>Date.parse(day+'T00:00:00Z');
+const formatDate=ms=>new Date(ms).toISOString().slice(0,10);
+const weekday=day=>new Date(asDate(day)).getUTCDay();
+const nonworkingDay=day=>Boolean(publicHoliday.get(day))||[0,6].includes(weekday(day));
+export function calendarDaySignals(day){
+  const start=asDate(day),dow=weekday(day);
+  const name=publicHoliday.get(day)||'';
+  let lower=start,upper=start;
+  for(let n=0;n<6&&nonworkingDay(formatDate(lower-oneDay));n++)lower-=oneDay;
+  for(let n=0;n<6&&nonworkingDay(formatDate(upper+oneDay));n++)upper+=oneDay;
+  const days=(upper-lower)/oneDay+1;
+  const longWeekend=nonworkingDay(day)&&days>=3&&
+    Array.from({length:days},(_,i)=>weekday(formatDate(lower+i*oneDay))).some(w=>w===0||w===6);
+  return {
+    publicHoliday:Boolean(name),publicHolidayName:name,longWeekend,
+    partialPublicHoliday:day.endsWith('-12-24')?'Christmas Eve (from 6 pm)':'',
+    redlandShowHoliday:name.includes('City of Redland'),
+    weekday:dow
+  };
+}
+
+===== END FILE studio/social-holiday-calendar.js =====
