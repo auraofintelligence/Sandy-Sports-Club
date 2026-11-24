@@ -255,3 +255,14 @@
 .webmaster-help-item form{display:grid;gap:.6rem;margin:.65rem 0}
 .webmaster-help-item form label{display:grid;gap:.3rem;font-weight:700;font-size:.82rem}
 .webmaster-help-item form textarea,.webmaster-help-item form select{width:100%;padding:.65rem;border:1px solid #b8d4ce;border-radius:8px;font:inherit}
+
+
+/* PLFC-style immediate committee tool directory, each link opens its actual specialised D1 screen. */
+.clubhouse-quick-desks{padding:1.1rem;margin:1rem 0;border:1px solid #bad9d0;border-radius:12px;background:#f9fcfa}
+.clubhouse-quick-desks h3{font-size:1.18rem;margin:0 0 .5rem;color:#14565e}
+.clubhouse-quick-desks>p{font-size:.82rem;line-height:1.5;color:#46656d}
+.clubhouse-quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin:1rem 0 .2rem}
+.clubhouse-quick-grid a{display:flex;align-items:center;min-height:48px;padding:.65rem .85rem;border:1px solid #bfd8d2;border-radius:9px;background:#fff;color:#075f69;text-decoration:none;font-size:.86rem;font-weight:800;line-height:1.3}
+.clubhouse-quick-grid a:hover,.clubhouse-quick-grid a:focus-visible{border-color:#088795;background:#e8f6f1}
+@media(max-width:950px){.clubhouse-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.clubhouse-quick-grid{grid-template-columns:1fr}}
