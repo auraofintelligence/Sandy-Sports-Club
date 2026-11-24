@@ -224,3 +224,19 @@
 .member-item{display:flex;justify-content:space-between;gap:1rem;padding:.7rem;border-bottom:1px solid #d4e8dc}
 .club-member-preview-link{font-size:.8rem;min-height:40px}
 @media(max-width:660px){#member-sport-options,#member-time-options{grid-template-columns:1fr}.member-workspace-nav{padding:.5rem}.member-workspace-nav button{flex:1 1 100%}}
+
+/* Purpose-built meeting, newsletter, stock, event and onboarding work products. */
+.suite-special{margin:1rem 0;padding:1rem;border:1px solid #a6d0c5;border-radius:11px;background:#f3faf5}
+.suite-special>header h4{font-size:1.13rem;margin:0 0 .3rem;color:#145661}
+.suite-special>header p{font-size:.84rem;line-height:1.5;color:#49696d;margin:.4rem 0}
+.suite-special-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin:1rem 0}
+.suite-special-actions button{min-height:43px;background:#176d76}
+.suite-special #suite-special-preview{width:100%;padding:.75rem;border:1px solid #ccdfd6;border-radius:8px;background:#fff;overflow-wrap:anywhere}
+.suite-special #suite-special-preview iframe{display:block;width:100%;height:460px;border:1px solid #bacfc9;background:#fff}
+.suite-special [data-special-status]{font-size:.82rem;font-weight:700;color:#2d6566}
+.suite-stock-move{flex:1 1 100%;display:grid;grid-template-columns:1fr 1fr 2fr auto;align-items:end;gap:.5rem;margin:.55rem 0;padding:.7rem;border:1px solid #b8d5cf;border-radius:9px;background:#eff8f4}
+.suite-stock-move label{display:grid;gap:.3rem;font-weight:700;font-size:.83rem}
+.suite-stock-move input,.suite-stock-move select{min-width:0;width:100%;min-height:42px;border:1px solid #b3ccc5;border-radius:7px;padding:.5rem;font:inherit}
+.suite-stock-move button{background:#096d79;color:#fff;border:0;border-radius:7px;padding:.6rem;font:inherit;font-weight:800;min-height:42px}
+@media(max-width:850px){.suite-stock-move{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.suite-special{padding:.65rem}.suite-stock-move{grid-template-columns:1fr}}
