@@ -29,7 +29,7 @@ export async function briefsEndpoint(req,env,path,identity){
  if(path==='/api/studio/briefs'&&req.method==='POST'){
   const b=clean(await payload(req,20000)),briefId=id();
   await db.batch([
-   db.prepare('INSERT INTO studio_briefs(id,'+saveFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
+   db.prepare('INSERT INTO studio_briefs(id,'+saveFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
     .bind(briefId,...values(b),identity.id,identity.id,at,at),
    revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:1,action:'created',actor:identity,at,snapshot:b}),
    audit(db,identity,'production_brief_created','studio-brief',briefId,at)
