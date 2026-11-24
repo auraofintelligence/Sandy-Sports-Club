@@ -17,6 +17,7 @@ const formData=form=>Object.fromEntries(new FormData(form));
 const maySeePeople=()=>identity&&['webmaster','president','secretary','assistant_secretary','treasurer'].includes(identity.role);
 function previewMode(){
  const chosen=$('club-view-role').value;
+ const memberPreview=$('member-preview-link');if(memberPreview)memberPreview.hidden=chosen!=='member';
  // This is a layout preview only. Never changes server identity or permissions.
  const staffPreview=chosen!=='member';
  for(const tab of allTabs){
