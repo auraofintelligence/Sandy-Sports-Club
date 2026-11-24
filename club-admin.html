@@ -18,7 +18,9 @@
 <button data-tab="people">People & memberships</button>
 <button data-tab="interests">Holiday visitor interest</button>
 <button data-tab="records">Committee & events</button>
-<button data-tab="accounts">Office holders</button>
+<button data-tab="social">Social Media Hub</button>
+<button data-tab="constitution">Constitution builder</button>
+<button data-tab="accounts">Office holders & invitations</button>
 <button data-tab="briefs">Production briefs</button>
 <button data-tab="audit">Audit history</button>
 </nav></details>
@@ -91,9 +93,16 @@
 <label>Working details (JSON object)<textarea name="body" rows="5" placeholder='{"description":"Proposed activity; details to confirm"}'></textarea></label>
 <button type="submit">Save shared record</button><button id="record-cancel" type="button">Cancel</button></form></details>
 </section>
-<section id="club-accounts" class="club-section" hidden><h2>Office-holder and account reservations</h2>
-<p>Account reservations are real shared records but not invitations or appointments. No emails or invitations will be issued by these forms.</p>
-<div class="club-table-scroll"><table><thead><tr><th>Username</th><th>Proposed office</th><th>Role</th><th>State</th><th>Activated</th></tr></thead><tbody id="account-rows"></tbody></table></div>
+<section id="club-accounts" class="club-section" hidden><h2>Office holders & private invitations</h2>
+<p>Reserve prospective committee accounts first. When you choose <strong>Prepare invite</strong>, a one-time link is generated for you to copy or send privately. Officers choose their own passwords. No messages are sent automatically and no office appointment is implied.</p>
+<div class="club-table-scroll"><table><thead><tr><th>Username</th><th>Proposed office</th><th>Role</th><th>State</th><th>Activated</th><th>Private setup</th></tr></thead><tbody id="account-rows"></tbody></table></div>
+<div class="club-private-invite" id="club-invitation-result" role="status" hidden>
+ <h3>Private officer setup link</h3>
+ <p>This link works once and expires after 48 hours. Copy or send it directly to the intended officer. It has <strong>not</strong> been sent automatically.</p>
+ <label>One-time activation link<input id="club-invitation-link" type="text" readonly autocomplete="off" spellcheck="false"></label>
+ <div class="club-private-actions"><button id="club-invite-copy" type="button">Copy setup link</button><a id="club-invite-email" href="#" rel="nofollow">Prepare email</a><button id="club-invite-clear" type="button">Hide link</button></div>
+ <p id="club-invitation-message"></p>
+</div>
 <details class="club-panel"><summary>Reserve an account (no invitation)</summary>
 <form id="account-form"><div class="club-form-grid"><label>Username<input name="username" minlength="3" maxlength="80" required></label>
 <label>Display name<input name="displayName" maxlength="100"></label>
@@ -102,6 +111,18 @@
 <option value="member">Future member</option><option value="webmaster_demo">View-only webmaster demo</option></select></label>
 <label>Office label<input name="office" maxlength="100" placeholder="Prospective role"></label></div>
 <button type="submit">Reserve (do not invite)</button></form></details>
+</section>
+<section id="club-social" class="club-section" hidden>
+<h2>Social Media Hub</h2>
+<p class="club-note">Your shared Social Studio lives here with the annual, monthly, weekly and daily calendar, ideas inbox and production handoffs. Work is saved to Sandy D1 when deliberately submitted. Publication and paid promotion remain disabled.</p>
+<p><a href="/social-studio.html">Open Social Studio as a full page</a> if you need a wider canvas.</p>
+<iframe class="club-tool-frame" data-tool="social" data-src="/social-studio.html?workspace=1" title="Sandy Social Media Hub working studio" loading="lazy"></iframe>
+</section>
+<section id="club-constitution" class="club-section" hidden>
+<h2>Constitution builder</h2>
+<p class="club-note">Adapt Sandy's existing PLFC-based constitution drafting tool and save reviewable working drafts into shared club records. Drafts and exports do not adopt or register a constitution.</p>
+<p><a href="/constitution.html">Open constitution builder as a full page</a> or continue below.</p>
+<iframe class="club-tool-frame" data-tool="constitution" data-src="/constitution.html?workspace=1" title="Sandy shared constitution drafting builder" loading="lazy"></iframe>
 </section>
 <section id="club-briefs" class="club-section" hidden><h2>Shared production and Social Studio handoffs</h2>
 <p>Production briefs can be prepared for internal work or a possible Ready SET Co-op arrangement. No production is commissioned without a separately authorised decision.</p>
