@@ -4,3 +4,25 @@
 @media(max-width:780px){.proposal-strip{display:block;font-size:.72rem}.proposal-strip span{display:block}.site-header{padding:.8rem 1.2rem}.menu-toggle{display:block;border:1px solid #acd2d0;background:none;border-radius:7px;color:#fff;padding:.5rem .8rem}.site-header nav{display:none;position:absolute;top:100%;left:0;right:0;background:#102d40;padding:1rem;flex-direction:column;align-items:stretch}.site-header nav.open{display:flex}.site-header nav a{padding:.6rem;font-size:1rem}.hero{min-height:660px}.hero-content{padding:5rem 1.5rem 5rem}.hero-shade{background:linear-gradient(90deg,rgba(6,31,45,.9),rgba(6,31,45,.4)),linear-gradient(0deg,#102d40a8,transparent)}.hero h1{font-size:clamp(3.3rem,12vw,5rem)}.section{padding:4rem 1.2rem}.section-heading{display:block}.section-heading>p{max-width:100%;margin-top:1rem}.programme-grid,.place-grid,.funding-grid{grid-template-columns:1fr 1fr}.calc-shell,.contribute,.clubhouse-link{grid-template-columns:1fr}.place-note,.evidence-strip{display:block}.place-note strong,.evidence-strip strong{display:block;margin-bottom:.5rem}.clubhouse-link img{height:250px}.footer-top{grid-template-columns:1fr 1fr}.footer-top>div:first-child{grid-column:span 2}}
 @media(max-width:540px){.brand{font-size:.9rem}.brand small{font-size:.48rem}.feature-grid,.programme-grid,.place-grid,.funding-grid,.system-grid,.footer-top{grid-template-columns:1fr}.feature-card.large{grid-column:span 1;min-height:470px}.footer-top>div:first-child{grid-column:auto}.programme-card img,.place-grid img{height:210px}.calc-controls,.calc-output,.brief-form{padding:1.2rem}.result-grid{grid-template-columns:1fr}.result-grid div{display:flex;justify-content:space-between;align-items:center}.result-grid strong{margin:0}.mozzie img{height:130px}.footer-bottom{display:block}.footer-bottom span{display:block;margin-bottom:.5rem}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}.button:hover,.header-cta:hover{transform:none}}
+
+/* The secure club login must never disappear behind the footer or the desktop menu. */
+.site-header .header-signin{
+ display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 auto;min-height:40px;padding:.55rem .8rem;
+ border:1px solid #a3d9cf;border-radius:100px;color:#fff;
+ background:#155b67;text-decoration:none;font-size:.82rem;font-weight:850;
+ white-space:nowrap;
+}
+.site-header .header-signin:hover,.site-header .header-signin:focus-visible{
+ background:#d3f3e9;color:#103747;
+}
+.site-header .header-signin[aria-current=page]{
+ background:#ffbf4f;color:#102d40;border-color:#ffbf4f;
+}
+@media(max-width:600px){
+ .site-header{gap:.45rem}
+ .site-header .header-signin{min-height:36px;padding:.45rem .55rem;font-size:.76rem}
+ .site-header .brand{min-width:0}
+ .site-header .brand small{font-size:.53rem}
+ .site-header .menu-toggle{padding:.45rem .55rem}
+}
