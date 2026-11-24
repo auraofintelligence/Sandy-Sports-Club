@@ -12,7 +12,7 @@ const pages = [
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
   ['facilities.html','Facilities'],['programme.html','Events & film'],
-  ['grants.html','Funding'],['clubhouse.html','Clubhouse']
+  ['grants.html','Funding'],['clubhouse.html','Clubhouse'],['club-login.html','Club sign-in']
 ];
 const mainSectionFor = page => {
   if(page==='index.html')return 'index.html';
@@ -25,7 +25,7 @@ const mainSectionFor = page => {
   return 'clubhouse.html';
 };
 const nav = primaryPages.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':mainSectionFor(here)===url?'data-section-active="true"':''}>${label}</a>`).join('');
-document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
+document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-signin" href="/club-login.html" ${here==='club-login.html'?'aria-current="page"':''}>Sign in</a><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
 // Shared navigation is assembled once for every page.
 const footerSections = [
   ['Explore',[['sports.html','Sports catalogue'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club']]],
