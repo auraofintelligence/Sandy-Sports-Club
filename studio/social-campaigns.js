@@ -61,8 +61,30 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
   let metrics=[],pendingReport=null,metricsPlatform='facebook',metricsNotice='',editingMilestone='';
   let eventCandidates=[],eventSelected=new Set(),eventVerified=new Set(),eventImportNotice='',eventImportError='',eventLoading=false;
   const metricsKey=()=> 'sandy-social-performance-v1:'+(reviewOnly?'review':'committee');
-  const importMetrics=()=>{try{const data=JSON.parse(localStorage.getItem(metricsKey())||'[]');metrics=Array.isArray(data)?data.slice(0,15000):[];}catch{metrics=[];}};
-  const storeMetrics=()=>{try{localStorage.setItem(metricsKey(),JSON.stringify(metrics));return true;}catch{return false;}};
+  let metricsVersion=0,lastMetrics=[];
+  const importMetrics=async()=>{
+    if(strictShared){
+      const row=await api('/api/committee/social-metrics',{cache:'no-store'});
+      metricsVersion=row.version||0;metrics=Array.isArray(row.metrics)?row.metrics:[];
+      lastMetrics=structuredClone(metrics);return;
+    }
+    try{const data=JSON.parse(localStorage.getItem(metricsKey())||'[]');metrics=Array.isArray(data)?data.slice(0,15000):[]}
+    catch{metrics=[]}
+  };
+  const storeMetrics=async()=>{
+    if(strictShared){
+      try{
+        const result=await api('/api/committee/social-metrics',{method:'POST',
+         body:JSON.stringify({version:metricsVersion,metrics})});
+        metricsVersion=result.version;lastMetrics=structuredClone(metrics);return true;
+      }catch(e){
+        metrics=structuredClone(lastMetrics);
+        metricsNotice='Imported metrics were NOT saved: '+(e.message||'shared service unavailable');
+        return false;
+      }
+    }
+    try{localStorage.setItem(metricsKey(),JSON.stringify(metrics));return true}catch{return false}
+  };
   const linkedMetrics=()=>linkMetrics(metrics,lastPreview?.posts||[],postEdits);
   let metricLookup=new Map();
   const metricsForPost=id=>metricLookup.get(id)||[];
@@ -460,7 +482,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       const remote=normaliseSettings(row.settings||defaultCampaignSettings());
       const local=!reviewOnly&&!strictShared?browserDraft():null;
       settings=local||remote;saved=JSON.stringify(remote);sharedSettingsReady=true;
-      loaded=true;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();importMetrics();
+      loaded=true;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();await importMetrics();
       latestSave={version:row.version,updatedAt:row.updatedAt,updatedByName:row.updatedByName,updatedOffice:row.updatedOffice};
       historyRows=null;historyError='';
       saveState=local||reviewOnly?'local':row.version>0?'shared':'idle';
@@ -473,7 +495,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       if(!strictShared&&e.status>=500){
         settings=browserDraft()||normaliseSettings(defaultCampaignSettings());
         saved=JSON.stringify(settings);loaded=true;sharedSettingsReady=false;
-        version=0;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();importMetrics();
+        version=0;monthDraft=null;batchMonth='';workingDayPlans=null;dayFormTouched=false;await loadEdits();await importMetrics();
         latestSave=null;saveState='local';historyRows=null;
         saveMessage='The club database is unavailable. Changes can be kept in this browser, but not shared yet.';
         notice=saveMessage;
@@ -840,8 +862,9 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       }));
       metrics.push(...records);
       if(metrics.length>15000)metrics=metrics.slice(-15000);
-      metricsNotice=storeMetrics()?'Imported '+records.length+' rows locally. Match any unlinked records below.':
-        'Storage is full. Export or reduce your report; the imported rows are available for this visit only.';
+      const savedMetrics=await storeMetrics();metricsNotice=savedMetrics?
+        (strictShared?'Imported '+records.length+' rows into the shared club performance register.':'Imported '+records.length+' rows locally.'):
+        'Performance metrics were NOT saved. Check the shared connection and retry.';
       pendingReport=null;draw();return;
     }
     if(b.hasAttribute('data-metric-link')){
@@ -856,8 +879,8 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
         x.platform===ref.platform&&x.externalId===ref.externalId&&x.postUrl===ref.postUrl);
       if(!exists)postEdits[postId].externalRefs=[...(postEdits[postId].externalRefs||[]),ref];
       const persisted=await persistEdits();if(!persisted){draw();return;}
-      storeMetrics();
-      metricsNotice='Linked a '+record.platform+' report row to '+target.date+'.';draw();return;
+      const linkedSaved=await storeMetrics();
+      metricsNotice=linkedSaved?'Linked the '+record.platform+' report row to '+target.date+' in the shared register.':'The linked result could not be saved.';draw();return;
     }
     if(b.hasAttribute('data-analytics-export')){
       if(!lastPreview)return;
