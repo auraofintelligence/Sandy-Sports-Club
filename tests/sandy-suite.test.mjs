@@ -52,3 +52,17 @@ test('a member and demo account cannot access the committee suite even without a
  }
  await assert.rejects(()=>suiteEndpoint(new Request('https://sandy.local/api/suite/desks'),{},'/api/suite/desks',null),e=>e.status===401);
 });
+
+test('the high-value PLFC operations have real purpose-specific editor assistance',()=>{
+ const app=read('../club-workflow-assist.js');
+ assert.ok(app.includes('Prepare draft minutes'));
+ assert.ok(app.includes('Download newsletter HTML'));
+ assert.ok(app.includes('Calculate stock available'));
+ assert.ok(app.includes('Download member pack'));
+ assert.ok(app.includes('Download grant checklist')||app.includes('Prepare grant checklist'));
+ assert.ok(app.includes('Tick, Flick & Debrief'));
+ assert.ok(!app.includes('fetch('));
+ assert.ok(read('../club-suite-ui.js').includes('setupWorkflowAssist'));
+ assert.deepEqual(SUITE_BY_KEY['stock'].roles,['webmaster','treasurer']);
+ assert.ok(!SUITE_BY_KEY['meetings'].roles.includes('committee'));
+});
