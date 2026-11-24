@@ -1,144 +1,130 @@
-// Sandy Sports production/handoff ledger. Browser-local and explicitly unauthenticated.
-const KEY="sandy-social-studio-handoffs-v1";
-const form=document.getElementById("sandy-handoff-form");
-const statusBox=document.getElementById("sandy-handoff-status");
-const list=document.getElementById("sandy-handoff-list");
-const historyBox=document.getElementById("sandy-handoff-revisions");
-const escapeHTML=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const isHttps=v=>!v||/^https:\/\/[^\s]+$/i.test(v);
-const now=()=>new Date().toISOString();
-const guid=()=>crypto.randomUUID?.()||"draft-"+Date.now()+"-"+Math.random().toString(36).slice(2);
-let state={version:1,records:[]};
-try{const previous=JSON.parse(localStorage.getItem(KEY)||"null");if(previous?.version===1&&Array.isArray(previous.records))state=previous}catch{}
-let currentId="";
-function note(message,bad=false){if(!statusBox)return;statusBox.textContent=message;statusBox.style.color=bad?"#9f3020":"#176b5c"}
-function snapshot(){return JSON.parse(JSON.stringify(state))}
-function persist(){
- try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch{return false}
+// Sandy production desk: D1-backed, authenticated, server-signed. No localStorage fallback.
+const form=document.querySelector('#sandy-handoff-form');
+const list=document.querySelector('#sandy-handoff-list');
+const revisions=document.querySelector('#sandy-handoff-revisions');
+const notice=document.querySelector('#sandy-handoff-status');
+const safe=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;',">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
+let briefs=[],opened=null,enabled=false,role='';
+async function api(path,{method='GET',data}={}){
+ const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+  headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});
+ let body={};try{body=await response.json()}catch{}
+ if(!response.ok)throw Error(body.error||'Shared service error ('+response.status+')');
+ return body;
 }
-function cleanData(raw){
- const trim=(x,max=150)=>String(raw.get(x)||"").trim().slice(0,max);
- return {
- title:trim("title",160),date:trim("date",10),reference:trim("reference",160),
- brief:trim("brief",5000),producer:trim("producer",32),reviewer:trim("reviewer",32),
- status:trim("status",24),due:trim("due",10),author:trim("author",100),
- decisionBy:trim("decisionBy",100),evidence:trim("evidence",700),
- publishedUrl:trim("publishedUrl",700),notes:trim("notes",5000)
- };
-}
-const labels={
- draft:"Draft brief",proposed:"Handoff proposed, not sent",prepared:"Prepared for committee review",
- revision:"Changes requested (self-reported)",evidence:"Decision evidence supplied, not verified",closed:"Closed / withdrawn",
- "ready-set":"Ready SET Co-op (proposed)","in-house":"In-house / volunteer idea",
- other:"Other contractor (proposed)",founding:"Prospective founding group",
- committee:"Committee (when established)",secretary:"Secretary (when appointed)",webmaster:"Webmaster (when activated)"
-};
-function uniqueDiff(a,b){
- const rows=[];for(const field of Object.keys(b)){if(JSON.stringify(a?.[field])!==JSON.stringify(b[field])){
-  rows.push({field,from:String(a?.[field]??"").slice(0,400),to:String(b[field]??"").slice(0,400)});
- }}return rows;
-}
-function setFields(record){
- form.reset();for(const [field,value] of Object.entries(record||{})){
-  if(form.elements[field]&&typeof value==="string")form.elements[field].value=value;
+function alert(message,bad=false){if(notice){notice.textContent=message;notice.style.color=bad?'#9f3020':'#176b5c'}}
+const labels={draft:'Draft',proposed:'Proposed handoff',prepared:'Prepared',revision:'Changes requested',evidence:'Evidence referenced (unverified)',closed:'Closed',
+ assigned:'Assigned (authorised)',delivered:'Delivered',approved:'Approved (server)',rejected:'Rejected (server)',published:'Published link recorded',
+ 'ready-set':'Ready SET Co-op (proposed)','in-house':'In-house / volunteer',other:'Other proposed provider'};
+function blank(){form.reset();form.elements.id.value='';opened=null;alert('New unsaved production brief.')}
+function formBody(){
+ const b=Object.fromEntries(new FormData(form));return {
+ title:b.title||'',date:b.date||'',sourcePostId:b.reference||'',sourceUrl:'',brief:b.brief||'',
+ producer:b.producer||'in-house',reviewer:b.reviewer||'founding',status:b.status||'draft',
+ due:b.due||'',author:b.author||'',decisionBy:b.decisionBy||'',evidence:b.evidence||'',
+ publishedUrl:b.publishedUrl||'',notes:b.notes||''
+ }}
+function edit(b){
+ blank();opened=b;
+ const map={reference:'sourcePostId'};
+ for(const [k,val] of Object.entries(b)){
+  const key=k==='sourcePostId'?'reference':k;
+  if(form.elements[key]&&typeof val==='string')form.elements[key].value=val;
  }
- currentId=record?.id||"";
- const idInput=document.getElementById("sandy-handoff-id");if(idInput)idInput.value=currentId;
+ form.elements.id.value=b.id;
+ form.elements.status.value=['draft','proposed','prepared','revision','evidence','closed'].includes(b.status)?b.status:'prepared';
+ form.scrollIntoView?.({behavior:'smooth'});
+ alert('Editing shared revision '+b.version+' of '+b.title+'. All changes require server authentication.');
 }
 function render(){
  if(!list)return;
- const records=[...state.records].sort((a,b)=>b.modifiedAt.localeCompare(a.modifiedAt));
- list.innerHTML=records.map(item=>'<article class="studio-record"><span class="studio-record-tag">'+escapeHTML(labels[item.status]||item.status)+'</span>'+
- '<h4>'+escapeHTML(item.title||"Untitled brief")+'</h4>'+
- '<p>'+escapeHTML((item.date||"Unscheduled")+(item.producer?" · "+(labels[item.producer]||item.producer):""))+'</p>'+
- '<p class="studio-small">Revision '+item.revision+' · Last local save '+escapeHTML(new Date(item.modifiedAt).toLocaleString("en-AU",{timeZone:"Australia/Brisbane"}))+'</p>'+
- '<p class="studio-small">'+escapeHTML(item.reviewer?("Review: "+(labels[item.reviewer]||item.reviewer)):"")+'</p>'+
- (item.evidence?'<p><a href="'+escapeHTML(item.evidence)+'" target="_blank" rel="noopener noreferrer">Decision reference (unverified)</a></p>':"")+
- (item.publishedUrl?'<p><a href="'+escapeHTML(item.publishedUrl)+'" target="_blank" rel="noopener noreferrer">Recorded post link (unverified)</a></p>':"")+
- '<div class="studio-buttons"><button type="button" data-edit="'+escapeHTML(item.id)+'">Edit</button><button type="button" data-copy="'+escapeHTML(item.id)+'">Copy production brief</button><button type="button" data-revisions="'+escapeHTML(item.id)+'">Revisions</button></div></article>').join("")||'<p>No production briefs yet. Select an item from the Studio or create one in the form.</p>';
+ list.innerHTML=briefs.map(b=>'<article class="studio-record"><span class="studio-record-tag">'+safe(labels[b.status]||b.status)+'</span>'+
+  '<h4>'+safe(b.title)+'</h4><p>'+safe((b.date||'Unscheduled')+' · '+(labels[b.producer]||b.producer))+'</p>'+
+  '<p class="studio-small">Shared revision '+b.version+' · '+safe(b.updatedAt||'')+' · last edited by account '+safe(b.updatedBy)+'</p>'+
+  (b.evidence?'<p><a href="'+safe(b.evidence)+'" target="_blank" rel="noopener noreferrer">Decision reference (unverified)</a></p>':'')+
+  (b.publishedUrl?'<p><a href="'+safe(b.publishedUrl)+'" target="_blank" rel="noopener noreferrer">Publication link (unverified)</a></p>':'')+
+  '<div class="studio-buttons"><button type="button" data-brief-edit="'+b.id+'">Edit</button>'+
+  '<button type="button" data-brief-revisions="'+b.id+'">Server history</button>'+
+  '<button type="button" data-brief-propose="'+b.id+'">Propose handoff</button></div></article>').join('')||
+  '<p>No shared production briefs yet. Select a Studio post to prepare one.</p>';
 }
-function showHistory(id){
- const item=state.records.find(x=>x.id===id);if(!item)return;
- historyBox.innerHTML='<h4>'+escapeHTML(item.title)+'</h4>'+
- item.revisions.slice().reverse().map(rev=>'<section class="studio-revision"><strong>Local revision '+rev.version+'</strong> · '+escapeHTML(new Date(rev.at).toLocaleString("en-AU",{timeZone:"Australia/Brisbane"}))+
- '<p>Entered by: '+escapeHTML(rev.actor||"Not specified")+' (self-entered, unverified)</p>'+
- '<p>'+escapeHTML(rev.changes.map(c=>c.field).join(", ")||"No field changes")+'</p>'+
- '<details><summary>Before and after</summary><ul>'+
- rev.changes.map(c=>'<li><strong>'+escapeHTML(c.field)+'</strong><p>Before: '+escapeHTML(c.from)+'</p><p>After: '+escapeHTML(c.to)+'</p></li>').join("")+
- '</ul></details></section>').join("");
- document.getElementById("sandy-handoff-history")?.setAttribute("open","");
+async function reload(){
+ const data=await api('/api/studio/briefs');briefs=data.briefs||[];render();
 }
-function briefText(item){
- return [
- "SANDY SPORTS / PROPOSED PRODUCTION BRIEF",
- "DRAFT FOR REVIEW ONLY: no real club permission, contract or commission is implied.",
- "Title: "+item.title,
- "Reference: "+(item.reference||"Pending"),
- "Suggested date: "+(item.date||"To determine"),
- "Proposed producer: "+(labels[item.producer]||item.producer),
- "Review route: "+(labels[item.reviewer]||item.reviewer),
- "Planning state: "+(labels[item.status]||item.status),
- "Brief:\n"+(item.brief||"Not yet written"),
- "Questions/feedback:\n"+(item.notes||"None"),
- "Source / decision reference: "+(item.evidence||"None; approval not verified"),
- "Prepared by (self-entered): "+(item.author||"Not supplied"),
- "Requires formal committee approval, production rights, asset permissions, publishing review and an agreed commissioning process."
- ].join("\n\n");
-}
-function download(filename,content,type){
- const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
-}
-const csvQuote=v=>'"'+String(v??"").replace(/"/g,'""').replace(/\r?\n/g," ")+'"';
-form?.addEventListener("submit",e=>{
- e.preventDefault();
- const data=cleanData(new FormData(form));
- if(!data.title){note("Add a working title.",true);return}
- if(!isHttps(data.evidence)||!isHttps(data.publishedUrl)){note("Decision and publication links must use HTTPS.",true);return}
- if(data.status==="evidence"&&(!data.evidence||!data.decisionBy)){
-  note("To record a proposed decision, add who reportedly made it and the supporting HTTPS reference. It remains unverified.",true);return;
+form?.addEventListener('submit',async ev=>{
+ ev.preventDefault();if(!enabled){alert('Sign in and connect the shared D1 database first.',true);return}
+ const b=formBody();
+ if(!b.title.trim()){alert('Enter a title.',true);return}
+ const button=form.querySelector('button[type=submit]');button.disabled=true;
+ try{
+  const saved=opened?await api('/api/studio/briefs/'+opened.id,{method:'PATCH',data:{...b,version:opened.version}}):
+    await api('/api/studio/briefs',{method:'POST',data:b});
+  await reload();const next=briefs.find(x=>x.id===saved.id);
+  if(next)edit(next);
+  alert('Shared revision '+saved.version+' saved. The server recorded the signed-in account and timestamp. No approval or message was issued.');
+ }catch(e){alert('Not saved: '+e.message,true)}
+ finally{button.disabled=false}
+});
+document.querySelector('#sandy-handoff-clear')?.addEventListener('click',blank);
+list?.addEventListener('click',async ev=>{
+ const button=ev.target.closest('button');if(!button)return;
+ const id=button.dataset.briefEdit||button.dataset.briefRevisions||button.dataset.briefPropose,b=briefs.find(x=>x.id===id);
+ if(!b)return;
+ if(button.dataset.briefEdit){edit(b);return}
+ if(button.dataset.briefRevisions){
+  try{
+   const data=await api('/api/studio/briefs/'+id+'/revisions');
+   revisions.innerHTML='<h4>'+safe(b.title)+' · server revisions</h4>'+
+    (data.revisions||[]).map(x=>'<article class="studio-revision"><strong>v'+x.version+'</strong> · '+safe(x.at)+' · '+safe(x.office)+' ('+safe(x.role)+')'+
+      '<p>'+safe(x.operation)+' · '+safe((x.changes?.changed||[]).join(', '))+'</p></article>').join('');
+   document.querySelector('#sandy-handoff-history')?.setAttribute('open','');
+  }catch(e){alert(e.message,true)}
+  return;
  }
- const previous=state.records.find(x=>x.id===currentId);
- const changes=uniqueDiff(previous||{},data);
- if(previous&&!changes.length){note("No changes since the last local save.");return}
- const when=now(),updated=previous?{...previous,...data,modifiedAt:when,revision:previous.revision+1}:
-  {...data,id:guid(),createdAt:when,modifiedAt:when,revision:1,revisions:[]};
- updated.revisions=[...(previous?.revisions||[]),{version:updated.revision,at:when,actor:data.author||"Not supplied",changes:changes.slice(0,30)}].slice(-70);
- if(previous)state.records=state.records.map(item=>item.id===previous.id?updated:item);
- else state.records.push(updated);
- if(!persist()){note("Browser storage is full or unavailable. Export JSON before leaving.",true);return}
- currentId=updated.id;form.elements.id.value=currentId;
- render();showHistory(currentId);
- note("Saved locally as revision "+updated.revision+". This is not a signed committee approval.");
-});
-document.getElementById("sandy-handoff-clear")?.addEventListener("click",()=>{setFields();note("New blank brief. No record changed.")});
-document.getElementById("sandy-handoff-export")?.addEventListener("click",()=>{
- download("sandy-social-handoff-drafts.json",JSON.stringify({notice:"Unauthenticated browser-local planning records, not certified approvals.",...snapshot()},null,2),"application/json;charset=utf-8");
- note("Exported all local briefs and revisions as JSON.");
-});
-document.getElementById("sandy-handoff-export-csv")?.addEventListener("click",()=>{
- const fields=["id","title","date","producer","reviewer","status","due","author","decisionBy","evidence","publishedUrl","reference","brief","notes","revision","createdAt","modifiedAt"];
- download("sandy-social-handoff-briefs.csv","\uFEFF"+[fields.join(","),...state.records.map(record=>fields.map(f=>csvQuote(record[f])).join(","))].join("\r\n"),"text/csv;charset=utf-8");
- note("Exported a CSV of the local handoff register. Full revision history is in JSON.");
-});
-list?.addEventListener("click",async e=>{
- const b=e.target.closest("button[data-edit],button[data-copy],button[data-revisions]");if(!b)return;
- const id=b.dataset.edit||b.dataset.copy||b.dataset.revisions,item=state.records.find(x=>x.id===id);if(!item)return;
- if(b.dataset.edit){setFields(item);form.scrollIntoView({behavior:"smooth"});note("Editing local brief "+item.revision+". No record is changed until you save.");}
- if(b.dataset.revisions){showHistory(id);document.getElementById("sandy-handoff-history")?.scrollIntoView({behavior:"smooth"});}
- if(b.dataset.copy){
-  try{await navigator.clipboard.writeText(briefText(item));note("Copied proposal brief. No message or commission was sent.");}
-  catch{note("Clipboard unavailable; export the CSV or JSON instead.",true);}
+ if(button.dataset.briefPropose){
+  const provider=prompt('Proposed producer for this brief (e.g. Ready SET Co-op):',b.producer||'ready-set');
+  if(provider===null)return;
+  try{
+   const result=await api('/api/studio/briefs/'+id+'/handoff',{method:'POST',
+     data:{producer:provider,due:b.due||'',authorised:false}});
+   alert('Handoff proposal '+result.handoffId+' stored in the shared register. Not commissioned and no message sent.');
+  }catch(e){alert('Handoff not recorded: '+e.message,true)}
  }
 });
-window.addEventListener("sandy-studio:handoff",event=>{
- const draft=event.detail||{};
- setFields();
- form.elements.title.value=String(draft.title||"Sandy Sports content idea").slice(0,160);
- form.elements.date.value=/^20\d\d-\d\d-\d\d$/.test(draft.plannedDate||"")?draft.plannedDate:"";
- form.elements.reference.value=String(draft.postId||"Studio preview draft").slice(0,160);
- form.elements.brief.value=[draft.body||"",Array.isArray(draft.channels)?"Suggested channels: "+draft.channels.join(", "):""].filter(Boolean).join("\n\n").slice(0,5000);
- form.elements.status.value="draft";
- note("Loaded selected Studio content into an unsaved brief. Choose the proposed producer and reviewer, then save locally.");
+function exportData(csv=false){
+ if(!enabled){alert('Shared records are unavailable. Nothing was exported.',true);return}
+ let text,name,type;
+ if(csv){
+  const names=['id','title','date','sourcePostId','producer','reviewer','status','due','evidence','publishedUrl','version','createdBy','updatedBy','createdAt','updatedAt'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""').replace(/\n/g,' ')+'"';
+  text='\uFEFF'+[names.join(','),...briefs.map(b=>names.map(k=>q(b[k])).join(','))].join('\r\n');
+  name='sandy-shared-production-briefs.csv';type='text/csv;charset=utf-8';
+ }else{
+  text=JSON.stringify({source:'Authenticated Sandy D1 shared production register',exportedAt:new Date().toISOString(),records:briefs},null,2);
+  name='sandy-shared-production-briefs.json';type='application/json;charset=utf-8';
+ }
+ const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+ alert('Exported the currently loaded authenticated shared production register.');
+}
+document.querySelector('#sandy-handoff-export')?.addEventListener('click',()=>exportData(false));
+document.querySelector('#sandy-handoff-export-csv')?.addEventListener('click',()=>exportData(true));
+window.addEventListener('sandy-studio:handoff',ev=>{
+ if(!enabled){alert('Connect to shared club records before preparing a handoff.',true);return}
+ const d=ev.detail||{};blank();
+ form.elements.title.value=String(d.title||'Sandy Sports content').slice(0,160);
+ form.elements.date.value=/^20\d\d-\d\d-\d\d$/.test(d.plannedDate||'')?d.plannedDate:'';
+ form.elements.reference.value=String(d.postId||'').slice(0,160);
+ form.elements.brief.value=[d.body||'',Array.isArray(d.channels)?'Channels: '+d.channels.join(', '):''].join('\n\n').slice(0,5000);
+ alert('Studio draft loaded into an UNSAVED production brief. Save to the shared database after checking its details.');
 });
-render();
+(async()=>{
+ if(!form)return;
+ try{
+  const s=await api('/api/session');
+  enabled=Boolean(s.authenticated&&s.storageReady&&
+   ['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(s.identity?.role));
+  if(!enabled){form.closest('.studio-handoff')?.setAttribute('hidden','');return}
+  role=s.identity.role;await reload();alert('Connected to the shared production register. Server-stamped revisions are enabled.');
+ }catch(e){form.closest('.studio-handoff')?.setAttribute('hidden','');alert('Shared production register is not connected: '+e.message,true)}
+})();
