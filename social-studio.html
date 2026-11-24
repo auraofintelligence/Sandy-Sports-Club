@@ -10,9 +10,9 @@
 <link rel="stylesheet" href="/studio/social-campaigns.css?v=20261123-topic-fix">
 <link rel="stylesheet" href="/studio/sandy-studio.css?v=20261124-temporal-parity">
 <script defer src="/site.js"></script>
-<script type="module" src="/studio/sandy-studio-app.js?v=20261124-temporal-parity"></script>
-<script type="module" src="/studio/sandy-workflows.js"></script>
-<script type="module" src="/studio/sandy-brainstorm.js?v=20261124-parity"></script>
+<script type="module" src="/studio/sandy-studio-app.js?v=20261124-shared-api"></script>
+<script type="module" src="/studio/sandy-workflows.js?v=20261124-shared-api"></script>
+<script type="module" src="/studio/sandy-brainstorm.js?v=20261124-shared-api"></script>
 </head>
 <body>
 <div data-site-header></div>
@@ -22,23 +22,23 @@
     <p class="eyebrow">COMMITTEE TOOLS · SANDY SPORTS CLUB PROPOSAL</p>
     <h1>Social Studio</h1>
     <p>Plan by day, week or month. Shape 32 sport and community topic layers, timing signals and creative formats. Keep every proposed activity distinct from an approved club event.</p>
-    <div class="studio-quick-links"><a href="/committee.html#social">Committee desk</a><a href="/social-planner.html">Simple pattern calendar</a><a href="/join.html">Expressions of interest</a></div>
+    <div class="studio-quick-links"><a href="/club-admin.html">Shared administration</a><a href="/social-planner.html">Simple pattern calendar</a><a href="/join.html">Expressions of interest</a></div>
   </div>
   <img src="/studio/sandy-topic-icons.svg" alt="Sandy Sports activity and community icons" width="300" height="300" loading="eager">
 </section>
 <div class="studio-content">
   <div class="studio-security" role="note">
-    <strong>Browser-only planning prototype, not an authorised committee system.</strong>
-    <span>Saved plans and revisions stay in this browser. No verified officer identity, shared database, actual approval, publishing connection, member records, SMS or paid advertising is active. Any self-entered authorisation evidence must still be confirmed by a real committee.</span>
+    <strong>Shared club planning requires an authenticated Worker and Sandy D1 database.</strong>
+    <span>Once the shared backend is activated, sign-in and role checks are required for settings, post edits, briefs and revisions. Formal club approval, automated publishing, SMS and advertising expenditure remain disabled until separately authorised.</span>
   </div>
-  <div class="studio-local-events"><button type="button" id="studio-import-demo-events" class="button outline">Import tentative dates from Sandy committee demo</button><a href="/committee.html#events">Review local event desk</a><p class="studio-small" id="studio-import-events-status" role="status">Optional. Only drafts already stored in this browser are available. Imports are marked tentative and still require separate committee verification.</p></div>
+  <div class="studio-local-events"><a href="/club-admin.html">Open shared event register</a><p class="studio-small">The Social Studio calendar importer can read shared committee events and meetings. Proposed dates are not automatically authorised for publication.</p></div>
 <div class="studio-highlights" aria-label="Main studio features">
     <span><strong>DAY</strong> · Individual post schedule</span>
     <span><strong>WEEK</strong> · Reusable day patterns</span>
     <span><strong>MONTH</strong> · Pattern sliders & previews</span>
     <span><strong>SIGNALS</strong> · Holidays, events & recaps</span>
   </div>
-  <div id="social-planner-desk"><p role="status">Preparing Sandy Sports Social Studio…</p></div>
+  <div id="studio-shared-status" class="studio-security" role="status">Checking shared club access…</div><div id="studio-legacy-import" class="studio-legacy-import" hidden></div><div id="social-planner-desk"><p role="status">Checking the shared Social Studio service…</p></div>
   <details class="studio-ideas" id="sandy-ideas">
   <summary><span>💡 Ideas inbox & brainstorms</span><small>Capture an original idea · review or archive · hand off to production</small></summary>
   <div class="studio-ideas-inner">
@@ -82,7 +82,7 @@
     <div class="studio-handoff-head">
       <div><p class="eyebrow">PRODUCTION & APPROVALS</p><h2 id="studio-handoff-title">Commissioning and committee review</h2>
       <p>Move a selected studio draft into a preparation brief. Propose in-house production or a Ready SET Co-op handoff, then collect links and a committee decision reference. Nothing is sent automatically.</p></div>
-      <div class="studio-lock"><strong>Local diary only</strong><small>Names and timestamps are self-entered or device-generated. They are not verified signatures.</small></div>
+      <div class="studio-lock"><strong>Shared audit required</strong><small>Server-stamped history records the signed-in account and version. A formal approval still requires an authorised decision.</small></div>
     </div>
     <div class="studio-handoff-grid">
       <form id="sandy-handoff-form" class="studio-handoff-form">
@@ -111,21 +111,21 @@
         </div>
         <label>Committee feedback / production notes <textarea name="notes" rows="3" maxlength="5000"></textarea></label>
         <p class="studio-small">An entered name, URL or approval status does not prove authority. Formal approvals require future authenticated committee access and a server audit trail.</p>
-        <div class="studio-buttons"><button type="submit" class="button coral">Save draft locally</button><button class="button outline" id="sandy-handoff-clear" type="button">New brief</button><button type="button" class="button outline" id="sandy-handoff-export">Export JSON</button><button type="button" class="button outline" id="sandy-handoff-export-csv">Export CSV</button></div>
+        <div class="studio-buttons"><button type="submit" class="button coral">Save shared draft</button><button class="button outline" id="sandy-handoff-clear" type="button">New brief</button><button type="button" class="button outline" id="sandy-handoff-export">Export JSON</button><button type="button" class="button outline" id="sandy-handoff-export-csv">Export CSV</button></div>
         <p id="sandy-handoff-status" role="status"></p>
       </form>
       <aside class="studio-handoff-aside">
-        <h3>Local review register</h3>
-        <p class="studio-small">Drafts can be prepared for the future committee, including a co-operative production route. An actual assignment still requires deliberate contact and the necessary approval.</p><p class="studio-small">Related proposals: <a href="https://auraofintelligence.github.io/ready-set-co-op-hyperlocal-media/" target="_blank" rel="noopener noreferrer">Ready SET Co-op hyperlocal media</a> and <a href="https://auraofintelligence.github.io/ready-set-co-op-trust-hub/" target="_blank" rel="noopener noreferrer">trust and governance hub</a>. These are ideas, not a service agreement or authorised assignment.</p>
+        <h3>Shared review register</h3>
+        <p class="studio-small">Drafts are held in the Sandy shared database after sign-in. A proposed production route is never a contract or actual assignment.</p><p class="studio-small">Related proposals: <a href="https://auraofintelligence.github.io/ready-set-co-op-hyperlocal-media/" target="_blank" rel="noopener noreferrer">Ready SET Co-op hyperlocal media</a> and <a href="https://auraofintelligence.github.io/ready-set-co-op-trust-hub/" target="_blank" rel="noopener noreferrer">trust and governance hub</a>. These are ideas, not a service agreement or authorised assignment.</p>
         <div id="sandy-handoff-list"><p>No handoff briefs yet.</p></div>
         <details id="sandy-handoff-history"><summary>Revision and decision references</summary>
-          <p class="studio-small">This is a browser-local diary, not an independently verifiable audit.</p>
+          <p class="studio-small">Server-revision history identifies the authenticated account. Official authority depends on the future adopted committee rules.</p>
           <div id="sandy-handoff-revisions"></div>
         </details>
       </aside>
     </div>
   </section>
-  <div class="studio-bottom-links"><a href="/social-planner.html">Simple 365-day pattern calendar</a><a href="https://github.com/auraofintelligence/Sandy-Sports-Club/blob/main/studio/PLFC-PARITY.md" target="_blank" rel="noopener noreferrer">PLFC feature parity & remaining gates</a><a href="/committee.html#social">Committee home</a><a href="/index.html#page-directory">All site pages</a></div>
+  <div class="studio-bottom-links"><a href="/social-planner.html">Simple 365-day pattern calendar</a><a href="https://github.com/auraofintelligence/Sandy-Sports-Club/blob/main/studio/PLFC-PARITY.md" target="_blank" rel="noopener noreferrer">PLFC feature parity & remaining gates</a><a href="/club-admin.html">Shared administration</a><a href="/index.html#page-directory">All site pages</a></div>
 </div>
 </main>
 <dialog id="trial-draft" class="studio-dialog" aria-label="Review draft pack"><h2>Draft production pack</h2>
