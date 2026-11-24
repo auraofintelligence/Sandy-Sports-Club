@@ -1,4 +1,5 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {setupWorkflowAssist} from './club-workflow-assist.js';
 // Working Sandy Sports desks, not fake PLFC parity. All saves use authenticated D1 APIs.
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const safeFilename=s=>String(s||'record').toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,60);
@@ -68,6 +69,7 @@ export function setupSandySuite({api,status,getIdentity}){
  '<p id="suite-save-status" role="status"></p></form></section>';
  const find=id=>root.querySelector('#'+id);
  const form=find('suite-form'),editor=find('suite-editor'),list=find('suite-records');
+ const helper=setupWorkflowAssist({root,getDesk:()=>desk,getValues:collect,getTitle:()=>form.elements.title.value});
  function say(text,bad=false){const n=find('suite-notice');n.textContent=text;n.hidden=false;n.classList.toggle('bad',bad)}
  function currentSearch(row){
   return [row.title,row.status,row.fields.owner,row.fields.officer,row.fields.editor,row.fields.chair,row.fields.funder,
@@ -102,7 +104,7 @@ export function setupSandySuite({api,status,getIdentity}){
   find('suite-fields').innerHTML=desk.steps.map((name,i)=>
    '<fieldset class="suite-stage" data-stage="'+i+'"><legend>'+esc(name)+'</legend><div class="suite-field-grid">'+
    desk.fields.filter(f=>f.step===name).map(f=>control(f,row?.fields?.[f.key])).join('')+'</div></fieldset>').join('');
-  editor.hidden=false;step=0;drawStep();
+  editor.hidden=false;step=0;drawStep();helper.render();
   find('suite-save-status').textContent='This is unsaved until you choose Save to Sandy D1.';
   editor.scrollIntoView({block:'start',behavior:'smooth'});
  }
