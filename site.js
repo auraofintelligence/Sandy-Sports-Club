@@ -34,8 +34,11 @@ fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
  .then(session=>{
   const entry=document.getElementById('club-header-account');
   if(!entry||!session?.authenticated)return;
-  entry.href='/club-admin.html';
-  entry.textContent='My Clubhouse';
+  if(session.identity?.role==='member'){
+   entry.href='/member-home.html';entry.textContent='My Membership';
+  }else{
+   entry.href='/club-admin.html';entry.textContent='My Clubhouse';
+  }
   entry.setAttribute('aria-label','Open your signed-in clubhouse workspace');
   if(here==='club-admin.html')entry.setAttribute('aria-current','page');
   else entry.removeAttribute('aria-current');
