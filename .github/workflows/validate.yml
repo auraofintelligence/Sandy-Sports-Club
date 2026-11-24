@@ -1,0 +1,23 @@
+name: Validate Sandy shared club
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check server-side and browser JavaScript syntax
+        run: |
+          for f in worker/*.mjs studio/*.js club-admin.js club-login.js interest.js; do node --check "$f"; done
+      - name: Validate new D1 migration and zero fake club records
+        run: python3 tests/schema-check.py
+      - name: Run Sandy calendar and shared-club tests
+        run: node --test tests/*.test.mjs
