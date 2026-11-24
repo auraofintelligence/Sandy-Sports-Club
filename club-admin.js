@@ -17,17 +17,28 @@ const formData=form=>Object.fromEntries(new FormData(form));
 const maySeePeople=()=>identity&&['webmaster','president','secretary','assistant_secretary','treasurer'].includes(identity.role);
 function previewMode(){
  const chosen=$('club-view-role').value;
- const memberPreview=$('member-preview-link');if(memberPreview)memberPreview.hidden=chosen!=='member';
- // This is a layout preview only. Never changes server identity or permissions.
- const staffPreview=chosen!=='member';
+ const memberPreview=$('member-preview-link');
+ if(memberPreview)memberPreview.hidden=!['member','webmaster_demo'].includes(chosen);
+ const access={
+  webmaster:allTabs,
+  president:['overview','people','interests','committee','records','social','constitution','briefs','audit'],
+  vice_president:['overview','committee','records','social','constitution','briefs'],
+  secretary:['overview','people','interests','committee','records','social','constitution','briefs','audit'],
+  assistant_secretary:['overview','people','interests','committee','records','social','constitution','briefs'],
+  treasurer:['overview','people','interests','committee','records','social','constitution','briefs'],
+  committee:['overview','committee','records','social','constitution','briefs'],
+  member:['overview'],
+  webmaster_demo:['overview']
+ };
+ const visible=access[chosen]||access.webmaster;
  for(const tab of allTabs){
   const button=document.querySelector('[data-tab="'+tab+'"]');
-  if(button)button.hidden=chosen==='member'&&tab!=='overview'||
-    chosen!=='webmaster'&&tab==='accounts'||
-    (chosen==='committee'&&['people','interests'].includes(tab))||
-    (['committee','treasurer','member'].includes(chosen)&&tab==='audit');
+  if(button)button.hidden=!visible.includes(tab);
  }
- if(!staffPreview){openTab('overview');status('Member-view layout preview. Actual access remains enforced by the server under your webmaster account.')}
+ document.body.dataset.previewRole=chosen;
+ if(!visible.includes(current))openTab('overview');
+ if(chosen!=='webmaster')status('Previewing the '+chosen.replace(/_/g,' ')+' layout as the real Webmaster. This is not impersonation. Return to Webmaster for actual administration.');
+ else status('Real Webmaster view restored. You remain signed in with your own account.');
 }
 function openTab(tab){
  if(!allTabs.includes(tab))return;
