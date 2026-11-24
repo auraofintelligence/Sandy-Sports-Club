@@ -6,6 +6,7 @@ import {peopleEndpoint,interestEndpoint} from './people.mjs';
 import {recordsEndpoint} from './records.mjs';
 import {socialEndpoint} from './social.mjs';
 import {briefsEndpoint,auditEndpoint} from './briefs.mjs';
+import {memberEndpoint} from './member.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -39,6 +40,8 @@ async function handle(req,env){
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
+ if(path==='/api/member/me'||path==='/api/member/events')
+  return memberEndpoint(req,env,path,identity);
  if(path==='/api/interest'||path.startsWith('/api/interest/'))
   return interestEndpoint(req,env,path,identity);
  if(path==='/api/people'||path.startsWith('/api/people/'))
