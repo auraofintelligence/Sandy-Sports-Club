@@ -116,3 +116,7 @@ const backToTop=document.querySelector('.back-to-top');
 function updateBackToTop(){backToTop.hidden=window.scrollY<450}
 window.addEventListener('scroll',updateBackToTop,{passive:true});updateBackToTop();
 backToTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+if(['club-admin.html','club-login.html','member-home.html','social-studio.html','constitution.html'].includes(here)){
+ const helper=document.createElement('script');helper.src='/club-mozzie.js?v=20261124';helper.defer=true;
+ document.body.append(helper);
+}
