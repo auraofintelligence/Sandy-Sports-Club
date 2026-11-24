@@ -87,7 +87,7 @@ CREATE INDEX IF NOT EXISTS club_interest_date ON club_interest(created_utc);
 
 CREATE TABLE IF NOT EXISTS club_records(
  id TEXT PRIMARY KEY,
- kind TEXT NOT NULL CHECK(kind IN ('event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard')),
+ kind TEXT NOT NULL CHECK(kind IN ('event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard','social_idea')),
  title TEXT NOT NULL,
  body_json TEXT NOT NULL DEFAULT '{}' CHECK(json_valid(body_json)),
  status TEXT NOT NULL DEFAULT 'proposal' CHECK(status IN ('proposal','draft','review','approved','scheduled','completed','archived','rejected')),
