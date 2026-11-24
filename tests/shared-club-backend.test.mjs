@@ -19,16 +19,19 @@ test('static deployment keeps private Worker and migrations out of public assets
  const ignore=read('../.assetsignore');
  for(const p of ['worker/','backend/','tests/','.github/','studio/backend/'])assert.ok(ignore.includes(p),p);
 });
-test('separate full Worker configuration cannot be deployed before providing a Sandy-only DB ID',()=>{
+test('full Worker deployment uses only the verified Sandy D1 database and keeps safety gates disabled',()=>{
  const normal=JSON.parse(read('../wrangler.jsonc'));
  const full=JSON.parse(read('../wrangler.full.example.jsonc'));
- assert.ok(!normal.main&&!normal.d1_databases,'Normal live static deployment stays untouched');
+ assert.equal(normal.name,'sandy-sports-club');
+ assert.equal(normal.main,'./worker/index.mjs');
+ assert.equal(normal.d1_databases[0].database_name,'sandy-sports-clubhouse');
+ assert.equal(normal.d1_databases[0].database_id,'ada9c7fc-a138-4158-8986-8d6d6e8bfa94');
+ assert.equal(normal.d1_databases[0].binding,'DB');
+ assert.ok(normal.assets.run_worker_first.includes('/api/*'));
+ assert.equal(normal.vars.SANDY_CLUB_APPROVALS,'disabled');
+ assert.equal(normal.vars.SANDY_INVITES_ENABLED,'disabled');
  assert.equal(full.main,'./worker/index.mjs');
  assert.equal(full.d1_databases[0].database_id,'REPLACE_WITH_NEW_SANDY_D1_UUID');
- assert.equal(full.d1_databases[0].binding,'DB');
- assert.ok(full.assets.run_worker_first.includes('/api/*'));
- assert.equal(full.vars.SANDY_CLUB_APPROVALS,'disabled');
- assert.equal(full.vars.SANDY_INVITES_ENABLED,'disabled');
 });
 test('no Sandy authenticated Studio path writes official records to localStorage',()=>{
  const app=read('../studio/sandy-studio-app.js');
