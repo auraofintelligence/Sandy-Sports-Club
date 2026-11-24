@@ -6,3 +6,18 @@ wrangler.jsonc
 .assetsignore
 build_pages.py
 polish.py
+
+# Server code, private operations and tests must never be uploaded as static assets.
+backend/
+worker/
+tests/
+scripts/
+studio/backend/
+node_modules/
+package.json
+package-lock.json
+wrangler.full.example.jsonc
+wrangler.full.jsonc
+.dev.vars
+.dev.vars.*
+.env
