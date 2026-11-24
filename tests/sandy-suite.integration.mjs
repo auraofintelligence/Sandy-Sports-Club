@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {suiteEndpoint} from '../worker/suite.mjs';
 import {memberWorkspaceEndpoint} from '../worker/member-workspace.mjs';
+import {helpEndpoint} from '../worker/help.mjs';
 const database=new DatabaseSync(':memory:');
 database.exec(readFileSync(new URL('../backend/migrations/0001_club.sql',import.meta.url),'utf8'));
 const webId='11111111-1111-4111-8111-111111111111';
@@ -181,4 +182,33 @@ test('stock receipts and issues maintain a safe versioned balance',async()=>{
  assert.equal(history.length,3);
  assert.ok(history.some(h=>h.operation==='stock_issue'));
  assert.ok(history.some(h=>h.operation==='stock_receive'));
+});
+
+test('Webmaster request inbox maintains real unread counts, officer ownership and internal audited replies',async()=>{
+ const secretaryId='99999999-9999-4999-8999-999999999999';
+ const secretary={id:secretaryId,role:'secretary',office_label:'Secretary',username:'secretary'};
+ database.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc) VALUES(?,?,'secretary','Secretary','Secretary','active','fake-salt','fake-hash',?)").run(secretaryId,'secretary','2026-11-24T09:00:00Z');
+ async function help(path,role,method='GET',body){
+  const req=new Request('https://sandy.example'+path,{method,headers:{'Content-Type':'application/json'},
+   ...(body?{body:JSON.stringify(body)}:{})});
+  const res=await helpEndpoint(req,env,path,role);
+  return {status:res.status,data:await res.json()};
+ }
+ const initial=await help('/api/webmaster/requests',secretary,'POST',
+  {subject:'Help with a shared calendar',category:'Committee workflow',message:'Need a review of proposed dates.'});
+ assert.equal(initial.status,201);
+ const inbox=await help('/api/webmaster/requests',webmaster);
+ assert.equal(inbox.data.counters.unread,1);assert.equal(inbox.data.counters.open,1);
+ assert.equal(inbox.data.requests.length,1);assert.equal(inbox.data.requests[0].createdBy,secretaryId);
+ const mine=await help('/api/webmaster/requests',secretary);
+ assert.equal(mine.data.requests.length,1);assert.equal(mine.data.counters,null);
+ const route='/api/webmaster/requests/'+initial.data.id;
+ await assert.rejects(()=>help(route,secretary,'PATCH',{version:1,stage:'completed',reply:'Not allowed'}),e=>e.status===403);
+ const solved=await help(route,webmaster,'PATCH',{version:1,stage:'completed',reply:'This answer is stored inside the clubhouse.'});
+ assert.equal(solved.data.version,2);
+ const after=await help('/api/webmaster/requests',webmaster);
+ assert.equal(after.data.counters.unread,0);assert.equal(after.data.counters.open,0);
+ assert.equal(after.data.requests[0].stage,'completed');
+ assert.equal(after.data.requests[0].reply,'This answer is stored inside the clubhouse.');
+ assert.equal(database.prepare("SELECT COUNT(*) AS n FROM club_audit WHERE resource_id=?").get(initial.data.id).n,2);
 });
