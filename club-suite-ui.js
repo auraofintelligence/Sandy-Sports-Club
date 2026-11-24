@@ -85,7 +85,15 @@ export function setupSandySuite({api,status,getIdentity}){
    '<div class="suite-record-buttons"><button type="button" data-suite-action="open">Open/edit</button>'+
    '<button type="button" data-suite-action="history">Officer history</button><button type="button" data-suite-action="md">Download draft</button>'+
    (['meetings','events','agm','sport-programme','venues','film'].includes(desk.key)?'<button type="button" data-suite-action="ics">Calendar file</button>':'')+
-   '</div><div class="suite-history" hidden></div></article>').join('')||
+   (desk.key==='meetings'?'<button type="button" data-suite-action="followups">Create officer to-dos</button>':'')+
+   (desk.key==='stock'?'<button type="button" data-suite-action="movement">Receive / issue stock</button>':'')+
+   '</div>'+
+   (desk.key==='stock'?'<form data-stock-move class="suite-stock-move" hidden>'+
+    '<label>Movement<select name="direction"><option value="receive">Receive stock</option><option value="issue">Issue stock</option></select></label>'+
+    '<label>Quantity<input name="quantity" type="number" min="1" step="1" required></label>'+
+    '<label>Reason / receipt<input name="note" maxlength="500"></label>'+
+    '<button type="submit">Record audited movement</button></form>':'')+
+   '<div class="suite-history" hidden></div></article>').join('')||
    '<p class="suite-empty">No '+esc(desk.title.toLowerCase())+' records yet. Choose New working record to begin.</p>';
  }
  function drawStep(){
@@ -151,6 +159,21 @@ export function setupSandySuite({api,status,getIdentity}){
   }catch(e){find('suite-save-status').textContent='Not saved: '+e.message;say('Save failed: '+e.message,true)}
   finally{button.disabled=false}
  });
+ list.addEventListener('submit',async event=>{
+  const form=event.target.closest('[data-stock-move]');
+  if(!form)return;
+  event.preventDefault();
+  const card=form.closest('[data-suite-id]'),r=rows.find(x=>x.id===card?.dataset.suiteId);
+  if(!r||desk?.key!=='stock')return;
+  const input=Object.fromEntries(new FormData(form));
+  const button=form.querySelector('[type=submit]');button.disabled=true;
+  try{
+   const result=await api('/api/suite/stock/'+r.id+'/movement',{method:'POST',data:{
+    version:r.version,direction:input.direction,quantity:Number(input.quantity),note:input.note}});
+   say('Stock '+input.direction+' recorded. Available balance: '+result.balance+' · revision '+result.version+'.');
+   await refresh();
+  }catch(error){say('Stock movement not saved: '+error.message,true);button.disabled=false}
+ });
  list.addEventListener('click',async event=>{
   const button=event.target.closest('[data-suite-action]'),card=button?.closest('[data-suite-id]');
   if(!card||!desk)return;
@@ -166,6 +189,18 @@ export function setupSandySuite({api,status,getIdentity}){
    }
    if(button.dataset.suiteAction==='md')download('sandy-'+desk.key+'-'+safeFilename(r.title)+'.md',recordMarkdown(desk,r),'text/markdown;charset=utf-8');
    if(button.dataset.suiteAction==='ics')download('sandy-'+desk.key+'-'+safeFilename(r.title)+'.ics',ics(r),'text/calendar;charset=utf-8');
+   if(button.dataset.suiteAction==='movement'){
+    const form=card.querySelector('[data-stock-move]');if(form)form.hidden=!form.hidden;
+   }
+   if(button.dataset.suiteAction==='followups'){
+    if(!r.fields.followUps?.trim())throw Error('First add and save real follow-up actions in the meeting record.');
+    if(!window.confirm('Create individual To-do records from this meeting follow-up list? Existing links will not be duplicated.'))return;
+    button.disabled=true;
+    try{
+     const result=await api('/api/suite/meetings/'+r.id+'/followups',{method:'POST',data:{version:r.version}});
+     say(result.created+' new officer tasks recorded; '+result.alreadyPresent+' already existed. Open Officer to-do lists to review them. No messages were sent.');
+    }finally{button.disabled=false}
+   }
   }catch(e){say(e.message,true)}
  });
  find('suite-export').addEventListener('click',()=>{
