@@ -50,3 +50,17 @@ test('office invitations and publication require separate gating',()=>{
  assert.ok(briefs.includes('ensureApprover(identity,env)'));
  assert.ok(!worker.includes('sendSMS('));
 });
+
+test('public proposal and real clubhouse have distinct prominent navigation',()=>{
+ const site=read('../site.js'),proposal=read('../clubhouse.html');
+ const admin=read('../club-admin.html'),script=read('../club-admin.js'),css=read('../club-system.css');
+ assert.ok(site.includes("['clubhouse.html','Club proposal']"));
+ assert.ok(site.includes("['club-admin.html','My Clubhouse']"));
+ assert.ok(site.includes("entry.href='/club-admin.html'"));
+ assert.ok(proposal.includes('class="clubhouse-entry"'));
+ assert.ok(proposal.includes('href="/club-admin.html" class="button coral"'));
+ assert.ok(admin.includes('<h1>My Clubhouse</h1>'));
+ assert.ok(admin.includes('class="clubhouse-menu"'));
+ assert.ok(script.includes("sectionLabel.textContent=button?.textContent?.trim()"));
+ assert.ok(css.includes('.clubhouse-menu .club-tabs{display:grid'));
+});
