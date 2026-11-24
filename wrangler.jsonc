@@ -1,6 +1,24 @@
 {
   "name": "sandy-sports-club",
-  "compatibility_date": "2026-11-01",
+  "main": "./worker/index.mjs",
+  "compatibility_date": "2026-11-24",
   "workers_dev": true,
-  "assets": {"directory": "./", "not_found_handling": "404-page"}
+  "assets": {
+    "directory": "./",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sandy-sports-clubhouse",
+      "database_id": "ada9c7fc-a138-4158-8986-8d6d6e8bfa94",
+      "migrations_dir": "backend/migrations"
+    }
+  ],
+  "vars": {
+    "SANDY_CLUB_APPROVALS": "disabled",
+    "SANDY_INVITES_ENABLED": "disabled"
+  }
 }
