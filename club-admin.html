@@ -2,11 +2,11 @@
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#102d40">
 <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
 <title>Shared club administration | Sandy Sports proposal</title>
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css?v=meeting-desk-20261125">
-<script defer src="/site.js"></script><script type="module" src="/club-admin.js?v=meeting-desk-20261125"></script><script type="module" src="/club-help.js"></script></head>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css?v=community-20261125">
+<script defer src="/site.js"></script><script type="module" src="/club-admin.js?v=community-20261125"></script><script type="module" src="/club-help.js"></script></head>
 <body><div data-site-header></div><main class="club-app" id="main">
 <header class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB WORKSPACE</p>
-<h1>My Clubhouse</h1><p>Your shared Sandy workspace for member records, future office holders, committee planning and production. Sandy Sports remains a proposed club.</p>
+<h1>My Clubhouse</h1><p>Your place to organise club activities, keep in touch with the committee and help build Sandy Sports across our island.</p>
 <div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>View as (synthetic, read-only) <select id="club-view-role">
 <option value="webmaster">Real Webmaster</option><option value="president">President</option><option value="vice_president">Vice President</option>
 <option value="secretary">Secretary</option><option value="assistant_secretary">Assistant Secretary</option>
@@ -52,6 +52,11 @@
  </div>
  <p>Related public projects and proposals, not automatic integrations or publishing permissions.</p>
 </aside>
+ <header id="committee-room-heading" class="committee-room-heading club-section" hidden>
+  <p class="eyebrow">SANDY SPORTS · MY CLUBHOUSE</p>
+  <h2 id="club-committee-title">Committee room</h2>
+  <p>Work together to organise sport, events, facilities and club activities across Minjerribah. Choose a desk below to manage your responsibilities, share updates and keep track of progress.</p>
+ </header>
  <div id="committee-navigation" class="committee-navigation" hidden aria-label="Committee navigation">
   <div class="committee-switcher">
    <button type="button" id="committee-back" hidden>← Back to committee room</button>
@@ -64,7 +69,7 @@
   </details>
  </div>
 <section id="club-overview" class="club-section">
-<h2>Formation and shared records</h2><p>Records below are held in the shared Sandy D1 database when the backend is provisioned. Nothing here is a fabricated operating-club membership, approved event or real payment.</p>
+<h2>Formation and shared records</h2><p>Keep track of prospective members, committee work and the progress of Sandy Sports Club. Formal membership and club approvals will open when the club is established.</p>
 <div class="club-summary" id="club-summary"></div>
 <nav class="clubhouse-quick-desks" aria-label="Open a working Sandy clubhouse tool">
  <h3>Your committee workbench</h3><p>Direct links to working records and role-specific tools. Only authorised officers may view or save the underlying data.</p>
@@ -91,7 +96,7 @@
 <p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The Webmaster can enter a synthetic, read-only role preview. It does not use real officers' identities or live records.</p>
 <p><a href="#committee/notices">Open working Committee room</a> · <a href="#social">Social Media Hub</a> · <a href="/committee.html">Public planning examples</a></p></article>
 <article class="club-panel"><h3>Review and publication</h3><p>Proposals, committee records and video briefs need identified reviewers and server-stamped decisions. No content is published and no advertising spend is authorised here.</p>
-<p><a href="/studio/PLFC-PARITY.md">PLFC comparison and production requirements</a></p></article></div>
+<p><a href="#briefs">Review production briefs</a></p></article></div>
 </section>
 <section id="club-people" class="club-section" hidden>
 <h2>People and prospective memberships</h2><p class="club-note">Sensitive member information is available only to authorised roles. Joining and renewal dates are records, not evidence of a payment or an established club. Gender is optional and voluntarily provided.</p>
@@ -135,12 +140,6 @@
 <p>Confirmed public responses are prospective supporters, not memberships. An expression of interest is only accepted after consent and abuse protection are configured.</p>
 <div class="club-table-scroll"><table><thead><tr><th>Date</th><th>Name</th><th>Town</th><th>Region</th><th>Topics</th><th>Status</th></tr></thead><tbody id="interest-rows"></tbody></table></div></section>
 <section id="club-committee" class="club-section" hidden aria-labelledby="club-committee-title">
- <header class="committee-room-heading">
-  <p class="eyebrow">SANDY SPORTS · COMMITTEE WORKSPACE</p>
-  <h2 id="club-committee-title">Committee room</h2>
-  <p>PLFC-style desks, adapted for Sandy. Choose a desk to work on real shared drafts and follow-ups, each stamped with the signed-in officer and revision history.</p>
-  <p class="club-note">This first shared committee workbench records plans and actions, not legal approvals, membership payments, email distribution or automatically published content. Specialised PLFC workflows are marked where they still need implementation.</p>
- </header>
  <div id="committee-ops-summary" class="committee-ops-summary" hidden></div>
  <section id="committee-ops" class="committee-ops" hidden aria-label="Committee notices and officer work"></section>
  <section id="meeting-workspace" class="meeting-workspace" hidden aria-label="Meetings and minutes"></section>
@@ -218,13 +217,7 @@
 </section>
 <section id="club-constitution" class="club-section" hidden>
 <h2>Constitution builder</h2>
-<p class="club-note">Compare against the actual PLFC Constitution V1.2 (January 2025). Sandy's working draft is separate and can be saved with shared revision history; neither export nor draft adopts club rules.</p>
-<div class="club-constitution-reference" aria-label="PLFC constitution source files">
- <strong>Original Point Lookout Fishing Club Constitution V1.2</strong>
- <a href="https://drive.google.com/file/d/1cV_baU8tf7O4C5gdrP16gaRVFxHF_8mg/view" target="_blank" rel="noopener noreferrer">View / download PLFC PDF</a>
- <a href="https://docs.google.com/document/d/1Z1uYKTy3Mi19bub9bG749ZICbjosoW0o/edit" target="_blank" rel="noopener noreferrer">View / download PLFC Word document</a>
- <small>Open in Google Drive and select Download. Access depends on PLFC Drive permissions.</small>
-</div>
+<p class="club-note">Prepare and review the proposed rules of Sandy Sports Club together. Saved drafts retain their revision history; adoption is a separate decision for the founding members.</p>
 <p><a href="/constitution.html">Open constitution builder as a full page</a> or continue below.</p>
 <iframe class="club-tool-frame" data-tool="constitution" data-src="/constitution.html?workspace=1" title="Sandy shared constitution drafting builder" loading="lazy"></iframe>
 </section>

@@ -1,4 +1,4 @@
-// PLFC-inspired Sandy committee room. Real draft data, server roles, revisions and audit; no fake approvals.
+// Sandy Sports committee room. Shared records, role permissions and revision history.
 import {SUITE_BY_KEY,SUITE_DESKS} from './studio/sandy-suite-spec.js';
 import {setupCommitteeOperations} from './club-committee-ops.js?v=20261125';
 import {setupMeetingDesk} from './club-meeting-workspace.js?v=20261125';
@@ -41,7 +41,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
- const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
+ const heading=$('committee-room-heading'),navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
  const canUse=desk=>{
   const role=getIdentity()?.role;
   if(SUITE_BY_KEY[desk.key]&&!SUITE_BY_KEY[desk.key].roles.includes(role))return false;
@@ -66,23 +66,23 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   }).join('');
   picker.value=selected&&canUse(byKey.get(selected))?selected:'';
  };
- function restoreNavigation(){navigation.hidden=false;directory.hidden=false;}
+ function restoreNavigation(){heading.hidden=false;navigation.hidden=false;directory.hidden=false;}
  function showDirectory({scroll=false}={}){
   restoreNavigation();selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
-  if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});
+  if(scroll)heading.scrollIntoView({block:'start',behavior:'auto'});
  }
  function goDirectory(){
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
-  openTab('committee');navigation.scrollIntoView({block:'start',behavior:'auto'});
+  openTab('committee');heading.scrollIntoView({block:'start',behavior:'auto'});
  }
  back.addEventListener('click',goDirectory);
  picker.addEventListener('change',()=>{if(picker.value)void showDesk(picker.value,{scroll:true});else goDirectory()});
  window.addEventListener('sandy:clubhouse-section-change',event=>{
   const tab=event.detail.tab;
-  if(tab!=='committee')meetingDesk.close();
+  if(tab!=='committee'){heading.hidden=true;meetingDesk.close();}
   const d=DESKS.find(x=>x.tab===tab);
   if(d&&canUse(d)){
    selected=d.key;refreshAllowed();directory.hidden=true;back.hidden=false;
@@ -104,8 +104,8 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   $('committee-desk-title').textContent=desk.label;
   $('committee-desk-summary').textContent=desk.description;
   $('committee-desk-explainer').textContent=desk.tab?
-   'This opens the existing shared clubhouse work area, without a duplicate local-storage copy.':
-   'Save a proposal or working note to Sandy D1. Every change has the signed-in officer, time, version and server audit. Specialised PLFC publishing, approvals and payments are not automatically enabled.';
+   'Open the corresponding working area in My Clubhouse.':
+   'Keep your committee's plans and actions up to date. Saved changes retain the responsible officer and revision history.';
   const related=$('committee-desk-related');related.replaceChildren();
   for(const [tab,text] of desk.related||[]){
    const button=document.createElement('button');button.type='button';button.textContent=text;
@@ -155,7 +155,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   }
   if(updateUrl)writeCurrentUrl();
   ops.close();meetingDesk.close();
-  if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});
+  if(scroll)heading.scrollIntoView({block:'start',behavior:'auto'});
   if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingDesk.open();return}
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;
