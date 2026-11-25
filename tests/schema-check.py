@@ -5,12 +5,14 @@ sql = Path("backend/migrations/0001_club.sql").read_text()
 db = sqlite3.connect(":memory:")
 db.execute("PRAGMA foreign_keys=ON")
 db.executescript(sql)
+db.executescript(Path("backend/migrations/0002_private_library.sql").read_text())
 required = {
     "club_accounts", "club_sessions", "club_invites", "club_login_attempts",
     "club_people", "club_interest", "club_records",
     "studio_settings", "studio_post_edits", "studio_metrics",
     "studio_briefs", "studio_decisions", "studio_handoffs", "studio_post_links",
     "club_revisions", "club_audit",
+    "sandy_library_documents", "sandy_library_versions", "sandy_library_parts",
 }
 tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
 missing = required - tables

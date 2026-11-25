@@ -3,6 +3,7 @@
 import {fail,json,now,id,dbFor,payload,field,version,revision,audit,requireRole} from './shared.mjs';
 import {memberOwns,memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 import {memberSafeguardFlags,requireParticipation,participationGuard,participationArgs} from './member-safeguards.mjs';
+import {ownLibraryMetadata} from './library.mjs';
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Multi-sport'];
 const availability=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 const options=['sport','film','volunteer','community'];
@@ -103,7 +104,7 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
  if(path==='/api/member/data-export'&&req.method==='GET'){
   const profile=await db.prepare("SELECT full_name,preferred_name,email,mobile,membership_class,status,joined_on,renewal_on,town,consent_contact,consent_publication FROM club_people WHERE account_id=? LIMIT 1").bind(identity.id).first();
   return json({exportedAt:now(),account:{username:identity.username,office:identity.office_label},
-   profile:profile||null,preferences:(await ownRecords(db,identity,'preferences'))[0]||null,wishes:await ownRecords(db,identity,'wish'),safeguards:await memberSafeguardFlags(db,identity.id),
+   profile:profile||null,preferences:(await ownRecords(db,identity,'preferences'))[0]||null,wishes:await ownRecords(db,identity,'wish'),safeguards:await memberSafeguardFlags(db,identity.id),privateFiles:await ownLibraryMetadata(db,identity),
    notice:'This is your own data. Other members and committee records are not included.'});
  }
  if(!env.SANDY_CLUB_APPROVALS||env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Member self-service is not active before the club is established.','club_not_established');

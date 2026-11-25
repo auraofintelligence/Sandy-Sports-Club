@@ -63,3 +63,7 @@ Cloudflare provisioning, actual browser workflows and restore rehearsal require 
 ## Recovery rehearsal and release controls
 
 See [Sandy recovery and release runbook](RECOVERY.md). The isolated SQL export/restore integration test does not read or modify live D1 and does not certify production backup or recovery.
+
+## Private file library (proposed, disabled)
+
+Additive migration `0002_private_library.sql` defines private metadata, immutable encrypted content versions and file parts. No file is seeded in live D1. The library requires a separate 64-character random hexadecimal `SANDY_LIBRARY_KEY` Cloudflare secret. Do not reuse the auth pepper, copy production keys to showcase, or commit keys. New uploads, access grants and replacements remain off unless separately approved through `SANDY_PRIVATE_LIBRARY_ENABLED=enabled`. Withdrawal remains possible for a signed-in authorised custodian. PDF, PNG and JPEG only, up to 1 MiB, attachment downloads with short-lived identity/version-bound tickets. This is the bounded D1-backed pattern adapted from PLFC, not public file hosting or an activated R2 integration. Retain encrypted versions and audit evidence; establish an approved retention, deletion, scanning and backup policy before enabling actual uploads. A separate release and redaction workflow is still required for member-facing club documents.

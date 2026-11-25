@@ -1,5 +1,6 @@
 import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
 import {recordAuditAllowed} from './record-policy.mjs';
+import {libraryAuditAllowed} from './library.mjs';
 const states=['draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published'];
 const mutable=['draft','proposed','prepared','revision','evidence','closed'];
 const writers=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
@@ -140,6 +141,7 @@ export async function auditEndpoint(req,env,identity){
    if(entry.kind==='record'&&!recordAuditAllowed(record_kind?{kind:record_kind,body_json,created_by}:null,identity,entry.action))continue;
    // Account credentials and access-management metadata are for the real Webmaster only.
    if(entry.kind==='account'&&identity.role!=='webmaster')continue;
+   if(entry.kind==='library'&&!await libraryAuditAllowed(db,identity,entry.resourceId))continue;
    visible.push({...entry,brisbaneAt:new Date(entry.at).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'})});if(visible.length===300)break;
   }
   if(rows.length<100)break;
