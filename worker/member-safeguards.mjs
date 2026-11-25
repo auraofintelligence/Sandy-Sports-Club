@@ -16,7 +16,9 @@ function from(row){
 }
 async function rowFor(db,accountId){
  const row=await db.prepare("SELECT * FROM club_records WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberSafeguard')=1 AND json_extract(body_json,'$.ownerId')=? ORDER BY updated_utc DESC,id DESC LIMIT 1").bind(accountId).first();
- return purposeOf(row)?.type==='member-safeguard'?row:null;
+ if(purposeOf(row)?.type!=='member-safeguard')return null;
+ const origin=await db.prepare("SELECT actor_role,operation FROM club_revisions WHERE resource_kind='record' AND resource_id=? AND resource_version=1").bind(row.id).first();
+ return origin?.operation==='safeguard_verified'&&SAFEGUARD_ROLES.includes(origin.actor_role)?row:null;
 }
 export async function memberSafeguardFlags(db,accountId){
  const row=await rowFor(db,accountId),data=row?from(row):{...initial(),recordId:null,version:0};
@@ -37,11 +39,12 @@ const shape=(account,flags)=>({accountId:account.id,username:account.username,st
 function strict(body,keys){if(Object.keys(body).some(k=>!keys.includes(k)))fail(400,'Only minimal safeguarding choices are accepted.','invalid_safeguard')}
 async function save(db,identity,accountId,row,fields,action){
  const at=now(),recordId=row?.id||id(),nextVersion=(row?.version||0)+1,body={sandyMemberSafeguard:1,ownerId:accountId,fields};
- const guard="EXISTS(SELECT 1 FROM club_accounts WHERE id=? AND role='member' AND state='active')";
+ const guard="EXISTS(SELECT 1 FROM club_accounts WHERE id=? AND role='member' AND state='active')"+(action==='safeguard_terms_accepted'?" AND EXISTS(SELECT 1 FROM club_people WHERE account_id=? AND status='active')":'');
+ const args=action==='safeguard_terms_accepted'?[accountId,accountId]:[accountId];
  const write=row?db.prepare("UPDATE club_records SET body_json=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND "+guard)
-  .bind(JSON.stringify(body),identity.id,at,recordId,row.version,accountId):
+  .bind(JSON.stringify(body),identity.id,at,recordId,row.version,...args):
   db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) SELECT ?,'safeguard','Restricted participation check',?,'draft',NULL,1,?,?,?,? WHERE "+guard+" AND NOT EXISTS(SELECT 1 FROM club_records WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberSafeguard')=1 AND json_extract(body_json,'$.ownerId')=?)")
-  .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at,accountId,accountId);
+  .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at,...args,accountId);
  const [result]=await db.batch([write,
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action,actor:identity,at,changes:{fromVersion:nextVersion-1,toVersion:nextVersion,reason:action},snapshot:fields,guarded:true}),
   audit(db,identity,action,'record',recordId,at,true)]);
@@ -81,6 +84,7 @@ export async function safeguardsEndpoint(req,env,path,identity){
  if(!['accept','withdraw'].includes(b.action)||b.termsVersion!==TERMS_VERSION)fail(409,'Read the current participation terms before recording a choice.','terms_changed');
  if(version(b.version)!==flags.version)fail(409,'The participation check changed. Reload before saving.','conflict');
  const row=await rowFor(db,identity.id);
+ if((row?.version||0)!==flags.version)fail(409,'The participation check changed. Reload before saving.','conflict');
  if(b.action==='accept'){
   if(env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Member participation is not active during club formation.','club_not_established');
   if(!await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(identity.id).first())fail(409,'A linked active membership is required.','membership_not_active');

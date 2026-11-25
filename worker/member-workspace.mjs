@@ -96,7 +96,8 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
    const nl=await visibleRecords(db,"WHERE kind='newsletter' AND status='approved'",[],'updated_utc DESC,id DESC',18,memberPublicationAllowed);
    newsletters=nl.map(r=>({id:r.id,title:r.title,date:r.updated_utc}));
   }
-  return json({active,enrolled,safeguards,profile:profile||null,preferences:prefs,wishes,events,notices,newsletters,
+  const displayProfile=profile?{...profile,consent_publication:active&&safeguards.optionalParticipation&&!!profile.consent_publication?1:0,consent_contact:active&&safeguards.optionalParticipation&&!!profile.consent_contact?1:0}:null;
+  return json({active,enrolled,safeguards,profile:displayProfile,preferences:prefs,wishes,events,notices,newsletters,
    notice:active?'Your personal record and authorised club information.':enrolled?'A verified age group and any required guardian permission are needed for member self-service. Your own data remains available.':'The club is not established, or your account is not linked to an approved membership. No draft events or private committee material is displayed.'});
  }
  if(path==='/api/member/data-export'&&req.method==='GET'){

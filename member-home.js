@@ -46,6 +46,8 @@ function showDemo(){
  for(const section of document.querySelectorAll('.member-workspace-form')){
   for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=true;
  }
+ $('member-safeguard-state').textContent='Synthetic preview: no age verification, guardian authority or terms acceptance exists.';
+ $('member-terms-accept').disabled=true;$('member-terms-withdraw').disabled=true;
  $('member-export').disabled=true;$('member-export').title='Synthetic preview; no personal record exists';
  $('member-wish-status').textContent='View-only demonstration; nothing is submitted.';
  $('member-sport-status').textContent='View-only demonstration; nothing is saved.';
@@ -81,6 +83,14 @@ function showReal(){
  $('member-film-interests').textContent=fields.filmClub?
   'You have indicated interest in film-club opportunities. Actual screenings and permissions are decided separately.':
   'No film-club preference saved yet.';
+ const flags=workspace.safeguards||{};
+ $('member-safeguard-state').textContent='Age group: '+(flags.ageBand||'unconfirmed')+' | Guardian permission: '+(flags.guardianPermission?'verified':'not recorded')+' | Optional consent: '+(flags.accepted?'accepted':'not accepted')+' | Terms: '+(flags.termsVersion||'unavailable');
+ $('member-terms-text').textContent=flags.terms||'Participation terms unavailable. No new consent can be recorded.';
+ $('member-terms-accept').disabled=!workspace.enrolled||flags.ageBand!=='adult'||flags.accepted||!flags.termsVersion;
+ $('member-terms-withdraw').disabled=!flags.accepted;
+ for(const section of document.querySelectorAll('.member-workspace-form'))for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=!workspace.active;
+ for(const key of ['volunteer','publicationConsent','contactPreference'])$('member-privacy-form').elements.namedItem(key).disabled=!workspace.active||!flags.optionalParticipation;
+ const volunteer=$('member-wish-form').elements.area.querySelector('[value=volunteer]');if(volunteer)volunteer.disabled=!flags.optionalParticipation;
  if(!workspace.active){
   for(const section of document.querySelectorAll('.member-workspace-form')){
    for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=true;
@@ -103,7 +113,7 @@ async function savePreferences(out){
  if(!workspace?.active||preview)return;
  try{
   const result=await api('/api/member/preferences','POST',preferenceBody());
-  workspace.preferences={version:result.version,fields:preferenceBody()};
+  workspace=await api('/api/member/workspace');showReal();
   out.textContent='Your own preferences were securely saved as revision '+result.version+'.';
   banner('Member preferences saved to Sandy D1.');
  }catch(error){out.textContent='Not saved: '+error.message;banner(error.message,true)}
@@ -120,6 +130,11 @@ $('member-wish-form').addEventListener('submit',async event=>{
   $('member-wish-status').textContent='Your private interest was saved. No external contact or booking was made.';
   const fresh=await api('/api/member/workspace');workspace=fresh;showReal();
  }catch(error){$('member-wish-status').textContent='Not saved: '+error.message}
+});
+for(const [id,action] of [['member-terms-accept','accept'],['member-terms-withdraw','withdraw']])$(id).addEventListener('click',async()=>{
+ if(preview||!workspace?.safeguards)return;
+ try{await api('/api/member/safeguards','POST',{action,version:workspace.safeguards.version,termsVersion:workspace.safeguards.termsVersion});workspace=await api('/api/member/workspace');showReal()}
+ catch(e){$('member-safeguard-state').textContent=e.message}
 });
 $('member-export').addEventListener('click',async()=>{
  if(preview)return;

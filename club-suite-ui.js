@@ -1,5 +1,6 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 import {isReadOnlyView,protectView} from './club-view-client.js';
+import {setupSafeguardsDesk} from './club-safeguards-ui.js';
 import {setupWorkflowAssist} from './club-workflow-assist.js';
 // Working Sandy Sports desks, not fake PLFC parity. All saves use authenticated D1 APIs.
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -68,6 +69,7 @@ export function setupSandySuite({api,status,getIdentity}){
  '<div id="suite-fields"></div><div class="suite-actions"><button id="suite-previous" type="button">Previous</button>'+
  '<button id="suite-next" type="button">Next stage</button><button id="suite-save" type="submit">Save to Sandy D1</button></div>'+
  '<p id="suite-save-status" role="status"></p></form></section>';
+ const safeguard=setupSafeguardsDesk(root,api);
  const find=id=>root.querySelector('#'+id);
  const form=find('suite-form'),editor=find('suite-editor'),list=find('suite-records');
  const helper=setupWorkflowAssist({root,getDesk:()=>desk,getValues:collect,getTitle:()=>form.elements.title.value});
@@ -134,7 +136,7 @@ export function setupSandySuite({api,status,getIdentity}){
  async function open(key){
   const schema=SUITE_BY_KEY[key];
   if(!schema||!schema.roles.includes(getIdentity()?.role)){say('This role cannot access the selected desk.',true);return}
-  desk=schema;rows=[];editing=null;query='';filter='';
+  desk=schema;rows=[];editing=null;query='';filter='';safeguard.open(key);
   if(isReadOnlyView()){root.querySelector('.suite-boundary').textContent='Synthetic example records, read-only. Open records and review stages, history and example exports without saving.';protectView('#suite-new,#suite-save,[data-suite-action="followups"],[data-suite-action="movement"],[data-stock-move] button[type=submit]',root)}
   find('suite-search').value='';find('suite-filter').value='';
   find('suite-desk-name').textContent=desk.title;find('suite-desk-intro').textContent=desk.purpose;
