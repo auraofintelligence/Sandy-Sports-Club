@@ -87,29 +87,43 @@ export async function briefsEndpoint(req,env,path,identity){
  if(match[2]==='handoff'&&req.method==='POST'){
   const b=await payload(req,8192),producer=field(b.producer,100),due=dateField(b.due);
   if(!producer)fail(400,'Choose a prospective production provider.','invalid_producer');
-  const authorised=env.SANDY_CLUB_APPROVALS==='enabled'&&b.authorised===true;
-  if(authorised)ensureApprover(identity,env); // a proposed provider isn't automatically contracted
-  const decision=authorised?await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='approved' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first():null;
-  if(authorised&&!decision)fail(409,'A signed committee approval must exist before commissioning work.','approval_required');
-  const handoffId=id();
-  await db.batch([
-   db.prepare('INSERT INTO studio_handoffs(id,brief_id,decision_id,producer,status,requested_delivery_on,updated_utc,issued_by,issued_utc) VALUES(?,?,?,?,?,?,?,?,?)')
-    .bind(handoffId,briefId,decision?.id||null,producer,authorised?'authorised':'proposed',due,at,authorised?identity.id:null,authorised?at:null),
-   audit(db,identity,authorised?'handoff_authorised':'handoff_proposed','studio-brief',briefId,at)
+  const authorised=b.authorised===true;
+  if(authorised)ensureApprover(identity,env);
+  if(authorised&&row.status!=='approved')fail(409,'The current brief must be approved before commissioning.','approval_required');
+  const decision=authorised?await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND entity_version=? AND decision='approved' LIMIT 1").bind(briefId,row.version).first():null;
+  if(authorised&&!decision)fail(409,'An approval for this exact brief revision must exist before commissioning.','approval_required');
+  const state=authorised?'authorised':'proposed',handoffId=id();
+  const key=[briefId,producer,state,due,decision?.id||null];
+  const lookup=()=>db.prepare("SELECT id FROM studio_handoffs WHERE brief_id=? AND producer=? AND status=? AND requested_delivery_on IS ? AND decision_id IS ? LIMIT 1").bind(...key).first();
+  const old=await lookup();if(old)return json({ok:true,handoffId:old.id,state,sent:false,replayed:true});
+  const [result]=await db.batch([
+   db.prepare(`INSERT INTO studio_handoffs(id,brief_id,decision_id,producer,status,requested_delivery_on,updated_utc,issued_by,issued_utc)
+    SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM studio_briefs WHERE id=? AND version=?)
+    AND NOT EXISTS(SELECT 1 FROM studio_handoffs WHERE brief_id=? AND producer=? AND status=? AND requested_delivery_on IS ? AND decision_id IS ?)`)
+    .bind(handoffId,briefId,decision?.id||null,producer,state,due,at,authorised?identity.id:null,authorised?at:null,briefId,row.version,...key),
+   audit(db,identity,authorised?'handoff_authorised':'handoff_proposed','studio-brief',briefId,at,true)
   ]);
-  return json({ok:true,handoffId,state:authorised?'authorised':'proposed',sent:false},201);
+  if(!result.meta.changes){const old=await lookup();if(old)return json({ok:true,handoffId:old.id,state,sent:false,replayed:true});fail(409,'The brief changed. Reload before recording a handoff.','conflict')}
+  return json({ok:true,handoffId,state,sent:false},201);
  }
  if(match[2]==='publish-link'&&req.method==='POST'){
+  ensureApprover(identity,env);
   const b=await payload(req,8192),url=https(b.url),platform=field(b.platform,30);
   if(!url||!['youtube','facebook','instagram','tiktok','noticeboard'].includes(platform))fail(400,'Provide a verified platform and HTTPS post link.','invalid_publication_link');
-  const decision=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='publish_authorised' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first();
-  if(!decision)fail(409,'Publishing has not been authorised. The link cannot be recorded as approved.','publication_not_authorised');
-  const linkId=id();
-  await db.batch([
-   db.prepare('INSERT INTO studio_post_links(id,brief_id,decision_id,platform,published_url,published_utc,recorded_by,recorded_utc) VALUES(?,?,?,?,?,?,?,?)')
-    .bind(linkId,briefId,decision.id,platform,url,dateField(b.publishedOn)?dateField(b.publishedOn)+'T00:00:00+10:00':null,identity.id,at),
-   audit(db,identity,'published_link_recorded','studio-brief',briefId,at)
+  if(row.status!=='approved')fail(409,'The current brief is not approved.','publication_not_authorised');
+  const decision=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND entity_version=? AND decision='publish_authorised' LIMIT 1").bind(briefId,row.version).first();
+  if(!decision)fail(409,'Publishing has not been authorised for the current brief revision.','publication_not_authorised');
+  const linkId=id(),key=[briefId,decision.id,platform,url];
+  const lookup=()=>db.prepare('SELECT id FROM studio_post_links WHERE brief_id=? AND decision_id=? AND platform=? AND published_url=? LIMIT 1').bind(...key).first();
+  const old=await lookup();if(old)return json({ok:true,linkId:old.id,replayed:true});
+  const [result]=await db.batch([
+   db.prepare(`INSERT INTO studio_post_links(id,brief_id,decision_id,platform,published_url,published_utc,recorded_by,recorded_utc)
+    SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM studio_briefs WHERE id=? AND version=? AND status='approved')
+    AND NOT EXISTS(SELECT 1 FROM studio_post_links WHERE brief_id=? AND decision_id=? AND platform=? AND published_url=?)`)
+    .bind(linkId,briefId,decision.id,platform,url,dateField(b.publishedOn)?dateField(b.publishedOn)+'T00:00:00+10:00':null,identity.id,at,briefId,row.version,...key),
+   audit(db,identity,'published_link_recorded','studio-brief',briefId,at,true)
   ]);
+  if(!result.meta.changes){const old=await lookup();if(old)return json({ok:true,linkId:old.id,replayed:true});fail(409,'The brief changed. Reload before recording publication evidence.','conflict')}
   return json({ok:true,linkId},201);
  }
  fail(404,'Unsupported production brief operation.','not_found');
@@ -124,7 +138,9 @@ export async function auditEndpoint(req,env,identity){
   for(const {record_kind,body_json,created_by,...entry} of rows){
    // Record-purpose audit is isolated just like the record. Other audit families retain their existing role checks.
    if(entry.kind==='record'&&!recordAuditAllowed(record_kind?{kind:record_kind,body_json,created_by}:null,identity,entry.action))continue;
-   visible.push(entry);if(visible.length===300)break;
+   // Account credentials and access-management metadata are for the real Webmaster only.
+   if(entry.kind==='account'&&identity.role!=='webmaster')continue;
+   visible.push({...entry,brisbaneAt:new Date(entry.at).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'})});if(visible.length===300)break;
   }
   if(rows.length<100)break;
  }

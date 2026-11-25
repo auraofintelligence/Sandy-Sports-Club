@@ -40,12 +40,13 @@ async function savePreference(db,identity,fields,expected){
  }
  if(expected!==0&&expected!==undefined)fail(409,'Reload your member profile before saving.','conflict');
  const recordId=id();
- await db.batch([
-  db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,'safeguard','Private member preferences',?,'draft',NULL,1,?,?,?,?)")
-   .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at),
-  revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'member_preferences_created',actor:identity,at,snapshot:fields}),
-  audit(db,identity,'member_preferences_created','record',recordId,at)
+ const [inserted]=await db.batch([
+  db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) SELECT ?,'safeguard','Private member preferences',?,'draft',NULL,1,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM club_records WHERE kind='safeguard' AND created_by=? AND json_extract(body_json,'$.sandyMemberWorkspace')=1 AND json_extract(body_json,'$.ownerId')=? AND json_extract(body_json,'$.type')='preferences')")
+   .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at,identity.id,identity.id),
+  revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'member_preferences_created',actor:identity,at,snapshot:fields,guarded:true}),
+  audit(db,identity,'member_preferences_created','record',recordId,at,true)
  ]);
+ if(!inserted.meta.changes)fail(409,'Your preferences were created in another session. Reload before saving.','conflict');
  return json({ok:true,id:recordId,version:1},201);
 }
 async function saveWish(db,identity,data){

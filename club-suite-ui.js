@@ -176,10 +176,12 @@ export function setupSandySuite({api,status,getIdentity}){
   const card=form.closest('[data-suite-id]'),r=rows.find(x=>x.id===card?.dataset.suiteId);
   if(!r||desk?.key!=='stock')return;
   const input=Object.fromEntries(new FormData(form));
+  const signature=JSON.stringify([r.version,input.direction,Number(input.quantity),input.note]);
+  if(form.dataset.movementSignature!==signature){form.dataset.movementSignature=signature;form.dataset.mutationId=crypto.randomUUID()}
   const button=form.querySelector('[type=submit]');button.disabled=true;
   try{
    const result=await api('/api/suite/stock/'+r.id+'/movement',{method:'POST',data:{
-    version:r.version,direction:input.direction,quantity:Number(input.quantity),note:input.note}});
+    version:r.version,direction:input.direction,quantity:Number(input.quantity),note:input.note,mutationId:form.dataset.mutationId}});
    say('Stock '+input.direction+' recorded. Available balance: '+result.balance+' · revision '+result.version+'.');
    await refresh();
   }catch(error){say('Stock movement not saved: '+error.message,true);button.disabled=false}

@@ -81,12 +81,14 @@ async function changed(db,desk,identity,recordId,request){
  if(current.status==='approved')fail(409,'A formally approved record cannot be changed as a working draft.','locked');
  const fields=cleanFields(desk,request.fields),title=field(request.title,180),status=checkStatus(request);
  if(!title)fail(400,'Enter a working title.','title_required');
- const at=now(),nextVersion=expected+1,body={sandySuiteVersion:1,domain:desk.key,fields};
+ const at=now(),nextVersion=expected+1,body={...before,fields};
+ // The origin is server-owned; editing a task cannot sever its original meeting link.
+ if(desk.key==='todos'&&before.sourceMeeting)fields.linkedDesk=before.sourceMeeting;
  const [saved]=await db.batch([
   db.prepare("UPDATE club_records SET title=?,body_json=?,status=?,event_date=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND kind=? AND version=? AND status!='approved'")
    .bind(title,JSON.stringify(body),status,dueDate(fields),identity.id,at,recordId,desk.kind,expected),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action:'suite_edited_'+desk.key,actor:identity,at,
-   changes:{domain:desk.key,from:current.status,to:status},snapshot:{title,status,fields},guarded:true}),
+   changes:{domain:desk.key,from:current.status,to:status,fromVersion:expected,toVersion:nextVersion,reason:field(request.reason,500)||'Working draft edit'},snapshot:{title,status,...body},guarded:true}),
   audit(db,identity,'suite_edited_'+desk.key,'record',recordId,at,true)
  ]);
  if(!saved.meta.changes)fail(409,'This record changed while saving. Reload it.','conflict');
@@ -128,7 +130,7 @@ export async function suiteEndpoint(req,env,path,identity){
  const body=validBody(row,desk);
  if(!body)fail(404,'That record is not in this working area.','record_not_found');
  if(history&&req.method==='GET'){
-  const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
+  const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_id AS actorId,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
   return json({history:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
  }
  if(!history&&req.method==='GET')return json({record:summary(row,body)});
