@@ -2,7 +2,7 @@
 // Sandy record store. No real appointment, email, payment or approval.
 import {STAFF,requireRole,dbFor,fail,json,payload,field,dateField,version,now,id,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY} from '../studio/sandy-suite-spec.js';
-import {suiteBody,suiteAllowed,visibleRecords,taskAllocators,genericAllowed} from './record-policy.mjs';
+import {suiteBody,suiteAllowed,visibleRecords,taskAllocators,genericAllowed,legacyNoticeRecipients} from './record-policy.mjs';
 const notices=SUITE_BY_KEY.notices,todos=SUITE_BY_KEY.todos;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const officeLabels={webmaster:'Webmaster',president:'President',vice_president:'Vice President',secretary:'Secretary',assistant_secretary:'Assistant Secretary',treasurer:'Treasurer',committee:'Committee officer'};
@@ -99,6 +99,8 @@ async function receipt(db,actor,row,seen,at){
    .bind(key,JSON.stringify(body),seen,actor.id,actor.id,at,at,row.id),
   ...historyWrites(db,actor,at,key,seen,'committee_notice_seen',{seenVersion:seen},{})
  ]);
+ const saved=await rowById(db,key);let receiptBody={};try{receiptBody=JSON.parse(saved?.body_json||'{}')}catch{}
+ if(receiptBody.sandyCommitteeReceipt!==1||receiptBody.ownerId!==actor.id||receiptBody.noticeId!==row.id||receiptBody.seenVersion<seen)failConflict();
 }
 async function mutateRow(db,row,body,actor,at,operation,changes,status=row.status,eventDate=row.event_date,guard='',args=[]){
  const v=row.version+1;
@@ -118,8 +120,9 @@ async function changeNotice(db,actor,b,at,today){
  const key=assertId(b.id),row=await rowById(db,key),body=suiteBody(row,notices),expected=version(b.version);
  if(!body||!suiteAllowed(row,notices,actor))fail(404,'Notice not found.','not_found');
  if(b.action==='seen'){await receipt(db,actor,row,expected,at);return}
- if(!managers(row,actor))fail(403,'Ask the author, Secretary or Webmaster to update this notice.','notice_forbidden');
- const existing=body.committeeOps||{version:1,kind:'notice',noticeType:'info',recipients:[...STAFF],important:false,reviewDate:body.fields.dueDate||plus(day(row.created_utc),30),taskId:null};
+ const existing=body.committeeOps||{version:1,kind:'notice',noticeType:'info',recipients:legacyNoticeRecipients(body),important:false,reviewDate:body.fields.dueDate||plus(day(row.created_utc),30),taskId:null};
+ const linkedOwner=existing.taskId&&b.action==='archive'?suiteBody(await rowById(db,existing.taskId),todos):null;
+ if(!managers(row,actor)&&!(linkedOwner&&canComplete(actor,linkedOwner)))fail(403,'Ask the author, responsible officer, Secretary or Webmaster to update this notice.','notice_forbidden');
  const operation='committee_notice_'+b.action,requested=b.action==='review'?dateOrEmpty(b.reviewDate):'',signature=requestKey([b.action,requested]);
  if(expected!==row.version){if(await mutationRetry(db,key,actor,operation,expected,signature))return;failConflict()}
  if(row.status==='archived'||row.status==='approved')failConflict();
@@ -148,7 +151,7 @@ async function board(db,actor,today,archive){
   const state=archived?'archived':complete?'done':timing(action?due:review,today,!action);
   const unread=!archived&&row.updated_by!==actor.id&&(seen.get(row.id)||0)<row.version;
   all.push({id:row.id,title:row.title,details:b.fields.message||'',version:row.version,author:author.get(row.created_by)||'Former office holder',createdAt:row.created_utc,updatedAt:row.updated_utc,
-   noticeType:action?'action':'info',important:Boolean(o.important),recipients:o.recipients||[...STAFF],taskId:o.taskId||null,office:tb?taskOffice(tb):'',dueDate:due,reviewDate:action?'':review,status:state,unread,legacy:!b.committeeOps,canReview:!action&&!archived&&row.status!=='approved'&&managers(row,actor),canArchive:!archived&&row.status!=='approved'&&managers(row,actor)&&(!action||complete)});
+   noticeType:action?'action':'info',important:Boolean(o.important),recipients:o.recipients||legacyNoticeRecipients(b),taskId:o.taskId||null,office:tb?taskOffice(tb):'',dueDate:due,reviewDate:action?'':review,status:state,unread,legacy:!b.committeeOps,canReview:!action&&!archived&&row.status!=='approved'&&managers(row,actor),canArchive:!archived&&row.status!=='approved'&&(managers(row,actor)||Boolean(tb&&canComplete(actor,tb)))&&(!action||complete)});
  }
  const active=all.filter(x=>x.status!=='archived');
  const counts={unread:active.filter(x=>x.unread).length,amber:active.filter(x=>['dueSoon','dueToday','reviewSoon','stale'].includes(x.status)).length,red:active.filter(x=>x.status==='overdue').length};

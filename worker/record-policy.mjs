@@ -64,13 +64,20 @@ export function suiteBody(row,desk){
  const p=purposeOf(row);
  return p?.type==='suite'&&p.key===desk.key?JSON.parse(row.body_json):false;
 }
+export function legacyNoticeRecipients(body){
+ const audience=body.fields?.audience;
+ if(audience==='President and secretary')return ['webmaster','president','secretary','assistant_secretary'];
+ if(audience==='Office holders')return STAFF.filter(r=>r!=='committee');
+ if(audience==='Project leads')return ['webmaster'];
+ return [...STAFF];
+}
 export const taskAllocators=['webmaster','secretary','assistant_secretary'];
 // Preserve previously shared working drafts; new operational notices and tasks
 // have server-owned recipient/office boundaries on every alternate read.
 export function suiteAllowed(row,desk,identity){
  const body=suiteBody(row,desk);if(!body||!desk.roles.includes(identity?.role))return false;
  const ops=body.committeeOps;
- if(!ops)return true;
+ if(!ops)return desk.key!=='notices'||identity.role==='webmaster'||row.created_by===identity.id||legacyNoticeRecipients(body).includes(identity.role);
  if(desk.key==='notices')return ops.kind==='notice'&&(identity.role==='webmaster'||row.created_by===identity.id||Array.isArray(ops.recipients)&&ops.recipients.includes(identity.role));
  if(desk.key==='todos')return ops.kind==='task'&&(taskAllocators.includes(identity.role)||!ops.office||(ops.office===identity.role&&(!ops.claimedBy||ops.claimedBy===identity.id)));
  return false;

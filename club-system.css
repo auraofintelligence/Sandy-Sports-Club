@@ -316,3 +316,6 @@
 #ops-paper-worklist{display:none}
 @media(max-width:720px){.ops-notice-grid,.ops-form-grid{grid-template-columns:1fr}}
 @media print{body.ops-printing> :not(#ops-paper-worklist){display:none!important}body.ops-printing #ops-paper-worklist{display:block!important;color:#111;background:white;font:11pt Arial,sans-serif}#ops-paper-worklist article{break-after:page;padding:10mm}#ops-paper-worklist article:last-child{break-after:auto}#ops-paper-worklist header{display:flex;gap:12mm;align-items:center}#ops-paper-worklist img{width:35mm;max-height:25mm;object-fit:contain}#ops-paper-worklist table{border-collapse:collapse;width:100%;font-size:10pt}#ops-paper-worklist th,#ops-paper-worklist td{border:1px solid #666;padding:3mm;vertical-align:top}#ops-paper-worklist tr{break-inside:avoid}.ops-paper-line{border-bottom:1px solid #777;min-height:8mm}}
+
+@page sandy-worklist{size:A4;margin:12mm}
+@media print{#ops-paper-worklist{page:sandy-worklist}}

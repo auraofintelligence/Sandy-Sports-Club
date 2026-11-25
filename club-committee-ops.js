@@ -53,7 +53,7 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
    (t.canTake?'<button type="button" data-task-action="take"'+block()+'>Take this task</button>':'')+(t.canComplete?'<button type="button" data-task-action="complete"'+block()+'>Mark complete</button>':'')+
    (t.canPaper?'<button type="button" data-task-action="paper"'+block()+'>Record returned paper tick</button>':'')+
    (t.version>0?'<button type="button" data-ops-history>Officer history</button>':'')+'</div>'+
-   (t.canAssign?'<form class="ops-assign" data-ops-assign><label>Allocate / change office<select name="office"><option value="">Unallocated</option>'+officeOptions(v.offices,t.office)+'</select></label><button type="submit"'+block()+'>Allocate</button></form>':'')+
+   (t.canAssign?'<form class="ops-assign" data-ops-assign><label>Allocate / change office<select name="office"'+block()+'><option value="">Unallocated</option>'+officeOptions(v.offices,t.office)+'</select></label><button type="submit"'+block()+'>Allocate</button></form>':'')+
    '<div data-ops-history-panel hidden></div></article>';
  }
  function worklist(v){

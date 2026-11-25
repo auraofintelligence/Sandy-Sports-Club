@@ -178,6 +178,41 @@ try{
  await mobile.close();
  assert.deepEqual(snapshot(live.sql),liveBefore,'all live fixture rows unchanged');
  assert.deepEqual(snapshot(showcase.sql),demoBefore,'all showcase fixture rows unchanged');
+
+// Independent real-account browser scenario (isolated fictional DB, not production).
+ const sc=await context('secretary'),sp=await makePage(sc),tc=await context('treasurer'),tp=await makePage(tc),cc=await context('committee'),cp=await makePage(cc);
+ await go(sp,'/club-admin.html#committee/notices');await wait(sp,'#ops-notice-form');
+ await sp.locator('.ops-compose summary').click();
+ await sp.locator('#ops-notice-form [name=kind]').selectOption('action');
+ await sp.locator('#ops-notice-form [name=title]').fill('Fictional Cylinder Beach net kit quote');
+ await sp.locator('#ops-notice-form [name=details]').fill('Compare two portable net kits, no purchase.');
+ await sp.locator('#ops-notice-form [name=scope]').selectOption('treasurer');
+ await sp.locator('#ops-notice-form [name=office]').selectOption('treasurer');
+ await sp.locator('#ops-notice-form [name=dueDate]').fill('2020-01-01');
+ await sp.locator('#ops-notice-form button[type=submit]').click();
+ await wait(sp,'.ops-notice');
+ assert.match(await sp.locator('.ops-notice').first().textContent(),/Overdue/);
+ await go(cp,'/club-admin.html#committee/notices');await wait(cp,'#ops-desk-title');
+ assert.doesNotMatch(await cp.locator('#committee-ops').textContent(),/Fictional Cylinder Beach net kit quote/);
+ await go(tp,'/club-admin.html#committee/notices');await wait(tp,'.ops-notice');
+ assert.match(await tp.locator('.ops-notice').first().textContent(),/New to you/);
+ await tp.locator('[data-notice-action=seen]').click();
+ await tp.waitForFunction(()=>!document.querySelector('[data-notice-action=seen]'));
+ await tp.locator('.ops-notice [data-ops-open=todos]').click();await wait(tp,'.ops-task');
+ assert.match(await tp.locator('.ops-task').first().textContent(),/Fictional Cylinder Beach net kit quote/);
+ await tp.locator('[data-task-action=complete]').click();await wait(tp,'.ops-completed');
+ await tp.waitForFunction(()=>document.querySelector('.ops-completed').textContent.includes('Fictional Cylinder Beach net kit quote'));
+ await tp.locator('.ops-toolbar [data-ops-open=notices]').click();await wait(tp,'.ops-notice');
+ assert.match(await tp.locator('.ops-notice').first().textContent(),/Completed/);
+ tp.once('dialog',d=>d.accept());
+ await tp.locator('[data-notice-action=archive]').click();
+ await tp.waitForFunction(()=>!document.querySelector('.ops-notice'));
+ await tp.locator('[data-board-mode=archive]').click();await wait(tp,'.ops-notice');
+ assert.match(await tp.locator('.ops-notice').first().textContent(),/Archived/);
+ await sc.close();await tc.close();await cc.close();
+ assert.equal(live.sql.prepare("SELECT count(*) AS n FROM club_records WHERE title='Fictional Cylinder Beach net kit quote'").get().n,2);
+ console.log('PASS: real fictional officer notice posting, recipient isolation, read receipt, linked task completion and archive in actual browser');
+
  assert.deepEqual(errors,[],'no uncaught browser JavaScript errors');
  console.log('PASS: both complete database snapshots unchanged and no uncaught browser errors');
 }finally{
