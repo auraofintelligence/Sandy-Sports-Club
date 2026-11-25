@@ -1,6 +1,7 @@
 // Sandy member portal: privacy-scoped real member preferences, activity choices and club data exports.
 // Nothing here enrolls a member, charges fees, sends email or claims an event is approved.
 import {fail,json,now,id,dbFor,payload,field,version,revision,audit,requireRole} from './shared.mjs';
+import {memberOwns,memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Multi-sport'];
 const availability=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 const options=['sport','film','volunteer','community'];
@@ -20,8 +21,8 @@ function cleanPreferences(body){
   publicationConsent:body.publicationConsent===true,notes:field(body.notes,1600)};
 }
 async function ownRecords(db,identity,type){
- const q=await db.prepare("SELECT * FROM club_records WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberWorkspace')=1 AND json_extract(body_json,'$.ownerId')=? AND json_extract(body_json,'$.type')=? ORDER BY updated_utc DESC LIMIT 80").bind(identity.id,type).all();
- return (q.results||[]).map(convert);
+ const rows=await visibleRecords(db,"WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberWorkspace')=1 AND json_extract(body_json,'$.ownerId')=? AND json_extract(body_json,'$.type')=?",[identity.id,type],'updated_utc DESC,id DESC',80,row=>memberOwns(row,identity));
+ return rows.map(convert);
 }
 async function savePreference(db,identity,fields,expected){
  const current=(await ownRecords(db,identity,'preferences'))[0],at=now(),body={sandyMemberWorkspace:1,type:'preferences',ownerId:identity.id,fields};
@@ -80,12 +81,12 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
   const wishes=await ownRecords(db,identity,'wish');
   let events=[],notices=[],newsletters=[];
   if(active){
-   const ev=await db.prepare("SELECT id,title,event_date AS date,status FROM club_records WHERE kind='event' AND status='approved' AND event_date>=date('now','+10 hours') ORDER BY event_date LIMIT 40").all();
-   events=ev.results||[];
-   const ns=await db.prepare("SELECT id,title,updated_utc AS date FROM club_records WHERE kind='notice' AND status='approved' ORDER BY updated_utc DESC LIMIT 30").all();
-   notices=ns.results||[];
-   const nl=await db.prepare("SELECT id,title,updated_utc AS date FROM club_records WHERE kind='newsletter' AND status='approved' ORDER BY updated_utc DESC LIMIT 18").all();
-   newsletters=nl.results||[];
+   const ev=await visibleRecords(db,"WHERE kind='event' AND status='approved' AND event_date>=date('now','+10 hours')",[],'event_date,id',40,memberPublicationAllowed);
+   events=ev.map(r=>({id:r.id,title:r.title,date:r.event_date,status:r.status}));
+   const ns=await visibleRecords(db,"WHERE kind='notice' AND status='approved'",[],'updated_utc DESC,id DESC',30,memberPublicationAllowed);
+   notices=ns.map(r=>({id:r.id,title:r.title,date:r.updated_utc}));
+   const nl=await visibleRecords(db,"WHERE kind='newsletter' AND status='approved'",[],'updated_utc DESC,id DESC',18,memberPublicationAllowed);
+   newsletters=nl.map(r=>({id:r.id,title:r.title,date:r.updated_utc}));
   }
   return json({active,profile:profile||null,preferences:prefs,wishes,events,notices,newsletters,
    notice:active?'Your personal record and authorised club information.':'The club is not established, or your account is not linked to an approved membership. No draft events or private committee material is displayed.'});

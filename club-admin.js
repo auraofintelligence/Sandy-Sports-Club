@@ -76,7 +76,7 @@ async function overview(){
  const people=results[1]?.status==='fulfilled'?results[1].value.total:null;
  const interest=results[2]?.status==='fulfilled'?results[2].value.interests.length:null;
  $('club-summary').innerHTML=[
-  ['Shared committee items',records],['Prospective people',people],['Recent expressions of interest',interest],['Operational club', 'Not established']
+  ['General working records',records],['Prospective people',people],['Recent expressions of interest',interest],['Operational club', 'Not established']
  ].map(([title,count])=>'<div class="club-summary-card"><strong>'+esc(count===null?'Restricted':count)+'</strong><span>'+esc(title)+'</span></div>').join('');
 }
 async function loadPeople(){

@@ -1,11 +1,13 @@
 // Cross-desk operational actions, all explicitly triggered by a real signed-in officer.
 // Creates meeting follow-up tasks and maintains an audited stock movement balance.
 import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,revision,audit} from './shared.mjs';
+import {suiteBody} from './record-policy.mjs';
+import {SUITE_BY_KEY} from '../studio/sandy-suite-spec.js';
 const isUuid=s=>/^[a-f0-9-]{36}$/.test(s);
 function readRecord(row,domain){
  if(!row)fail(404,'The working record was not found.','not_found');
- let body;try{body=JSON.parse(row.body_json)}catch{}
- if(body?.domain!==domain||body?.sandySuiteVersion!==1)fail(404,'That record belongs to another work area.','invalid_area');
+ const body=suiteBody(row,SUITE_BY_KEY[domain]);
+ if(!body)fail(404,'That record belongs to another work area.','invalid_area');
  return body;
 }
 export async function suiteActionEndpoint(req,env,path,identity){

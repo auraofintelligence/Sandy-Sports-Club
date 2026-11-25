@@ -3,6 +3,7 @@
 import {ApiError,fail,json,now,id,dbFor,payload,field,dateField,https,version,requireRole,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 import {suiteActionEndpoint} from './suite-actions.mjs';
+import {suiteBody,visibleRecords} from './record-policy.mjs';
 const statuses=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const exactDate=value=>dateField(value||'',true);
 const isRecordId=value=>/^[a-f0-9-]{36}$/.test(value||'');
@@ -61,19 +62,15 @@ function summary(row,parsed){
   fields:body.fields,version:row.version,createdBy:row.created_by,updatedBy:row.updated_by,
   createdAt:row.created_utc,updatedAt:row.updated_utc};
 }
-function validBody(row,domain){
- if(!row||row.kind!==domain.kind)return false;
- try{const body=JSON.parse(row.body_json);return body?.sandySuiteVersion===1&&body.domain===domain.key?body:false}
- catch{return false}
-}
+const validBody=suiteBody;
 function checkStatus(data){
  const status=field(data.status,30)||'draft';
  if(!statuses.includes(status))fail(400,'Choose a valid working stage.','invalid_status');
  return status;
 }
 async function list(db,desk){
- const rows=await db.prepare("SELECT * FROM club_records WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=? ORDER BY updated_utc DESC,id DESC LIMIT 300").bind(desk.kind,desk.key).all();
- return (rows.results||[]).map(row=>summary(row));
+ const rows=await visibleRecords(db,"WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=?",[desk.kind,desk.key],'updated_utc DESC,id DESC',300,row=>Boolean(suiteBody(row,desk)));
+ return rows.map(row=>summary(row));
 }
 async function changed(db,desk,identity,recordId,request){
  const current=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();

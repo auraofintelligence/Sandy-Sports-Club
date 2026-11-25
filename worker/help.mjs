@@ -1,5 +1,6 @@
 // Sandy's authenticated Webmaster help inbox. All replies remain in the club; no email is sent.
 import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit} from './shared.mjs';
+import {helpAllowed,visibleRecords} from './record-policy.mjs';
 const writers=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee','member'];
 const categories=['Access or password','Site or account issue','Member or safety concern','Committee workflow','Sports or events','Media or notices','Other'];
 const convert=row=>{const b=JSON.parse(row.body_json);return {id:row.id,category:b.category,subject:row.title,
@@ -11,8 +12,8 @@ export async function helpEndpoint(req,env,path,identity){
  if(path==='/api/webmaster/requests'&&req.method==='GET'){
   const webmaster=identity.role==='webmaster';
   const where=webmaster?'':' AND created_by=?';
-  const rows=await db.prepare("SELECT * FROM club_records WHERE kind='notice' AND json_extract(body_json,'$.sandyWebmasterRequest')=1"+where+" ORDER BY updated_utc DESC LIMIT 200").bind(...(webmaster?[]:[identity.id])).all();
-  const records=(rows.results||[]).map(convert);
+  const rows=await visibleRecords(db,"WHERE kind='notice' AND json_extract(body_json,'$.sandyWebmasterRequest')=1"+where,webmaster?[]:[identity.id],'updated_utc DESC,id DESC',200,row=>helpAllowed(row,identity));
+  const records=rows.map(convert);
   return json({requests:records,counters:webmaster?{
    unread:records.filter(x=>!x.readAt).length,open:records.filter(x=>x.stage!=='completed'&&x.stage!=='archived').length
   }:null});
@@ -22,6 +23,7 @@ export async function helpEndpoint(req,env,path,identity){
    category=field(p.category,40);
   if(!subject||!message||!categories.includes(category))
    fail(400,'Enter a subject, category and a request message.','invalid_help_request');
+  if(/(?:[?#&](?:activate|invite|token|reset|receipt|code)=|\b[a-f0-9]{64}\b|\b(?:my (?:password|passcode|pin) is|(?:password|passcode|pin|verification code|login code)\s*[:=])\s*\S)/i.test(subject+' '+message))fail(400,'Remove passwords, private links or access codes before submitting.','private_credentials');
   const rid=id(),body={sandyWebmasterRequest:1,category,message,readAt:null,reply:''};
   await db.batch([
    db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,'notice',?,?,'draft',NULL,1,?,?,?,?)")
@@ -38,7 +40,7 @@ export async function helpEndpoint(req,env,path,identity){
   const rid=match[1],row=await db.prepare('SELECT * FROM club_records WHERE id=? AND kind=?').bind(rid,'notice').first();
   if(!row)fail(404,'This request does not exist.','help_not_found');
   const before=JSON.parse(row.body_json);
-  if(before.sandyWebmasterRequest!==1)fail(404,'This is not a webmaster request.','help_not_found');
+  if(!helpAllowed(row,identity))fail(404,'This is not a webmaster request.','help_not_found');
   const p=await payload(req,8000),expected=version(p.version);
   if(expected!==row.version)fail(409,'This request was updated by another officer. Reload.','conflict');
   const stage=field(p.stage,24);

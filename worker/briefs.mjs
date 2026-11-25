@@ -1,4 +1,5 @@
 import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+import {recordAuditAllowed} from './record-policy.mjs';
 const states=['draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published'];
 const mutable=['draft','proposed','prepared','revision','evidence','closed'];
 const writers=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
@@ -116,6 +117,16 @@ export async function briefsEndpoint(req,env,path,identity){
 export async function auditEndpoint(req,env,identity){
  requireRole(identity,['webmaster','president','secretary']);
  if(req.method!=='GET')fail(405,'Audit history is read-only.','method_not_allowed');
- const db=dbFor(env),r=await db.prepare('SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 300').all();
- return json({audit:r.results||[]});
+ const db=dbFor(env),visible=[];
+ for(let offset=0;visible.length<300;offset+=100){
+  const q=await db.prepare("SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at,r.kind AS record_kind,r.body_json,r.created_by FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id LEFT JOIN club_records r ON a.resource_kind='record' AND r.id=a.resource_id ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 100 OFFSET ?").bind(offset).all();
+  const rows=q.results||[];
+  for(const {record_kind,body_json,created_by,...entry} of rows){
+   // Record-purpose audit is isolated just like the record. Other audit families retain their existing role checks.
+   if(entry.kind==='record'&&!recordAuditAllowed(record_kind?{kind:record_kind,body_json,created_by}:null,identity,entry.action))continue;
+   visible.push(entry);if(visible.length===300)break;
+  }
+  if(rows.length<100)break;
+ }
+ return json({audit:visible});
 }
