@@ -17,6 +17,12 @@
 <form id="club-activate"><label>Private activation token<input name="token" autocomplete="off" spellcheck="false" pattern="[a-fA-F0-9]{64}" minlength="64" maxlength="64" required></label>
 <label>Choose a strong password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>
 <button type="submit">Activate account</button></form></details>
+<details class="club-panel" id="club-recovery-panel"><summary>Recover an active account</summary><p>Use a private recovery link prepared by the real Webmaster. Recovery invalidates existing sessions and does not activate a reserved account.</p>
+<form id="club-recover"><label>Private recovery token<input name="token" autocomplete="off" spellcheck="false" pattern="[a-fA-F0-9]{64}" minlength="64" maxlength="64" required></label>
+<label>Choose a new password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>
+<button type="submit">Recover account</button></form></details>
+<details class="club-panel" id="club-password-panel" hidden><summary>Change my password</summary><p>Sign in first. Changing your password signs out all your sessions. The real Webmaster can change their own password here without recreating the account.</p>
+<form id="club-change-password"><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label><button type="submit">Change password and sign out</button></form></details>
 <details class="club-panel"><summary>First webmaster setup (one time only)</summary>
 <p>Requires a new Sandy database and a bootstrap key entered as a Cloudflare secret. Do not put bootstrap credentials in GitHub or publish them.</p>
 <form id="club-bootstrap">

@@ -20,14 +20,17 @@ function fixture(t){
   sql.prepare('INSERT INTO club_sessions VALUES(?,?,0,4102444800)').run(createHash('sha256').update(token).digest('hex'),id);
   actors[name]={id,token};
  }
+ async function request(who,path,method='GET',body,origin='https://sandy.test'){
+  const headers={Origin:origin,'Content-Type':'application/json'};
+  if(who)headers.Cookie='__Host-sandy_session='+(actors[who]?.token||who);
+  return worker.fetch(new Request('https://sandy.test'+path,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env);
+ }
  async function call(who,path,method='GET',body,status=200){
-  const headers={Origin:'https://sandy.test','Content-Type':'application/json'};
-  if(who)headers.Cookie='__Host-sandy_session='+actors[who].token;
-  const res=await worker.fetch(new Request('https://sandy.test'+path,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env);
+  const res=await request(who,path,method,body);
   const value=await res.json();assert.equal(res.status,status,JSON.stringify(value));return value;
  }
  function active(who){const id=actors[who].id;sql.prepare("INSERT INTO club_people(id,account_id,full_name,status,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,'Fictional member','active',?,?,'2026-01-01','2026-01-01')").run(randomUUID(),id,id,id)}
- return {sql,env,actors,call,active};
+ return {sql,env,actors,call,active,request};
 }
 test('restricted stock, legacy desk and meeting purpose cannot escape through broad register, history or calendar routes',async t=>{
  const {call,sql,env}=fixture(t);
@@ -113,4 +116,85 @@ test('private member preferences stay owner-only across register, suite, audit a
  assert.ok(!(await call('sec','/api/suite/safety')).records.some(r=>r.id===saved.id));
  assert.ok(!(await call('web','/api/audit')).audit.some(r=>r.resourceId===saved.id));
  assert.equal((await call('member','/api/member/workspace')).preferences.fields.notes,'Private preference fixture');
+});
+
+test('reserved officer setup is closed by default; explicit isolated issuance, replacement, expiry, redemption and revocation preserve account identity',async t=>{
+ const {call,env,sql,request}=fixture(t);
+ const ids={};
+ for(const role of ['president','vice_president','secretary','assistant_secretary','treasurer','committee']){
+  const r=await call('web','/api/accounts','POST',{username:'fixture-'+role,role},201);ids[role]=r.account.id;
+ }
+ assert.equal(sql.prepare('SELECT count(*) AS n FROM club_invites').get().n,0);
+ const target=ids.secretary,path='/api/accounts/'+target,username='fixture-secretary',password='fictional-password-1';
+ await call('web',path+'/invite','POST',{manual:true},409);
+ await call(null,'/api/auth/activate','POST',{token:'a'.repeat(64),password},409);
+ env.SANDY_INVITES_ENABLED='enabled';
+ await call('other',path+'/invite','POST',{manual:true},403);
+ await call('web',path+'/invite','POST',{},409);
+ const first=await call('web',path+'/invite','POST',{manual:true},201);
+ const replacement=await call('web',path+'/invite','POST',{manual:true},201);
+ assert.equal(first.sent,false);assert.notEqual(first.token,replacement.token);
+ await call(null,'/api/auth/activate','POST',{token:first.token,password},400);
+ sql.prepare('UPDATE club_invites SET expires_epoch=0 WHERE account_id=?').run(target);
+ await call(null,'/api/auth/activate','POST',{token:replacement.token,password},400);
+ const revoked=await call('web',path+'/invite','POST',{manual:true},201);
+ await call('web',path+'/revoke-link','POST',{manual:true});
+ await call(null,'/api/auth/activate','POST',{token:revoked.token,password},400);
+ const valid=await call('web',path+'/invite','POST',{manual:true},201);
+ env.SANDY_INVITES_ENABLED='disabled';
+ await call(null,'/api/auth/activate','POST',{token:valid.token,password},409);
+ env.SANDY_INVITES_ENABLED='enabled';
+ await call(null,'/api/auth/activate','POST',{token:valid.token,password});
+ await call(null,'/api/auth/activate','POST',{token:valid.token,password},400);
+ const login=await request(null,'/api/auth/login','POST',{username,password});
+ assert.equal(login.status,200);
+ const session=login.headers.get('set-cookie').match(/__Host-sandy_session=([a-f0-9]{64})/)[1];
+ assert.equal((await call(session,'/api/session')).identity.id,target);
+ await call('web',path+'/revoke-sessions','POST',{manual:true});
+ assert.equal((await call(session,'/api/session')).authenticated,false);
+ assert.equal(sql.prepare('SELECT count(*) AS n FROM club_accounts WHERE role=? AND state=?').get('webmaster','active').n,1);
+});
+test('password recovery, self-change, stale tokens, expiry and disable are fail-closed in actual session routing',async t=>{
+ const {call,env,sql,request,actors}=fixture(t);
+ const reserved=await call('web','/api/accounts','POST',{username:'recover-fixture',role:'treasurer'},201);
+ const target=reserved.account.id,path='/api/accounts/'+target;
+ const password='fictional-password-1',next='fictional-password-2',third='fictional-password-3';
+ await call('web',path+'/recover','POST',{manual:true},409);
+ env.SANDY_INVITES_ENABLED='enabled';
+ const invite=await call('web',path+'/invite','POST',{manual:true},201);
+ await call(null,'/api/auth/recover','POST',{token:invite.token,password},400);
+ await call(null,'/api/auth/activate','POST',{token:invite.token,password});
+ env.SANDY_INVITES_ENABLED='disabled';
+ const login=async(p)=>{const r=await request(null,'/api/auth/login','POST',{username:'recover-fixture',password:p});assert.equal(r.status,200);return r.headers.get('set-cookie').match(/__Host-sandy_session=([a-f0-9]{64})/)[1]};
+ const one=await login(password),two=await login(password);
+ await call('other',path+'/recover','POST',{manual:true},403);
+ await call('web','/api/accounts/'+actors.web.id+'/recover','POST',{manual:true},404);
+ const reset=await call('web',path+'/recover','POST',{manual:true},201);
+ env.SANDY_INVITES_ENABLED='enabled';
+ await call(null,'/api/auth/activate','POST',{token:reset.token,password:next},400);
+ env.SANDY_INVITES_ENABLED='disabled';
+ const result=await call(null,'/api/auth/recover','POST',{token:reset.token,password:next});
+ assert.equal(result.ok,true);
+ await call(null,'/api/auth/recover','POST',{token:reset.token,password:next},400);
+ for(const token of [one,two])assert.equal((await call(token,'/api/session')).authenticated,false);
+ await call(null,'/api/auth/login','POST',{username:'recover-fixture',password},401);
+ const current=await login(next);
+ const cross=await request(current,'/api/auth/change-password','POST',{currentPassword:next,password:third},'https://elsewhere.test');assert.equal(cross.status,403);
+ await call(current,'/api/auth/change-password','POST',{currentPassword:password,password:third},401);
+ const pending=await call('web',path+'/recover','POST',{manual:true},201);
+ await call(current,'/api/auth/change-password','POST',{currentPassword:next,password:third});
+ assert.equal((await call(current,'/api/session')).authenticated,false);
+ await call(null,'/api/auth/recover','POST',{token:pending.token,password:next},400);
+ const expired=await login(third);
+ sql.prepare('UPDATE club_sessions SET expires_epoch=0 WHERE digest=?').run(createHash('sha256').update(expired).digest('hex'));
+ assert.equal((await call(expired,'/api/session')).authenticated,false);
+ const live=await login(third);
+ const stillPending=await call('web',path+'/recover','POST',{manual:true},201);
+ await call('web',path+'/disable','POST',{manual:true});
+ assert.equal((await call(live,'/api/session')).authenticated,false);
+ await call(null,'/api/auth/login','POST',{username:'recover-fixture',password:third},401);
+ await call(null,'/api/auth/recover','POST',{token:stillPending.token,password:next},400);
+ assert.equal((await call('web','/api/session')).identity.id,actors.web.id);
+ assert.equal(sql.prepare('SELECT state FROM club_accounts WHERE id=?').get(target).state,'disabled');
+ assert.equal(sql.prepare('SELECT count(*) AS n FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL').get(target).n,0);
 });

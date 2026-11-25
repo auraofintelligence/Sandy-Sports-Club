@@ -5,6 +5,10 @@ const bytes=n=>crypto.getRandomValues(new Uint8Array(n));
 const hex=buf=>Array.from(new Uint8Array(buf),x=>x.toString(16).padStart(2,'0')).join('');
 const random=n=>hex(bytes(n));
 const hash=async value=>hex(await crypto.subtle.digest('SHA-256',enc.encode(value)));
+const resetDigest=token=>hash('sandy-account-recovery/'+token);
+const officeRoles=['president','vice_president','secretary','assistant_secretary','treasurer','committee'];
+const invitationsEnabled=env=>env.SANDY_INVITES_ENABLED==='enabled';
+const requireInvitations=env=>{if(!invitationsEnabled(env))fail(409,'Private officer activation is disabled until the owner authorises opening it.','invites_disabled')};
 const cookie=(value,age)=>COOKIE+'='+value+'; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age='+age;
 const name=x=>field(x,80).toLowerCase();
 const validName=x=>/^[a-z0-9][a-z0-9._+-]{2,79}$/.test(x);
@@ -71,18 +75,19 @@ export async function authEndpoint(req,env,path,identity){
   return json({ok:true,username,notice:'Remove SANDY_BOOTSTRAP_KEY from Cloudflare secrets after setup.'},201);
  }
  if(path==='/api/auth/activate'&&req.method==='POST'){
-  requireCrypto(env);
+  requireCrypto(env);requireInvitations(env);
   const b=await payload(req,8192),token=field(b.token,200);
   if(!/^[a-f0-9]{64}$/.test(token)||!strong(b.password))fail(400,'Use a valid one-time invitation and a strong password.','invalid_activation');
   await rateLimit(req,db,'activation');
   const digest=await hash(token),t=nowSec();
   const record=await db.prepare('SELECT i.account_id,a.username,a.role,a.state FROM club_invites i JOIN club_accounts a ON a.id=i.account_id WHERE i.digest=? AND i.redeemed_epoch IS NULL AND i.expires_epoch>?')
    .bind(digest,t).first();
-  if(!record||record.state!=='reserved')fail(400,'This invitation is unavailable or has expired.','invalid_activation');
+  if(!record||record.state!=='reserved'||!officeRoles.includes(record.role))fail(400,'This invitation is unavailable or has expired.','invalid_activation');
   const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),at=now();
+  const redemptionTime=nowSec();
   const [updated]=await db.batch([
-   db.prepare("UPDATE club_accounts SET password_salt=?,password_verifier=?,state='active',activated_utc=? WHERE id=? AND state='reserved' AND EXISTS(SELECT 1 FROM club_invites WHERE digest=? AND redeemed_epoch IS NULL AND expires_epoch>?)").bind(salt,pass,at,record.account_id,digest,t),
-   db.prepare('UPDATE club_invites SET redeemed_epoch=? WHERE digest=? AND redeemed_epoch IS NULL AND changes()=1').bind(t,digest),
+   db.prepare("UPDATE club_accounts SET password_salt=?,password_verifier=?,state='active',activated_utc=? WHERE id=? AND state='reserved' AND EXISTS(SELECT 1 FROM club_invites WHERE digest=? AND redeemed_epoch IS NULL AND expires_epoch>?)").bind(salt,pass,at,record.account_id,digest,redemptionTime),
+   db.prepare('UPDATE club_invites SET redeemed_epoch=? WHERE digest=? AND redeemed_epoch IS NULL AND changes()=1').bind(redemptionTime,digest),
    audit(db,{id:record.account_id,role:record.role},'account_activated','account',record.account_id,at,true)
   ]);
   if(updated.meta.changes!==1)fail(409,'This invitation has already been redeemed.','invite_conflict');
@@ -99,11 +104,54 @@ export async function authEndpoint(req,env,path,identity){
   if(!user||user.state!=='active'||!constantEqual(expected,user.password_verifier||'0'.repeat(64)))
    fail(401,'The username or password is incorrect.','invalid_credentials');
   const token=random(32),at=now(),until=nowSec()+SESSION_HOURS*3600;
-  await db.batch([
-   db.prepare('INSERT INTO club_sessions(digest,account_id,created_epoch,expires_epoch) VALUES(?,?,?,?)').bind(await hash(token),user.id,nowSec(),until),
-   db.prepare('UPDATE club_accounts SET last_login_utc=? WHERE id=?').bind(at,user.id),
-   audit(db,{id:user.id,role:user.role},'login','account',user.id,at)]);
+  // Do not create a session with a verifier that was reset or disabled during password hashing.
+  const [issued]=await db.batch([
+   db.prepare("INSERT INTO club_sessions(digest,account_id,created_epoch,expires_epoch) SELECT ?,id,?,? FROM club_accounts WHERE id=? AND state='active' AND password_salt=? AND password_verifier=?").bind(await hash(token),nowSec(),until,user.id,user.password_salt,user.password_verifier),
+   db.prepare('UPDATE club_accounts SET last_login_utc=? WHERE id=? AND changes()=1').bind(at,user.id),
+   audit(db,{id:user.id,role:user.role},'login','account',user.id,at,true)]);
+  if(!issued.meta.changes)fail(401,'The username or password is incorrect.','invalid_credentials');
   return json({ok:true},200,{'Set-Cookie':cookie(token,SESSION_HOURS*3600)});
+ }
+ // Recovery uses the same existing token storage but a domain-separated digest.
+ // It cannot activate reserved accounts or reset the sole Webmaster.
+ if(path==='/api/auth/recover'&&req.method==='POST'){
+  requireCrypto(env);
+  const b=await payload(req,8192),token=field(b.token,200);
+  if(!/^[a-f0-9]{64}$/.test(token)||!strong(b.password))fail(400,'Use a valid one-time recovery link and strong password.','invalid_recovery');
+  await rateLimit(req,db,'recovery');
+  const digest=await resetDigest(token);
+  const record=await db.prepare("SELECT a.id,a.role,a.state,a.password_verifier FROM club_invites i JOIN club_accounts a ON a.id=i.account_id WHERE i.digest=? AND i.redeemed_epoch IS NULL AND i.expires_epoch>?").bind(digest,nowSec()).first();
+  if(!record||record.state!=='active'||record.role==='webmaster')fail(400,'This recovery link is unavailable or expired.','invalid_recovery');
+  const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),at=now(),t=nowSec();
+  const [changed]=await db.batch([
+   db.prepare("UPDATE club_accounts SET password_salt=?,password_verifier=? WHERE id=? AND state='active' AND role!='webmaster' AND password_verifier=? AND EXISTS(SELECT 1 FROM club_invites WHERE digest=? AND account_id=? AND redeemed_epoch IS NULL AND expires_epoch>?)").bind(salt,pass,record.id,record.password_verifier,digest,record.id,t),
+   db.prepare('UPDATE club_invites SET redeemed_epoch=? WHERE digest=? AND redeemed_epoch IS NULL AND changes()=1').bind(t,digest),
+   audit(db,{id:record.id,role:record.role},'password_recovered','account',record.id,at,true),
+   db.prepare('DELETE FROM club_sessions WHERE account_id=? AND changes()=1').bind(record.id)
+  ]);
+  if(!changed.meta.changes)fail(409,'This recovery link is no longer available.','recovery_conflict');
+  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
+ }
+ if(path==='/api/auth/change-password'&&req.method==='POST'){
+  requireCrypto(env);requireRole(identity,ROLES.filter(role=>role!=='webmaster_demo'));
+  const b=await payload(req,8192);
+  if(typeof b.currentPassword!=='string'||b.currentPassword.length>256||!strong(b.password)||b.currentPassword===b.password)
+   fail(400,'Enter your current password and a different strong password.','invalid_password');
+  await rateLimit(req,db,'change/'+identity.id);
+  const user=await db.prepare("SELECT password_salt,password_verifier FROM club_accounts WHERE id=? AND state='active'").bind(identity.id).first();
+  if(!user||!constantEqual(await verifier(b.currentPassword,user.password_salt,env.SANDY_AUTH_PEPPER),user.password_verifier))
+   fail(401,'The current password did not match.','invalid_credentials');
+  const salt=random(16),pass=await verifier(b.password,salt,env.SANDY_AUTH_PEPPER),at=now();
+  const digest=await hash(sessionToken(req)),t=nowSec();
+  const [changed]=await db.batch([
+   db.prepare("UPDATE club_accounts SET password_salt=?,password_verifier=? WHERE id=? AND state='active' AND password_salt=? AND password_verifier=? AND EXISTS(SELECT 1 FROM club_sessions WHERE digest=? AND account_id=? AND expires_epoch>?)").bind(salt,pass,identity.id,user.password_salt,user.password_verifier,digest,identity.id,t),
+   audit(db,identity,'password_changed','account',identity.id,at,true),
+   db.prepare('DELETE FROM club_sessions WHERE account_id=? AND changes()=1').bind(identity.id),
+   // Invalidate outstanding recovery tokens after a successful change, even when no other sessions existed.
+   db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL AND EXISTS(SELECT 1 FROM club_accounts WHERE id=? AND password_verifier=?)').bind(identity.id,identity.id,pass)
+  ]);
+  if(!changed.meta.changes)fail(409,'Your account or session changed. Sign in again.','password_conflict');
+  return json({ok:true},200,{'Set-Cookie':cookie('',0)});
  }
  if(path==='/api/auth/logout'&&req.method==='POST'){
   const token=sessionToken(req);
@@ -118,7 +166,7 @@ export async function authEndpoint(req,env,path,identity){
  if(path==='/api/accounts'&&req.method==='GET'){
   requireRole(identity,['webmaster']);
   const rows=await db.prepare('SELECT a.id,a.username,a.role,a.office_label,a.display_name,a.state,a.created_utc,a.activated_utc,(SELECT MAX(i.expires_epoch) FROM club_invites i WHERE i.account_id=a.id AND i.redeemed_epoch IS NULL AND i.expires_epoch>?) AS invite_expires_epoch FROM club_accounts a ORDER BY CASE WHEN a.role=? THEN 0 ELSE 1 END,a.username').bind(nowSec(),'webmaster').all();
-  return json({accounts:(rows.results||[]).map(safeAccount)});
+  return json({accounts:(rows.results||[]).map(safeAccount),officerActivationEnabled:invitationsEnabled(env)});
  }
  if(path==='/api/accounts'&&req.method==='POST'){
   requireRole(identity,['webmaster']);
@@ -134,35 +182,52 @@ export async function authEndpoint(req,env,path,identity){
   }catch(e){if(/UNIQUE|constraint/i.test(String(e.message)))fail(409,'That username is already reserved.','account_exists');throw e}
   return json({ok:true,account:{id:newId,username,role,office,state:'reserved'},invitationSent:false},201);
  }
- const match=path.match(/^\/api\/accounts\/([a-f0-9-]{36})\/(invite|disable)$/);
+ const match=path.match(/^\/api\/accounts\/([a-f0-9-]{36})\/(invite|recover|revoke-link|revoke-sessions|disable)$/);
  if(match&&req.method==='POST'){
   requireRole(identity,['webmaster']);
   const [_,accountId,action]=match;
   const target=await db.prepare('SELECT id,username,role,state FROM club_accounts WHERE id=?').bind(accountId).first();
   if(!target||target.role==='webmaster')fail(404,'This reserved account is unavailable.','account_not_found');
   const at=now();
-  if(action==='invite'){
-   // This one-time manual invitation is created only by an authenticated webmaster action.
-   // The disabled SANDY_INVITES_ENABLED switch still prevents unattended invitation workflows.
+  if(action==='invite'||action==='recover'){
    const b=await payload(req,2048);
-   if(b.manual!==true)fail(409,'Automatic invitation generation is disabled. The webmaster must explicitly issue a private link.','manual_invite_required');
-   if(!['president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(target.role))
+   if(b.manual!==true)fail(409,'The webmaster must explicitly prepare a private link.','manual_invite_required');
+   const recovery=action==='recover';
+   if(!recovery)requireInvitations(env);
+   if(!recovery&&!officeRoles.includes(target.role))
     fail(403,'Manual invitations are available only for reserved prospective committee officers.','office_only');
-   if(target.state!=='reserved')fail(409,'Only reserved accounts may be activated by invitation.','account_not_reserved');
-   const token=random(32),digest=await hash(token),expiry=nowSec()+48*3600;
-   await db.batch([
-    db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL').bind(accountId),
-    db.prepare('INSERT INTO club_invites(digest,account_id,issued_by,created_epoch,expires_epoch) VALUES(?,?,?,?,?)').bind(digest,accountId,identity.id,nowSec(),expiry),
-    audit(db,identity,'manual_officer_invitation_created_not_sent','account',accountId,at)
+   if(recovery&&target.role==='webmaster_demo')fail(403,'Demo access uses separate setup.','demo_recovery_forbidden');
+   const expected=recovery?'active':'reserved';
+   if(target.state!==expected)fail(409,recovery?'Only active accounts may recover a password.':'Only reserved accounts may activate by invitation.','account_state_conflict');
+   const token=random(32),digest=await (recovery?resetDigest(token):hash(token)),t=nowSec(),expiry=t+48*3600;
+   const [,issued]=await db.batch([
+    db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL AND EXISTS(SELECT 1 FROM club_accounts WHERE id=? AND state=?)').bind(accountId,accountId,expected),
+    db.prepare('INSERT INTO club_invites(digest,account_id,issued_by,created_epoch,expires_epoch) SELECT ?,id,?,?,? FROM club_accounts WHERE id=? AND state=?').bind(digest,identity.id,t,expiry,accountId,expected),
+    audit(db,identity,recovery?'manual_password_recovery_created_not_sent':'manual_officer_invitation_created_not_sent','account',accountId,at,true)
    ]);
-   return json({token,username:target.username,expiresAt:new Date(expiry*1000).toISOString(),sent:false,
+   if(!issued.meta.changes)fail(409,'The account changed before the link could be issued.','account_state_conflict');
+   return json({token,username:target.username,expiresAt:new Date(expiry*1000).toISOString(),sent:false,recovery,
     instruction:'One-time link prepared. Copy it or open a draft email to send it privately. No message was sent automatically.'},201);
   }
+  if(action==='revoke-link'||action==='revoke-sessions'){
+   const b=await payload(req,2048);
+   if(b.manual!==true)fail(409,'Confirm this account action explicitly.','manual_action_required');
+   const link=action==='revoke-link';
+   const [result]=await db.batch([
+    db.prepare(link?'DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL':'DELETE FROM club_sessions WHERE account_id=?').bind(accountId),
+    // SQLite changes() may exceed one when several sessions are revoked.
+    db.prepare("INSERT INTO club_audit(id,actor_id,actor_role,action,resource_kind,resource_id,occurred_utc,context_json) SELECT ?,?,?,?,'account',?,?,'{}' WHERE changes()>0").bind(id(),identity.id,identity.role,link?'private_link_revoked':'account_sessions_revoked',accountId,at)
+   ]);
+   return json({ok:true,revoked:result.meta.changes});
+  }
   if(action==='disable'){
+   const b=await payload(req,2048);
+   if(b.manual!==true)fail(409,'Confirm disabling the account explicitly.','manual_action_required');
    const [result]=await db.batch([
     db.prepare("UPDATE club_accounts SET state='disabled' WHERE id=? AND state!='disabled'").bind(accountId),
+    audit(db,identity,'account_disabled','account',accountId,at,true),
     db.prepare('DELETE FROM club_sessions WHERE account_id=?').bind(accountId),
-    audit(db,identity,'account_disabled','account',accountId,at)
+    db.prepare('DELETE FROM club_invites WHERE account_id=? AND redeemed_epoch IS NULL').bind(accountId)
    ]);
    if(!result.meta.changes)fail(409,'This account was already disabled.','already_disabled');
    return json({ok:true});

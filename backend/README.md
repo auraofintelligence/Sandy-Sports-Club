@@ -26,12 +26,18 @@ The club is still a proposal. No claim is made that every PLFC workflow or exter
 ## Boundaries
 
 - `SANDY_CLUB_APPROVALS=disabled`: no formal approvals, memberships or published club claims
-- `SANDY_INVITES_ENABLED=disabled`: no unattended invitation delivery; a real signed-in Webmaster may only generate an explicit private officer setup link
+- `SANDY_INVITES_ENABLED=disabled`: no new officer setup link can be issued or redeemed. Opening activation requires a separate owner-approved configuration change and an explicit real Webmaster action; no automated delivery. Active-account recovery and revocation are separate manual actions, not new appointments.
 - No paid API, payments, SMS, automated social publishing or advertising expenditure
 - The one synthetic member is labelled preview-only; no real account or private member data is seeded
 - Real writes record officer account, office, UTC timestamp, changes and revision number. The Webmaster role-preview does not impersonate another identity
 
 Voluntary C-Hours are not cash balances, wages or financial exchange. If used, they remain separate from money.
+
+## Account recovery and revocation
+
+- A real Webmaster can prepare or replace a recovery link for an existing active non-Webmaster account. The link expires in 48 hours, is purpose-separated from activation, and is not sent automatically. Redeeming it revokes prior sessions. A pending link can be revoked without changing the account; sessions can be revoked without resetting the password; disabling an account removes sessions and unused links.
+- An authenticated account owner (except the view-only demo) can change their password from the sign-in page using the current password. All sessions and pending recovery links are revoked. The original Webmaster account and ID are preserved.
+- If the sole Webmaster loses both their password and active sessions, do not rerun bootstrap or create a second administrator. No self-service recovery for that scenario is implemented. Owner-controlled recovery requires a separately approved, identity-verified Cloudflare/D1 procedure with protected backup and a documented rehearsal (SEC-03/SEC-12 remain open).
 
 ## Tests and deployment
 

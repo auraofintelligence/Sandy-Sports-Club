@@ -15,6 +15,7 @@ async function check(){
    message('The shared Cloudflare/D1 backend has not been activated. No login or membership data will be stored by this page.',true);
    return;
   }
+  $('club-password-panel').hidden=!session.authenticated||session.identity?.role==='webmaster_demo';
   if(session.authenticated){
    message('Signed in as '+session.identity.name+' ('+session.identity.role+'). Open shared administration.');
   }else message('Shared club storage is connected. Sign in with an activated account.');
@@ -27,7 +28,8 @@ async function submit(formId,path,redirect=false){
   try{
    const result=await request(path,input);form.reset();
    message(path.endsWith('/bootstrap')?'First webmaster reserved and activated. Remove the bootstrap Cloudflare secret. Then sign in.':
-     path.endsWith('/activate')?'Account activated. You may now sign in.':'Signed in. Opening shared club administration.');
+     path.endsWith('/activate')?'Account activated. You may now sign in.':path.endsWith('/recover')||path.endsWith('/change-password')?'Password changed. All previous sessions have been signed out. Sign in with your new password.':'Signed in. Opening shared club administration.');
+   if(path.endsWith('/recover')||path.endsWith('/change-password'))$('club-password-panel').hidden=true;
    if(redirect){const session=await request('/api/session');location.href=session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
   }catch(error){message(error.message,true)}
   finally{button.disabled=false}
@@ -36,17 +38,19 @@ async function submit(formId,path,redirect=false){
 // One-time invitation links carry their token in a URL fragment (never sent in HTTP requests).
 // Read it into the activation field, then remove the fragment from the address bar.
 function openPrivateInvitation(){
- const params=new URLSearchParams(location.hash.slice(1)),token=params.get('invite');
+ const params=new URLSearchParams(location.hash.slice(1)),recovery=params.has('recover'),token=params.get(recovery?'recover':'invite');
  if(!token||!/^[a-f0-9]{64}$/i.test(token))return;
- const panel=$('club-invite-panel'),form=$('club-activate');
+ const panel=$(recovery?'club-recovery-panel':'club-invite-panel'),form=$(recovery?'club-recover':'club-activate');
  if(!panel||!form)return;
  panel.open=true;form.elements.token.value=token.toLowerCase();
  history.replaceState(null,'',location.pathname+location.search);
- message('Private officer invitation loaded. Choose your own strong password to activate your account.');
+ message(recovery?'Private recovery link loaded. Choose a new password.':'Private officer invitation loaded. Choose your own strong password to activate your account.');
  panel.scrollIntoView({block:'start'});
 }
 openPrivateInvitation();
 submit('club-login','/api/auth/login',true);
 submit('club-activate','/api/auth/activate');
+submit('club-recover','/api/auth/recover');
+submit('club-change-password','/api/auth/change-password');
 submit('club-bootstrap','/api/auth/bootstrap');
 check();

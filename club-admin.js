@@ -147,11 +147,16 @@ async function loadAccounts(){
  const result=await api('/api/accounts');
  const officeRoles=['president','vice_president','secretary','assistant_secretary','treasurer','committee'];
  $('account-rows').innerHTML=result.accounts.map(a=>{
-  let invitation='—';
+  let invitation='Not available';
+  const pending=Boolean(a.inviteExpiresAt),actionButton=(action,label)=>'<button type="button" data-account-action="'+action+'" data-account-id="'+esc(a.id)+'" data-username="'+esc(a.username)+'">'+label+'</button>';
   if(a.state==='reserved'&&officeRoles.includes(a.role)){
-   const pending=Boolean(a.inviteExpiresAt);
-   invitation='<button type="button" data-office-invite="'+esc(a.id)+'" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace setup link':'Prepare invite')+'</button>'+
-    (pending?'<small class="club-invite-pending">Pending until '+esc(new Date(a.inviteExpiresAt).toLocaleString('en-AU'))+'</small>':'');
+   invitation=result.officerActivationEnabled?'<button type="button" data-office-invite="'+esc(a.id)+'" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace setup link':'Prepare invite')+'</button>':'<small>Officer activation disabled</small>';
+  }else if(a.state==='active'&&!['webmaster','webmaster_demo'].includes(a.role)){
+   invitation='<button type="button" data-office-invite="'+esc(a.id)+'" data-recovery="true" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace recovery link':'Prepare recovery link')+'</button> '+actionButton('revoke-sessions','Sign out all sessions');
+  }
+  if(a.role!=='webmaster'){
+   if(pending)invitation+=' <small class="club-invite-pending">Pending until '+esc(new Date(a.inviteExpiresAt).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'}))+' Brisbane</small> '+actionButton('revoke-link','Revoke private link');
+   if(a.state!=='disabled')invitation+=' '+actionButton('disable','Disable account');
   }
   return '<tr><td>'+esc(a.username)+'</td><td>'+esc(a.office)+'</td><td>'+esc(a.role)+'</td><td>'+esc(a.state)+'</td><td>'+esc(a.activatedAt||'Not activated')+'</td><td>'+invitation+'</td></tr>';
  }).join('')||'<tr><td colspan="6">No accounts reserved.</td></tr>';
@@ -199,22 +204,32 @@ function bind(){
   if(Number.isFinite(h)&&h>300)frame.style.height=Math.min(24000,Math.ceil(h)+30)+'px';
  });
  $('account-rows').addEventListener('click',async ev=>{
+  const accountAction=ev.target.closest('button[data-account-action]');
+  if(identity?.role!=='webmaster'||$('club-view-role').value!=='webmaster')return;
+  if(accountAction){
+   const action=accountAction.dataset.accountAction;
+   if(!confirm('Confirm '+action.replace(/-/g,' ')+' for '+accountAction.dataset.username+'?'))return;
+   accountAction.disabled=true;hidePrivateInvite();
+   try{await api('/api/accounts/'+accountAction.dataset.accountId+'/'+action,{method:'POST',data:{manual:true}});status('Account action completed. No message sent.');await loadAccounts()}catch(e){status(e.message,true)}finally{accountAction.disabled=false}
+   return;
+  }
   const b=ev.target.closest('button[data-office-invite]');
-  if(!b||identity?.role!=='webmaster')return;
-  if(b.dataset.pending==='true'&&!confirm('Replace the existing private setup link? The earlier invitation will stop working.'))return;
+  if(!b)return;
+  const recovery=b.dataset.recovery==='true';
+  if(!confirm((b.dataset.pending==='true'?'Replace the existing':'Prepare a')+' private '+(recovery?'recovery':'setup')+' link for '+b.dataset.username+'? No message will be sent.'))return;
   b.disabled=true;
   hidePrivateInvite();
   try{
-   const result=await api('/api/accounts/'+b.dataset.officeInvite+'/invite',{method:'POST',data:{manual:true}});
-   const link=location.origin+'/club-login.html#invite='+result.token;
+   const result=await api('/api/accounts/'+b.dataset.officeInvite+'/'+(recovery?'recover':'invite'),{method:'POST',data:{manual:true}});
+   const link=location.origin+'/club-login.html#'+(recovery?'recover':'invite')+'='+result.token;
    $('club-invitation-link').value=link;
-   $('club-invite-email').href='mailto:?subject='+encodeURIComponent('Sandy Sports Club private officer account setup')+
-    '&body='+encodeURIComponent('A prospective Sandy Sports office account has been reserved for '+result.username+
-     '. If you agree to activate it, use this one-time private link to set your own password (expires in 48 hours):\n\n'+link+
-     '\n\nSandy Sports is a proposed club. This invitation does not confer an elected office or active membership.');
+   $('club-invite-email').href='mailto:?subject='+(recovery?encodeURIComponent('Sandy Sports Club private account recovery'):encodeURIComponent('Sandy Sports Club private officer account setup'))+
+    '&body='+encodeURIComponent((recovery?'A private password recovery link was prepared for ':'A prospective Sandy Sports office account has been reserved for ')+result.username+
+     '. Use this one-time private link to set your own password (expires in 48 hours):\n\n'+link+
+     '\n\nSandy Sports is a proposed club. This link does not confer an elected office or active membership.');
    $('club-invitation-result').hidden=false;
    $('club-invitation-message').textContent='Prepared for '+result.username+'. This private link has NOT been sent.';
-   status('Private officer invitation prepared. Choose Copy setup link or Prepare email. Nothing has been sent automatically.');
+   status('Private '+(recovery?'recovery':'setup')+' link prepared. Copy it or prepare an email. Nothing has been sent automatically.');
    await loadAccounts();
    $('club-invitation-result').scrollIntoView({block:'nearest'});
   }catch(e){status(e.message,true)}
