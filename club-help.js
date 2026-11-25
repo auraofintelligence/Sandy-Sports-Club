@@ -32,7 +32,7 @@ if(root){
      '<p>'+esc(row.reply||'No Webmaster response recorded yet.')+'</p>';
     return '<details class="webmaster-help-item"><summary><strong>'+esc(row.subject)+'</strong> · '+esc(row.stage)+
      ' · '+esc(row.category)+(webmaster&&!row.readAt?' · Unread':'')+'</summary>'+
-     '<p>'+esc(row.message)+'</p><small>Logged '+esc(row.createdAt)+' · account '+esc(row.createdBy)+'</small>'+action+'</details>';
+     '<p>'+esc(row.message)+'</p><small>Logged '+esc(row.createdAt)+' · account '+esc(row.createdBy)+'</small>'+action+'<p><button type="button" data-help-history="'+esc(row.id)+'">View private status history</button></p><div data-help-history-panel hidden></div></details>';
    }).join('')||'<p>No private Webmaster requests have been recorded yet.</p>';
   }catch(error){list.textContent='Could not load requests: '+error.message}
  }
@@ -57,6 +57,13 @@ if(root){
    notice.textContent='Internal reply saved with a server audit. No email sent.';
    await load();
   }catch(error){notice.textContent='Not saved: '+error.message;button.disabled=false}
+ });
+ list.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-help-history]');if(!button)return;
+  const panel=button.closest('.webmaster-help-item').querySelector('[data-help-history-panel]');
+  if(!panel.hidden){panel.hidden=true;return}
+  button.disabled=true;
+  try{const result=await request('/api/webmaster/requests/'+button.dataset.helpHistory+'/history');panel.innerHTML='<h4>Private status history</h4>'+result.history.map(h=>'<p>Revision '+h.version+' | '+esc(h.office||h.role)+' | '+esc(h.brisbaneAt||h.at)+' | '+esc(h.operation)+'</p>').join('');panel.hidden=false}catch(e){notice.textContent=e.message}finally{button.disabled=false}
  });
  window.SandyHelp={load};
  window.addEventListener('sandy:clubhouse-section-change',e=>{if(e.detail?.tab==='requests')void load()});

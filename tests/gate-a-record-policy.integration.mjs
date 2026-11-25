@@ -400,3 +400,36 @@ test('authentication limits are atomic, bound to source and subject, clean expir
  assert.equal((await ambiguous.json()).authenticated,false);
  assert.equal(sql.prepare('SELECT count(*) AS n FROM club_login_attempts WHERE key LIKE ?').get('%missing-fixture%').n,0);
 });
+
+test('private help status and history remain requester/Webmaster only, and scoped audit pagination and CSV do not leak records',async t=>{
+ const {call,request,sql,actors}=fixture(t);
+ const help=await call('other','/api/webmaster/requests','POST',{subject:'Fictional private support',category:'Committee workflow',message:'Private fictional request'},201);
+ const path='/api/webmaster/requests/'+help.id;
+ await call('web',path,'PATCH',{version:1,stage:'review',reply:'Here is https://example.test/#recover=secret'},400);
+ await call('web',path,'PATCH',{version:1,stage:'review',reply:'Fictional private reply'});
+ assert.equal((await call('other',path)).request.reply,'Fictional private reply');
+ const status=await call('other',path+'/status');assert.equal(status.stage,'review');assert.equal(status.version,2);assert.equal(status.reply,undefined);
+ const history=(await call('other',path+'/history')).history;assert.equal(history.length,2);assert.equal(history[0].version,2);
+ assert.doesNotMatch(JSON.stringify(history),/Private fictional request|Fictional private reply/);
+ for(const who of ['sec','treasurer','member'])for(const suffix of ['','/status','/history'])await call(who,path+suffix,'GET',undefined,404);
+ await call(null,path+'/history','GET',undefined,401);
+ await call('other',path+'/history','PATCH',{version:2},404);
+ const stock=await call('treasurer','/api/suite/stock','POST',{title:'Restricted finance fixture',fields:{sku:'FIXTURE',category:'Sports gear',opening:2}},201);
+ const allowed=await call('sec','/api/records','POST',{kind:'social_idea',title:'Fictional common audit',body:{notes:'Common'}},201);
+ for(let i=0;i<3;i++)await call('sec','/api/records','POST',{kind:'social_idea',title:'Fictional draft '+i,body:{}},201);
+ let cursor=null,seen=[];
+ do{
+  const page=await call('sec','/api/audit?limit=2'+(cursor?'&cursor='+encodeURIComponent(cursor):''));
+  seen.push(...page.audit);cursor=page.nextCursor;
+ }while(cursor);
+ assert.equal(new Set(seen.map(x=>x.id)).size,seen.length);
+ assert.ok(seen.some(x=>x.resourceId===allowed.id));
+ assert.ok(!seen.some(x=>[help.id,stock.id].includes(x.resourceId)));
+ const csv=await request('sec','/api/audit?kind=record&format=csv&limit=300');
+ assert.equal(csv.status,200);assert.match(csv.headers.get('Cache-Control'),/no-store/);assert.match(csv.headers.get('Content-Type'),/text\/csv/);
+ const text=await csv.text();assert.ok(text.includes(allowed.id));assert.ok(!text.includes(help.id)&&!text.includes(stock.id));
+ assert.ok(text.includes('brisbaneAt')&&text.includes('office'));
+ await call('sec','/api/audit?cursor=bad','GET',undefined,400);
+ await call('other','/api/audit?format=csv','GET',undefined,403);
+ assert.ok((await call('web','/api/audit?kind=record')).audit.some(x=>x.resourceId===help.id));
+});

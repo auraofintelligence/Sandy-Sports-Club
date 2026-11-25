@@ -78,8 +78,11 @@ export function revision(db,{kind,resourceId,resourceVersion,action,actor,at,sna
  return db.prepare(sql).bind(id(),kind,resourceId,resourceVersion,action,actor.id,actor.role,actor.office_label||actor.role,at,
   JSON.stringify(changes),JSON.stringify(snapshot));
 }
-export function audit(db,identity,action,kind,resourceId,at,guarded=false){
+export function audit(db,identity,action,kind,resourceId,at,guarded=false,context={}){
+ // No credential, raw record body or free-form user content in the general audit index.
+ const details={office:identity.office_label||identity.role,reason:action};
+ for(const key of ['fromVersion','toVersion'])if(Number.isSafeInteger(context[key])&&context[key]>=0)details[key]=context[key];
  const sql='INSERT INTO club_audit(id,actor_id,actor_role,action,resource_kind,resource_id,occurred_utc,context_json) '+
-   "SELECT ?,?,?,?,?,?,?,'{}'"+(guarded?' WHERE changes()=1':'');
- return db.prepare(sql).bind(id(),identity.id,identity.role,action,kind,resourceId,at);
+   "SELECT ?,?,?,?,?,?,?,?"+(guarded?' WHERE changes()=1':'');
+ return db.prepare(sql).bind(id(),identity.id,identity.role,action,kind,resourceId,at,JSON.stringify(details));
 }

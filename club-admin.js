@@ -179,15 +179,36 @@ async function loadBriefs(){
   '<span>'+esc(b.updatedAt?.slice(0,16)||'')+'</span></article>').join('')||
   '<p>No shared production briefs yet. Use Social Studio to prepare one for committee review.</p>';
 }
-async function loadAudit(){
+let auditCursor=null,auditNext=null,auditPage=1;
+function auditQuery(format){
+ const q=new URLSearchParams({limit:'100'});
+ if($('audit-kind').value)q.set('kind',$('audit-kind').value);
+ if(auditCursor)q.set('cursor',auditCursor);
+ if(format)q.set('format',format);
+ return '/api/audit?'+q.toString();
+}
+async function loadAudit(reset=true){
  if(!['webmaster','president','secretary'].includes(identity.role)){status('Audit access is restricted.',true);return}
- const data=await api('/api/audit');
+ if(reset){auditCursor=null;auditNext=null;auditPage=1}
+ $('audit-next').disabled=true;$('audit-export').disabled=true;$('audit-page-status').textContent='Loading authorised audit history…';
+ const data=await api(auditQuery());auditNext=data.nextCursor;
  $('audit-rows').innerHTML=data.audit.map(r=>
-  '<article class="club-audit-item"><strong>'+esc(r.action)+'</strong> · '+esc(r.actor||r.role)+' · '+esc(r.at)+
-  '<p>'+esc(r.kind+' / '+r.resourceId)+'</p></article>').join('')||'<p>No server-stamped changes yet.</p>';
+  '<article class="club-audit-item"><strong>'+esc(r.action)+'</strong> · '+esc(r.actor||r.role)+' · '+esc(r.office||r.role)+' · '+esc(r.brisbaneAt||r.at)+
+  '<p>'+esc(r.kind+' / '+r.resourceId)+(r.toVersion!=null?' | Revision '+esc(r.fromVersion)+' to '+esc(r.toVersion):'')+'</p></article>').join('')||'<p>No authorised server-stamped changes on this page.</p>';
+ $('audit-page-status').textContent='Page '+auditPage+' | '+data.audit.length+' authorised entries'+(isReadOnlyView()?' | Synthetic example only':'');
+ $('audit-next').disabled=!auditNext;$('audit-export').disabled=false;
+}
+async function exportAudit(){
+ const response=await viewFetch(auditQuery('csv'),{credentials:'same-origin',cache:'no-store'});
+ if(!response.ok)throw Error('The current scoped audit page could not be exported.');
+ const url=URL.createObjectURL(await response.blob()),link=document.createElement('a');link.href=url;link.download='sandy-scoped-audit.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function bind(){
  committeeRoom=setupCommitteeRoom({api,esc,status,openTab,getIdentity:()=>identity});
+ $('audit-refresh').addEventListener('click',()=>loadAudit().catch(e=>status(e.message,true)));
+ $('audit-kind').addEventListener('change',()=>loadAudit().catch(e=>status(e.message,true)));
+ $('audit-next').addEventListener('click',()=>{if(auditNext){auditCursor=auditNext;auditPage++;loadAudit(false).catch(e=>status(e.message,true))}});
+ $('audit-export').addEventListener('click',()=>exportAudit().catch(e=>status(e.message,true)));
  window.addEventListener('hashchange',()=>{
   if(!identity)return;
   const hash=location.hash.slice(1);

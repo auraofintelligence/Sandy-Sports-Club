@@ -129,22 +129,56 @@ export async function briefsEndpoint(req,env,path,identity){
  }
  fail(404,'Unsupported production brief operation.','not_found');
 }
+const auditKinds=new Set(['account','record','person','interest','studio-brief','social-settings','social-edits','social-metrics','library']);
+const auditCsvFields=['at','brisbaneAt','actorId','actor','role','office','action','kind','resourceId','fromVersion','toVersion','reason'];
+const csvCell=value=>{
+ let s=String(value??'');if(/^[\s]*[=+\-@]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;
+ return '"'+s.replaceAll('"','""')+'"';
+};
+function auditCursor(value){
+ if(!value)return null;
+ try{
+  const p=JSON.parse(atob(value));
+  if(!Array.isArray(p)||p.length!==2||typeof p[0]!=='string'||!Number.isFinite(Date.parse(p[0]))||typeof p[1]!=='string'||!/^[a-f0-9-]{36}$/.test(p[1]))throw Error();
+  return p;
+ }catch{fail(400,'The audit page reference is invalid. Refresh the audit trail.','invalid_cursor')}
+}
 export async function auditEndpoint(req,env,identity){
  requireRole(identity,['webmaster','president','secretary']);
  if(req.method!=='GET')fail(405,'Audit history is read-only.','method_not_allowed');
- const db=dbFor(env),visible=[];
- for(let offset=0;visible.length<300;offset+=100){
-  const q=await db.prepare("SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at,r.kind AS record_kind,r.body_json,r.created_by FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id LEFT JOIN club_records r ON a.resource_kind='record' AND r.id=a.resource_id ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 100 OFFSET ?").bind(offset).all();
+ const url=new URL(req.url),db=dbFor(env),visible=[];
+ const kind=url.searchParams.get('kind'),format=url.searchParams.get('format'),limitParam=url.searchParams.get('limit');
+ if(kind&&!auditKinds.has(kind))fail(400,'Choose a valid audit resource category.','invalid_audit_kind');
+ if(format&&format!=='csv')fail(400,'Choose JSON or CSV audit output.','invalid_format');
+ const limit=limitParam===null?300:Number(limitParam);
+ if(!Number.isInteger(limit)||limit<1||limit>300)fail(400,'Choose an audit page size between 1 and 300.','invalid_limit');
+ let cursor=auditCursor(url.searchParams.get('cursor')),nextCursor=null,done=false;
+ while(visible.length<limit+1&&!done){
+  const conditions=[],args=[];
+  if(cursor){conditions.push('(a.occurred_utc<? OR (a.occurred_utc=? AND a.id<?))');args.push(cursor[0],cursor[0],cursor[1])}
+  if(kind){conditions.push('a.resource_kind=?');args.push(kind)}
+  const q=await db.prepare("SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at,a.context_json AS context,r.kind AS record_kind,r.body_json,r.created_by FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id LEFT JOIN club_records r ON a.resource_kind='record' AND r.id=a.resource_id "+(conditions.length?'WHERE '+conditions.join(' AND ')+' ':'')+"ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 100").bind(...args).all();
   const rows=q.results||[];
-  for(const {record_kind,body_json,created_by,...entry} of rows){
-   // Record-purpose audit is isolated just like the record. Other audit families retain their existing role checks.
+  for(const {record_kind,body_json,created_by,context,...entry} of rows){
+   cursor=[entry.at,entry.id];
+   if(!auditKinds.has(entry.kind))continue;
    if(entry.kind==='record'&&!recordAuditAllowed(record_kind?{kind:record_kind,body_json,created_by}:null,identity,entry.action))continue;
-   // Account credentials and access-management metadata are for the real Webmaster only.
    if(entry.kind==='account'&&identity.role!=='webmaster')continue;
    if(entry.kind==='library'&&!await libraryAuditAllowed(db,identity,entry.resourceId))continue;
-   visible.push({...entry,brisbaneAt:new Date(entry.at).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'})});if(visible.length===300)break;
+   // Only explicit safe metadata, never context_json, snapshot_json or private record body.
+   let c={};try{c=JSON.parse(context)||{}}catch{}
+   visible.push({...entry,office:typeof c.office==='string'?c.office:entry.role,reason:entry.action,
+    fromVersion:Number.isSafeInteger(c.fromVersion)?c.fromVersion:null,toVersion:Number.isSafeInteger(c.toVersion)?c.toVersion:null,
+    brisbaneAt:new Date(entry.at).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'})});
+   if(visible.length===limit+1)break;
   }
-  if(rows.length<100)break;
+  if(rows.length<100)done=true;
  }
- return json({audit:visible});
+ const page=visible.slice(0,limit);
+ if(visible.length>limit){const last=page[page.length-1];nextCursor=btoa(JSON.stringify([last.at,last.id]))}
+ if(format==='csv'){
+  const body=[auditCsvFields.map(csvCell).join(','),...page.map(r=>auditCsvFields.map(k=>csvCell(r[k])).join(','))].join('\r\n')+'\r\n';
+  return new Response(body,{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="sandy-scoped-audit.csv"','Cache-Control':'no-store, private'}});
+ }
+ return json({audit:page,nextCursor});
 }
