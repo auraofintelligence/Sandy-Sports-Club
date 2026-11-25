@@ -4,15 +4,15 @@ const topics=['Interpretation','Name','Objects','Powers','Classes of members','T
 // Disabled view-only fields still contain the fictional draft and must render in previews.
 const val=name=>String(form.elements.namedItem(name)?.value||'').trim();
 function build(){
- const voting={review:'Founding decision: assess whether the PLFC v1.2 island resident / non-resident weighted vote design is appropriate for this new club. No formula is adopted by this draft.',one:'Proposed: one vote for each eligible adult member, subject to the membership and voting clauses agreed by the founding members.',classes:'Founding decision: define each class and its voting rights explicitly.'}[val('voting')];
+ const voting={review:'Founding decision: consider whether island resident and non-resident membership classes should have different voting weights. No formula is adopted by this draft.',one:'Proposed: one vote for each eligible adult member, subject to the membership and voting clauses agreed by the founding members.',classes:'Founding decision: define each class and its voting rights explicitly.'}[val('voting')];
  const balance={
   'women-led':'Proposed women-led composition: women should hold a majority of filled elected management committee positions. Invite women to shape the founding purpose and nominate for chair, treasurer, sport, facilities and media leadership. All genders remain eligible to nominate. Gender is self-described and private; no one is required to disclose it publicly. Define a fair election and vacancy process in the final rules, including documented recruitment and a timely review if a suitable candidate is not available. A temporary vacancy should not by itself invalidate committee decisions.',
   equity:'Proposed equity target: at least half of filled elected management committee positions should be held by women and/or gender diverse people. For an odd number, aim for at least one fewer than half, consistent with the Australian Sports Commission example. Invite women into substantial officer and programme roles. All genders remain eligible; use self-description, privacy and a documented recruitment response to vacancies.',
   balanced:'Proposed balance policy: actively recruit women and gender diverse people, avoid an all-male founding committee, aim for a gender-balanced management committee and review representation each year. Set a measurable target and vacancy response with the founding group.'
  }[val('balance')]||'Founding decision: settle a leadership composition policy.';
- return `# ${val('name')} — constitution working draft
+ return `# ${val('name')} - constitution working draft
 
-Generated ${new Date().toLocaleDateString('en-AU')}. Drafting aid based on the owner’s PLFC v1.2 custom constitution structure. This is not the adopted or registered rules of Sandy Sports.
+Generated ${new Date().toLocaleDateString('en-AU')}. Prepared for the founding members of Sandy Sports Club. This is a working draft, not adopted or registered rules.
 
 ## 1. Name and objects
 
@@ -64,15 +64,15 @@ Financial year end proposal: ${val('year')}.
 
 ${val('additional')||'No additional notes entered.'}
 
-## PLFC v1.2 topic map for clause-by-clause review
+## Constitution topics for clause-by-clause review
 
-${topics.map((topic,i)=>`${i+1}. ${topic} — [draft or review clause against current Queensland requirements]`).join('\n')}
+${topics.map((topic,i)=>`${i+1}. ${topic} - [draft or review clause against current Queensland requirements]`).join('\n')}
 
 ## Review points
 
 - Decide whether to adopt the entire current Queensland model rules with permitted details, or draft complete own rules.
 - Check all required matters, including grievance procedure, member rights, meetings, finance and surplus assets, against current Office of Fair Trading materials.
-- Resolve any PLFC-specific fishing wording, classes, weighting, historic entity transition and the duplicate rule 11 numbering.
+- Confirm membership classes and voting rights, formation arrangements and consistent clause numbering.
 - Check the elected committee composition clause, voluntary self-description, fair nominations, vacancies and interim measures with appropriate Queensland governance advice before making it binding.
 - Record founding resolutions and use the final adopted text for incorporation. This export is a working document only.
 `;

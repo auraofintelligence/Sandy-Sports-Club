@@ -27,7 +27,7 @@ const mainSectionFor = page => {
 };
 const nav = primaryPages.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':mainSectionFor(here)===url?'data-section-active="true"':''}>${label}</a>`).join('');
 document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-signin" id="club-header-account" href="/club-login.html" ${here==='club-login.html'?'aria-current="page"':''}>Sign in</a><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
-// PLFC-style private clubhouse entry: show the actual dashboard when a real session exists.
+// Private clubhouse entry: show the dashboard when a real session exists.
 // The endpoint checks the HttpOnly session cookie; nothing about the role is cached locally.
 fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
  .then(response=>response.ok?response.json():null)
@@ -113,7 +113,7 @@ const guide=document.querySelector('#guide-panel'),guideButton=document.querySel
 function guideOpen(open){guide.hidden=!open;guideButton.setAttribute('aria-expanded',String(open));if(open)document.querySelector('#guide-close').focus();else guideButton.focus()}
 guideButton?.addEventListener('click',()=>guideOpen(guide.hidden));document.querySelector('#guide-close')?.addEventListener('click',()=>guideOpen(false));
 guide?.addEventListener('click',e=>{if(e.target.closest('a'))guideOpen(false)});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guide&&!guide.hidden)guideOpen(false)});
-document.querySelector('.footer-bottom')?.insertAdjacentHTML('beforeend','<span><a href="/index.html#page-directory">All pages</a> · <a href="/sources.html">Sources & credits</a> · <a href="/LICENCE.md">Interim licence</a> · <a href="https://auraofintelligence.github.io/strange-but-true/">Strange But True</a></span>');
+document.querySelector('.footer-bottom')?.insertAdjacentHTML('beforeend','<span><a href="/index.html#page-directory">All pages</a> · <a href="/sources.html">Sources & credits</a> · <a href="/LICENCE.md">Interim licence</a> · Website by Luke at <a href="https://auraofintelligence.github.io/strange-but-true/">Strange But True</a>, Amity Point</span>');
 document.body.insertAdjacentHTML('beforeend','<button class="back-to-top" type="button" aria-label="Back to top" title="Back to top" hidden>↑<span>Top</span></button>');
 const backToTop=document.querySelector('.back-to-top');
 function updateBackToTop(){backToTop.hidden=window.scrollY<450}
