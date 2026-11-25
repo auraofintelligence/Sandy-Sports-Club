@@ -73,8 +73,11 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
  if(path==='/api/member/preview'&&req.method==='GET'){
   requireRole(identity,env.SANDY_SYNTHETIC_VIEW===true?['webmaster','member']:['webmaster','webmaster_demo']);
   return json({synthetic:true,
-   profile:{name:'Illustrative demo member',town:'Example island locality',status:'preview only',membershipClass:'sample, not enrolled'},
+   profile:{name:'Illustrative demo member',town:'Amity Point / Pulan, Minjerribah, QLD',status:'preview only',membershipClass:'sample, not enrolled'},
    sports:['Mixed beach volleyball','Beach cricket'],filmClub:true,volunteer:true,
+   examplePlans:[{title:'[EXAMPLE] Amity Point / Pulan beach volleyball practice',date:'2027-02-13'},{title:'[EXAMPLE] Dunwich / Goompi community cinema planning',date:'2027-02-20'},{title:'[EXAMPLE] Point Lookout / Mulumba beach cricket skills',date:'2027-02-21'}],
+   exampleNotice:'Proposed island sessions require venue permission, tide and weather checks, transport planning and safeguarding review. Nothing is booked.',
+   exampleNewsletter:'Around Minjerribah: sport, skills and community cinema (fictional issue, not sent)',
    areas:['My sports','Calendar','Volunteering','Film club','Member notices','My privacy choices'],
    notice:'A synthetic role-layout preview; no real memberships, fees, accounts or messages are created.'});
  }

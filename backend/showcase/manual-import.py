@@ -38,6 +38,12 @@ assert db.execute("SELECT COUNT(*) FROM club_people").fetchone()[0] == 1
 assert db.execute("SELECT COUNT(*) FROM club_sessions").fetchone()[0] == 0
 assert db.execute("SELECT COUNT(*) FROM club_invites").fetchone()[0] == 0
 assert not db.execute("PRAGMA foreign_key_check").fetchall()
+local = ' '.join(row[0] for row in db.execute('SELECT title || body_json FROM club_records'))
+for place in ('Minjerribah', 'Dunwich / Goompi', 'Amity Point / Pulan', 'Point Lookout / Mulumba', 'Queensland', 'AUD'):
+    assert place in local, 'Missing local fixture reference: ' + place
+assert 'Example island locality' not in source
+assert db.execute("SELECT town FROM club_people").fetchone()[0] == 'Amity Point / Pulan, Minjerribah, QLD'
+assert db.execute("SELECT count(*) FROM club_records WHERE json_extract(body_json,'$.sandySuiteVersion')=1").fetchone()[0] == 29
 (root / 'READ-ME-FIRST.txt').write_text(
     'SANDY SHOWCASE ONLY. Database: sandy-sports-clubhouse-showcase\n'
     'ID: fbc64621-a57a-43e7-8138-717576d167c2\n'

@@ -41,10 +41,10 @@ function showDemo(){
  ].map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+safe(a)+'</span></div>').join('');
  fillProfile(workspace.profile);
  $('member-interest-list').textContent='Sample interests: Mixed beach volleyball, beach cricket, film nights.';
- $('member-events').textContent='No real events are shown in this synthetic preview.';
- $('member-notices').textContent='No actual member notices or private messages in this preview.';
- $('member-newsletters').textContent='Newsletter archive preview only.';
- $('member-film-interests').textContent='Example interest: community film club and local screenings.';
+ $('member-events').innerHTML='<p>Fictional proposed activities only, not approved or booked.</p>'+cardList(workspace.examplePlans,'No example activities.');
+ $('member-notices').textContent=workspace.exampleNotice||'No actual member notices or private messages in this preview.';
+ $('member-newsletters').textContent=workspace.exampleNewsletter||'Newsletter archive preview only.';
+ $('member-film-interests').textContent='Example interest: community film club and a proposed Dunwich / Goompi screening.';
  for(const section of document.querySelectorAll('.member-workspace-form')){
   for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=true;
  }
