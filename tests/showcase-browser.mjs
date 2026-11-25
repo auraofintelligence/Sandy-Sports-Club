@@ -181,7 +181,7 @@ try{
 
 // Independent real-account browser scenario (isolated fictional DB, not production).
  const sc=await context('secretary'),sp=await makePage(sc),tc=await context('treasurer'),tp=await makePage(tc),cc=await context('committee'),cp=await makePage(cc);
- await go(sp,'/club-admin.html#committee/notices');await wait(sp,'#ops-notice-form');
+ await go(sp,'/club-admin.html#committee/notices');await wait(sp,'.ops-compose summary');
  await sp.locator('.ops-compose summary').click();
  await sp.locator('#ops-notice-form [name=kind]').selectOption('action');
  await sp.locator('#ops-notice-form [name=title]').fill('Fictional Cylinder Beach net kit quote');
