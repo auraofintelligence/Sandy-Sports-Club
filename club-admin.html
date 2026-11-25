@@ -2,8 +2,8 @@
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#102d40">
 <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
 <title>Shared club administration | Sandy Sports proposal</title>
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css">
-<script defer src="/site.js"></script><script type="module" src="/club-admin.js"></script><script type="module" src="/club-help.js"></script></head>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css?v=committee-nav-20261125">
+<script defer src="/site.js"></script><script type="module" src="/club-admin.js?v=committee-nav-20261125"></script><script type="module" src="/club-help.js"></script></head>
 <body><div data-site-header></div><main class="club-app" id="main">
 <header class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB WORKSPACE</p>
 <h1>My Clubhouse</h1><p>Your shared Sandy workspace for member records, future office holders, committee planning and production. Sandy Sports remains a proposed club.</p>
@@ -52,6 +52,17 @@
  </div>
  <p>Related public projects and proposals, not automatic integrations or publishing permissions.</p>
 </aside>
+ <div id="committee-navigation" class="committee-navigation" hidden aria-label="Committee navigation">
+  <div class="committee-switcher">
+   <button type="button" id="committee-back" hidden>← Back to committee room</button>
+   <label for="committee-desk-switch">Switch desk</label>
+   <select id="committee-desk-switch" aria-label="Switch committee desk"></select>
+  </div>
+  <details id="committee-directory" class="committee-directory" open>
+   <summary>Browse committee desks by section</summary>
+   <nav id="committee-tools" class="committee-tools" aria-label="Committee work desks"></nav>
+  </details>
+ </div>
 <section id="club-overview" class="club-section">
 <h2>Formation and shared records</h2><p>Records below are held in the shared Sandy D1 database when the backend is provisioned. Nothing here is a fabricated operating-club membership, approved event or real payment.</p>
 <div class="club-summary" id="club-summary"></div>
@@ -130,7 +141,6 @@
   <p>PLFC-style desks, adapted for Sandy. Choose a desk to work on real shared drafts and follow-ups, each stamped with the signed-in officer and revision history.</p>
   <p class="club-note">This first shared committee workbench records plans and actions, not legal approvals, membership payments, email distribution or automatically published content. Specialised PLFC workflows are marked where they still need implementation.</p>
  </header>
- <nav id="committee-tools" class="committee-tools" aria-label="Committee work desks"></nav>
  <div id="committee-suite" class="committee-suite" hidden aria-live="polite"></div>
  <section id="committee-workbench" class="committee-workbench" aria-labelledby="committee-desk-title" hidden>
   <div class="committee-workbench-heading"><div><h3 id="committee-desk-title">Committee notices</h3><p id="committee-desk-summary">Working notices and agenda items for future officers.</p></div>
