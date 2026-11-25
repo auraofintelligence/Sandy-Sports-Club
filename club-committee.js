@@ -36,7 +36,8 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const suite=setupSandySuite({api,status,getIdentity});
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
- let selected='notices',currentRecords=[];
+ let selected='',currentRecords=[];
+ const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back'),anchor=$('committee-navigation-anchor');
  const canUse=desk=>{
   const role=getIdentity()?.role;
   if(SUITE_BY_KEY[desk.key]&&!SUITE_BY_KEY[desk.key].roles.includes(role))return false;
@@ -45,13 +46,44 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   return true;
  };
  const groups=[...new Set(DESKS.map(d=>d.group))];
- nav.innerHTML=groups.map(group=>'<div class="committee-tools-group"><h3>'+esc(group)+'</h3><div>'+
+ nav.innerHTML=groups.map(group=>'<details class="committee-tools-group"><summary>'+esc(group)+'</summary><div>'+
   DESKS.filter(d=>d.group===group).map(d=>'<button type="button" data-committee-desk="'+d.key+'"'+
    (canUse(d)?'':' disabled title="This working area requires additional office access"')+
-   (d.key===selected?' aria-current="page"':'')+'>'+esc(d.label)+'</button>').join('')+'</div></div>').join('');
- const refreshAllowed=()=>nav.querySelectorAll('[data-committee-desk]').forEach(button=>{
-  const desk=byKey.get(button.dataset.committeeDesk);
-  button.disabled=!canUse(desk);
+   '>'+esc(d.label)+'</button>').join('')+'</div></details>').join('');
+ const refreshAllowed=()=>{
+  nav.querySelectorAll('[data-committee-desk]').forEach(button=>{
+   const desk=byKey.get(button.dataset.committeeDesk);
+   button.disabled=!canUse(desk);
+   if(desk.key===selected)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+  });
+  picker.innerHTML='<option value="">Committee room / choose a desk</option>'+groups.map(group=>{
+   const choices=DESKS.filter(d=>d.group===group&&canUse(d));
+   return choices.length?'<optgroup label="'+esc(group)+'">'+choices.map(d=>'<option value="'+d.key+'">'+esc(d.label)+'</option>').join('')+'</optgroup>':'';
+  }).join('');
+  picker.value=selected&&canUse(byKey.get(selected))?selected:'';
+ };
+ function restoreNavigation(){anchor.after(navigation);directory.hidden=false;}
+ function showDirectory({scroll=false}={}){
+  restoreNavigation();selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;
+  refreshAllowed();back.hidden=true;directory.open=true;
+  for(const group of nav.querySelectorAll('details'))group.open=false;
+  const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
+  if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});
+ }
+ function goDirectory(){
+  const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
+  openTab('committee');navigation.scrollIntoView({block:'start',behavior:'auto'});
+ }
+ back.addEventListener('click',goDirectory);
+ picker.addEventListener('change',()=>{if(picker.value)void showDesk(picker.value,{scroll:true});else goDirectory()});
+ window.addEventListener('sandy:clubhouse-section-change',event=>{
+  const tab=event.detail.tab;
+  const d=DESKS.find(x=>x.tab===tab);
+  if(d&&canUse(d)){
+   selected=d.key;refreshAllowed();directory.hidden=true;back.hidden=false;
+   $('club-'+tab).prepend(navigation);
+  }else if(tab==='committee'){restoreNavigation();}
+  else {restoreNavigation();}
  });
  function closeEditor(){
   $('committee-desk-editor').hidden=true;
@@ -104,16 +136,19 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    }).join(''):'<p class="committee-empty">No shared '+esc(desk.label.toLowerCase())+' records yet. Choose New working record to begin.</p>';
   }catch(error){list.textContent='Could not load this desk: '+error.message;status(error.message,true)}
  }
- async function showDesk(key,{updateUrl=true}={}){
+ async function showDesk(key,{updateUrl=true,scroll=false}={}){
   const desk=byKey.get(key);
   if(!desk||!canUse(desk)){status('This role cannot open that committee desk.',true);return;}
-  if(desk.tab){openTab(desk.tab);return}
-  selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
+  if(desk.tab){selected=key;openTab(desk.tab);if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});return}
+  restoreNavigation();selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
+  back.hidden=false;directory.open=false;
+  for(const group of nav.querySelectorAll('details'))group.open=false;
   for(const button of nav.querySelectorAll('[data-committee-desk]')){
    if(button.dataset.committeeDesk===key)button.setAttribute('aria-current','page');
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
+  if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});
   if(SUITE_BY_KEY[key]){
    oldWorkbench.hidden=true;
    suiteRoot.hidden=false;
@@ -142,7 +177,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  }
  nav.addEventListener('click',event=>{
   const button=event.target.closest('[data-committee-desk]');
-  if(button&&!button.disabled)void showDesk(button.dataset.committeeDesk);
+  if(button&&!button.disabled)void showDesk(button.dataset.committeeDesk,{scroll:true});
  });
  $('committee-desk-new').addEventListener('click',()=>edit(null));
  $('committee-desk-cancel').addEventListener('click',closeEditor);
@@ -177,6 +212,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   }catch(error){$('committee-desk-save-status').textContent=error.message;status(error.message,true)}
   finally{submit.disabled=false}
  });
- return {open(){refreshAllowed();const hash=location.hash.slice(1);const key=hash.startsWith('committee/')?hash.slice('committee/'.length):selected;
-  return showDesk(byKey.has(key)?key:selected,{updateUrl:false})},showDesk,get currentDesk(){return selected}};
+ return {open(){restoreNavigation();refreshAllowed();const hash=location.hash.slice(1);const key=hash.startsWith('committee/')?hash.slice('committee/'.length):'';
+  if(!key||!byKey.has(key)){showDirectory();return Promise.resolve()}
+  return showDesk(key,{updateUrl:false})},showDesk,get currentDesk(){return selected}};
 }

@@ -266,3 +266,19 @@
 .clubhouse-quick-grid a:hover,.clubhouse-quick-grid a:focus-visible{border-color:#088795;background:#e8f6f1}
 @media(max-width:950px){.clubhouse-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.clubhouse-quick-grid{grid-template-columns:1fr}}
+
+/* Compact PLFC-style committee overview and desk navigation. */
+.committee-navigation{margin:0 0 .8rem;scroll-margin-top:1rem;min-width:0}
+.committee-switcher{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:.7rem;border:1px solid #b5d1d0;border-radius:10px;background:#eff7f5}
+.committee-switcher label{font-size:.8rem;font-weight:800;color:#174f58}
+.committee-switcher select{flex:1 1 180px;min-width:0;max-width:100%;min-height:44px;padding:.5rem;border:1px solid #a9cbcb;border-radius:8px;background:white}
+.committee-switcher button{min-height:44px;padding:.55rem .75rem;border:1px solid #a9cbcb;border-radius:8px;background:white;color:#075f6d;font:inherit;font-size:.85rem;font-weight:800;cursor:pointer}
+.committee-switcher button:hover{background:#e3f2ee}
+.committee-directory{margin:.5rem 0;border:1px solid #c7dfdc;border-radius:10px;background:#f9fcfb}
+.committee-directory>summary,.committee-tools-group>summary{cursor:pointer;font-weight:800;color:#225765;min-height:44px;padding:.7rem;list-style-position:inside}
+.committee-directory .committee-tools{margin:0;padding:.55rem;gap:.5rem}
+.committee-tools-group{padding:0}
+.committee-tools-group>div{padding:0 .6rem .6rem}
+.committee-tools-group:not([open])>div{display:none}
+.committee-navigation:has(#committee-back:not([hidden])){position:sticky;top:0;z-index:15;background:#fff;padding-bottom:.25rem}
+@media(max-width:560px){.committee-switcher label{flex-basis:100%}.committee-switcher button{flex:1 1 100%}}

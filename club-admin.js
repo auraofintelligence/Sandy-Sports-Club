@@ -1,5 +1,5 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
-import {setupCommitteeRoom} from './club-committee.js';
+import {setupCommitteeRoom} from './club-committee.js?v=committee-nav-20261125';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -64,7 +64,7 @@ function openTab(tab){
  const button=document.querySelector('[data-tab="'+tab+'"]');
  if(button?.hidden){if(tab!=='overview')openTab('overview');return}
  current=tab;
- const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee/'+(committeeRoom?.currentDesk||'notices')):tab;
+ const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee'):tab;
  history.replaceState(null,'',location.pathname+location.search+'#'+route);
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
