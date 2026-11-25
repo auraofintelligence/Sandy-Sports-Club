@@ -1,5 +1,7 @@
 // Generate a NEW synthetic fixture SQL file. Never run it against the live database.
 import {readFileSync} from 'node:fs';
+import {createHash,createCipheriv,randomBytes} from 'node:crypto';
+import {FIXTURE_LIBRARY_KEY} from '../../worker/library.mjs';
 import {pathToFileURL} from 'node:url';
 import {SUITE_DESKS} from '../../studio/sandy-suite-spec.js';
 import {defaultCampaignSettings} from '../../studio/social-campaign-engine.js';
@@ -26,7 +28,8 @@ const defaults=f=>f.type==='checkbox'?false:f.type==='number'?0:f.type==='select
 export function showcaseSql(){
  // Fail at the first existing table. No DROP, DELETE, session, invite or credential data.
  const schema=readFileSync(new URL('../migrations/0001_club.sql',import.meta.url),'utf8').replaceAll('CREATE TABLE IF NOT EXISTS','CREATE TABLE');
- const out=[schema],owner=fixtureId(1);
+ const librarySchema=readFileSync(new URL('../migrations/0002_private_library.sql',import.meta.url),'utf8').replaceAll('CREATE TABLE IF NOT EXISTS','CREATE TABLE');
+ const out=[schema,librarySchema],owner=fixtureId(1);
  let sequence=100;
  const next=()=>fixtureId(sequence++);
  const record=(kind,title,body,eventDate=null,actor=owner,role='webmaster')=>{
@@ -48,6 +51,18 @@ export function showcaseSql(){
  out.push(insert('club_interest',{id:next(),created_utc:stamp,first_name:'Example',town:'Example island locality',interests_json:JSON.stringify(['Sport and film']),comments:'Fictional expression of interest.',contact_consent:0,source:'synthetic fixture'}));
  out.push(insert('studio_settings',{id:1,version:1,settings_json:JSON.stringify(defaultCampaignSettings()),updated_by:owner,updated_utc:stamp}));
  out.push(insert('studio_briefs',{id:next(),title:'[EXAMPLE] Beach skills video brief',date,brief:'Fictional internal coaching video concept. No commission or publication.',created_by:owner,updated_by:owner,created_utc:stamp,updated_utc:stamp}));
+ // Harmless single-pixel PNG. The fixture key is never accepted for live files.
+ const sample=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ZkAAAAASUVORK5CYII=','base64');
+ const key=createHash('sha256').update('sandy-library-v1/content/'+FIXTURE_LIBRARY_KEY).digest();
+ for(const [scope,roles] of [['governance',['webmaster','president','secretary','assistant_secretary']],['finance',['webmaster','treasurer']],['safety',['webmaster','president','secretary']]]){
+  const doc=next(),iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key,iv);
+  cipher.setAAD(Buffer.from('sandy-library-v1/'+doc+'/1/0'));
+  const ciphertext=Buffer.concat([cipher.update(sample),cipher.final(),cipher.getAuthTag()]);
+  out.push(insert('sandy_library_documents',{id:doc,owner_id:owner,title:'[EXAMPLE] '+scope+' private image',scope,roles_json:JSON.stringify(roles),state:'private',version:1,content_version:1,review_date:date,created_utc:stamp,updated_utc:stamp,updated_by:owner}));
+  out.push(insert('sandy_library_versions',{document_id:doc,content_version:1,media_type:'image/png',byte_length:sample.length,digest:createHash('sha256').update(sample).digest('hex'),part_count:1,source_note:'Synthetic fixture image only',created_by:owner,created_utc:stamp}));
+  out.push(insert('sandy_library_parts',{document_id:doc,content_version:1,part:0,iv:iv.toString('base64'),ciphertext:ciphertext.toString('base64')}));
+  out.push(insert('club_revisions',{id:next(),resource_kind:'library',resource_id:doc,resource_version:1,operation:'synthetic_fixture',actor_id:owner,actor_role:'webmaster',actor_office:'Example Webmaster',at_utc:stamp,snapshot_json:JSON.stringify({title:'[EXAMPLE] '+scope+' private image',scope,contentVersion:1})}));
+ }
  out.push("CREATE TABLE sandy_showcase_marker(id INTEGER PRIMARY KEY CHECK(id=1),version INTEGER NOT NULL,classification TEXT NOT NULL);");
  out.push(insert('sandy_showcase_marker',{id:1,version:1,classification:'SANDY_SYNTHETIC_ONLY'}));
  return out.join('\n')+'\n';

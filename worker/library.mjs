@@ -60,7 +60,7 @@ function file(b){
  const source=field(b.source,240);if(!source||b.consent!==true)fail(400,'Record the source and confirm permission to store this private file.','consent_required');
  return {bytes,mediaType:b.mediaType,source};
 }
-async function encryptedParts(db,key,doc,v,content,actor,at,guard=null,guardArgs=[]){
+async function encryptedParts(db,key,doc,v,content,actor,at){
  const parts=[];
  for(let offset=0,index=0;offset<content.bytes.length;offset+=PART,index++){
   const iv=crypto.getRandomValues(new Uint8Array(12));
@@ -70,8 +70,8 @@ async function encryptedParts(db,key,doc,v,content,actor,at,guard=null,guardArgs
  const hash=await digest(content.bytes);
  const values=[doc,v,content.mediaType,content.bytes.length,hash,parts.length,content.source,actor.id,at];
  return {hash,statements:[
-  db.prepare('INSERT INTO sandy_library_versions(document_id,content_version,media_type,byte_length,digest,part_count,source_note,created_by,created_utc) SELECT ?,?,?,?,?,?,?,?,?'+(guard?' WHERE '+guard:'')).bind(...values,...guardArgs),
-  ...parts.map(p=>db.prepare('INSERT INTO sandy_library_parts(document_id,content_version,part,iv,ciphertext) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sandy_library_versions WHERE document_id=? AND content_version=? AND created_utc=?)').bind(doc,v,p.index,p.iv,p.ciphertext,doc,v,at))
+  db.prepare('INSERT INTO sandy_library_versions(document_id,content_version,media_type,byte_length,digest,part_count,source_note,created_by,created_utc) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1').bind(...values),
+  ...parts.map(p=>db.prepare('INSERT INTO sandy_library_parts(document_id,content_version,part,iv,ciphertext) SELECT ?,?,?,?,? WHERE changes()=1').bind(doc,v,p.index,p.iv,p.ciphertext))
  ]};
 }
 async function writeAllowed(env,db,actor,scope){
@@ -94,9 +94,15 @@ export async function libraryEndpoint(req,env,path,actor){
  const db=dbFor(env),url=new URL(req.url);
  if(path==='/api/library'&&req.method==='GET'){
   if(!await ready(db)||!secret(env))return json({available:false,writeEnabled:false,documents:[],notice:'Private file storage has not been provisioned.'});
-  const {results}=await db.prepare('SELECT d.*,v.media_type,v.byte_length,v.digest,v.source_note FROM sandy_library_documents d JOIN sandy_library_versions v ON d.id=v.document_id AND d.content_version=v.content_version ORDER BY d.updated_utc DESC,d.id').all();
-  return json({available:true,writeEnabled:env.SANDY_PRIVATE_LIBRARY_ENABLED==='enabled'&&!env.SANDY_SYNTHETIC_VIEW,
-   documents:results.filter(r=>canReadLibrary(r,actor)).map(r=>view(r,r,actor)),scopes:Object.keys(scopes).filter(s=>s==='owner'||scopes[s].includes(actor.role)),scopeRoles:scopes,limit:LIBRARY_LIMIT,synthetic:!!env.SANDY_SYNTHETIC_VIEW});
+  const page=Math.max(0,Math.min(10000,Math.floor(Number(url.searchParams.get('page'))||0)));
+  const allowed=Object.keys(scopes).filter(s=>s!=='owner'&&scopes[s].includes(actor.role));
+  const condition="(d.scope='owner' AND d.owner_id=?)"+(allowed.length?" OR (d.scope IN ("+allowed.map(()=>'?').join(',')+") AND (d.owner_id=? OR EXISTS(SELECT 1 FROM json_each(d.roles_json) WHERE value=?)))":'');
+  const args=[actor.id,...(allowed.length?[...allowed,actor.id,actor.role]:[])];
+  const {results}=await db.prepare('SELECT d.*,v.media_type,v.byte_length,v.digest,v.source_note FROM sandy_library_documents d JOIN sandy_library_versions v ON d.id=v.document_id AND d.content_version=v.content_version WHERE '+condition+' ORDER BY d.updated_utc DESC,d.id LIMIT 101 OFFSET ?').bind(...args,page*100).all();
+  let writeEnabled=env.SANDY_PRIVATE_LIBRARY_ENABLED==='enabled'&&!env.SANDY_SYNTHETIC_VIEW;
+  if(writeEnabled&&actor.role==='member')writeEnabled=env.SANDY_CLUB_APPROVALS==='enabled'&&(await memberSafeguardFlags(db,actor.id)).optionalParticipation&&!!await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(actor.id).first();
+  return json({available:true,writeEnabled,
+   documents:results.slice(0,100).filter(r=>canReadLibrary(r,actor)).map(r=>view(r,r,actor)),page,hasMore:results.length>100,scopes:Object.keys(scopes).filter(s=>s==='owner'||scopes[s].includes(actor.role)),scopeRoles:scopes,limit:LIBRARY_LIMIT,synthetic:!!env.SANDY_SYNTHETIC_VIEW});
  }
  if(!await ready(db))fail(503,'Private file storage has not been provisioned.','library_unavailable');
  if(path==='/api/library'&&req.method==='POST'){
@@ -104,7 +110,7 @@ export async function libraryEndpoint(req,env,path,actor){
   const title=field(b.title,160),scope=b.scope;
   if(!title||!Object.hasOwn(scopes,scope))fail(400,'Choose a title and private classification.','invalid_library_fields');
   const flags=await writeAllowed(env,db,actor,scope),roles=validatedRoles(scope,b.roles),reviewDate=review(b.reviewDate),content=file(b),k=await keys(env);
-  const doc=id(),at=now(),parts=await encryptedParts(db,k.aes,doc,1,content,actor,at,'EXISTS(SELECT 1 FROM sandy_library_documents WHERE id=? AND version=1)',[doc]);
+  const doc=id(),at=now(),parts=await encryptedParts(db,k.aes,doc,1,content,actor,at);
   const guard=flags?' WHERE '+participationGuard:'';
   const [saved]=await db.batch([
    db.prepare("INSERT INTO sandy_library_documents(id,owner_id,title,scope,roles_json,state,version,content_version,review_date,created_utc,updated_utc,updated_by) SELECT ?,?,?,?,?,'private',1,1,?,?,?,?"+guard).bind(doc,actor.id,title,scope,JSON.stringify(roles),reviewDate,at,at,actor.id,...(flags?participationArgs(actor,flags):[])),
@@ -133,7 +139,7 @@ export async function libraryEndpoint(req,env,path,actor){
   const k=await keys(env);
   if(action==='ticket'&&req.method==='GET'){const expiry=epoch()+300;return json({ticket:expiry+'.'+await token(k,row,actor,expiry),expiresAt:new Date(expiry*1000).toISOString()})}
   const t=/^(\d{10})\.([a-f0-9]{64})$/.exec(req.headers.get('x-sandy-download')||'');
-  if(!t||Number(t[1])<=epoch()||Number(t[1])>epoch()+300||t[2]!==await token(k,row,actor,Number(t[1])))fail(403,'The private download permission expired or changed. Request a new one.','library_ticket_invalid');
+  if(!t||Number(t[1])<=epoch()||Number(t[1])>epoch()+300||!await crypto.subtle.verify('HMAC',k.ticket,Uint8Array.from(t[2].match(/../g),v=>parseInt(v,16)),enc.encode(['sandy-download-v1',row.id,row.version,row.content_version,actor.id,Number(t[1])].join('/'))))fail(403,'The private download permission expired or changed. Request a new one.','library_ticket_invalid');
   const headers={'Content-Type':content.media_type,'Content-Length':String(content.byte_length),'Content-Disposition':'attachment; filename="sandy-document-'+doc+'.'+types[content.media_type]+'"','Content-Security-Policy':"default-src 'none'; sandbox",'Cache-Control':'no-store, private'};
   if(req.method==='HEAD')return new Response(null,{headers});
   const {results}=await db.prepare('SELECT part,iv,ciphertext FROM sandy_library_parts WHERE document_id=? AND content_version=? ORDER BY part').bind(doc,row.content_version).all();
@@ -174,9 +180,9 @@ export async function libraryEndpoint(req,env,path,actor){
   const b=await payload(req,1450000);strict(b,['version','mediaType','content','source','consent']);
   if(version(b.version)!==row.version)fail(409,'Document changed. Reload before saving.','conflict');
   const c=file(b),k=await keys(env),at=now(),next=row.version+1,v=row.content_version+1;
-  // The unique updated timestamp and actor check tie parts to the winning update.
-  const guard="EXISTS(SELECT 1 FROM sandy_library_documents WHERE id=? AND version=? AND content_version=? AND updated_utc=? AND updated_by=?)";
-  const parts=await encryptedParts(db,k.aes,doc,v,c,actor,at,guard,[doc,next,v,at,actor.id]);
+  // D1 executes this batch atomically. Every version, part and history insert
+  // depends on the previous statement changing exactly one row.
+  const parts=await encryptedParts(db,k.aes,doc,v,c,actor,at);
   const [result]=await db.batch([
    db.prepare("UPDATE sandy_library_documents SET content_version=?,version=version+1,updated_utc=?,updated_by=? WHERE id=? AND version=? AND state='private'"+(flags?' AND '+participationGuard:'')).bind(v,at,actor.id,doc,row.version,...(flags?participationArgs(actor,flags):[])),
    ...parts.statements,
