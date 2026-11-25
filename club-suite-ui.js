@@ -1,4 +1,5 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {isReadOnlyView,protectView} from './club-view-client.js';
 import {setupWorkflowAssist} from './club-workflow-assist.js';
 // Working Sandy Sports desks, not fake PLFC parity. All saves use authenticated D1 APIs.
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -113,7 +114,8 @@ export function setupSandySuite({api,status,getIdentity}){
    '<fieldset class="suite-stage" data-stage="'+i+'"><legend>'+esc(name)+'</legend><div class="suite-field-grid">'+
    desk.fields.filter(f=>f.step===name).map(f=>control(f,row?.fields?.[f.key])).join('')+'</div></fieldset>').join('');
   editor.hidden=false;step=0;drawStep();helper.render();
-  find('suite-save-status').textContent='This is unsaved until you choose Save to Sandy D1.';
+  if(isReadOnlyView()){find('suite-editor-label').textContent='View '+(row?.title||desk.title);protectView('#suite-form input,#suite-form textarea,#suite-form select,#suite-save',root)}
+  find('suite-save-status').textContent=isReadOnlyView()?'Synthetic view only. No change can be saved.':'This is unsaved until you choose Save to Sandy D1.';
   editor.scrollIntoView({block:'start',behavior:'smooth'});
  }
  function collect(){
@@ -133,6 +135,7 @@ export function setupSandySuite({api,status,getIdentity}){
   const schema=SUITE_BY_KEY[key];
   if(!schema||!schema.roles.includes(getIdentity()?.role)){say('This role cannot access the selected desk.',true);return}
   desk=schema;rows=[];editing=null;query='';filter='';
+  if(isReadOnlyView()){root.querySelector('.suite-boundary').textContent='Synthetic example records, read-only. Open records and review stages, history and example exports without saving.';protectView('#suite-new,#suite-save,[data-suite-action="followups"],[data-suite-action="movement"],[data-stock-move] button[type=submit]',root)}
   find('suite-search').value='';find('suite-filter').value='';
   find('suite-desk-name').textContent=desk.title;find('suite-desk-intro').textContent=desk.purpose;
   find('suite-notice').hidden=true;close();root.hidden=false;
@@ -147,7 +150,7 @@ export function setupSandySuite({api,status,getIdentity}){
  find('suite-next').addEventListener('click',()=>{step=Math.min(desk.steps.length-1,step+1);drawStep()});
  find('suite-steps').addEventListener('click',event=>{const b=event.target.closest('[data-suite-step]');if(b){step=Number(b.dataset.suiteStep);drawStep()}});
  form.addEventListener('submit',async event=>{
-  event.preventDefault();if(!desk)return;
+  event.preventDefault();if(!desk||isReadOnlyView())return;
   const request={title:form.elements.title.value.trim(),status:form.elements.status.value,fields:collect()};
   if(!request.title){form.elements.title.focus();return}
   const missing=desk.fields.find(def=>def.required&&!String(request.fields[def.key]??'').trim());

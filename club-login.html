@@ -7,12 +7,13 @@
 <body><div data-site-header></div><main class="club-app" id="main"><div class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB SERVICES</p>
 <h1>Secure club sign-in</h1><p>For the future webmaster, reserved office holders and authorised club members. Sandy Sports remains a proposal; no accounts or memberships are automatically activated.</p></div>
 <div id="auth-state" role="status" class="club-status">Checking whether the shared club service is connected…</div>
-<div class="club-auth-layout">
+<p><button type="button" id="club-exit-view">Exit an existing view-only session</button></p><div class="club-auth-layout">
 <section class="club-panel"><h2>Sign in</h2><form id="club-login">
 <label>Username<input name="username" autocomplete="username" maxlength="80" required></label>
 <label>Password<input type="password" name="password" autocomplete="current-password" minlength="12" required></label>
 <button type="submit">Sign in</button></form>
 <p class="club-note">Only activated accounts can sign in. There is no public sign-up or automatic invitation service.</p></section>
+<details class="club-panel" id="club-showcase-panel"><summary>Independent view-only Webmaster showcase</summary><p>Use the separate high-entropy access key supplied by the owner after the synthetic showcase is configured. Sign out of any real account first. The showcase never opens live member or committee records.</p><form id="club-showcase-login"><label>Showcase access key<input name="key" type="password" pattern="[a-f0-9]{64}" minlength="64" maxlength="64" autocomplete="off" required></label><button type="submit">Open synthetic showcase</button></form></details>
 <details class="club-panel" id="club-invite-panel"><summary>Activate a reserved account</summary><p>Only use a one-time invitation issued separately by the authorised webmaster. Invitations are currently disabled by default.</p>
 <form id="club-activate"><label>Private activation token<input name="token" autocomplete="off" spellcheck="false" pattern="[a-fA-F0-9]{64}" minlength="64" maxlength="64" required></label>
 <label>Choose a strong password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></label>

@@ -1,10 +1,11 @@
+import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
 // Sandy Sports member clubhouse: real self-service when incorporated, synthetic preview only for the webmaster.
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Multi-sport'];
 const times=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 let workspace=null,preview=false;
 async function api(path,method='GET',data){
- const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   ...(data===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
  const payload=await response.json().catch(()=>({}));
  if(!response.ok)throw Error(payload.error||'Shared service error ('+response.status+').');
@@ -132,11 +133,17 @@ $('member-export').addEventListener('click',async()=>{
 $('member-logout').addEventListener('click',async()=>{
  try{await api('/api/auth/logout','POST',{})}finally{location.href='/club-login.html'}
 });
+installExitControl('member-exit-view');
 (async()=>{
  options();
  try{
   const session=await api('/api/session');
   if(!session?.authenticated){banner('Please sign in before opening your personal member area.',true);return}
+  if(session.readOnly&&['member','webmaster'].includes(session.identity.role)){
+   workspace=await api('/api/member/preview');showDemo();
+   $('member-exit-view').hidden=false;$('member-return-showcase').hidden=session.identity.role!=='webmaster';
+   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');return;
+  }
   if(new URLSearchParams(location.search).get('demo')==='1'&&session.identity.role==='webmaster'){
    workspace=await api('/api/member/preview');showDemo();selectTab('home');return;
   }
@@ -149,5 +156,5 @@ $('member-logout').addEventListener('click',async()=>{
   }
   workspace=await api('/api/member/workspace');showReal();
   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');
- }catch(error){banner('Could not load your member area: '+error.message,true)}
+ }catch(error){$('member-exit-view').hidden=false;banner('Could not load your member area: '+error.message,true)}
 })();

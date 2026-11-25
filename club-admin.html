@@ -7,13 +7,13 @@
 <body><div data-site-header></div><main class="club-app" id="main">
 <header class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB WORKSPACE</p>
 <h1>My Clubhouse</h1><p>Your shared Sandy workspace for member records, future office holders, committee planning and production. Sandy Sports remains a proposed club.</p>
-<div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>Preview view as <select id="club-view-role">
-<option value="webmaster">Webmaster</option><option value="president">President</option><option value="vice_president">Vice President</option>
+<div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>View as (synthetic, read-only) <select id="club-view-role">
+<option value="webmaster">Real Webmaster</option><option value="president">President</option><option value="vice_president">Vice President</option>
 <option value="secretary">Secretary</option><option value="assistant_secretary">Assistant Secretary</option>
 <option value="treasurer">Treasurer</option><option value="committee">Committee</option>
 <option value="member">Member</option><option value="webmaster_demo">Webmaster demo (view only)</option></select></label>
 <a id="member-preview-link" class="club-member-preview-link" href="/member-home.html?demo=1" hidden>Open view-only member preview</a>
-<button type="button" id="club-logout">Sign out</button></div></header>
+<button type="button" id="club-exit-view" hidden>Exit view-only mode</button><button type="button" id="club-logout">Sign out</button></div></header>
 <div class="club-status" role="status" id="club-status">Connecting to server…</div>
 <div id="club-console" hidden>
 <details class="clubhouse-menu" id="clubhouse-menu" open><summary><span><strong>Clubhouse menu</strong><small>Choose a working area</small></span><span id="clubhouse-current">Overview</span></summary>
@@ -77,7 +77,7 @@
 </nav>
 <div class="club-grid-two">
 <article class="club-panel"><h3>Webmaster / committee</h3>
-<p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The webmaster may preview what other roles can see, but does not impersonate their identity.</p>
+<p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The Webmaster can enter a synthetic, read-only role preview. It does not use real officers' identities or live records.</p>
 <p><a href="#committee/notices">Open working Committee room</a> · <a href="#social">Social Media Hub</a> · <a href="/committee.html">Public planning examples</a></p></article>
 <article class="club-panel"><h3>Review and publication</h3><p>Proposals, committee records and video briefs need identified reviewers and server-stamped decisions. No content is published and no advertising spend is authorised here.</p>
 <p><a href="/studio/PLFC-PARITY.md">PLFC comparison and production requirements</a></p></article></div>

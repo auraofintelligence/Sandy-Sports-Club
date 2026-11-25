@@ -1,7 +1,8 @@
+import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
 const $=id=>document.getElementById(id);
 const message=(txt,bad=false)=>{$('auth-state').textContent=txt;$('auth-state').className='club-status'+(bad?' bad':'')};
 async function request(path,body){
- const response=await fetch(path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},
+ const response=await viewFetch(path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},
   credentials:'same-origin',cache:'no-store',body:body?JSON.stringify(body):undefined});
  let result={};try{result=await response.json()}catch{}
  if(!response.ok)throw Error(result.error||'The shared club service is unavailable ('+response.status+').');
@@ -15,7 +16,8 @@ async function check(){
    message('The shared Cloudflare/D1 backend has not been activated. No login or membership data will be stored by this page.',true);
    return;
   }
-  $('club-password-panel').hidden=!session.authenticated||session.identity?.role==='webmaster_demo';
+  $('club-password-panel').hidden=!session.authenticated||session.readOnly||session.identity?.role==='webmaster_demo';
+  if(session.readOnly){message('View-only synthetic session is open. Continue to My Clubhouse or explicitly exit the view.');return}
   if(session.authenticated){
    message('Signed in as '+session.identity.name+' ('+session.identity.role+'). Open shared administration.');
   }else message('Shared club storage is connected. Sign in with an activated account.');
@@ -30,7 +32,7 @@ async function submit(formId,path,redirect=false){
    message(path.endsWith('/bootstrap')?'First webmaster reserved and activated. Remove the bootstrap Cloudflare secret. Then sign in.':
      path.endsWith('/activate')?'Account activated. You may now sign in.':path.endsWith('/recover')||path.endsWith('/change-password')?'Password changed. All previous sessions have been signed out. Sign in with your new password.':'Signed in. Opening shared club administration.');
    if(path.endsWith('/recover')||path.endsWith('/change-password'))$('club-password-panel').hidden=true;
-   if(redirect){const session=await request('/api/session');location.href=session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
+   if(redirect){if(path==='/api/view/login'){location.href='/club-admin.html';return}const session=await request('/api/session');location.href=session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
   }catch(error){message(error.message,true)}
   finally{button.disabled=false}
  });
@@ -53,4 +55,6 @@ submit('club-activate','/api/auth/activate');
 submit('club-recover','/api/auth/recover');
 submit('club-change-password','/api/auth/change-password');
 submit('club-bootstrap','/api/auth/bootstrap');
+submit('club-showcase-login','/api/view/login',true);
+installExitControl('club-exit-view');
 check();

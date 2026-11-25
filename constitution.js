@@ -1,3 +1,4 @@
+import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
 const form=document.querySelector('#constitution-form'),preview=document.querySelector('#constitution-preview'),output=document.querySelector('#constitution-text'),status=document.querySelector('#constitution-status');
 const topics=['Interpretation','Name','Objects','Powers','Classes of members','Transition from an unincorporated group','New membership','Membership fees','Admission and rejection','Membership suspension','Membership ends','Appeals and general meeting','Register of members','Use of register information','Secretary appointment','Secretary removal','Secretary functions','Management committee composition','Committee election','Resignation and removal','Vacancies','Committee functions','Committee meetings','Quorum and adjournment','Special committee meeting','Committee minutes','Subcommittees','Validity of acts','Decisions without a meeting','First AGM','Subsequent AGMs','AGM business and financial reporting','Notice of general meeting','General meeting quorum','Meeting procedure','Voting','Special general meeting','Proxies','General meeting minutes','By-laws','Rule alterations','Funds and accounts','Financial matters','Documents','Financial year','Surplus assets','Grievance procedure','Conflicts, safeguarding and digital stewardship'];
 const val=name=>String(new FormData(form).get(name)||'').trim();
@@ -76,8 +77,12 @@ ${topics.map((topic,i)=>`${i+1}. ${topic} — [draft or review clause against cu
 `;
 }
 function render(){output.textContent=build();preview.hidden=false;status.textContent='Draft generated in this browser.'}
-try{const saved=JSON.parse(localStorage.getItem('sandy-constitution-draft')||'{}');for(const [name,value] of Object.entries(saved)){const field=form.elements.namedItem(name);if(field)field.value=value}}catch{}
-form?.addEventListener('input',()=>{const d=Object.fromEntries(new FormData(form));localStorage.setItem('sandy-constitution-draft',JSON.stringify(d))});
+let localDraftReady=false;
+function enableLocalDraft(){
+ if(localDraftReady)return;localDraftReady=true;
+ try{const saved=JSON.parse(localStorage.getItem('sandy-constitution-draft')||'{}');for(const [name,value] of Object.entries(saved)){const field=form.elements.namedItem(name);if(field)field.value=value}}catch{}
+}
+form?.addEventListener('input',()=>{if(!localDraftReady||isReadOnlyView())return;const d=Object.fromEntries(new FormData(form));localStorage.setItem('sandy-constitution-draft',JSON.stringify(d))});
 form?.addEventListener('submit',e=>{e.preventDefault();if(form.reportValidity())render()});
 document.querySelector('#download-constitution')?.addEventListener('click',()=>{if(!form.reportValidity())return;render();const blob=new Blob([output.textContent],{type:'text/markdown;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sandy-sports-constitution-working-draft.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Working draft downloaded.'});
 document.querySelector('#print-constitution')?.addEventListener('click',()=>{if(!form.reportValidity())return;render();window.print()});
@@ -86,7 +91,7 @@ document.querySelector('#print-constitution')?.addEventListener('click',()=>{if(
 /* Authenticated Sandy constitution drafts: same D1 record/revision/audit system as committee records.
    Keep the old browser draft and export tools, but require an explicit button for server writes. */
 async function constitutionApi(path,method='GET',data){
- const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   ...(data===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
  let result={};try{result=await response.json()}catch{}
  if(!response.ok)throw Error(result.error||'Shared club API error ('+response.status+')');
@@ -95,7 +100,8 @@ async function constitutionApi(path,method='GET',data){
 async function setupSharedConstitution(){
  if(!form)return;
  let session;
- try{session=await constitutionApi('/api/session')}catch{return}
+ try{session=await constitutionApi('/api/session')}catch{if(!new URLSearchParams(location.search).has('workspace'))enableLocalDraft();return}
+ if(!session?.readOnly)enableLocalDraft();
  if(!session?.authenticated||!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(session.identity?.role))return;
  const box=document.createElement('section');
  box.className='club-shared-constitution';
@@ -104,6 +110,7 @@ async function setupSharedConstitution(){
  '<button type="button" data-shared-constitution="load">Load latest shared draft</button></div>'+
  '<p data-shared-constitution-state role="status">Checking the shared constitution register…</p>';
  form.insertAdjacentElement('afterend',box);
+ if(session.readOnly){box.querySelector('p').textContent='Synthetic view only. Load the example draft without accessing or changing local or live drafts.';protectView('#constitution-form input,#constitution-form select,#constitution-form textarea,[data-shared-constitution="save"]');}
  const notice=box.querySelector('[data-shared-constitution-state]');
  let saved=null;
  async function refresh(){
@@ -113,7 +120,7 @@ async function setupSharedConstitution(){
   notice.textContent=saved?'Shared draft: revision '+saved.version+', edited '+new Date(saved.updatedAt).toLocaleString('en-AU')+
    '. Loading it is optional and replaces the current form contents.':'No shared constitution draft exists yet. The current browser draft is untouched.';
  }
- try{await refresh()}catch(e){notice.textContent='Could not check shared draft: '+e.message}
+ try{await refresh();if(session.readOnly&&saved){form.reset();for(const [name,value] of Object.entries(saved.body?.fields||{})){const input=form.elements.namedItem(name);if(input&&typeof value==='string')input.value=value}render();notice.textContent='Loaded fictional draft revision '+saved.version+'. No browser or live record was changed.'}}catch(e){notice.textContent='Could not check shared draft: '+e.message}
  box.addEventListener('click',async ev=>{
   const button=ev.target.closest('button[data-shared-constitution]');
   if(!button)return;
@@ -123,7 +130,7 @@ async function setupSharedConstitution(){
    if(operation==='load'){
     await refresh();
     if(!saved){notice.textContent='There is no shared constitution draft to load.';return}
-    if(!window.confirm('Load the latest shared constitution draft? This will replace the fields currently on screen.'))return;
+    if(!session.readOnly&&!window.confirm('Load the latest shared constitution draft? This will replace the fields currently on screen.'))return;
     const latest=(await constitutionApi('/api/records/'+saved.id)).record;
     const fields=latest.body?.fields||{};
     form.reset();
@@ -132,11 +139,11 @@ async function setupSharedConstitution(){
      if(input&&typeof value==='string')input.value=value;
     }
     saved=latest;
-    localStorage.setItem('sandy-constitution-draft',JSON.stringify(fields));
+    if(!session.readOnly)localStorage.setItem('sandy-constitution-draft',JSON.stringify(fields));
     render();
     notice.textContent='Loaded shared revision '+latest.version+' into the editor. No new server revision was saved.';
    }else if(operation==='save'){
-    if(!form.reportValidity())return;
+    if(session.readOnly||!form.reportValidity())return;
     render();
     const fields=Object.fromEntries(new FormData(form));
     const body={source:'sandy-constitution-builder',fields,markdown:output.textContent};
