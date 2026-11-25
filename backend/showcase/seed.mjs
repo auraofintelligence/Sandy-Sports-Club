@@ -12,25 +12,25 @@ const quote=value=>value===null?'NULL':typeof value==='number'?String(value):"'"
 const insert=(table,fields)=>'INSERT INTO '+table+'('+Object.keys(fields).join(',')+') VALUES('+Object.values(fields).map(quote).join(',')+');';
 const explicit={
  "notices": {
-  "title": "Amity Point equipment and shade checklist",
-  "subject": "Amity Point / Pulan practice preparation",
-  "message": "Review portable nets, shade, drinking water and access before proposing a Saturday practice. Check the weather, tides and site permission. No booking made.",
+  "title": "Point Lookout portable beach setup checklist",
+  "subject": "Cylinder Beach and Home Beach pilot planning",
+  "message": "Founder reports Amity Point beach erosion and limited sand at Main Beach. Assess Cylinder Beach and Home Beach near residents; consider Adder Rock and Flinders Beach for campers. Check space, tide, access, weather, permissions and other beach users before setting up. No booking.",
   "responseOwner": "Example Secretary",
-  "responses": "Discuss equipment transport between Amity Point and Dunwich."
+  "responses": "Keep permanent facility opportunities in all three townships separate from temporary beach activations."
  },
  "todos": {
-  "title": "Dunwich equipment transport plan",
-  "action": "Compare vehicle ferry and island equipment transport options",
-  "owner": "Example Treasurer",
-  "linkedDesk": "Dunwich / Goompi sports equipment planning",
-  "progress": "Obtain indicative AUD quotes; nothing purchased or booked."
+  "title": "Founder-funded starter equipment planning",
+  "action": "Obtain AUD prices for two portable net kits, a battery-powered speaker and fundraising supplies",
+  "owner": "Example equipment coordinator",
+  "linkedDesk": "Portable beach pilot and bracelet fundraiser",
+  "progress": "Founder is considering personal expenditure; existing pop-up tent proposed for reuse. No equipment purchase or reimbursement recorded."
  },
  "news": {
   "title": "Straddie sport and screen community update",
   "headline": "Around Minjerribah: sport, skills and community cinema",
   "lead": "A fictional newsletter exploring Sandy Sports activities across Dunwich / Goompi, Amity Point / Pulan and Point Lookout / Mulumba.",
-  "articles": "Beach volleyball beginner sessions\nIsland transport and access\nCommunity film nights and volunteer skills",
-  "eventRoundup": "Proposed beach games and family-friendly screen activities, subject to approvals.",
+  "articles": "Cylinder and Home Beach: possible local pilot locations\nAdder Rock and Flinders Beach: possible camper outreach\nFounder-funded portable equipment and bracelet fundraising\nPermanent sport and screen facility possibilities in all three towns",
+  "eventRoundup": "Temporary beach activities are distinct from permanent facility proposals. No Amity beach pilot, no assumption of usable sand at Main Beach, and no confirmed venue.",
   "editor": "Example Secretary",
   "reviewNotes": "Check permissions, local terminology and Queensland dates before any distribution."
  },
@@ -53,9 +53,9 @@ const explicit={
   "minuteTaker": "Example Secretary",
   "attendees": "Example President\nExample Secretary\nExample Treasurer",
   "quorum": "Not a formal meeting; no quorum or motion certified",
-  "agenda": "Portable beach sport equipment\nAccess for Amity Point and Point Lookout participants\nFerry and bus logistics\nSite permissions and Queensland safeguarding",
-  "draftMinutes": "Fictional discussion of a three-town programme. No motion adopted.",
-  "decisions": "Proposal only: investigate accessible venues and equipment costs",
+  "agenda": "Assess Cylinder Beach and Home Beach for local participation\nAssess Adder Rock and Flinders Beach for camper participation\nTwo founder-funded net kits, existing pop-up tent and proposed battery-powered speaker\nBracelet sales: indicative AUD 0.50 unit cost, AUD 10 minimum selling price and voluntary extra contribution with no maximum\nSeparate permanent facility possibilities in all three towns\nSite permissions, insurance, music licensing and fundraising arrangements",
+  "draftMinutes": "Fictional working discussion reflecting the founder's actual concept, not a held meeting. Amity beach erosion and limited Main Beach sand rule out assuming suitable temporary courts there. No purchase, sale, booking or motion adopted.",
+  "decisions": "Proposal only: assess suitable beach locations and obtain equipment quotes; determine lawful fundraising arrangements before trading.",
   "followUps": "Check net stock | Example Treasurer | 2027-02-20",
   "openingNotes": "Respect Quandamooka Country; seek appropriate permissions for activities and cultural content."
  },
@@ -92,42 +92,42 @@ const explicit={
   "service": "Volunteer coordination",
   "sandyOwner": "Example Secretary",
   "partnerContact": "Ready SET Co-op, proposed contact only",
-  "scope": "Investigate moving nets and portable screen equipment between Dunwich, Amity Point and Point Lookout. No partnership agreement.",
-  "estimatedCost": 180,
+  "scope": "Explore temporary equipment and volunteer logistics for suitable Point Lookout and camper beaches, plus separate permanent site options in all three towns. No agreement, cost or authority assumed.",
+  "estimatedCost": 0,
   "conditions": "Written permission and defined volunteer roles\nQueensland safety requirements\nSeparate approval of AUD expenses and C-Hours",
   "writtenAcceptance": "None received; fictional proposal only."
  },
  "events": {
-  "title": "Amity Point beach volleyball practice proposal",
+  "title": "Cylinder Beach and Home Beach portable volleyball pilot proposal",
   "activity": "Mixed beach volleyball",
-  "town": "Amity Point / Pulan",
-  "site": "Amity Point / Pulan, suitable sand area to be assessed; no reservation",
+  "town": "Point Lookout / Mulumba",
+  "site": "Cylinder Beach or Home Beach, subject to suitable available sand, tide, access and permission. Adder Rock and Flinders Beach are possible separate camper-focused sessions. No reservation.",
   "startTime": "09:00",
   "endTime": "10:30",
-  "programme": "Warm-up and mobility\nBeginner passing drills\nMixed teams\nPack down and leave beach tidy",
+  "programme": "Check beach conditions and permissions\nSet up proposed two portable net kits and existing pop-up tent if permitted\nBeginner passing and mixed social teams\nLow-volume music if authorised\nPack down and leave beach tidy",
   "volunteers": "Example facilitator | Fictional role | 08:30",
-  "equipment": "Portable net\nVolleyballs\nShade and water\nFirst aid kit",
-  "risk": "Check tide, heat, lightning, shorebird and site restrictions; accessible arrival and emergency arrangements.",
-  "debrief": "Record hypothetical equipment and access improvements."
+  "equipment": "Two portable net kits (proposed founder purchase)\nVolleyballs\nExisting founder pop-up tent (proposed use)\nBattery-powered speaker (proposed purchase)\nWater, first aid kit and appropriate tent anchoring",
+  "risk": "Check tides, heat, lightning, erosion, dunes, wildlife, other beach users, tent wind limits and emergency access. No Amity beach setup; Main Beach has limited sand according to founder. No site confirmed.",
+  "debrief": "Record hypothetical participant feedback, suitable sand space, equipment costs and interest in future permanent facilities."
  },
  "fundraising": {
-  "title": "Dunwich community BBQ proposal",
-  "method": "BBQ or market stall",
-  "cashCustodian": "Example Treasurer",
+  "title": "Point Lookout portable bracelet fundraising pilot",
+  "method": "Donation appeal",
+  "cashCustodian": "Example finance custodian (not appointed)",
   "income": 0,
   "cost": 0,
-  "receiptRefs": "No receipts, purchases or payments. Illustrative budget discussion only.",
-  "outstanding": "Explore food-handling, site permissions and waste arrangements; AUD costs to be assessed."
+  "receiptRefs": "No actual transactions or expenses. Proposed product: bracelets costing about AUD 0.50 each, selling price at least AUD 10, with voluntary larger contributions and no upper limit. Record sales separately from additional voluntary contributions and expenses.",
+  "outstanding": "Use existing founder pop-up tent if permitted. Proposed battery speaker, two net kits and small merchandise supplies funded personally by founder. Check permission to trade/fundraise, music licensing, cash/receipt controls and appropriate legal arrangements before selling. Disclose purpose and destination of funds. No charitable status or tax deductibility assumed."
  },
  "equipment": {
-  "title": "Portable beach net for island sessions",
+  "title": "Two portable net kits and pop-up event setup",
   "assetType": "Sport net / court",
-  "tag": "STRADDIE-EXAMPLE-NET-01",
-  "location": "Dunwich / Goompi, proposed storage only",
-  "quantity": 1,
-  "holder": "Example custodian",
+  "tag": "STRADDIE-EXAMPLE-NET-KITS",
+  "location": "Founder storage, location not recorded; proposed transport to Point Lookout beaches and camper areas",
+  "quantity": 2,
+  "holder": "Founder, proposed personal ownership; no transfer",
   "condition": "Proposed",
-  "maintenance": "Check sand anchors, net tension and condition before any Amity or Point Lookout use."
+  "maintenance": "Two net kits not yet purchased. Existing pop-up tent proposed for shade subject to wind-safe anchoring and permission. Battery-powered speaker and fundraising supplies proposed. Record actual ownership, condition and costs separately."
  },
  "sponsors": {
   "title": "Hypothetical Straddie equipment supporter",
@@ -145,7 +145,7 @@ const explicit={
   "amount": 1000,
   "eligibility": "Not assessed",
   "applicant": "Future eligible Sandy entity, not established",
-  "case": "AUD 1,000 sample request for portable nets, accessibility and heat protection on Minjerribah.",
+  "case": "AUD 1,000 illustrative funding scenario for two portable net kits, safe beach setup, accessibility and future three-town facility planning. Founder may initially self-fund equipment; no grant identified or awarded.",
   "officer": "Example Treasurer",
   "attachments": "Indicative AUD supplier quotes\nVenue permission\nEligibility and insurance review",
   "submission": "No actual grant identified, submitted or awarded."
@@ -158,16 +158,16 @@ const explicit={
   "prizes": "Proposed reusable drink bottles only; no donor committed"
  },
  "stock": {
-  "title": "Straddie portable volleyball net stock example",
-  "sku": "STRADDIE-EXAMPLE-NET",
-  "category": "Sports gear",
-  "opening": 4,
-  "inward": 2,
-  "outward": 1,
-  "price": 0,
-  "unitCost": 25,
-  "supplier": "Fictional Queensland equipment supplier",
-  "stocktake": "Five sample units; AUD 25 illustrative unit cost, not actual inventory or sale."
+  "title": "Bracelet fundraiser stock and unit economics example",
+  "sku": "STRADDIE-EXAMPLE-BRACELET",
+  "category": "Event goods",
+  "opening": 100,
+  "inward": 0,
+  "outward": 0,
+  "price": 10,
+  "unitCost": 0.5,
+  "supplier": "Supplier to be selected; indicative price from founder",
+  "stocktake": "Fictional scenario only: 100 bracelets at AUD 0.50 = AUD 50 stock cost. Minimum AUD 10 selling price each, voluntary higher payment with no maximum. At 100 minimum-price sales, gross receipts AUD 1,000 and AUD 950 before other expenses. No actual stock, sale, payment or donation."
  },
  "safety": {
   "title": "Queensland junior participation and beach safety planning",
@@ -210,7 +210,7 @@ const explicit={
  "member-notice": {
   "title": "Straddie weekend practice draft notice",
   "subject": "Proposed Minjerribah weekend activity",
-  "body": "A beginner-friendly beach sports session is being explored for Amity Point / Pulan. Check site permissions, weather and island transport before sharing confirmed details.",
+  "body": "A beginner-friendly beach sports pilot is being considered at Cylinder Beach or Home Beach, Point Lookout. Adder Rock and Flinders Beach may suit camper-focused sessions. Dates, suitable sand, permissions and conditions must be checked. Permanent site possibilities in all three towns remain separate.",
   "delivery": "Not sent; future opt-in audience only."
  },
  "birthday": {
@@ -229,29 +229,29 @@ const explicit={
   "deliveryLog": "Not sent. No actual recipients."
  },
  "sport-programme": {
-  "title": "Point Lookout beginner beach cricket session",
+  "title": "Point Lookout portable beach cricket skills proposal",
   "sport": "Beach cricket",
-  "location": "Point Lookout / Mulumba, suitable area subject to permission",
+  "location": "Cylinder Beach or Home Beach, Point Lookout / Mulumba, only if suitable space and permission; camper options Adder Rock and Flinders Beach",
   "coach": "Example facilitator",
   "capacity": 12,
-  "needs": "Soft balls, portable stumps, shade, accessible approach and water",
+  "needs": "Soft balls, portable stumps, shade, accessible approach and water. Avoid crowded areas, dunes and limited-sand sites.",
   "weatherPlan": "Check Bureau of Meteorology forecast, lightning, heat, tides and beach conditions; cancel or reschedule if unsafe."
  },
  "venues": {
-  "title": "Dunwich sports and outdoor screen venue proposal",
-  "town": "Dunwich / Goompi",
-  "site": "Proposed community space; actual landholder permission required",
-  "assets": "Portable court\nOutdoor screen\nProjector and audio\nShade and accessible amenities",
+  "title": "Three-town permanent sports and screen facility options",
+  "town": "Multi-town / TBD",
+  "site": "Investigate permanent site possibilities separately in Dunwich / Goompi, Amity Point / Pulan and Point Lookout / Mulumba. No parcel, lease or facility booking established.",
+  "assets": "Potential permanent courts\nOutdoor screen and community space\nShade and accessible amenities\nSeparate temporary portable net activities at suitable Point Lookout and camper beaches",
   "contact": "No confirmed venue or contact",
-  "permissions": "Check council/landholder requirements, cultural permissions, public liability, electrical safety and transport."
+  "permissions": "Separate permanent tenure, planning, site suitability and cultural permissions from temporary beach use. Founder reports eroded Amity beach and limited Main Beach sand; no assumed temporary beach site there."
  },
  "volunteers": {
-  "title": "Amity Point beach activity setup roster",
-  "event": "Amity Point / Pulan proposed volleyball practice",
+  "title": "Cylinder Beach or Home Beach pilot setup roster",
+  "event": "Point Lookout / Mulumba proposed portable volleyball pilot",
   "role": "Equipment setup and shade assistant",
   "person": "Example volunteer role, unassigned",
-  "training": "Safe lifting\nSand anchors and net setup\nSun safety\nPack-down and litter check",
-  "followUp": "No actual volunteer has agreed. Confirm appropriate training and availability."
+  "training": "Safe lifting\nSand anchors and net setup\nTent wind-safe setup\nSun safety\nAppropriate music volume and permissions\nFundraising recordkeeping\nPack-down and litter check",
+  "followUp": "No actual volunteer has agreed. Confirm suitable beach conditions, site permissions and appropriate roles."
  },
  "film": {
   "title": "Dunwich community cinema planning",
@@ -294,12 +294,12 @@ export function showcaseSql(){
   const eventDate=['date','eventDate','closingDate','dueDate','reviewDate','agmDate'].map(k=>fields[k]).find(v=>/^\d{4}-\d{2}-\d{2}$/.test(v||''))||null;
   record(desk.kind,explicit[desk.key].title,{sandySuiteVersion:1,domain:desk.key,fields},eventDate);
  }
- record('social_idea','Amity Point beginner volleyball tips',{category:'',channel:'undecided',notes:'Fictional Queensland summer coaching clip: passing drills, shade, water and packing down on Straddie. No recording or publication.',authorNote:'Example officer'});
+ record('social_idea','Cylinder Beach and Home Beach beginner volleyball tips',{category:'',channel:'undecided',notes:'Fictional Queensland summer coaching clip concept: suitable sand at Cylinder Beach or Home Beach, two proposed portable nets, shade, water, respectful music and safe pack-down. No recording or publication.',authorNote:'Example officer'});
  record('governance','Constitution working draft',{source:'sandy-constitution-builder',fields:{name:'Sandy Sports Club (example draft)',additional:'Fictional Sandy Sports Club working notes for Minjerribah, Queensland, across Dunwich / Goompi, Amity Point / Pulan and Point Lookout / Mulumba. No adopted rules.'},markdown:'Example Queensland club constitution draft for Sandy Sports on Minjerribah. No adopted rules.'});
  STAFF.forEach((role,i)=>record('notice','Help with Straddie activity calendar',{sandyWebmasterRequest:1,category:'Committee workflow',message:'Fictional support request for '+role+': check the Brisbane-time calendar, island venues and consent controls.',readAt:null,reply:''},null,fixtureId(i+1),role));
  out.push(insert('club_interest',{id:next(),created_utc:stamp,first_name:'Example',town:'Point Lookout / Mulumba, QLD',interests_json:JSON.stringify(['Sport and film']),comments:'Fictional Point Lookout interest in beach cricket and a community film night. No contact or consent.',contact_consent:0,source:'synthetic fixture'}));
  out.push(insert('studio_settings',{id:1,version:1,settings_json:JSON.stringify(defaultCampaignSettings()),updated_by:owner,updated_utc:stamp}));
- out.push(insert('studio_briefs',{id:next(),title:'[EXAMPLE] Straddie beach skills video brief',date,brief:'Fictional coaching clip on Minjerribah: Amity Point passing drills, heat and shade, island transport and leave-no-trace pack down. No film permissions, commission or publication.',created_by:owner,updated_by:owner,created_utc:stamp,updated_utc:stamp}));
+ out.push(insert('studio_briefs',{id:next(),title:'[EXAMPLE] Straddie beach skills video brief',date,brief:'Fictional coaching clip on Minjerribah: Cylinder Beach or Home Beach passing drills, proposed portable nets, heat and shade, island transport and leave-no-trace pack down. No film permissions, commission or publication.',created_by:owner,updated_by:owner,created_utc:stamp,updated_utc:stamp}));
  // Harmless single-pixel PNG. The fixture key is never accepted for live files.
  const sample=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ZkAAAAASUVORK5CYII=','base64');
  const key=createHash('sha256').update('sandy-library-v1/content/'+FIXTURE_LIBRARY_KEY).digest();

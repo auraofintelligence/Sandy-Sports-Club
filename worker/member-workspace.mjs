@@ -75,8 +75,8 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
   return json({synthetic:true,
    profile:{name:'Illustrative demo member',town:'Amity Point / Pulan, Minjerribah, QLD',status:'preview only',membershipClass:'sample, not enrolled'},
    sports:['Mixed beach volleyball','Beach cricket'],filmClub:true,volunteer:true,
-   examplePlans:[{title:'[EXAMPLE] Amity Point / Pulan beach volleyball practice',date:'2027-02-13'},{title:'[EXAMPLE] Dunwich / Goompi community cinema planning',date:'2027-02-20'},{title:'[EXAMPLE] Point Lookout / Mulumba beach cricket skills',date:'2027-02-21'}],
-   exampleNotice:'Proposed island sessions require venue permission, tide and weather checks, transport planning and safeguarding review. Nothing is booked.',
+   examplePlans:[{title:'[EXAMPLE] Cylinder Beach or Home Beach portable volleyball pilot',date:'2027-02-13'},{title:'[EXAMPLE] Dunwich / Goompi community cinema planning',date:'2027-02-20'},{title:'[EXAMPLE] Adder Rock or Flinders Beach camper activity proposal',date:'2027-02-21'}],
+   exampleNotice:'Possible beach pilot at Cylinder Beach or Home Beach for local residents, Adder Rock or Flinders Beach for campers. Founder reports erosion at Amity and limited sand at Main Beach. Permanent facility possibilities remain separate in all three towns. Venue permission, tide, weather, transport and safety checks required. Nothing booked.',
    exampleNewsletter:'Around Minjerribah: sport, skills and community cinema (fictional issue, not sent)',
    areas:['My sports','Calendar','Volunteering','Film club','Member notices','My privacy choices'],
    notice:'A synthetic role-layout preview; no real memberships, fees, accounts or messages are created.'});
