@@ -1,9 +1,11 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
+import {setupPrivateLibrary} from './club-library-ui.js';
 // Sandy Sports member clubhouse: real self-service when incorporated, synthetic preview only for the webmaster.
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Multi-sport'];
 const times=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 let workspace=null,preview=false;
+const privateLibrary=setupPrivateLibrary(document.querySelector('#member-library-mount'));
 async function api(path,method='GET',data){
  const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   ...(data===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
@@ -133,7 +135,7 @@ $('member-wish-form').addEventListener('submit',async event=>{
 });
 for(const [id,action] of [['member-terms-accept','accept'],['member-terms-withdraw','withdraw']])$(id).addEventListener('click',async()=>{
  if(preview||!workspace?.safeguards)return;
- try{await api('/api/member/safeguards','POST',{action,version:workspace.safeguards.version,termsVersion:workspace.safeguards.termsVersion});workspace=await api('/api/member/workspace');showReal()}
+ try{await api('/api/member/safeguards','POST',{action,version:workspace.safeguards.version,termsVersion:workspace.safeguards.termsVersion});workspace=await api('/api/member/workspace');showReal();await privateLibrary.open('owner')}
  catch(e){$('member-safeguard-state').textContent=e.message}
 });
 $('member-export').addEventListener('click',async()=>{
@@ -157,6 +159,7 @@ installExitControl('member-exit-view');
   if(session.readOnly&&['member','webmaster'].includes(session.identity.role)){
    workspace=await api('/api/member/preview');showDemo();
    $('member-exit-view').hidden=false;$('member-return-showcase').hidden=session.identity.role!=='webmaster';
+   if(session.identity.role==='member')await privateLibrary.open('owner');
    const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');return;
   }
   if(new URLSearchParams(location.search).get('demo')==='1'&&session.identity.role==='webmaster'){
@@ -169,7 +172,7 @@ installExitControl('member-exit-view');
    banner('This page is for member accounts. For a view-only example, open My Clubhouse and choose the member preview.',true);
    return;
   }
-  workspace=await api('/api/member/workspace');showReal();
+  workspace=await api('/api/member/workspace');showReal();await privateLibrary.open('owner');
   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');
  }catch(error){$('member-exit-view').hidden=false;banner('Could not load your member area: '+error.message,true)}
 })();

@@ -138,6 +138,12 @@ try{
  await wait(m,'#club-console');assert.match(await m.locator('#club-status').textContent(),/SYNTHETIC VIEW ONLY/);
  assert.equal(await m.locator('#club-view-role-wrap').isHidden(),true);
  for(const d of SUITE_DESKS)await desk(m,d.key);
+ await desk(m,'documents');await wait(m,'#private-library [data-library-id]');
+ assert.equal(await m.locator('#library-upload button[type="submit"]').isDisabled(),true);
+ const sampleDownload=await Promise.all([m.waitForEvent('download'),m.locator('#private-library [data-library-action="download"]').first().click()]);
+ const sampleFile=await sampleDownload[0].path();assert.ok(sampleFile);
+ assert.equal(readFileSync(sampleFile).toString('base64'),'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ZkAAAAASUVORK5CYII=');
+ console.log('PASS: synthetic private library downloaded exact fictional bytes, uploads disabled');
  console.log('PASS: independent phone-sized showcase navigated all '+SUITE_DESKS.length+' working desks with fictional records');
  await go(m,'/club-admin.html?accounts=1#accounts');await wait(m,'#account-rows tr');assert.equal(await m.locator('[data-office-invite],[data-account-action]').count(),0);
  await go(m,'/member-home.html?demo=1#sports');await wait(m,'#member-panel');assert.equal(await m.locator('#member-sport-preferences button[type="submit"]').isDisabled(),true);

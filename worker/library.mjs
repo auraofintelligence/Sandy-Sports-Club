@@ -97,8 +97,9 @@ export async function libraryEndpoint(req,env,path,actor){
   const page=Math.max(0,Math.min(10000,Math.floor(Number(url.searchParams.get('page'))||0)));
   const allowed=Object.keys(scopes).filter(s=>s!=='owner'&&scopes[s].includes(actor.role));
   const condition="(d.scope='owner' AND d.owner_id=?)"+(allowed.length?" OR (d.scope IN ("+allowed.map(()=>'?').join(',')+") AND (d.owner_id=? OR EXISTS(SELECT 1 FROM json_each(d.roles_json) WHERE value=?)))":'');
-  const args=[actor.id,...(allowed.length?[...allowed,actor.id,actor.role]:[])];
-  const {results}=await db.prepare('SELECT d.*,v.media_type,v.byte_length,v.digest,v.source_note FROM sandy_library_documents d JOIN sandy_library_versions v ON d.id=v.document_id AND d.content_version=v.content_version WHERE '+condition+' ORDER BY d.updated_utc DESC,d.id LIMIT 101 OFFSET ?').bind(...args,page*100).all();
+  const args=[actor.id,...(allowed.length?[...allowed,actor.id,actor.role]:[])],scope=url.searchParams.get('scope');
+  if(scope&&!['owner',...allowed].includes(scope))fail(403,'This document classification is not available to this account.','library_forbidden');
+  const {results}=await db.prepare('SELECT d.*,v.media_type,v.byte_length,v.digest,v.source_note FROM sandy_library_documents d JOIN sandy_library_versions v ON d.id=v.document_id AND d.content_version=v.content_version WHERE ('+condition+')'+(scope?' AND d.scope=?':'')+' ORDER BY d.updated_utc DESC,d.id LIMIT 101 OFFSET ?').bind(...args,...(scope?[scope]:[]),page*100).all();
   let writeEnabled=env.SANDY_PRIVATE_LIBRARY_ENABLED==='enabled'&&!env.SANDY_SYNTHETIC_VIEW;
   if(writeEnabled&&actor.role==='member')writeEnabled=env.SANDY_CLUB_APPROVALS==='enabled'&&(await memberSafeguardFlags(db,actor.id)).optionalParticipation&&!!await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(actor.id).first();
   return json({available:true,writeEnabled,

@@ -1,6 +1,7 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 import {isReadOnlyView,protectView} from './club-view-client.js';
 import {setupSafeguardsDesk} from './club-safeguards-ui.js';
+import {setupPrivateLibrary} from './club-library-ui.js';
 import {setupWorkflowAssist} from './club-workflow-assist.js';
 // Working Sandy Sports desks, not fake PLFC parity. All saves use authenticated D1 APIs.
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -70,6 +71,7 @@ export function setupSandySuite({api,status,getIdentity}){
  '<button id="suite-next" type="button">Next stage</button><button id="suite-save" type="submit">Save to Sandy D1</button></div>'+
  '<p id="suite-save-status" role="status"></p></form></section>';
  const safeguard=setupSafeguardsDesk(root,api);
+ const library=setupPrivateLibrary(root);
  const find=id=>root.querySelector('#'+id);
  const form=find('suite-form'),editor=find('suite-editor'),list=find('suite-records');
  const helper=setupWorkflowAssist({root,getDesk:()=>desk,getValues:collect,getTitle:()=>form.elements.title.value});
@@ -141,7 +143,7 @@ export function setupSandySuite({api,status,getIdentity}){
   find('suite-search').value='';find('suite-filter').value='';
   find('suite-desk-name').textContent=desk.title;find('suite-desk-intro').textContent=desk.purpose;
   find('suite-notice').hidden=true;close();root.hidden=false;
-  await refresh();
+  await Promise.all([refresh(),library.open(key)]);
  }
  find('suite-search').addEventListener('input',event=>{query=event.target.value.toLowerCase();drawList()});
  find('suite-filter').addEventListener('change',event=>{filter=event.target.value;drawList()});
