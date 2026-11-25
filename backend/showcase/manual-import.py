@@ -1,5 +1,5 @@
 """Generate ordered, verified SQL batches for the empty Sandy showcase only."""
-import pathlib, sqlite3, sys
+import pathlib, sqlite3, sys, json
 root = pathlib.Path(sys.argv[1])
 source = (root / 'showcase-full.sql').read_text()
 statements = []
@@ -45,6 +45,13 @@ assert 'Example island locality' not in source
 assert 'Amity Point beach volleyball practice proposal' not in source
 stock = db.execute("SELECT json_extract(body_json,'$.fields.price'),json_extract(body_json,'$.fields.unitCost'),json_extract(body_json,'$.fields.opening') FROM club_records WHERE json_extract(body_json,'$.domain')='stock'").fetchone()
 assert stock == (10,0.5,100)
+assert 'locals and tourists' in local.lower()
+assert '5 December' in local and '29 January' in local
+assert db.execute("SELECT event_date FROM club_records WHERE json_extract(body_json,'$.domain')='events'").fetchone() == ('2026-12-12',)
+summer=json.loads(db.execute('SELECT settings_json FROM studio_settings').fetchone()[0])
+assert len(summer['dayPlans']) == 8
+assert min(summer['dayPlans']) == '2026-12-05' and max(summer['dayPlans']) == '2027-01-23'
+assert summer['timingSignals']['holidays']['enabled'] is True
 assert db.execute("SELECT json_extract(body_json,'$.fields.quantity') FROM club_records WHERE json_extract(body_json,'$.domain')='equipment'").fetchone() == (2,)
 assert db.execute("SELECT town FROM club_people").fetchone()[0] == 'Amity Point / Pulan, Minjerribah, QLD'
 assert db.execute("SELECT count(*) FROM club_records WHERE json_extract(body_json,'$.sandySuiteVersion')=1").fetchone()[0] == 29
