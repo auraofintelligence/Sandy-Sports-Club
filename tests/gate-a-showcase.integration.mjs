@@ -11,7 +11,7 @@ const origin='https://sandy.test',digest=value=>createHash('sha256').update(valu
 function db(t,sqlText){
  const sql=new DatabaseSync(':memory:');t.after(()=>sql.close());sql.exec(sqlText);
  const binding={prepare(query){
-  const q=sql.prepare(query),bind=(...args)=>({first:async()=>q.get(...args)||null,all:async()=>({results:q.all(...args)}),run:async()=>({meta:{changes:Number(q.run(...args).changes)}})});
+  const q=sql.prepare(query),bind=(...args)=>({first:async()=>q.get(...args)||null,all:async()=>({results:q.all(...args)}),run:async()=>{if(/\bRETURNING\b/i.test(query)){const results=q.all(...args);return {results,meta:{changes:results.length}}}return {meta:{changes:Number(q.run(...args).changes)}}}});
   return {...bind(),bind};
  },withSession(){return this},async batch(stmts){sql.exec('BEGIN');try{const out=[];for(const s of stmts)out.push(await s.run());sql.exec('COMMIT');return out}catch(e){sql.exec('ROLLBACK');throw e}}};
  return {sql,binding};
