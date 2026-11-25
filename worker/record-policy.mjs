@@ -3,7 +3,7 @@
 import {fail,requireRole,STAFF} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 const owns=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
-const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard'];
+const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard','sandyCommitteeReceipt'];
 const safeObject=body=>body&&typeof body==='object'&&!Array.isArray(body);
 const restrictedGeneric=kind=>{
  const desks=SUITE_DESKS.filter(d=>d.kind===kind);
@@ -18,6 +18,8 @@ export function recordPurpose(kind,body){
  if(marks.length>1)return null;
  if(marks.length){
   if(owns(body,'desk')||body.source==='sandy-committee-room-v1'||body.source==='sandy-constitution-builder')return null;
+  if(marks[0]==='sandyCommitteeReceipt')
+   return kind==='notice'&&body.sandyCommitteeReceipt===1&&typeof body.ownerId==='string'&&typeof body.noticeId==='string'?{type:'committee-receipt',key:'receipt',roles:[]}:null;
   if(marks[0]==='sandyWebmasterRequest')
    return kind==='notice'&&body.sandyWebmasterRequest===1?{type:'help',key:'help',roles:['webmaster']}:null;
   if(marks[0]==='sandyMemberSafeguard')
@@ -39,7 +41,7 @@ export function purposeOf(row){
  if(!row)return null;
  try{
   const body=JSON.parse(row.body_json),purpose=recordPurpose(row.kind,body);
-  if(purpose?.type==='member'&&body.ownerId!==row.created_by)return null;
+  if(['member','committee-receipt'].includes(purpose?.type)&&body.ownerId!==row.created_by)return null;
   return purpose;
  }catch{return null}
 }
@@ -61,6 +63,24 @@ export function requireGenericWrite(record,identity,before){
 export function suiteBody(row,desk){
  const p=purposeOf(row);
  return p?.type==='suite'&&p.key===desk.key?JSON.parse(row.body_json):false;
+}
+export function legacyNoticeRecipients(body){
+ const audience=body.fields?.audience;
+ if(audience==='President and secretary')return ['webmaster','president','secretary','assistant_secretary'];
+ if(audience==='Office holders')return STAFF.filter(r=>r!=='committee');
+ if(audience==='Project leads')return ['webmaster'];
+ return [...STAFF];
+}
+export const taskAllocators=['webmaster','secretary','assistant_secretary'];
+// Preserve previously shared working drafts; new operational notices and tasks
+// have server-owned recipient/office boundaries on every alternate read.
+export function suiteAllowed(row,desk,identity){
+ const body=suiteBody(row,desk);if(!body||!desk.roles.includes(identity?.role))return false;
+ const ops=body.committeeOps;
+ if(!ops)return desk.key!=='notices'||identity.role==='webmaster'||row.created_by===identity.id||legacyNoticeRecipients(body).includes(identity.role);
+ if(desk.key==='notices')return ops.kind==='notice'&&(identity.role==='webmaster'||row.created_by===identity.id||Array.isArray(ops.recipients)&&ops.recipients.includes(identity.role));
+ if(desk.key==='todos')return ops.kind==='task'&&(taskAllocators.includes(identity.role)||!ops.office||(ops.office===identity.role&&(!ops.claimedBy||ops.claimedBy===identity.id)));
+ return false;
 }
 export function helpAllowed(row,identity){
  return purposeOf(row)?.type==='help'&&Boolean(identity&&(identity.role==='webmaster'||row.created_by===identity.id));
@@ -85,6 +105,8 @@ export function recordAuditAllowed(row,identity,action){
  if(!p)return false;
  if(action.startsWith('webmaster_request_')||p.type==='help')return identity.role==='webmaster'&&p.type==='help';
  if(action.startsWith('member_preferences_')||action.startsWith('member_interest_')||p.type==='member')return false;
+ if(p.type==='committee-receipt')return identity.role==='webmaster'||row.created_by===identity.id;
+ if(p.type==='suite')return suiteAllowed(row,SUITE_BY_KEY[p.key],identity);
  if(p.type==='member-safeguard'||action.startsWith('safeguard_'))return p.type==='member-safeguard'&&p.roles.includes(identity.role);
  return p.roles.includes(identity.role);
 }

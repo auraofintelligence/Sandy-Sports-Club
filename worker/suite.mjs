@@ -3,7 +3,7 @@
 import {ApiError,fail,json,now,id,dbFor,payload,field,dateField,https,version,requireRole,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 import {suiteActionEndpoint} from './suite-actions.mjs';
-import {suiteBody,visibleRecords} from './record-policy.mjs';
+import {suiteBody,suiteAllowed,visibleRecords} from './record-policy.mjs';
 const statuses=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const exactDate=value=>dateField(value||'',true);
 const isRecordId=value=>/^[a-f0-9-]{36}$/.test(value||'');
@@ -68,14 +68,15 @@ function checkStatus(data){
  if(!statuses.includes(status))fail(400,'Choose a valid working stage.','invalid_status');
  return status;
 }
-async function list(db,desk){
- const rows=await visibleRecords(db,"WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=?",[desk.kind,desk.key],'updated_utc DESC,id DESC',300,row=>Boolean(suiteBody(row,desk)));
+async function list(db,desk,identity){
+ const rows=await visibleRecords(db,"WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=?",[desk.kind,desk.key],'updated_utc DESC,id DESC',300,row=>suiteAllowed(row,desk,identity));
  return rows.map(row=>summary(row));
 }
 async function changed(db,desk,identity,recordId,request){
  const current=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
  const before=validBody(current,desk);
- if(!before)fail(404,'That Sandy working record was not found in this area.','record_not_found');
+ if(!before||!suiteAllowed(current,desk,identity))fail(404,'That Sandy working record was not found in this area.','record_not_found');
+ if(before.committeeOps)fail(409,'Use the dedicated committee noticeboard or officer task list for this record.','dedicated_workflow');
  const expected=version(request.version);
  if(expected!==current.version)fail(409,'Another officer edited this record. Reload the latest version.','conflict');
  if(current.status==='approved')fail(409,'A formally approved record cannot be changed as a working draft.','locked');
@@ -123,12 +124,12 @@ export async function suiteEndpoint(req,env,path,identity){
  const desk=SUITE_BY_KEY[match[1]],recordId=match[2],history=match[3];
  authorised(identity,desk);
  const db=dbFor(env);
- if(!recordId&&req.method==='GET')return json({records:await list(db,desk),domain:desk.key});
+ if(!recordId&&req.method==='GET')return json({records:await list(db,desk,identity),domain:desk.key});
  if(!recordId&&req.method==='POST')return create(db,desk,identity,await payload(req,26000));
  if(!isRecordId(recordId))fail(404,'That record identifier is invalid.','record_not_found');
  const row=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
  const body=validBody(row,desk);
- if(!body)fail(404,'That record is not in this working area.','record_not_found');
+ if(!body||!suiteAllowed(row,desk,identity))fail(404,'That record is not in this working area.','record_not_found');
  if(history&&req.method==='GET'){
   const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_id AS actorId,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
   return json({history:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
