@@ -67,7 +67,14 @@ try{
  const go=async(p,path)=>p.goto(origin+path,{waitUntil:'domcontentloaded'});
  const roleTabs=async p=>p.locator('[data-tab]').evaluateAll(nodes=>nodes.filter(n=>!n.hidden).map(n=>n.dataset.tab).sort());
  async function desk(p,key){
-  await go(p,'/club-admin.html?desk='+key+'#committee/'+key);await wait(p,'#committee-suite .suite-record');
+  await go(p,'/club-admin.html?desk='+key+'#committee/'+key);
+  if(key==='notices'||key==='todos'){
+   await wait(p,key==='notices'?'#committee-ops .ops-notice':'#committee-ops .ops-task');
+   assert.equal(await p.locator('#committee-suite').isHidden(),true);
+   assert.match(await p.locator('#ops-desk-title').textContent(),key==='notices'?/Committee notices/:/Officer to-do lists/);
+   assert.match(await p.locator('#committee-ops').textContent(),/\[EXAMPLE\]/);return;
+  }
+  await wait(p,'#committee-suite .suite-record');
   assert.equal(await p.locator('#suite-desk-name').textContent(),SUITE_DESKS.find(d=>d.key===key).title);
   assert.match(await p.locator('.suite-record strong').first().textContent(),/^\[EXAMPLE\]/);
  }
@@ -86,7 +93,7 @@ try{
   assert.deepEqual(await roleTabs(p),realTabs,role+' menu parity');
   assert.match(await p.locator('#club-status').textContent(),/SYNTHETIC VIEW ONLY/);
   assert.equal(await p.locator('#club-view-role').inputValue(),role);
-  await go(p,'/club-admin.html?check='+role+'#committee/notices');await wait(p,'#committee-suite .suite-record');
+  await go(p,'/club-admin.html?check='+role+'#committee/notices');await wait(p,'#committee-ops .ops-notice');
   for(const d of SUITE_DESKS)assert.equal(await p.locator('[data-committee-desk="'+d.key+'"]').isDisabled(),!d.roles.includes(role),role+' '+d.key);
   await real.close();
  }
@@ -108,7 +115,7 @@ try{
  assert.equal(new URL(p.url()).hash,'#committee');
  assert.equal(await p.locator('#committee-tools details[open]').count(),0);
  await p.locator('#committee-tools details summary').first().click();
- await p.locator('[data-committee-desk="notices"]').click();await wait(p,'#committee-suite .suite-record');
+ await p.locator('[data-committee-desk="notices"]').click();await wait(p,'#committee-ops .ops-notice');
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
  await p.locator('#committee-desk-switch').selectOption('social');await wait(p,'#club-social iframe');
  await wait(p,'#committee-back');assert.equal(await p.locator('#committee-desk-switch').inputValue(),'social');

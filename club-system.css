@@ -282,3 +282,37 @@
 .committee-tools-group:not([open])>div{display:none}
 .committee-navigation:has(#committee-back:not([hidden])){position:sticky;top:0;z-index:15;background:#fff;padding-bottom:.25rem}
 @media(max-width:560px){.committee-switcher label{flex-basis:100%}.committee-switcher button{flex:1 1 100%}}
+
+/* Dedicated committee board and officer work lists. */
+.committee-ops{padding:.9rem;min-width:0;border:1px solid #c0d9d4;border-radius:12px;background:#f7fbf9}
+.committee-ops-summary,.ops-header,.ops-toolbar,.ops-card-head,.ops-actions,.ops-office-group>header{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
+.committee-ops-summary{padding:.85rem;border:1px solid #bfd8d4;background:#f4faf7;border-radius:12px;margin:.8rem 0}
+.committee-ops-summary h3,.ops-header h3{margin:0 0 .4rem;color:#164f59}
+.ops-header>div{flex:1 1 300px}.ops-header p{margin:.3rem 0;max-width:76ch;font-size:.9rem}
+.ops-counts{display:flex;flex-wrap:wrap;gap:.5rem;margin:.6rem 0}
+.ops-counts span{padding:.45rem .65rem;background:#e3f1ed;border-radius:8px;color:#19565f;font-size:.85rem}.ops-counts strong{font-size:1.1rem}
+.ops-toolbar{justify-content:flex-start;margin:.8rem 0}.ops-toolbar label{display:flex;align-items:center;gap:.5rem;flex:1 1 180px}
+.committee-ops button,.committee-ops-summary button{min-height:42px;padding:.5rem .75rem;border:1px solid #93bdb8;border-radius:8px;background:white;color:#075f6d;font:inherit;font-size:.85rem;font-weight:750;cursor:pointer}
+.committee-ops button:hover,.committee-ops button[aria-pressed=true]{background:#e4f2ed}.committee-ops button:disabled{opacity:.55;cursor:not-allowed}
+.ops-compose,.ops-duty-guide,.ops-completed,.ops-legacy{padding:.7rem .9rem;margin:.7rem 0;border:1px solid #c8dfd9;border-radius:10px;background:white}
+.committee-ops details>summary{font-weight:800;color:#174f58;min-height:34px;cursor:pointer}
+.ops-compose fieldset{display:grid;gap:.75rem;border:0;padding:.4rem 0;margin:0;min-width:0}
+.ops-compose label,.ops-assign label{display:grid;gap:.35rem;font-weight:700;font-size:.85rem;min-width:0}
+.committee-ops input:not([type=checkbox]),.committee-ops textarea,.committee-ops select{box-sizing:border-box;width:100%;min-width:0;min-height:42px;padding:.5rem;border:1px solid #abcac3;border-radius:7px;background:white;font:inherit}
+.ops-compose .ops-check{display:flex;align-items:center;justify-content:flex-start;gap:.6rem}.ops-check input{width:1.3rem;height:1.3rem}
+.ops-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;align-items:end}
+.ops-notice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.ops-notice,.ops-task{min-width:0;padding:.8rem;border:1px solid #c3ded9;border-radius:10px;background:white;margin:0}
+.ops-card-head{align-items:flex-start}.ops-card-head h4{font-size:1.05rem;color:#164f59;margin:.1rem 0;flex:1 1 180px}
+.ops-badges{display:flex;gap:.3rem;flex-wrap:wrap}.ops-pill{font-size:.77rem;padding:.3rem .5rem;border-radius:14px;font-weight:800}
+.ops-red{background:#fae4e3;color:#9b2520}.ops-amber{background:#fff0cf;color:#805300}.ops-green{background:#e1f1e7;color:#1c6349}.ops-muted{background:#eef0ef;color:#50625f}.ops-important{background:#fde6c5;color:#783d09}.ops-new{background:#d8e9fb;color:#205b91}
+.ops-meta{color:#557179;font-size:.78rem;margin:.35rem 0;overflow-wrap:anywhere}.ops-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92rem;line-height:1.5}
+.ops-notice-timing{font-size:.85rem;padding:.45rem 0;border-top:1px solid #e0eae6}.ops-actions{justify-content:flex-start;margin:.45rem 0}.ops-actions button{min-height:38px}
+.ops-office-group{border:1px solid #bddbd2;padding:.65rem;background:#edf6f1;border-radius:10px;margin:.75rem 0;display:grid;gap:.6rem}.ops-office-group>header h4{margin:0;color:#174f58}.ops-office-group>header span{font-size:.83rem;font-weight:700}
+.ops-assign{display:flex;align-items:end;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}.ops-assign label{flex:1 1 180px}.ops-completion{font-size:.84rem;color:#36654c}
+.ops-duty-guide section,.ops-legacy article{border-top:1px solid #dce9e4;padding:.5rem 0}.ops-duty-guide h4{margin:.25rem 0}
+.ops-boundary,.ops-empty{padding:.65rem;background:#eaf4f0;border-radius:8px}.committee-ops [data-ops-message]{font-weight:750;color:#14635a}.committee-ops [data-ops-message].bad{color:#9b2520}
+.committee-ops [data-ops-history-panel]{background:#edf5f1;border-radius:7px;padding:.6rem;font-size:.82rem}
+#ops-paper-worklist{display:none}
+@media(max-width:720px){.ops-notice-grid,.ops-form-grid{grid-template-columns:1fr}}
+@media print{body.ops-printing> :not(#ops-paper-worklist){display:none!important}body.ops-printing #ops-paper-worklist{display:block!important;color:#111;background:white;font:11pt Arial,sans-serif}#ops-paper-worklist article{break-after:page;padding:10mm}#ops-paper-worklist article:last-child{break-after:auto}#ops-paper-worklist header{display:flex;gap:12mm;align-items:center}#ops-paper-worklist img{width:35mm;max-height:25mm;object-fit:contain}#ops-paper-worklist table{border-collapse:collapse;width:100%;font-size:10pt}#ops-paper-worklist th,#ops-paper-worklist td{border:1px solid #666;padding:3mm;vertical-align:top}#ops-paper-worklist tr{break-inside:avoid}.ops-paper-line{border-bottom:1px solid #777;min-height:8mm}}

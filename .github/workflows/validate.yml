@@ -16,7 +16,7 @@ jobs:
           node-version: '22'
       - name: Check server-side and browser JavaScript syntax
         run: |
-          for f in worker/*.mjs studio/*.js club-view-client.js club-library-ui.js club-safeguards-ui.js club-admin.js club-login.js club-committee.js club-suite-ui.js club-workflow-assist.js club-help.js club-mozzie.js member-home.js site.js constitution.js interest.js; do node --check "$f"; done
+          for f in worker/*.mjs studio/*.js club-view-client.js club-library-ui.js club-safeguards-ui.js club-admin.js club-login.js club-committee.js club-committee-ops.js club-suite-ui.js club-workflow-assist.js club-help.js club-mozzie.js member-home.js site.js constitution.js interest.js; do node --check "$f"; done
       - name: Validate new D1 migration and zero fake club records
         run: python3 tests/schema-check.py
       - name: Run Sandy calendar and shared-club tests
