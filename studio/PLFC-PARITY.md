@@ -255,3 +255,5 @@ Keep the real Webmaster and current database stable. Do not issue invitations or
 ### Owner-confirmed separate showcase binding (SEC-04 / SEC-05 / SEC-06)
 
 The owner identified the already-created `sandy-sports-clubhouse-showcase` D1 database and supplied its full ID. Draft `wrangler.jsonc` declares `SANDY_SHOWCASE_DB` using that resource, preserving the existing live `DB` unchanged. Configuration regression tests assert the two specific Sandy IDs are distinct and all activation gates remain disabled. The actual showcase schema/content inspection, safe synthetic population, independent access secret and deployed verification are still outstanding. No remote operation or production deployment was performed; statuses unchanged pending acceptance.
+
+- Owner screenshot confirmed the existing showcase database currently lists only Cloudflare's reserved `_cf_KV` table; no club schema. A read-only CI import-pack job prepares the exact tested synthetic SQL and numbered console batches. No remote import was run. Verify the owner is on the named showcase database before use.

@@ -31,3 +31,22 @@ jobs:
         run: node tests/wrangler-release.mjs
       - name: Exercise actual clubhouse and embedded tools in a cloud browser
         run: node --experimental-sqlite tests/showcase-browser.mjs
+  showcase-import:
+    name: Prepare fictional showcase import (no remote access)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate exact fixture and validate manual import pack
+        run: |
+          mkdir -p /tmp/sandy-showcase-import
+          node backend/showcase/seed.mjs > /tmp/sandy-showcase-import/showcase-full.sql
+          python3 backend/showcase/manual-import.py /tmp/sandy-showcase-import
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sandy-showcase-import
+          path: /tmp/sandy-showcase-import/
+          retention-days: 14
+          if-no-files-found: error
