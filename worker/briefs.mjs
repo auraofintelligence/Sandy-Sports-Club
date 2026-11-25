@@ -1,4 +1,6 @@
 import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+import {recordAuditAllowed} from './record-policy.mjs';
+import {libraryAuditAllowed} from './library.mjs';
 const states=['draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published'];
 const mutable=['draft','proposed','prepared','revision','evidence','closed'];
 const writers=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
@@ -86,36 +88,97 @@ export async function briefsEndpoint(req,env,path,identity){
  if(match[2]==='handoff'&&req.method==='POST'){
   const b=await payload(req,8192),producer=field(b.producer,100),due=dateField(b.due);
   if(!producer)fail(400,'Choose a prospective production provider.','invalid_producer');
-  const authorised=env.SANDY_CLUB_APPROVALS==='enabled'&&b.authorised===true;
-  if(authorised)ensureApprover(identity,env); // a proposed provider isn't automatically contracted
-  const decision=authorised?await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='approved' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first():null;
-  if(authorised&&!decision)fail(409,'A signed committee approval must exist before commissioning work.','approval_required');
-  const handoffId=id();
-  await db.batch([
-   db.prepare('INSERT INTO studio_handoffs(id,brief_id,decision_id,producer,status,requested_delivery_on,updated_utc,issued_by,issued_utc) VALUES(?,?,?,?,?,?,?,?,?)')
-    .bind(handoffId,briefId,decision?.id||null,producer,authorised?'authorised':'proposed',due,at,authorised?identity.id:null,authorised?at:null),
-   audit(db,identity,authorised?'handoff_authorised':'handoff_proposed','studio-brief',briefId,at)
+  const authorised=b.authorised===true;
+  if(authorised)ensureApprover(identity,env);
+  if(authorised&&row.status!=='approved')fail(409,'The current brief must be approved before commissioning.','approval_required');
+  const decision=authorised?await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND entity_version=? AND decision='approved' LIMIT 1").bind(briefId,row.version).first():null;
+  if(authorised&&!decision)fail(409,'An approval for this exact brief revision must exist before commissioning.','approval_required');
+  const state=authorised?'authorised':'proposed',handoffId=id();
+  const key=[briefId,producer,state,due,decision?.id||null];
+  const lookup=()=>db.prepare("SELECT id FROM studio_handoffs WHERE brief_id=? AND producer=? AND status=? AND requested_delivery_on IS ? AND decision_id IS ? LIMIT 1").bind(...key).first();
+  const old=await lookup();if(old)return json({ok:true,handoffId:old.id,state,sent:false,replayed:true});
+  const [result]=await db.batch([
+   db.prepare(`INSERT INTO studio_handoffs(id,brief_id,decision_id,producer,status,requested_delivery_on,updated_utc,issued_by,issued_utc)
+    SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM studio_briefs WHERE id=? AND version=?)
+    AND NOT EXISTS(SELECT 1 FROM studio_handoffs WHERE brief_id=? AND producer=? AND status=? AND requested_delivery_on IS ? AND decision_id IS ?)`)
+    .bind(handoffId,briefId,decision?.id||null,producer,state,due,at,authorised?identity.id:null,authorised?at:null,briefId,row.version,...key),
+   audit(db,identity,authorised?'handoff_authorised':'handoff_proposed','studio-brief',briefId,at,true)
   ]);
-  return json({ok:true,handoffId,state:authorised?'authorised':'proposed',sent:false},201);
+  if(!result.meta.changes){const old=await lookup();if(old)return json({ok:true,handoffId:old.id,state,sent:false,replayed:true});fail(409,'The brief changed. Reload before recording a handoff.','conflict')}
+  return json({ok:true,handoffId,state,sent:false},201);
  }
  if(match[2]==='publish-link'&&req.method==='POST'){
+  ensureApprover(identity,env);
   const b=await payload(req,8192),url=https(b.url),platform=field(b.platform,30);
   if(!url||!['youtube','facebook','instagram','tiktok','noticeboard'].includes(platform))fail(400,'Provide a verified platform and HTTPS post link.','invalid_publication_link');
-  const decision=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND decision='publish_authorised' ORDER BY decided_utc DESC LIMIT 1").bind(briefId).first();
-  if(!decision)fail(409,'Publishing has not been authorised. The link cannot be recorded as approved.','publication_not_authorised');
-  const linkId=id();
-  await db.batch([
-   db.prepare('INSERT INTO studio_post_links(id,brief_id,decision_id,platform,published_url,published_utc,recorded_by,recorded_utc) VALUES(?,?,?,?,?,?,?,?)')
-    .bind(linkId,briefId,decision.id,platform,url,dateField(b.publishedOn)?dateField(b.publishedOn)+'T00:00:00+10:00':null,identity.id,at),
-   audit(db,identity,'published_link_recorded','studio-brief',briefId,at)
+  if(row.status!=='approved')fail(409,'The current brief is not approved.','publication_not_authorised');
+  const decision=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='studio_brief' AND entity_id=? AND entity_version=? AND decision='publish_authorised' LIMIT 1").bind(briefId,row.version).first();
+  if(!decision)fail(409,'Publishing has not been authorised for the current brief revision.','publication_not_authorised');
+  const linkId=id(),key=[briefId,decision.id,platform,url];
+  const lookup=()=>db.prepare('SELECT id FROM studio_post_links WHERE brief_id=? AND decision_id=? AND platform=? AND published_url=? LIMIT 1').bind(...key).first();
+  const old=await lookup();if(old)return json({ok:true,linkId:old.id,replayed:true});
+  const [result]=await db.batch([
+   db.prepare(`INSERT INTO studio_post_links(id,brief_id,decision_id,platform,published_url,published_utc,recorded_by,recorded_utc)
+    SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM studio_briefs WHERE id=? AND version=? AND status='approved')
+    AND NOT EXISTS(SELECT 1 FROM studio_post_links WHERE brief_id=? AND decision_id=? AND platform=? AND published_url=?)`)
+    .bind(linkId,briefId,decision.id,platform,url,dateField(b.publishedOn)?dateField(b.publishedOn)+'T00:00:00+10:00':null,identity.id,at,briefId,row.version,...key),
+   audit(db,identity,'published_link_recorded','studio-brief',briefId,at,true)
   ]);
+  if(!result.meta.changes){const old=await lookup();if(old)return json({ok:true,linkId:old.id,replayed:true});fail(409,'The brief changed. Reload before recording publication evidence.','conflict')}
   return json({ok:true,linkId},201);
  }
  fail(404,'Unsupported production brief operation.','not_found');
 }
+const auditKinds=new Set(['account','record','person','interest','studio-brief','social-settings','social-edits','social-metrics','library']);
+const auditCsvFields=['at','brisbaneAt','actorId','actor','role','office','action','kind','resourceId','fromVersion','toVersion','reason'];
+const csvCell=value=>{
+ let s=String(value??'');if(/^[\s]*[=+\-@]/.test(s)||/^[\t\r\n]/.test(s))s="'"+s;
+ return '"'+s.replaceAll('"','""')+'"';
+};
+function auditCursor(value){
+ if(!value)return null;
+ try{
+  const p=JSON.parse(atob(value));
+  if(!Array.isArray(p)||p.length!==2||typeof p[0]!=='string'||!Number.isFinite(Date.parse(p[0]))||typeof p[1]!=='string'||!/^[a-f0-9-]{36}$/.test(p[1]))throw Error();
+  return p;
+ }catch{fail(400,'The audit page reference is invalid. Refresh the audit trail.','invalid_cursor')}
+}
 export async function auditEndpoint(req,env,identity){
  requireRole(identity,['webmaster','president','secretary']);
  if(req.method!=='GET')fail(405,'Audit history is read-only.','method_not_allowed');
- const db=dbFor(env),r=await db.prepare('SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 300').all();
- return json({audit:r.results||[]});
+ const url=new URL(req.url),db=dbFor(env),visible=[];
+ const kind=url.searchParams.get('kind'),format=url.searchParams.get('format'),limitParam=url.searchParams.get('limit');
+ if(kind&&!auditKinds.has(kind))fail(400,'Choose a valid audit resource category.','invalid_audit_kind');
+ if(format&&format!=='csv')fail(400,'Choose JSON or CSV audit output.','invalid_format');
+ const limit=limitParam===null?300:Number(limitParam);
+ if(!Number.isInteger(limit)||limit<1||limit>300)fail(400,'Choose an audit page size between 1 and 300.','invalid_limit');
+ let cursor=auditCursor(url.searchParams.get('cursor')),nextCursor=null,done=false;
+ while(visible.length<limit+1&&!done){
+  const conditions=[],args=[];
+  if(cursor){conditions.push('(a.occurred_utc<? OR (a.occurred_utc=? AND a.id<?))');args.push(cursor[0],cursor[0],cursor[1])}
+  if(kind){conditions.push('a.resource_kind=?');args.push(kind)}
+  const q=await db.prepare("SELECT a.id,a.actor_id AS actorId,b.username AS actor,a.actor_role AS role,a.action,a.resource_kind AS kind,a.resource_id AS resourceId,a.occurred_utc AS at,a.context_json AS context,r.kind AS record_kind,r.body_json,r.created_by FROM club_audit a LEFT JOIN club_accounts b ON b.id=a.actor_id LEFT JOIN club_records r ON a.resource_kind='record' AND r.id=a.resource_id "+(conditions.length?'WHERE '+conditions.join(' AND ')+' ':'')+"ORDER BY a.occurred_utc DESC,a.id DESC LIMIT 100").bind(...args).all();
+  const rows=q.results||[];
+  for(const {record_kind,body_json,created_by,context,...entry} of rows){
+   cursor=[entry.at,entry.id];
+   if(!auditKinds.has(entry.kind))continue;
+   if(entry.kind==='record'&&!recordAuditAllowed(record_kind?{kind:record_kind,body_json,created_by}:null,identity,entry.action))continue;
+   if(entry.kind==='account'&&identity.role!=='webmaster')continue;
+   if(entry.kind==='library'&&!await libraryAuditAllowed(db,identity,entry.resourceId))continue;
+   // Only explicit safe metadata, never context_json, snapshot_json or private record body.
+   let c={};try{c=JSON.parse(context)||{}}catch{}
+   visible.push({...entry,office:typeof c.office==='string'?c.office:entry.role,reason:entry.action,
+    fromVersion:Number.isSafeInteger(c.fromVersion)?c.fromVersion:null,toVersion:Number.isSafeInteger(c.toVersion)?c.toVersion:null,
+    brisbaneAt:new Date(entry.at).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'})});
+   if(visible.length===limit+1)break;
+  }
+  if(rows.length<100)done=true;
+ }
+ const page=visible.slice(0,limit);
+ if(visible.length>limit){const last=page[page.length-1];nextCursor=btoa(JSON.stringify([last.at,last.id]))}
+ if(format==='csv'){
+  const body=[auditCsvFields.map(csvCell).join(','),...page.map(r=>auditCsvFields.map(k=>csvCell(r[k])).join(','))].join('\r\n')+'\r\n';
+  return new Response(body,{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="sandy-scoped-audit.csv"','Cache-Control':'no-store, private'}});
+ }
+ return json({audit:page,nextCursor});
 }

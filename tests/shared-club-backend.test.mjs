@@ -19,7 +19,7 @@ test('static deployment keeps private Worker and migrations out of public assets
  const ignore=read('../.assetsignore');
  for(const p of ['worker/','backend/','tests/','.github/','studio/backend/'])assert.ok(ignore.includes(p),p);
 });
-test('full Worker deployment uses only the verified Sandy D1 database and keeps safety gates disabled',()=>{
+test('full Worker deployment preserves the verified Sandy D1 and separate owner-supplied showcase binding with safety gates disabled',()=>{
  const normal=JSON.parse(read('../wrangler.jsonc'));
  const full=JSON.parse(read('../wrangler.full.example.jsonc'));
  assert.equal(normal.name,'sandy-sports-club');
@@ -27,6 +27,9 @@ test('full Worker deployment uses only the verified Sandy D1 database and keeps 
  assert.equal(normal.d1_databases[0].database_name,'sandy-sports-clubhouse');
  assert.equal(normal.d1_databases[0].database_id,'ada9c7fc-a138-4158-8986-8d6d6e8bfa94');
  assert.equal(normal.d1_databases[0].binding,'DB');
+ assert.equal(normal.d1_databases.length,2);
+ assert.deepEqual(normal.d1_databases[1],{binding:'SANDY_SHOWCASE_DB',database_name:'sandy-sports-clubhouse-showcase',database_id:'fbc64621-a57a-43e7-8138-717576d167c2'});
+ assert.notEqual(normal.d1_databases[0].database_id,normal.d1_databases[1].database_id);
  assert.ok(normal.assets.run_worker_first.includes('/api/*'));
  assert.equal(normal.vars.SANDY_CLUB_APPROVALS,'disabled');
  assert.equal(normal.vars.SANDY_INVITES_ENABLED,'disabled');

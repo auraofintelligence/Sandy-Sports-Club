@@ -1,3 +1,4 @@
+import {viewFetch,protectView} from '../club-view-client.js';
 // Sandy production desk: D1-backed, authenticated, server-signed. No localStorage fallback.
 const form=document.querySelector('#sandy-handoff-form');
 const list=document.querySelector('#sandy-handoff-list');
@@ -6,7 +7,7 @@ const notice=document.querySelector('#sandy-handoff-status');
 const safe=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;',">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
 let briefs=[],opened=null,enabled=false,role='';
 async function api(path,{method='GET',data}={}){
- const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});
  let body={};try{body=await response.json()}catch{}
  if(!response.ok)throw Error(body.error||'Shared service error ('+response.status+')');
@@ -125,6 +126,6 @@ window.addEventListener('sandy-studio:handoff',ev=>{
   enabled=Boolean(s.authenticated&&s.storageReady&&
    ['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(s.identity?.role));
   if(!enabled){form.closest('.studio-handoff')?.setAttribute('hidden','');return}
-  role=s.identity.role;await reload();alert('Connected to the shared production register. Server-stamped revisions are enabled.');
+  role=s.identity.role;await reload();if(s.readOnly){protectView('#sandy-handoff-form input,#sandy-handoff-form select,#sandy-handoff-form textarea,#sandy-handoff-form button[type=submit],#sandy-handoff-clear,[data-brief-propose]');alert('Synthetic view only. Example briefs cannot be saved or commissioned.')}else alert('Connected to the shared production register. Server-stamped revisions are enabled.');
  }catch(e){form.closest('.studio-handoff')?.setAttribute('hidden','');alert('Shared production register is not connected: '+e.message,true)}
 })();

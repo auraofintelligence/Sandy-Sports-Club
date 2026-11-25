@@ -1,9 +1,10 @@
+import {viewFetch,protectView} from '../club-view-client.js';
 // Sandy Social Studio: authenticated shared API only. No browser-local fallback.
 const mount=document.querySelector('#social-planner-desk');
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;',">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 let currentDraft=null,planner=null;
 async function api(path,options={}){
- const response=await fetch(path,{method:options.method||'GET',credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method:options.method||'GET',credentials:'same-origin',cache:'no-store',
   headers:options.method==='POST'?{'Content-Type':'application/json'}:undefined,body:options.body});
  let data={};try{data=await response.json()}catch{}
  if(!response.ok){const error=new Error(data.error||'Shared club API unavailable ('+response.status+').');error.status=response.status;throw error}
@@ -52,10 +53,10 @@ async function launch(){
   if(!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(role)){
    showUnavailable('This account is read-only and cannot use live committee Social Studio records.');return;
   }
-  notice('Signed in as '+session.identity.name+' ('+role+'). Studio settings, day plans and edited posts use the shared database and server-stamped audit history.');
+  notice(session.readOnly?'SYNTHETIC VIEW ONLY: calendar, settings and post layouts are fictional. No changes are saved.':'Signed in as '+session.identity.name+' ('+role+'). Studio settings, day plans and edited posts use the shared database and server-stamped audit history.');
   const {setupAnnualCampaigns}=await import('./social-campaigns.js?v=20261124-shared-club-v1');
   planner=setupAnnualCampaigns({
-   mount,api,esc,isActive:()=>true,reviewOnly:false,strictShared:true,
+   mount,api,esc,isActive:()=>true,reviewOnly:false,strictShared:true,viewOnly:session.readOnly===true,
    onUse(draft){
     currentDraft=structuredClone(draft);
     document.querySelector('#trial-draft-body').textContent=JSON.stringify(currentDraft,null,2);
@@ -64,7 +65,8 @@ async function launch(){
   });
   mount.innerHTML=planner.markup();
   await planner.open();
-  await maybeImportLegacy();
+  if(!session.readOnly)await maybeImportLegacy();
+  else protectView('[data-annual-save],[data-month-apply],[data-month-copy-next],[data-month-reset],[data-day-save],[data-day-save-pattern],[data-day-update-pattern],[data-day-delete-pattern],[data-week-save],[data-calendar-save],[data-signal-save],[data-metric-import],[data-metric-link],[data-events-apply],[data-calendar-restore],[data-annual-use],#trial-draft-handoff');
   document.querySelector('#trial-draft-close')?.addEventListener('click',()=>document.querySelector('#trial-draft')?.close());
   document.querySelector('#trial-draft-copy')?.addEventListener('click',async event=>{
    if(!currentDraft)return;

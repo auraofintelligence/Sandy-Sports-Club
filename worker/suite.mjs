@@ -3,6 +3,7 @@
 import {ApiError,fail,json,now,id,dbFor,payload,field,dateField,https,version,requireRole,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 import {suiteActionEndpoint} from './suite-actions.mjs';
+import {suiteBody,visibleRecords} from './record-policy.mjs';
 const statuses=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const exactDate=value=>dateField(value||'',true);
 const isRecordId=value=>/^[a-f0-9-]{36}$/.test(value||'');
@@ -61,19 +62,15 @@ function summary(row,parsed){
   fields:body.fields,version:row.version,createdBy:row.created_by,updatedBy:row.updated_by,
   createdAt:row.created_utc,updatedAt:row.updated_utc};
 }
-function validBody(row,domain){
- if(!row||row.kind!==domain.kind)return false;
- try{const body=JSON.parse(row.body_json);return body?.sandySuiteVersion===1&&body.domain===domain.key?body:false}
- catch{return false}
-}
+const validBody=suiteBody;
 function checkStatus(data){
  const status=field(data.status,30)||'draft';
  if(!statuses.includes(status))fail(400,'Choose a valid working stage.','invalid_status');
  return status;
 }
 async function list(db,desk){
- const rows=await db.prepare("SELECT * FROM club_records WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=? ORDER BY updated_utc DESC,id DESC LIMIT 300").bind(desk.kind,desk.key).all();
- return (rows.results||[]).map(row=>summary(row));
+ const rows=await visibleRecords(db,"WHERE kind=? AND json_extract(body_json,'$.sandySuiteVersion')=1 AND json_extract(body_json,'$.domain')=?",[desk.kind,desk.key],'updated_utc DESC,id DESC',300,row=>Boolean(suiteBody(row,desk)));
+ return rows.map(row=>summary(row));
 }
 async function changed(db,desk,identity,recordId,request){
  const current=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
@@ -84,13 +81,15 @@ async function changed(db,desk,identity,recordId,request){
  if(current.status==='approved')fail(409,'A formally approved record cannot be changed as a working draft.','locked');
  const fields=cleanFields(desk,request.fields),title=field(request.title,180),status=checkStatus(request);
  if(!title)fail(400,'Enter a working title.','title_required');
- const at=now(),nextVersion=expected+1,body={sandySuiteVersion:1,domain:desk.key,fields};
+ const at=now(),nextVersion=expected+1,body={...before,fields};
+ // The origin is server-owned; editing a task cannot sever its original meeting link.
+ if(desk.key==='todos'&&before.sourceMeeting)fields.linkedDesk=before.sourceMeeting;
  const [saved]=await db.batch([
   db.prepare("UPDATE club_records SET title=?,body_json=?,status=?,event_date=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND kind=? AND version=? AND status!='approved'")
    .bind(title,JSON.stringify(body),status,dueDate(fields),identity.id,at,recordId,desk.kind,expected),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action:'suite_edited_'+desk.key,actor:identity,at,
-   changes:{domain:desk.key,from:current.status,to:status},snapshot:{title,status,fields},guarded:true}),
-  audit(db,identity,'suite_edited_'+desk.key,'record',recordId,at,true)
+   changes:{domain:desk.key,from:current.status,to:status,fromVersion:expected,toVersion:nextVersion,reason:field(request.reason,500)||'Working draft edit'},snapshot:{title,status,...body},guarded:true}),
+  audit(db,identity,'suite_edited_'+desk.key,'record',recordId,at,true,{fromVersion:expected,toVersion:nextVersion})
  ]);
  if(!saved.meta.changes)fail(409,'This record changed while saving. Reload it.','conflict');
  return json({ok:true,id:recordId,version:nextVersion,updatedBy:identity.id,updatedOffice:identity.office_label,updatedAt:at});
@@ -104,7 +103,7 @@ async function create(db,desk,identity,request){
    .bind(recordId,desk.kind,title,JSON.stringify(body),status,dueDate(fields),identity.id,identity.id,at,at),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'suite_created_'+desk.key,actor:identity,at,
    snapshot:{title,status,fields}}),
-  audit(db,identity,'suite_created_'+desk.key,'record',recordId,at)
+  audit(db,identity,'suite_created_'+desk.key,'record',recordId,at,false,{fromVersion:0,toVersion:1})
  ]);
  if(!saved.meta.changes)fail(409,'The draft was not saved. Try again.','save_failed');
  return json({ok:true,id:recordId,version:1,updatedBy:identity.id,updatedOffice:identity.office_label,updatedAt:at},201);
@@ -131,7 +130,7 @@ export async function suiteEndpoint(req,env,path,identity){
  const body=validBody(row,desk);
  if(!body)fail(404,'That record is not in this working area.','record_not_found');
  if(history&&req.method==='GET'){
-  const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
+  const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_id AS actorId,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
   return json({history:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
  }
  if(!history&&req.method==='GET')return json({record:summary(row,body)});

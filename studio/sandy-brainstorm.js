@@ -1,10 +1,11 @@
+import {viewFetch,protectView} from '../club-view-client.js';
 // Sandy ideas inbox backed by authenticated club records. No local-only saves.
 const root=document.querySelector('#sandy-ideas'),form=document.querySelector('#sandy-ideas-form');
 const list=document.querySelector('#sandy-ideas-list'),statusBox=document.querySelector('#sandy-ideas-status'),filter=document.querySelector('#sandy-ideas-filter');
 const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;',">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
 let items=[],selected=null,enabled=false;
 async function api(path,{method='GET',data}={}){
- const r=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const r=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});
  let d={};try{d=await r.json()}catch{}
  if(!r.ok)throw Error(d.error||'Shared records unavailable ('+r.status+')');
@@ -112,6 +113,6 @@ async function legacyImport(){
   const {CAMPAIGN_LAYERS}=await import('./social-campaign-engine.js');
   form.elements.category.innerHTML='<option value="">Select a Sandy topic</option>'+
    CAMPAIGN_LAYERS.map(x=>'<option value="'+esc(x.id)+'">'+esc((x.emoji||'📌')+' '+x.label)+'</option>').join('');
-  await load();await legacyImport();note('Connected to shared Sandy ideas. Every save has an authenticated server revision.');
+  await load();if(!session.readOnly){await legacyImport();note('Connected to shared Sandy ideas. Every save has an authenticated server revision.')}else{protectView('#sandy-ideas-form input,#sandy-ideas-form textarea,#sandy-ideas-form select,#sandy-ideas-form button[type=submit],#sandy-idea-new,[data-idea-archive],[data-idea-restore],[data-idea-handoff]',root);note('Synthetic view only. Example ideas cannot be saved or transferred.');}
  }catch(e){root.hidden=true;note('Shared ideas are unavailable: '+e.message,true)}
 })();

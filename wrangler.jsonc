@@ -7,7 +7,24 @@
     "directory": "./",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api",
+      "/api/*",
+      "/backend*",
+      "/worker*",
+      "/tests*",
+      "/scripts*",
+      "/studio/backend*",
+      "/.git*",
+      "/.env*",
+      "/.dev.vars*",
+      "/wrangler*",
+      "/club-admin*",
+      "/club-login*",
+      "/member-home*",
+      "/social-studio*",
+      "/constitution*"
+    ]
   },
   "d1_databases": [
     {
@@ -15,10 +32,16 @@
       "database_name": "sandy-sports-clubhouse",
       "database_id": "ada9c7fc-a138-4158-8986-8d6d6e8bfa94",
       "migrations_dir": "backend/migrations"
+    },
+    {
+      "binding": "SANDY_SHOWCASE_DB",
+      "database_name": "sandy-sports-clubhouse-showcase",
+      "database_id": "fbc64621-a57a-43e7-8138-717576d167c2"
     }
   ],
   "vars": {
     "SANDY_CLUB_APPROVALS": "disabled",
-    "SANDY_INVITES_ENABLED": "disabled"
+    "SANDY_INVITES_ENABLED": "disabled",
+    "SANDY_PRIVATE_LIBRARY_ENABLED": "disabled"
   }
 }

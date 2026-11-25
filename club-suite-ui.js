@@ -1,4 +1,7 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {isReadOnlyView,protectView} from './club-view-client.js';
+import {setupSafeguardsDesk} from './club-safeguards-ui.js';
+import {setupPrivateLibrary} from './club-library-ui.js';
 import {setupWorkflowAssist} from './club-workflow-assist.js';
 // Working Sandy Sports desks, not fake PLFC parity. All saves use authenticated D1 APIs.
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -67,6 +70,8 @@ export function setupSandySuite({api,status,getIdentity}){
  '<div id="suite-fields"></div><div class="suite-actions"><button id="suite-previous" type="button">Previous</button>'+
  '<button id="suite-next" type="button">Next stage</button><button id="suite-save" type="submit">Save to Sandy D1</button></div>'+
  '<p id="suite-save-status" role="status"></p></form></section>';
+ const safeguard=setupSafeguardsDesk(root,api);
+ const library=setupPrivateLibrary(root);
  const find=id=>root.querySelector('#'+id);
  const form=find('suite-form'),editor=find('suite-editor'),list=find('suite-records');
  const helper=setupWorkflowAssist({root,getDesk:()=>desk,getValues:collect,getTitle:()=>form.elements.title.value});
@@ -113,7 +118,8 @@ export function setupSandySuite({api,status,getIdentity}){
    '<fieldset class="suite-stage" data-stage="'+i+'"><legend>'+esc(name)+'</legend><div class="suite-field-grid">'+
    desk.fields.filter(f=>f.step===name).map(f=>control(f,row?.fields?.[f.key])).join('')+'</div></fieldset>').join('');
   editor.hidden=false;step=0;drawStep();helper.render();
-  find('suite-save-status').textContent='This is unsaved until you choose Save to Sandy D1.';
+  if(isReadOnlyView()){find('suite-editor-label').textContent='View '+(row?.title||desk.title);protectView('#suite-form input,#suite-form textarea,#suite-form select,#suite-save',root)}
+  find('suite-save-status').textContent=isReadOnlyView()?'Synthetic view only. No change can be saved.':'This is unsaved until you choose Save to Sandy D1.';
   editor.scrollIntoView({block:'start',behavior:'smooth'});
  }
  function collect(){
@@ -132,11 +138,12 @@ export function setupSandySuite({api,status,getIdentity}){
  async function open(key){
   const schema=SUITE_BY_KEY[key];
   if(!schema||!schema.roles.includes(getIdentity()?.role)){say('This role cannot access the selected desk.',true);return}
-  desk=schema;rows=[];editing=null;query='';filter='';
+  desk=schema;rows=[];editing=null;query='';filter='';safeguard.open(key);
+  if(isReadOnlyView()){root.querySelector('.suite-boundary').textContent='Synthetic example records, read-only. Open records and review stages, history and example exports without saving.';protectView('#suite-new,#suite-save,[data-suite-action="followups"],[data-suite-action="movement"],[data-stock-move] button[type=submit]',root)}
   find('suite-search').value='';find('suite-filter').value='';
   find('suite-desk-name').textContent=desk.title;find('suite-desk-intro').textContent=desk.purpose;
   find('suite-notice').hidden=true;close();root.hidden=false;
-  await refresh();
+  await Promise.all([refresh(),library.open(key)]);
  }
  find('suite-search').addEventListener('input',event=>{query=event.target.value.toLowerCase();drawList()});
  find('suite-filter').addEventListener('change',event=>{filter=event.target.value;drawList()});
@@ -147,7 +154,7 @@ export function setupSandySuite({api,status,getIdentity}){
  find('suite-next').addEventListener('click',()=>{step=Math.min(desk.steps.length-1,step+1);drawStep()});
  find('suite-steps').addEventListener('click',event=>{const b=event.target.closest('[data-suite-step]');if(b){step=Number(b.dataset.suiteStep);drawStep()}});
  form.addEventListener('submit',async event=>{
-  event.preventDefault();if(!desk)return;
+  event.preventDefault();if(!desk||isReadOnlyView())return;
   const request={title:form.elements.title.value.trim(),status:form.elements.status.value,fields:collect()};
   if(!request.title){form.elements.title.focus();return}
   const missing=desk.fields.find(def=>def.required&&!String(request.fields[def.key]??'').trim());
@@ -173,10 +180,12 @@ export function setupSandySuite({api,status,getIdentity}){
   const card=form.closest('[data-suite-id]'),r=rows.find(x=>x.id===card?.dataset.suiteId);
   if(!r||desk?.key!=='stock')return;
   const input=Object.fromEntries(new FormData(form));
+  const signature=JSON.stringify([r.version,input.direction,Number(input.quantity),input.note]);
+  if(form.dataset.movementSignature!==signature){form.dataset.movementSignature=signature;form.dataset.mutationId=crypto.randomUUID()}
   const button=form.querySelector('[type=submit]');button.disabled=true;
   try{
    const result=await api('/api/suite/stock/'+r.id+'/movement',{method:'POST',data:{
-    version:r.version,direction:input.direction,quantity:Number(input.quantity),note:input.note}});
+    version:r.version,direction:input.direction,quantity:Number(input.quantity),note:input.note,mutationId:form.dataset.mutationId}});
    say('Stock '+input.direction+' recorded. Available balance: '+result.balance+' · revision '+result.version+'.');
    await refresh();
   }catch(error){say('Stock movement not saved: '+error.message,true);button.disabled=false}

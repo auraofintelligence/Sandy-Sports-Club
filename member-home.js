@@ -1,10 +1,13 @@
+import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
+import {setupPrivateLibrary} from './club-library-ui.js';
 // Sandy Sports member clubhouse: real self-service when incorporated, synthetic preview only for the webmaster.
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Multi-sport'];
 const times=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 let workspace=null,preview=false;
+const privateLibrary=setupPrivateLibrary(document.querySelector('#member-library-mount'));
 async function api(path,method='GET',data){
- const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   ...(data===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})});
  const payload=await response.json().catch(()=>({}));
  if(!response.ok)throw Error(payload.error||'Shared service error ('+response.status+').');
@@ -38,13 +41,15 @@ function showDemo(){
  ].map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+safe(a)+'</span></div>').join('');
  fillProfile(workspace.profile);
  $('member-interest-list').textContent='Sample interests: Mixed beach volleyball, beach cricket, film nights.';
- $('member-events').textContent='No real events are shown in this synthetic preview.';
- $('member-notices').textContent='No actual member notices or private messages in this preview.';
- $('member-newsletters').textContent='Newsletter archive preview only.';
- $('member-film-interests').textContent='Example interest: community film club and local screenings.';
+ $('member-events').innerHTML='<p>Fictional proposed activities only, not approved or booked.</p>'+cardList(workspace.examplePlans,'No example activities.');
+ $('member-notices').textContent=workspace.exampleNotice||'No actual member notices or private messages in this preview.';
+ $('member-newsletters').textContent=workspace.exampleNewsletter||'Newsletter archive preview only.';
+ $('member-film-interests').textContent='Example interest: community film club and a proposed Dunwich / Goompi screening.';
  for(const section of document.querySelectorAll('.member-workspace-form')){
   for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=true;
  }
+ $('member-safeguard-state').textContent='Synthetic preview: no age verification, guardian authority or terms acceptance exists.';
+ $('member-terms-accept').disabled=true;$('member-terms-withdraw').disabled=true;
  $('member-export').disabled=true;$('member-export').title='Synthetic preview; no personal record exists';
  $('member-wish-status').textContent='View-only demonstration; nothing is submitted.';
  $('member-sport-status').textContent='View-only demonstration; nothing is saved.';
@@ -80,6 +85,14 @@ function showReal(){
  $('member-film-interests').textContent=fields.filmClub?
   'You have indicated interest in film-club opportunities. Actual screenings and permissions are decided separately.':
   'No film-club preference saved yet.';
+ const flags=workspace.safeguards||{};
+ $('member-safeguard-state').textContent='Age group: '+(flags.ageBand||'unconfirmed')+' | Guardian permission: '+(flags.guardianPermission?'verified':'not recorded')+' | Optional consent: '+(flags.accepted?'accepted':'not accepted')+' | Terms: '+(flags.termsVersion||'unavailable');
+ $('member-terms-text').textContent=flags.terms||'Participation terms unavailable. No new consent can be recorded.';
+ $('member-terms-accept').disabled=!workspace.enrolled||flags.ageBand!=='adult'||flags.accepted||!flags.termsVersion;
+ $('member-terms-withdraw').disabled=!flags.accepted;
+ for(const section of document.querySelectorAll('.member-workspace-form'))for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=!workspace.active;
+ for(const key of ['volunteer','publicationConsent','contactPreference'])$('member-privacy-form').elements.namedItem(key).disabled=!workspace.active||!flags.optionalParticipation;
+ const volunteer=$('member-wish-form').elements.area.querySelector('[value=volunteer]');if(volunteer)volunteer.disabled=!flags.optionalParticipation;
  if(!workspace.active){
   for(const section of document.querySelectorAll('.member-workspace-form')){
    for(const control of section.querySelectorAll('input,select,textarea,button'))control.disabled=true;
@@ -102,7 +115,7 @@ async function savePreferences(out){
  if(!workspace?.active||preview)return;
  try{
   const result=await api('/api/member/preferences','POST',preferenceBody());
-  workspace.preferences={version:result.version,fields:preferenceBody()};
+  workspace=await api('/api/member/workspace');showReal();
   out.textContent='Your own preferences were securely saved as revision '+result.version+'.';
   banner('Member preferences saved to Sandy D1.');
  }catch(error){out.textContent='Not saved: '+error.message;banner(error.message,true)}
@@ -120,6 +133,11 @@ $('member-wish-form').addEventListener('submit',async event=>{
   const fresh=await api('/api/member/workspace');workspace=fresh;showReal();
  }catch(error){$('member-wish-status').textContent='Not saved: '+error.message}
 });
+for(const [id,action] of [['member-terms-accept','accept'],['member-terms-withdraw','withdraw']])$(id).addEventListener('click',async()=>{
+ if(preview||!workspace?.safeguards)return;
+ try{await api('/api/member/safeguards','POST',{action,version:workspace.safeguards.version,termsVersion:workspace.safeguards.termsVersion});workspace=await api('/api/member/workspace');showReal();await privateLibrary.open('owner')}
+ catch(e){$('member-safeguard-state').textContent=e.message}
+});
 $('member-export').addEventListener('click',async()=>{
  if(preview)return;
  try{
@@ -132,11 +150,18 @@ $('member-export').addEventListener('click',async()=>{
 $('member-logout').addEventListener('click',async()=>{
  try{await api('/api/auth/logout','POST',{})}finally{location.href='/club-login.html'}
 });
+installExitControl('member-exit-view');
 (async()=>{
  options();
  try{
   const session=await api('/api/session');
   if(!session?.authenticated){banner('Please sign in before opening your personal member area.',true);return}
+  if(session.readOnly&&['member','webmaster'].includes(session.identity.role)){
+   workspace=await api('/api/member/preview');showDemo();
+   $('member-exit-view').hidden=false;$('member-return-showcase').hidden=session.identity.role!=='webmaster';
+   if(session.identity.role==='member')await privateLibrary.open('owner');
+   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');return;
+  }
   if(new URLSearchParams(location.search).get('demo')==='1'&&session.identity.role==='webmaster'){
    workspace=await api('/api/member/preview');showDemo();selectTab('home');return;
   }
@@ -147,7 +172,7 @@ $('member-logout').addEventListener('click',async()=>{
    banner('This page is for member accounts. For a view-only example, open My Clubhouse and choose the member preview.',true);
    return;
   }
-  workspace=await api('/api/member/workspace');showReal();
+  workspace=await api('/api/member/workspace');showReal();await privateLibrary.open('owner');
   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','privacy'].includes(wanted)?wanted:'home');
- }catch(error){banner('Could not load your member area: '+error.message,true)}
+ }catch(error){$('member-exit-view').hidden=false;banner('Could not load your member area: '+error.message,true)}
 })();

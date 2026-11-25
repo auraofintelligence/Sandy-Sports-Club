@@ -1,14 +1,15 @@
+import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
 import {setupCommitteeRoom} from './club-committee.js';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','requests','briefs','audit'];
 let committeeRoom=null;
-let identity=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
+let identity=null,sessionInfo=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'—';
 function status(msg,bad=false){$('club-status').textContent=msg;$('club-status').className='club-status'+(bad?' bad':'')}
 async function api(path,{method='GET',data}={}){
- const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',
+ const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
   ...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
  let json={};try{json=await response.json()}catch{}
  if(!response.ok)throw Error(json.error||'Shared service unavailable ('+response.status+')');
@@ -22,43 +23,46 @@ function filterQuickDesks(role){
   const route=(link.getAttribute('href')||'').replace(/^#/,'');
   if(route.startsWith('committee/')){
    const desk=SUITE_BY_KEY[route.slice('committee/'.length)];
-   link.hidden=Boolean(desk&&!desk.roles.includes(role));
+   link.hidden=Boolean(!desk||!desk.roles.includes(role));
   }else if(route==='accounts')link.hidden=role!=='webmaster';
   else if(route==='requests')link.hidden=['member','webmaster_demo'].includes(role);
   else if(route==='constitution')link.hidden=['member','webmaster_demo'].includes(role);
  });
 }
 
-function previewMode(){
+async function previewMode(){
  const chosen=$('club-view-role').value;
- const memberPreview=$('member-preview-link');
- if(memberPreview)memberPreview.hidden=!['member','webmaster_demo'].includes(chosen);
- const access={
-  webmaster:allTabs,
-  president:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs','audit'],
-  vice_president:['overview','committee','records','social','constitution' ,'requests','briefs'],
-  secretary:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs','audit'],
-  assistant_secretary:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs'],
-  treasurer:['overview','people','interests','committee','records','social','constitution' ,'requests','briefs'],
-  committee:['overview','committee','records','social','constitution' ,'requests','briefs'],
-  member:['overview'],
-  webmaster_demo:['overview']
- };
- const visible=access[chosen]||access.webmaster;
- for(const tab of allTabs){
-  const button=document.querySelector('[data-tab="'+tab+'"]');
-  if(button)button.hidden=!visible.includes(tab);
+ if(!sessionInfo?.canSwitchView)return;
+ const select=$('club-view-role');select.disabled=true;
+ try{
+  await api('/api/view/select',{method:'POST',data:{role:chosen}});
+  if(chosen==='member'){location.href='/member-home.html';return}
+  // Reload the entire document and frames, not just the outer menu.
+  if(chosen==='webmaster')history.replaceState(null,'','/club-admin.html#overview');
+  location.reload();
+ }catch(e){select.value=sessionInfo.viewRole||'webmaster';status(e.message,true);select.disabled=false}
+}
+function applyRole(session){
+ const role=identity.role,staff=role!=='member'&&role!=='webmaster_demo';
+ const visible=new Set(staff?['overview','committee','records','social','constitution','requests','briefs']:['overview']);
+ if(maySeePeople()){visible.add('people');visible.add('interests')}
+ if(role==='webmaster')visible.add('accounts');
+ if(['webmaster','president','secretary'].includes(role))visible.add('audit');
+ for(const tab of allTabs){const b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.hidden=!visible.has(tab)}
+ filterQuickDesks(role);
+ $('club-view-role-wrap').hidden=!session.canSwitchView;
+ $('club-view-role').value=session.viewRole||'webmaster';
+ $('member-preview-link').hidden=role!=='webmaster'&&role!=='member';
+ $('club-exit-view').hidden=!session.readOnly;
+ if(session.readOnly){
+  document.body.dataset.previewRole=session.viewRole;
+  protectView('#people-new,#people-form input,#people-form select,#people-form textarea,#people-form button[type=submit],#record-new,#record-form input,#record-form select,#record-form textarea,#record-form button[type=submit],#account-form input,#account-form select,#account-form button[type=submit],[data-account-action],[data-office-invite],#committee-desk-new,#committee-desk-form button[type=submit],#webmaster-help-form button[type=submit],[data-help-review] button[type=submit]');
  }
- document.body.dataset.previewRole=chosen;
- filterQuickDesks(chosen);
- if(!visible.includes(current))openTab('overview');
- if(chosen!=='webmaster')status('Previewing the '+chosen.replace(/_/g,' ')+' layout as the real Webmaster. This is not impersonation. Return to Webmaster for actual administration.');
- else status('Real Webmaster view restored. You remain signed in with your own account.');
 }
 function openTab(tab){
  if(!allTabs.includes(tab))return;
  const button=document.querySelector('[data-tab="'+tab+'"]');
- if(button?.hidden){openTab('overview');return}
+ if(button?.hidden){if(tab!=='overview')openTab('overview');return}
  current=tab;
  const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee/'+(committeeRoom?.currentDesk||'notices')):tab;
  history.replaceState(null,'',location.pathname+location.search+'#'+route);
@@ -76,7 +80,7 @@ async function overview(){
  const people=results[1]?.status==='fulfilled'?results[1].value.total:null;
  const interest=results[2]?.status==='fulfilled'?results[2].value.interests.length:null;
  $('club-summary').innerHTML=[
-  ['Shared committee items',records],['Prospective people',people],['Recent expressions of interest',interest],['Operational club', 'Not established']
+  ['General working records',records],['Prospective people',people],['Recent expressions of interest',interest],['Operational club', 'Not established']
  ].map(([title,count])=>'<div class="club-summary-card"><strong>'+esc(count===null?'Restricted':count)+'</strong><span>'+esc(title)+'</span></div>').join('');
 }
 async function loadPeople(){
@@ -143,16 +147,22 @@ function loadEmbeddedTool(tool){
  if(frame&&!frame.hasAttribute('src'))frame.setAttribute('src',frame.dataset.src);
 }
 async function loadAccounts(){
- if(identity?.role!=='webmaster'){status('Only the real webmaster can manage reserved accounts.',true);return}
+ if(identity?.role!=='webmaster'){status('Only the Webmaster role can see the account register.',true);return}
  const result=await api('/api/accounts');
  const officeRoles=['president','vice_president','secretary','assistant_secretary','treasurer','committee'];
  $('account-rows').innerHTML=result.accounts.map(a=>{
-  let invitation='—';
+  let invitation='Not available';
+  const pending=Boolean(a.inviteExpiresAt),actionButton=(action,label)=>'<button type="button" data-account-action="'+action+'" data-account-id="'+esc(a.id)+'" data-username="'+esc(a.username)+'">'+label+'</button>';
   if(a.state==='reserved'&&officeRoles.includes(a.role)){
-   const pending=Boolean(a.inviteExpiresAt);
-   invitation='<button type="button" data-office-invite="'+esc(a.id)+'" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace setup link':'Prepare invite')+'</button>'+
-    (pending?'<small class="club-invite-pending">Pending until '+esc(new Date(a.inviteExpiresAt).toLocaleString('en-AU'))+'</small>':'');
+   invitation=result.officerActivationEnabled?'<button type="button" data-office-invite="'+esc(a.id)+'" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace setup link':'Prepare invite')+'</button>':'<small>Officer activation disabled</small>';
+  }else if(a.state==='active'&&!['webmaster','webmaster_demo'].includes(a.role)){
+   invitation='<button type="button" data-office-invite="'+esc(a.id)+'" data-recovery="true" data-username="'+esc(a.username)+'" data-pending="'+pending+'">'+(pending?'Replace recovery link':'Prepare recovery link')+'</button> '+actionButton('revoke-sessions','Sign out all sessions');
   }
+  if(a.role!=='webmaster'){
+   if(pending)invitation+=' <small class="club-invite-pending">Pending until '+esc(new Date(a.inviteExpiresAt).toLocaleString('en-AU',{timeZone:'Australia/Brisbane'}))+' Brisbane</small> '+actionButton('revoke-link','Revoke private link');
+   if(a.state!=='disabled')invitation+=' '+actionButton('disable','Disable account');
+  }
+  if(isReadOnlyView())invitation='Synthetic reservation; no account action available';
   return '<tr><td>'+esc(a.username)+'</td><td>'+esc(a.office)+'</td><td>'+esc(a.role)+'</td><td>'+esc(a.state)+'</td><td>'+esc(a.activatedAt||'Not activated')+'</td><td>'+invitation+'</td></tr>';
  }).join('')||'<tr><td colspan="6">No accounts reserved.</td></tr>';
 }
@@ -169,15 +179,36 @@ async function loadBriefs(){
   '<span>'+esc(b.updatedAt?.slice(0,16)||'')+'</span></article>').join('')||
   '<p>No shared production briefs yet. Use Social Studio to prepare one for committee review.</p>';
 }
-async function loadAudit(){
+let auditCursor=null,auditNext=null,auditPage=1;
+function auditQuery(format){
+ const q=new URLSearchParams({limit:'100'});
+ if($('audit-kind').value)q.set('kind',$('audit-kind').value);
+ if(auditCursor)q.set('cursor',auditCursor);
+ if(format)q.set('format',format);
+ return '/api/audit?'+q.toString();
+}
+async function loadAudit(reset=true){
  if(!['webmaster','president','secretary'].includes(identity.role)){status('Audit access is restricted.',true);return}
- const data=await api('/api/audit');
+ if(reset){auditCursor=null;auditNext=null;auditPage=1}
+ $('audit-next').disabled=true;$('audit-export').disabled=true;$('audit-page-status').textContent='Loading authorised audit history…';
+ const data=await api(auditQuery());auditNext=data.nextCursor;
  $('audit-rows').innerHTML=data.audit.map(r=>
-  '<article class="club-audit-item"><strong>'+esc(r.action)+'</strong> · '+esc(r.actor||r.role)+' · '+esc(r.at)+
-  '<p>'+esc(r.kind+' / '+r.resourceId)+'</p></article>').join('')||'<p>No server-stamped changes yet.</p>';
+  '<article class="club-audit-item"><strong>'+esc(r.action)+'</strong> · '+esc(r.actor||r.role)+' · '+esc(r.office||r.role)+' · '+esc(r.brisbaneAt||r.at)+
+  '<p>'+esc(r.kind+' / '+r.resourceId)+(r.toVersion!=null?' | Revision '+esc(r.fromVersion)+' to '+esc(r.toVersion):'')+'</p></article>').join('')||'<p>No authorised server-stamped changes on this page.</p>';
+ $('audit-page-status').textContent='Page '+auditPage+' | '+data.audit.length+' authorised entries'+(isReadOnlyView()?' | Synthetic example only':'');
+ $('audit-next').disabled=!auditNext;$('audit-export').disabled=false;
+}
+async function exportAudit(){
+ const response=await viewFetch(auditQuery('csv'),{credentials:'same-origin',cache:'no-store'});
+ if(!response.ok)throw Error('The current scoped audit page could not be exported.');
+ const url=URL.createObjectURL(await response.blob()),link=document.createElement('a');link.href=url;link.download='sandy-scoped-audit.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function bind(){
  committeeRoom=setupCommitteeRoom({api,esc,status,openTab,getIdentity:()=>identity});
+ $('audit-refresh').addEventListener('click',()=>loadAudit().catch(e=>status(e.message,true)));
+ $('audit-kind').addEventListener('change',()=>loadAudit().catch(e=>status(e.message,true)));
+ $('audit-next').addEventListener('click',()=>{if(auditNext){auditCursor=auditNext;auditPage++;loadAudit(false).catch(e=>status(e.message,true))}});
+ $('audit-export').addEventListener('click',()=>exportAudit().catch(e=>status(e.message,true)));
  window.addEventListener('hashchange',()=>{
   if(!identity)return;
   const hash=location.hash.slice(1);
@@ -190,6 +221,7 @@ function bind(){
  }));
  $('club-logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',data:{}})}finally{location.href='/club-login.html'}});
  $('club-view-role').addEventListener('change',previewMode);
+ installExitControl('club-exit-view');
  // The tool frame belongs to the same site. Only accept size messages from that exact frame.
  window.addEventListener('message',ev=>{
   if(ev.origin!==location.origin||ev.data?.type!=='sandy-club-frame-height')return;
@@ -199,22 +231,32 @@ function bind(){
   if(Number.isFinite(h)&&h>300)frame.style.height=Math.min(24000,Math.ceil(h)+30)+'px';
  });
  $('account-rows').addEventListener('click',async ev=>{
+  const accountAction=ev.target.closest('button[data-account-action]');
+  if(identity?.role!=='webmaster'||$('club-view-role').value!=='webmaster')return;
+  if(accountAction){
+   const action=accountAction.dataset.accountAction;
+   if(!confirm('Confirm '+action.replace(/-/g,' ')+' for '+accountAction.dataset.username+'?'))return;
+   accountAction.disabled=true;hidePrivateInvite();
+   try{await api('/api/accounts/'+accountAction.dataset.accountId+'/'+action,{method:'POST',data:{manual:true}});status('Account action completed. No message sent.');await loadAccounts()}catch(e){status(e.message,true)}finally{accountAction.disabled=false}
+   return;
+  }
   const b=ev.target.closest('button[data-office-invite]');
-  if(!b||identity?.role!=='webmaster')return;
-  if(b.dataset.pending==='true'&&!confirm('Replace the existing private setup link? The earlier invitation will stop working.'))return;
+  if(!b)return;
+  const recovery=b.dataset.recovery==='true';
+  if(!confirm((b.dataset.pending==='true'?'Replace the existing':'Prepare a')+' private '+(recovery?'recovery':'setup')+' link for '+b.dataset.username+'? No message will be sent.'))return;
   b.disabled=true;
   hidePrivateInvite();
   try{
-   const result=await api('/api/accounts/'+b.dataset.officeInvite+'/invite',{method:'POST',data:{manual:true}});
-   const link=location.origin+'/club-login.html#invite='+result.token;
+   const result=await api('/api/accounts/'+b.dataset.officeInvite+'/'+(recovery?'recover':'invite'),{method:'POST',data:{manual:true}});
+   const link=location.origin+'/club-login.html#'+(recovery?'recover':'invite')+'='+result.token;
    $('club-invitation-link').value=link;
-   $('club-invite-email').href='mailto:?subject='+encodeURIComponent('Sandy Sports Club private officer account setup')+
-    '&body='+encodeURIComponent('A prospective Sandy Sports office account has been reserved for '+result.username+
-     '. If you agree to activate it, use this one-time private link to set your own password (expires in 48 hours):\n\n'+link+
-     '\n\nSandy Sports is a proposed club. This invitation does not confer an elected office or active membership.');
+   $('club-invite-email').href='mailto:?subject='+(recovery?encodeURIComponent('Sandy Sports Club private account recovery'):encodeURIComponent('Sandy Sports Club private officer account setup'))+
+    '&body='+encodeURIComponent((recovery?'A private password recovery link was prepared for ':'A prospective Sandy Sports office account has been reserved for ')+result.username+
+     '. Use this one-time private link to set your own password (expires in 48 hours):\n\n'+link+
+     '\n\nSandy Sports is a proposed club. This link does not confer an elected office or active membership.');
    $('club-invitation-result').hidden=false;
    $('club-invitation-message').textContent='Prepared for '+result.username+'. This private link has NOT been sent.';
-   status('Private officer invitation prepared. Choose Copy setup link or Prepare email. Nothing has been sent automatically.');
+   status('Private '+(recovery?'recovery':'setup')+' link prepared. Copy it or prepare an email. Nothing has been sent automatically.');
    await loadAccounts();
    $('club-invitation-result').scrollIntoView({block:'nearest'});
   }catch(e){status(e.message,true)}
@@ -278,27 +320,23 @@ function bind(){
   const session=await api('/api/session');
   if(!session.storageReady||!session.authReady){status('The shared Worker and Sandy D1 database are not yet activated. No club records will be stored in this browser.',true);return}
   if(!session.authenticated){status('Sign in to the shared Sandy club system.');$('club-user').innerHTML='<a href="/club-login.html">Sign in</a>';return}
-  identity=session.identity;$('club-user').textContent=identity.name+' · '+identity.role;
-  filterQuickDesks(identity.role);
+  sessionInfo=session;identity=session.identity;$('club-user').textContent=identity.name+' · '+identity.role;
+  if(identity.role==='member'&&session.readOnly){location.replace('/member-home.html');return}
   if(identity.role==='webmaster_demo'){
    const preview=await api('/api/demo');
-   status('View-only synthetic webmaster demo. No live member or committee data is exposed.');
+   status('Legacy demo account: synthetic member overview only. Use the separate view-only showcase sign-in for the full walkthrough.');
    $('club-summary').innerHTML=preview.records.map(r=>'<div class="club-panel">'+esc(r.name)+' · '+esc(r.town)+'</div>').join('');
    $('club-console').hidden=false;
-   for(const t of allTabs){const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.hidden=t!=='overview'}
-   current='overview';for(const t of allTabs){$('club-'+t).hidden=t!=='overview';const tab=document.querySelector('[data-tab="'+t+'"]');if(tab)tab.setAttribute('aria-current',t==='overview'?'page':'false')}return;
+   for(const t of allTabs){const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.hidden=t!=='overview';$('club-'+t).hidden=t!=='overview'}return;
   }
   if(!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(identity.role)){
-   status('This member account does not have committee access. Membership views will be added after the club establishes its policies.');return;
+   status('This member account does not have committee access. Open My Membership.');return;
   }
+  applyRole(session);
   $('club-console').hidden=false;
-  if(identity.role==='webmaster')$('club-view-role-wrap').hidden=false;
-  if(!maySeePeople())for(const tab of ['people','interests'])document.querySelector('[data-tab="'+tab+'"]').hidden=true;
-  if(identity.role!=='webmaster')document.querySelector('[data-tab="accounts"]').hidden=true;
-  if(!['webmaster','president','secretary'].includes(identity.role))document.querySelector('[data-tab="audit"]').hidden=true;
-  status('Connected to Sandy shared club records. Proposals are not legal club approvals.');
+  status(session.readOnly?'SYNTHETIC VIEW ONLY: '+session.viewRole.replace(/_/g,' ')+'. All displayed records are fictional; no changes can be saved.':'Connected to Sandy shared club records. Proposals are not legal club approvals.');
   const hash=location.hash.slice(1);
   const initial=hash.startsWith('committee/')?'committee':allTabs.includes(hash)?hash:'overview';
   openTab(initial);
- }catch(e){status('Shared club access is not yet configured: '+e.message,true)}
+ }catch(e){$('club-exit-view').hidden=false;status('Could not open club access: '+e.message,true)}
 })();

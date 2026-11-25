@@ -106,7 +106,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  }
  async function showDesk(key,{updateUrl=true}={}){
   const desk=byKey.get(key);
-  if(!desk||!canUse(desk))return;
+  if(!desk||!canUse(desk)){status('This role cannot open that committee desk.',true);return;}
   if(desk.tab){openTab(desk.tab);return}
   selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
   for(const button of nav.querySelectorAll('[data-committee-desk]')){

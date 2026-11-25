@@ -7,13 +7,13 @@
 <body><div data-site-header></div><main class="club-app" id="main">
 <header class="club-app-heading"><p class="eyebrow">SANDY SPORTS · SHARED CLUB WORKSPACE</p>
 <h1>My Clubhouse</h1><p>Your shared Sandy workspace for member records, future office holders, committee planning and production. Sandy Sports remains a proposed club.</p>
-<div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>Preview view as <select id="club-view-role">
-<option value="webmaster">Webmaster</option><option value="president">President</option><option value="vice_president">Vice President</option>
+<div class="club-app-toolbar"><strong id="club-user">Checking session…</strong><label id="club-view-role-wrap" hidden>View as (synthetic, read-only) <select id="club-view-role">
+<option value="webmaster">Real Webmaster</option><option value="president">President</option><option value="vice_president">Vice President</option>
 <option value="secretary">Secretary</option><option value="assistant_secretary">Assistant Secretary</option>
 <option value="treasurer">Treasurer</option><option value="committee">Committee</option>
 <option value="member">Member</option><option value="webmaster_demo">Webmaster demo (view only)</option></select></label>
 <a id="member-preview-link" class="club-member-preview-link" href="/member-home.html?demo=1" hidden>Open view-only member preview</a>
-<button type="button" id="club-logout">Sign out</button></div></header>
+<button type="button" id="club-exit-view" hidden>Exit view-only mode</button><button type="button" id="club-logout">Sign out</button></div></header>
 <div class="club-status" role="status" id="club-status">Connecting to server…</div>
 <div id="club-console" hidden>
 <details class="clubhouse-menu" id="clubhouse-menu" open><summary><span><strong>Clubhouse menu</strong><small>Choose a working area</small></span><span id="clubhouse-current">Overview</span></summary>
@@ -77,7 +77,7 @@
 </nav>
 <div class="club-grid-two">
 <article class="club-panel"><h3>Webmaster / committee</h3>
-<p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The webmaster may preview what other roles can see, but does not impersonate their identity.</p>
+<p>Reserved accounts do not receive invitations or emails until you explicitly enable and issue them. The Webmaster can enter a synthetic, read-only role preview. It does not use real officers' identities or live records.</p>
 <p><a href="#committee/notices">Open working Committee room</a> · <a href="#social">Social Media Hub</a> · <a href="/committee.html">Public planning examples</a></p></article>
 <article class="club-panel"><h3>Review and publication</h3><p>Proposals, committee records and video briefs need identified reviewers and server-stamped decisions. No content is published and no advertising spend is authorised here.</p>
 <p><a href="/studio/PLFC-PARITY.md">PLFC comparison and production requirements</a></p></article></div>
@@ -179,12 +179,12 @@
 <button type="submit">Save shared record</button><button id="record-cancel" type="button">Cancel</button></form></details>
 </section>
 <section id="club-accounts" class="club-section" hidden><h2>Office holders & private invitations</h2>
-<p>Reserve prospective committee accounts first. When you choose <strong>Prepare invite</strong>, a one-time link is generated for you to copy or send privately. Officers choose their own passwords. No messages are sent automatically and no office appointment is implied.</p>
+<p>Reserve prospective committee accounts first. Private setup links are available only after the owner opens officer activation. For active accounts, prepare a password recovery link, revoke a pending link, sign out all sessions or disable access. No message is sent automatically and no office appointment is implied.</p>
 <div class="club-table-scroll"><table><thead><tr><th>Username</th><th>Proposed office</th><th>Role</th><th>State</th><th>Activated</th><th>Private setup</th></tr></thead><tbody id="account-rows"></tbody></table></div>
 <div class="club-private-invite" id="club-invitation-result" role="status" hidden>
- <h3>Private officer setup link</h3>
+ <h3>Private account link</h3>
  <p>This link works once and expires after 48 hours. Copy or send it directly to the intended officer. It has <strong>not</strong> been sent automatically.</p>
- <label>One-time activation link<input id="club-invitation-link" type="text" readonly autocomplete="off" spellcheck="false"></label>
+ <label>One-time private link<input id="club-invitation-link" type="text" readonly autocomplete="off" spellcheck="false"></label>
  <div class="club-private-actions"><button id="club-invite-copy" type="button">Copy setup link</button><a id="club-invite-email" href="#" rel="nofollow">Prepare email</a><button id="club-invite-clear" type="button">Hide link</button></div>
  <p id="club-invitation-message"></p>
 </div>
@@ -238,5 +238,5 @@
 <p><a href="/social-studio.html">Plan content in Social Studio</a></p>
 </section>
 <section id="club-audit" class="club-section" hidden><h2>Server-stamped audit trail</h2><p class="club-note">Changes are recorded by the server under the signed-in account, not self-entered names or local browser clocks.</p>
-<div id="audit-rows" class="club-list"></div></section>
+<div class="club-toolbar"><label>Resource category<select id="audit-kind"><option value="">All authorised categories</option><option value="record">Working records</option><option value="account">Account lifecycle (Webmaster only)</option><option value="person">People</option><option value="interest">Expressions of interest</option><option value="studio-brief">Production briefs</option><option value="social-settings">Social settings</option><option value="social-edits">Social post edits</option><option value="social-metrics">Social metrics</option><option value="library">Private files</option></select></label><button type="button" id="audit-refresh">Refresh</button><button type="button" id="audit-next" disabled>Next audit page</button><button type="button" id="audit-export">Download current authorised page</button></div><p id="audit-page-status" role="status"></p><div id="audit-rows" class="club-list"></div></section>
 </div></main><div data-site-footer></div></body></html>
