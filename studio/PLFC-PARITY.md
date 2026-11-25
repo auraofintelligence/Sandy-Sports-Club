@@ -251,3 +251,7 @@ Keep the real Webmaster and current database stable. Do not issue invitations or
 - Merge recommendation: complete the proposed Gate A release prerequisites in [the controlled merge checklist](../backend/RELEASE-CHECKLIST.md). Keep the draft unmerged while the actual runtime check and owner-approved Cloudflare preflight remain outstanding. All production activation gates remain closed. Gate A is not accepted merely by merging, and Gate B remains pending required post-deployment verification. No production settings, records or credentials have been modified.
 
 - Runtime acceptance: actual Wrangler/workerd local D1 and asset test passed in 45552826211. SEC-04 moves to Substantial; actual production Cloudflare binding, deployment and signed-out asset verification remain open. The complete validation including Chromium passed. No remote resources or production data changed.
+
+### Owner-confirmed separate showcase binding (SEC-04 / SEC-05 / SEC-06)
+
+The owner identified the already-created `sandy-sports-clubhouse-showcase` D1 database and supplied its full ID. Draft `wrangler.jsonc` declares `SANDY_SHOWCASE_DB` using that resource, preserving the existing live `DB` unchanged. Configuration regression tests assert the two specific Sandy IDs are distinct and all activation gates remain disabled. The actual showcase schema/content inspection, safe synthetic population, independent access secret and deployed verification are still outstanding. No remote operation or production deployment was performed; statuses unchanged pending acceptance.
