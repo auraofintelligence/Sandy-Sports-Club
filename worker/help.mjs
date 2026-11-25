@@ -63,7 +63,7 @@ export async function helpEndpoint(req,env,path,identity){
     .bind(stage,JSON.stringify(next),identity.id,at,rid,expected),
    revision(db,{kind:'record',resourceId:rid,resourceVersion:expected+1,action:'webmaster_request_'+stage,actor:identity,at,
     changes:{from:row.status,to:stage,fromVersion:expected,toVersion:expected+1,reason:'Private request review'},snapshot:{stage,subject:row.title,reply:next.reply},guarded:true}),
-   audit(db,identity,'webmaster_request_'+stage,'record',rid,at,true)
+   audit(db,identity,'webmaster_request_'+stage,'record',rid,at,true,{fromVersion:expected,toVersion:expected+1})
   ]);
   if(!result.meta.changes)fail(409,'Request changed during update. Reload it.','conflict');
   return json({ok:true,id:rid,version:expected+1,notice:'Reply saved internally. No email has been sent.'});

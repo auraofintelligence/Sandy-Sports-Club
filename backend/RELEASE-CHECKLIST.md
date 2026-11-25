@@ -26,3 +26,5 @@ This is a proposed release procedure, not approval to merge or activate services
 ## Current hold
 
 The draft PR remains unmerged. Local/CI isolated tests are not actual Cloudflare provisioning or live acceptance. The new file library remains off by default. Its malware scanning, approved retention/deletion, binary backup/restore and encryption key custody must precede real uploads. The provisional minor-safety policy is not adopted. No formal authority, invitations or member services are activated by this checklist.
+
+Cloud-run `tests/wrangler-release.mjs` uses the actual Wrangler/workerd runtime, with both D1 identifiers replaced by fresh fictional IDs and no Cloudflare credentials, `--local` only, and disposable state. It checks asset packaging, no-store shells, D1 login, atomic task handoff, separate view mode and encrypted synthetic download. This is not a live deployment or a remote D1 rehearsal. Require a successful run in addition to Chromium before merge.

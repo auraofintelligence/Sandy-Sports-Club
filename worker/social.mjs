@@ -159,7 +159,7 @@ export async function socialEndpoint(req,env,path,identity){
   write,
   revision(db,{kind,resourceId:'sandy-social',resourceVersion:newVersion,action:'saved',actor:identity,at,snapshot:next,
    changes:changeSummary(previous||{},next),guarded:true}),
-  audit(db,identity,'shared_social_saved',kind,'sandy-social',at,true)
+  audit(db,identity,'shared_social_saved',kind,'sandy-social',at,true,{fromVersion:expected,toVersion:newVersion})
  ]);
  if(!result.meta.changes)fail(409,'The shared plan changed during saving. Refresh its latest version.','revision_conflict');
  return json({version:newVersion,...(isEdits?{edits:next}:isMetrics?{metrics:next}:{settings:next}),

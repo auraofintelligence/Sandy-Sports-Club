@@ -89,7 +89,7 @@ async function changed(db,desk,identity,recordId,request){
    .bind(title,JSON.stringify(body),status,dueDate(fields),identity.id,at,recordId,desk.kind,expected),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action:'suite_edited_'+desk.key,actor:identity,at,
    changes:{domain:desk.key,from:current.status,to:status,fromVersion:expected,toVersion:nextVersion,reason:field(request.reason,500)||'Working draft edit'},snapshot:{title,status,...body},guarded:true}),
-  audit(db,identity,'suite_edited_'+desk.key,'record',recordId,at,true)
+  audit(db,identity,'suite_edited_'+desk.key,'record',recordId,at,true,{fromVersion:expected,toVersion:nextVersion})
  ]);
  if(!saved.meta.changes)fail(409,'This record changed while saving. Reload it.','conflict');
  return json({ok:true,id:recordId,version:nextVersion,updatedBy:identity.id,updatedOffice:identity.office_label,updatedAt:at});
@@ -103,7 +103,7 @@ async function create(db,desk,identity,request){
    .bind(recordId,desk.kind,title,JSON.stringify(body),status,dueDate(fields),identity.id,identity.id,at,at),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'suite_created_'+desk.key,actor:identity,at,
    snapshot:{title,status,fields}}),
-  audit(db,identity,'suite_created_'+desk.key,'record',recordId,at)
+  audit(db,identity,'suite_created_'+desk.key,'record',recordId,at,false,{fromVersion:0,toVersion:1})
  ]);
  if(!saved.meta.changes)fail(409,'The draft was not saved. Try again.','save_failed');
  return json({ok:true,id:recordId,version:1,updatedBy:identity.id,updatedOffice:identity.office_label,updatedAt:at},201);

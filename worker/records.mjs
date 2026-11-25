@@ -78,7 +78,7 @@ export async function recordsEndpoint(req,env,path,identity){
      .bind(record.title,JSON.stringify(record.body),record.status,record.eventDate,identity.id,at,recordId,expected,'approved'),
     revision(db,{kind:'record',resourceId:recordId,resourceVersion:expected+1,action:'edited',actor:identity,at,snapshot:record,
      changes:{changed:Object.keys(b).filter(k=>k!=='version')},guarded:true}),
-    audit(db,identity,'record_edited','record',recordId,at,true)
+    audit(db,identity,'record_edited','record',recordId,at,true,{fromVersion:expected,toVersion:expected+1})
    ]);
    if(!result.meta.changes)fail(409,'The record changed during saving.','conflict');
    return json({ok:true,id:recordId,version:expected+1});
@@ -100,7 +100,7 @@ export async function recordsEndpoint(req,env,path,identity){
      .bind(decisionId,recordId,newVersion,decision,JSON.stringify({kind:row.kind,title:row.title}),evidence,identity.id,identity.office_label,at),
     revision(db,{kind:'record',resourceId:recordId,resourceVersion:newVersion,action:'decision_'+decision,actor:identity,at,
       snapshot:{...convert(row),status:newStatus,version:newVersion},changes:{decision,evidence},guarded:true}),
-    audit(db,identity,'record_decision_'+decision,'record',recordId,at,true)
+    audit(db,identity,'record_decision_'+decision,'record',recordId,at,true,{fromVersion:row.version,toVersion:newVersion})
    ]);
    if(!saved.meta.changes)fail(409,'This record was already decided or changed.','conflict');
    return json({ok:true,id:recordId,version:newVersion,decisionId,decision,decidedAt:at});
