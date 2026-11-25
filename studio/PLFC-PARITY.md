@@ -129,6 +129,17 @@ PLFC references name files or capability families in the pinned reference reposi
 7. **End-to-end evidence:** focused automated positive/negative integration tests using isolated SQLite/D1; browser acceptance on an authorised isolated preview or owner-approved non-destructive live review. Record test paths, run URL, commit, scenario result, known limitations and deployment actually checked. A green general CI run alone is not sufficient.
 8. **Acceptance:** update the row only when its specific scenario and applicable common gates have evidence. Do not claim production readiness from a mock, screenshot, schema or source-only check. Mark unresolved and conditional requirements explicitly. Legal adoption, actual appointments and external activation are separate decisions.
 
+## Required desk acceptance (owner approved, 25 November 2026)
+
+Applies to every functional group in Gates B, C and D, not just the common security foundation. Each applicable desk must satisfy all four conditions:
+
+1. Interface parity: inspect actual PLFC screens and interaction code, and adapt their distinct working layouts to Sandy. A shared editor or renamed field set is not equivalent to a purpose-built operational workspace.
+2. Workflow parity: execute the connected path from creation to follow-up, including authorisation, persistence, attribution, reconciliation, errors and appropriate cross-desk links. Preserve existing record IDs and legacy content through compatible reads or reviewed migration.
+3. Navigation parity: dedicated desk route, compact role-filtered switcher, back to committee room, collapsible sections, direct links and mobile/keyboard access.
+4. Demonstration parity: synthetic Straddie examples must exercise the specialised states and actions, not simply display populated generic fields. Keep the isolated read-only showcase, no live mutations or fake approvals.
+
+For each completed group, compare actual PLFC source and tests, run the real Sandy browser and backend interactions, record evidence and outstanding limits. A passing general smoke test is not desk acceptance. No artificial daily quotas or completion by counting forms.
+
 ## Implementation sequence and stop conditions
 
 - **Gate A: P0 foundations first.** Close the generic-record authorisation bypass and help privacy issue, then prove isolation, real role permissions, secure separate demo and owner preview. Rehearse backup/restore without touching production. Stop wider role activation until these pass.
@@ -136,6 +147,7 @@ PLFC references name files or capability families in the pinned reference reposi
 - **Gate C: events, assets, grants and finance.** Connect actual Sandy sport/film/venue workflows with event run sheets, staffing, notices, stock and funding, not separate drafts that require retyping.
 - **Gate D: member engagement and communications.** Complete publication, privacy, calendar, results, member content and community participation; finish Social Studio event import and production chain with cross-role acceptance.
 - **Gate E: optional/deeper services.** Provider-dependent email, payment, transcription, file storage and external connections are separate, explicitly authorised decisions. SMS remains off; no automatic spend/posting. Preserve manual and in-app alternatives. Security-related storage controls are designed early even if provider activation is later.
+- **Owner-approved summer priority:** after the essential noticeboard, officer duties, meeting and action workflows in Gate B, bring forward the related summer events, volunteer coordination, equipment, stock and fundraising workflows in Gate C, followed by Social Studio connections in Gate D. Then resume the remaining governance, membership and other matrix units. Keep all 79 units; no reduction in required depth. Real financial collection, invitations, approval and external publishing remain separately authorised decisions.
 - A subsequent owner decision can change ordering or declare a genuinely inapplicable PLFC feature Hold with reason. Never silently remove a row to inflate the completion claim.
 
 ## Maintenance and evidence protocol
@@ -271,3 +283,5 @@ Owner requested PLFC-style desk switching and return to committee room. Compared
 ### Owner feedback after Gate A merge
 
 Owner confirmed the real Webmaster still sees generic, repetitive desk layouts rather than PLFC-specific operational screens. Security/showcase release and navigation improvements do not satisfy functional parity. Retain all existing records and purpose-specific APIs as migration inputs; each governance desk must have its own task-oriented workspace and connected state, not just renamed fields or demo examples. Prioritise GOV-02/GOV-04 as a cohesive officer duties, task allocation and noticeboard workflow, then GOV-05 through GOV-12 meeting lifecycle/AGM and remaining matrix groups. Compare actual PLFC UI, Worker and tests per group; do not mark Accepted from common editor changes. Navigation browser test initially failed on Social Studio return; revise to a single shared switcher outside the hidden work panels and test the return route. No production data changes.
+
+- Navigation follow-up: [run 45560045115](https://github.com/auraofintelligence/Sandy-Sports-Club/actions/runs/45560045115) passed role filtering, directory/back, Social Studio return, all 29 mobile desks, library download and unchanged fixture snapshots; final browser assertion failed on an uncaught `.catch` of undefined because synchronous embedded-tab loading returns no promise. Normalise sync/async tab loaders; rerun full validation before release. Owner approved the strengthened acceptance and summer-first sequencing. No status advancement or production change.

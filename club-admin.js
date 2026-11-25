@@ -70,7 +70,7 @@ function openTab(tab){
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
  const load={overview:overview,people:loadPeople,interests:loadInterests,committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
- load?.().catch(e=>status(e.message,true));
+ try{Promise.resolve(load?.()).catch(e=>status(e.message,true))}catch(e){status(e.message,true)}
  window.dispatchEvent(new CustomEvent('sandy:clubhouse-section-change',{detail:{tab}}));
 }
 async function overview(){
