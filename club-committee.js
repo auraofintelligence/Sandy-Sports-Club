@@ -37,7 +37,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
- const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back'),anchor=$('committee-navigation-anchor');
+ const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
  const canUse=desk=>{
   const role=getIdentity()?.role;
   if(SUITE_BY_KEY[desk.key]&&!SUITE_BY_KEY[desk.key].roles.includes(role))return false;
@@ -62,7 +62,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   }).join('');
   picker.value=selected&&canUse(byKey.get(selected))?selected:'';
  };
- function restoreNavigation(){anchor.after(navigation);directory.hidden=false;}
+ function restoreNavigation(){navigation.hidden=false;directory.hidden=false;}
  function showDirectory({scroll=false}={}){
   restoreNavigation();selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;
   refreshAllowed();back.hidden=true;directory.open=true;
@@ -81,9 +81,9 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   const d=DESKS.find(x=>x.tab===tab);
   if(d&&canUse(d)){
    selected=d.key;refreshAllowed();directory.hidden=true;back.hidden=false;
-   $('club-'+tab).prepend(navigation);
+   navigation.hidden=false;
   }else if(tab==='committee'){restoreNavigation();}
-  else {restoreNavigation();}
+  else {navigation.hidden=true;}
  });
  function closeEditor(){
   $('committee-desk-editor').hidden=true;
@@ -140,6 +140,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   const desk=byKey.get(key);
   if(!desk||!canUse(desk)){status('This role cannot open that committee desk.',true);return;}
   if(desk.tab){selected=key;openTab(desk.tab);if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});return}
+  if($('club-committee').hidden){selected=key;writeCurrentUrl();openTab('committee');if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});return}
   restoreNavigation();selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
   back.hidden=false;directory.open=false;
   for(const group of nav.querySelectorAll('details'))group.open=false;

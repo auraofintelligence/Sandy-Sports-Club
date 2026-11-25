@@ -111,10 +111,10 @@ try{
  await p.locator('[data-committee-desk="notices"]').click();await wait(p,'#committee-suite .suite-record');
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
  await p.locator('#committee-desk-switch').selectOption('social');await wait(p,'#club-social iframe');
- assert.equal(await p.locator('#club-social #committee-back').isVisible(),true);
+ await wait(p,'#committee-back');assert.equal(await p.locator('#committee-desk-switch').inputValue(),'social');
  await p.locator('#committee-desk-switch').selectOption('meetings');await wait(p,'#committee-suite .suite-record');
  assert.equal(await p.locator('#suite-desk-name').textContent(),'Meetings and minutes');
- assert.equal(await p.locator('#club-committee #committee-navigation').count(),1);
+ assert.equal(await p.locator('#committee-navigation').count(),1);assert.equal(await p.locator('#club-committee').isVisible(),true);
  console.log('PASS: collapsible room directory, restricted switcher, direct desk route and return from Social Studio');
  const stale=await makePage(owner);await go(stale,'/club-admin.html?stale=1#records');await wait(stale,'#club-records');
  await stale.waitForFunction(()=>document.querySelector('#records-list').textContent.includes('[EXAMPLE]'));
