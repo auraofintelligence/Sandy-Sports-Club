@@ -74,6 +74,10 @@ try{
    assert.match(await p.locator('#ops-desk-title').textContent(),key==='notices'?/Committee notices/:/Officer to-do lists/);
    assert.match(await p.locator('#committee-ops').textContent(),/\[EXAMPLE\]/);return;
   }
+  if(key==='meetings'){
+   await wait(p,'.meeting-register-card');assert.equal(await p.locator('#committee-suite').isHidden(),true);
+   assert.match(await p.locator('.meeting-register-card').first().textContent(),/\[EXAMPLE\]/);return;
+  }
   await wait(p,'#committee-suite .suite-record');
   assert.equal(await p.locator('#suite-desk-name').textContent(),SUITE_DESKS.find(d=>d.key===key).title);
   assert.match(await p.locator('.suite-record strong').first().textContent(),/^\[EXAMPLE\]/);
@@ -107,7 +111,7 @@ try{
  await select(p,'secretary');await go(p,'/club-admin.html?restricted=1#committee/stock');await wait(p,'#club-console');
  await p.waitForFunction(()=>document.querySelector('#club-status').textContent.includes('cannot open that committee desk'));
  assert.equal(await p.locator('#committee-suite .suite-record').count(),0);
- await desk(p,'meetings');assert.equal(await p.locator('[data-suite-action="followups"]').isDisabled(),true);
+ await desk(p,'meetings');await wait(p,'.meeting-current');await p.locator('[data-meeting-stage="3"]').click();assert.equal(await p.locator('[data-meeting-handoff]').first().isDisabled(),true);
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
  assert.equal(await p.locator('#committee-desk-switch option[value="stock"]').count(),0,'restricted desk omitted from switcher');
  await p.locator('#committee-back').click();await wait(p,'#committee-directory summary');
@@ -119,8 +123,8 @@ try{
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
  await p.locator('#committee-desk-switch').selectOption('social');await wait(p,'#club-social iframe');
  await wait(p,'#committee-back');assert.equal(await p.locator('#committee-desk-switch').inputValue(),'social');
- await p.locator('#committee-desk-switch').selectOption('meetings');await wait(p,'#committee-suite .suite-record');
- assert.equal(await p.locator('#suite-desk-name').textContent(),'Meetings and minutes');
+ await p.locator('#committee-desk-switch').selectOption('meetings');await wait(p,'.meeting-register-card');
+ assert.equal(await p.locator('#meeting-desk-title').textContent(),'Meetings and minutes');
  assert.equal(await p.locator('#committee-navigation').count(),1);assert.equal(await p.locator('#club-committee').isVisible(),true);
  console.log('PASS: collapsible room directory, restricted switcher, direct desk route and return from Social Studio');
  const stale=await makePage(owner);await go(stale,'/club-admin.html?stale=1#records');await wait(stale,'#club-records');

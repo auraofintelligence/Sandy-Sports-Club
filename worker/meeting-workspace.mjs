@@ -63,9 +63,7 @@ function validate(m,old,env){
    if(!x||!['pending','deferred','withdrawn','carried','lost'].includes(x.outcome))fail(400,'Choose a motion status.','invalid_motion');
    const wording=clean(x.text,2000);if(!wording)fail(400,'Enter motion wording.','invalid_motion');
    if(['carried','lost'].includes(x.outcome)){
-    if(env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Formal votes remain disabled until the club is lawfully established.','club_not_established');
-    if(out.date>today())fail(409,'A future meeting cannot record a vote.','future_meeting');
-    if(out.quorumStatus!=='present')fail(400,'Confirm quorum before recording a vote.','vote_without_quorum');
+    fail(409,'Formal vote recording requires the separately authorised adoption and quorum workflow. Record a proposed motion instead.','club_not_established');
    }
    return {id:unique(x.id),text:wording,movedBy:clean(x.movedBy,140),secondedBy:clean(x.secondedBy,140),outcome:x.outcome,vote:clean(x.vote,500)};
   });
@@ -135,9 +133,9 @@ async function save(db,row,b,actor,req,env){
   const n=m.actions.find(x=>x.id===a.id);
   if(!n||n.text!==a.text||n.office!==a.office||n.dueDate!==a.dueDate||n.sourceItem!==a.sourceItem)fail(409,'A linked officer action cannot be removed or rewritten in minutes. Allocate or complete it in the officer work list.','linked_action_locked');
  }
- if(req.review===true){if(!m.minutes.trim())fail(400,'Prepare draft minutes first.','missing_minutes');if(!m.reviewedForPrivacy||!m.reviewedBySecretary)fail(400,'Complete the review checks before marking a draft ready.','review_required');m.state='reviewed';m.reviewVersion=row.version+1}
+ if(req.review===true){requireRole(actor,['webmaster','secretary','assistant_secretary']);if(!m.minutes.trim())fail(400,'Prepare draft minutes first.','missing_minutes');if(!m.reviewedForPrivacy||!m.reviewedBySecretary)fail(400,'Complete the review checks before marking a draft ready.','review_required');m.state='reviewed';m.reviewVersion=row.version+1}
  const next=projected(b,m);
- const result=await db.batch([db.prepare("UPDATE club_records SET title=?,body_json=?,event_date=?,status=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND status NOT IN ('approved','archived')").bind(title,JSON.stringify(next),m.date,m.state==='reviewed'?'review':'draft',actor.id,at,row.id,row.version),...writes(db,actor,at,row.id,row.version+1,'meeting_workspace_saved',{title,...next},{scheduleRevision:m.scheduleRevision,reviewed:m.state==='reviewed'})]);
+ const result=await db.batch([db.prepare("UPDATE club_records SET title=?,body_json=?,event_date=?,status=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND status NOT IN ('approved','archived') AND (SELECT count(*) FROM club_records WHERE kind='task' AND json_extract(body_json,'$.sourceMeeting')=?)=?").bind(title,JSON.stringify(next),m.date,m.state==='reviewed'?'review':'draft',actor.id,at,row.id,row.version,row.id,jobs.length),...writes(db,actor,at,row.id,row.version+1,'meeting_workspace_saved',{title,...next},{scheduleRevision:m.scheduleRevision,reviewed:m.state==='reviewed'})]);
  if(!result[0].meta.changes)failConflict();
  return json({ok:true,id:row.id,version:row.version+1});
 }

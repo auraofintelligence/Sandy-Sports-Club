@@ -1,5 +1,5 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
-import {setupCommitteeRoom} from './club-committee.js?v=committee-ops-20261125';
+import {setupCommitteeRoom} from './club-committee.js?v=meeting-desk-20261125';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
