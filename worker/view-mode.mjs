@@ -1,7 +1,7 @@
 // Owner rehearsal and independent showcase share real read handlers, not live records.
 import {fail,json,epoch,payload,requireRole,STAFF} from './shared.mjs';
 import {identityFor,authEndpoint} from './auth.mjs';
-const COOKIE='__Host-sandy_view',LIVE='__Host-sandy_session',DURATION=3600;
+const COOKIE='__Host-sandy_view',LIVE='__Host-sandy_session',DURATION=3600,MARKER_AGE=7*24*3600;
 const roles=[...STAFF,'member','webmaster_demo'];
 const prefix='f1c71000-0000-4000-8000-';
 export const fixtureId=n=>prefix+String(n).padStart(12,'0');
@@ -48,9 +48,9 @@ async function syntheticEnv(env){
  let marker,unsafe;
  try{
   marker=await db.prepare("SELECT version,classification FROM sandy_showcase_marker WHERE id=1").first();
-  unsafe=await db.prepare("SELECT (SELECT count(*) FROM club_accounts WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%' OR state!='reserved' OR password_verifier IS NOT NULL OR password_salt IS NOT NULL OR role='member')+(SELECT count(*) FROM club_sessions)+(SELECT count(*) FROM club_invites)+(SELECT count(*) FROM club_people WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%' OR account_id IS NOT NULL)+(SELECT count(*) FROM club_records WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_interest WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_briefs WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_audit WHERE actor_id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_revisions WHERE actor_id NOT LIKE 'f1c71000-0000-4000-8000-%') AS n").first();
+  unsafe=await db.prepare("SELECT (SELECT count(*) FROM club_accounts WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%' OR state!='reserved' OR password_verifier IS NOT NULL OR password_salt IS NOT NULL OR role='member')+(SELECT count(*) FROM club_sessions)+(SELECT count(*) FROM club_invites)+(SELECT count(*) FROM club_people WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%' OR account_id IS NOT NULL)+(SELECT count(*) FROM club_records WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_interest WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_briefs WHERE id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_audit WHERE actor_id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM club_revisions WHERE actor_id NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_settings WHERE updated_by NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_post_edits WHERE updated_by NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_metrics WHERE updated_by NOT LIKE 'f1c71000-0000-4000-8000-%')+(SELECT count(*) FROM studio_decisions)+(SELECT count(*) FROM studio_handoffs)+(SELECT count(*) FROM studio_post_links)+(SELECT count(*) FROM club_login_attempts) AS n,(SELECT count(*) FROM club_people) AS people,(SELECT count(*) FROM club_accounts) AS officers").first();
  }catch{fail(503,'The synthetic showcase schema is unavailable. No live data will be opened.','showcase_unavailable')}
- if(marker?.version!==1||marker.classification!=='SANDY_SYNTHETIC_ONLY'||unsafe?.n!==0)
+ if(marker?.version!==1||marker.classification!=='SANDY_SYNTHETIC_ONLY'||unsafe?.n!==0||unsafe.people!==1||unsafe.officers!==STAFF.length)
   fail(503,'The showcase data boundary did not validate. No live data will be opened.','showcase_unavailable');
  return {DB:readOnlyDB(db),SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled',SANDY_SYNTHETIC_VIEW:true};
 }
@@ -60,15 +60,15 @@ async function issue(req,env,mode,role){
  const binding=mode==='owner'?rawCookie(req,LIVE):'standalone';
  if(!secret||!binding)fail(503,'View-only sign-in is not configured.','showcase_unavailable');
  const sig=await sign(secret,'sandy-view-v1/'+value+'/'+binding);
- return json({ok:true,viewMode:mode,role,expiresAt:new Date(expiry*1000).toISOString()},200,{'Set-Cookie':cookie(COOKIE,value+'.'+sig,DURATION)});
+ return json({ok:true,viewMode:mode,role,expiresAt:new Date(expiry*1000).toISOString()},200,{'Set-Cookie':cookie(COOKIE,value+'.'+sig,MARKER_AGE)});
 }
-async function parse(req,env){
+async function parse(req,env,allowExpired=false){
  const value=rawCookie(req,COOKIE);
  if(value===null)return null;
  const m=/^(owner|showcase)\.([a-z_]+)\.(\d{10})\.([a-f0-9]{32})\.([a-f0-9]{64})$/.exec(value);
  if(!m)return false;
  const [,mode,role,expiry,nonce,sig]=m;
- if(!roles.includes(role)||Number(expiry)<=epoch()||(mode==='showcase'&&role!=='webmaster_demo'))return false;
+ if(!roles.includes(role)||(!allowExpired&&Number(expiry)<=epoch())||(mode==='showcase'&&role!=='webmaster_demo'))return false;
  const secret=mode==='owner'?ownerSecret(env):showcaseSecret(env);
  const binding=mode==='owner'?rawCookie(req,LIVE):'standalone';
  if(!secret||!binding||!same(sig,await sign(secret,'sandy-view-v1/'+[mode,role,expiry,nonce].join('.')+'/'+binding)))return false;
@@ -86,7 +86,7 @@ const closed=()=>fail(409,'This view has changed or expired. Reload or explicitl
 export async function viewMode(req,env,path,serve){
  const marker=rawCookie(req,COOKIE),context=req.headers.get('x-sandy-view');
  if(path==='/api/view/exit'&&req.method==='POST'){
-  const view=await parse(req,env);
+  const view=await parse(req,env,true);
   // A standalone, invalid or missing view must not reveal a prior live session.
   return clear(json({ok:true,realRestored:view?.mode==='owner'}),COOKIE,...(view?.mode==='owner'?[]:[LIVE]));
  }

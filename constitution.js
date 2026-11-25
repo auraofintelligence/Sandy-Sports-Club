@@ -100,7 +100,13 @@ async function constitutionApi(path,method='GET',data){
 async function setupSharedConstitution(){
  if(!form)return;
  let session;
- try{session=await constitutionApi('/api/session')}catch{if(!new URLSearchParams(location.search).has('workspace'))enableLocalDraft();return}
+ try{session=await constitutionApi('/api/session')}catch{
+  // Static GitHub Pages has no session service and retains the original local builder.
+  // A failed Worker session must not reveal a previous local draft to a stale view.
+  if(location.hostname.endsWith('.github.io')&&!new URLSearchParams(location.search).has('workspace'))enableLocalDraft();
+  else status.textContent='Session unavailable. Reload or explicitly exit the view before opening a saved draft.';
+  return;
+ }
  if(!session?.readOnly)enableLocalDraft();
  if(!session?.authenticated||!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'].includes(session.identity?.role))return;
  const box=document.createElement('section');

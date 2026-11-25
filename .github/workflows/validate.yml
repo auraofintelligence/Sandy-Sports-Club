@@ -23,3 +23,9 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Execute Sandy D1 operational workflow integration tests
         run: node --experimental-sqlite --test tests/*.integration.mjs
+      - name: Install isolated Chromium acceptance runner
+        run: |
+          npm install --no-save --package-lock=false playwright@1.51.1
+          npx playwright install --with-deps chromium
+      - name: Exercise actual clubhouse and embedded tools in a cloud browser
+        run: node --experimental-sqlite tests/showcase-browser.mjs

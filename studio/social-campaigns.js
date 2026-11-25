@@ -488,7 +488,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       saveState=local||reviewOnly?'local':row.version>0?'shared':'idle';
       saveMessage=local?'Browser-only changes loaded. Review them before sharing with the committee.':
         reviewOnly?'Trial settings are kept in this browser between refreshes; no club data is changed.':
-        row.updatedAt?'Shared settings loaded from the Sandy Sports database.':'No committee settings saved yet.';
+        viewOnly?'Synthetic settings loaded. No actual club plan is displayed.':row.updatedAt?'Shared settings loaded from the Sandy Sports database.':'No committee settings saved yet.';
       notice=saveMessage;
     }catch(e){
       if(!isActive())return;
@@ -505,6 +505,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
     }finally{busy=false;draw();}
   }
   async function save(){
+    if(viewOnly){notice='Synthetic view only. No change can be saved.';draw();return;}
     if(busy||!loaded||!isActive())return;
     if(!sharedSettingsReady){
       if(strictShared){saveState='error';saveMessage='Cannot save: the shared club database is unavailable. No browser-local substitute will be used.';notice=saveMessage;draw();return;}
