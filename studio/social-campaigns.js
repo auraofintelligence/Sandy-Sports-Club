@@ -23,7 +23,7 @@ const monthName=value=>new Intl.DateTimeFormat('en-AU',{timeZone:'UTC',month:'sh
 const audienceText=selection=>Object.values(selection||{}).map(values=>values.join(', ')).join(' · ');
 const csvDate=value=>value.slice(0,10);
 
-export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=false,strictShared=false}){
+export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=false,strictShared=false,viewOnly=false}){
   let settings=defaultCampaignSettings(),saved=JSON.stringify(settings),version=0,loaded=false,busy=false,notice='';
   let sharedSettingsReady=true;
   let saveState='idle',saveMessage='',latestSave=null,historyRows=null,historyError='',historyLoading=false;
@@ -525,7 +525,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       latestSave={version:row.version,updatedAt:row.updatedAt,
         updatedByName:row.updatedByName,updatedOffice:row.updatedOffice};
       historyRows=null;historyError='';
-      try{localStorage.removeItem(offlineKey);}catch{}
+      if(!viewOnly)try{localStorage.removeItem(offlineKey);}catch{}
       saveState=reviewOnly?'local':'shared';
       saveMessage=reviewOnly?'Saved on this browser. The calendar now uses the saved topic switches and posting limits. This is not shared with Sandy Sports.':
         'Saved to the shared Sandy Sports database as version '+row.version+'. You can refresh without losing these settings.';
