@@ -7,7 +7,24 @@
     "directory": "./",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": [
+      "/api",
+      "/api/*",
+      "/backend*",
+      "/worker*",
+      "/tests*",
+      "/scripts*",
+      "/studio/backend*",
+      "/.git*",
+      "/.env*",
+      "/.dev.vars*",
+      "/wrangler*",
+      "/club-admin*",
+      "/club-login*",
+      "/member-home*",
+      "/social-studio*",
+      "/constitution*"
+    ]
   },
   "d1_databases": [
     {
@@ -19,6 +36,7 @@
   ],
   "vars": {
     "SANDY_CLUB_APPROVALS": "disabled",
-    "SANDY_INVITES_ENABLED": "disabled"
+    "SANDY_INVITES_ENABLED": "disabled",
+    "SANDY_PRIVATE_LIBRARY_ENABLED": "disabled"
   }
 }

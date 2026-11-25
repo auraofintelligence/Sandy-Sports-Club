@@ -13,6 +13,7 @@ import {helpEndpoint} from './help.mjs';
 import {viewMode} from './view-mode.mjs';
 import {safeguardsEndpoint} from './member-safeguards.mjs';
 import {libraryEndpoint} from './library.mjs';
+import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -31,7 +32,19 @@ function safePath(req){
 }
 async function handle(req,env){
  const path=safePath(req);
- if(!path.startsWith('/api/'))return env.ASSETS?.fetch(req)||new Response('Static assets not configured.',{status:503});
+ if(path==='/api')throw new ApiError(404,'No club service exists at this address.','not_found');
+ if(!path.startsWith('/api/')){
+  const asset=publicPath(path);
+  if(!asset||!['GET','HEAD'].includes(req.method))throw new ApiError(404,'No public file exists at this address.','not_found');
+  if(!env.ASSETS?.fetch)return new Response('Static assets not configured.',{status:503,headers:defaults});
+  const response=await env.ASSETS.fetch(req);
+  if(!privateShell(asset))return response;
+  const headers=new Headers(response.headers);
+  for(const [name,value] of Object.entries(defaults))headers.set(name,value);
+  // These shells are deliberately embedded by the same-origin clubhouse.
+  headers.set('X-Frame-Options','SAMEORIGIN');headers.set('Content-Security-Policy',"frame-ancestors 'self'");
+  return new Response(response.body,{status:response.status,headers});
+ }
  if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
  if(!['GET','HEAD'].includes(req.method))verifySameOrigin(req);
  return viewMode(req,env,path,route);
@@ -80,7 +93,7 @@ export default {
    for(const [name,value] of Object.entries(defaults))headers.set(name,value);
    return new Response(response.body,{status:response.status,headers});
   }catch(error){
-   if(!(error instanceof ApiError))console.error('Sandy API failure:',String(error?.message||error).slice(0,240));
+   if(!(error instanceof ApiError))console.error('Sandy API failure: unexpected server error');
    const status=error instanceof ApiError?error.status:500;
    return respond({error:error instanceof ApiError?error.message:'The shared club service could not complete this request.',
     code:error instanceof ApiError?error.code:'server_error'},status);
