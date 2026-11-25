@@ -10,7 +10,7 @@ function fixture(t){
  sql.exec(readFileSync(new URL('../backend/migrations/0001_club.sql',import.meta.url),'utf8'));
  let pending=Promise.resolve();
  const DB={prepare(query){
-  const q=sql.prepare(query),bind=(...args)=>({first:async()=>q.get(...args)||null,all:async()=>({results:q.all(...args)}),run:async()=>({meta:{changes:Number(q.run(...args).changes)}})});
+  const q=sql.prepare(query),bind=(...args)=>({first:async()=>q.get(...args)||null,all:async()=>({results:q.all(...args)}),run:async()=>{if(/\bRETURNING\b/i.test(query)){const results=q.all(...args);return {results,meta:{changes:results.length}}}return {meta:{changes:Number(q.run(...args).changes)}}}});
   return {...bind(),bind};
  },withSession(){return this},async batch(stmts){const run=pending.then(async()=>{sql.exec('BEGIN');try{const out=[];for(const s of stmts)out.push(await s.run());sql.exec('COMMIT');return out}catch(e){sql.exec('ROLLBACK');throw e}});pending=run.catch(()=>{});return run}};
  const env={DB,SANDY_AUTH_PEPPER:'isolated-fictional-pepper-not-for-production',SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled'};
@@ -21,8 +21,8 @@ function fixture(t){
   sql.prepare('INSERT INTO club_sessions VALUES(?,?,0,4102444800)').run(createHash('sha256').update(token).digest('hex'),id);
   actors[name]={id,token};
  }
- async function request(who,path,method='GET',body,origin='https://sandy.test'){
-  const headers={Origin:origin,'Content-Type':'application/json'};
+ async function request(who,path,method='GET',body,origin='https://sandy.test',extraHeaders={}){
+  const headers={Origin:origin,'Content-Type':'application/json',...extraHeaders};
   if(who)headers.Cookie='__Host-sandy_session='+(actors[who]?.token||who);
   return worker.fetch(new Request('https://sandy.test'+path,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env);
  }
@@ -376,4 +376,27 @@ test('encrypted private library enforces owner and role ACLs, immutable versions
  await call('web',path+'/'+own.id,'GET',undefined,404);
  const exported=await call('member','/api/member/data-export');assert.equal(exported.privateFiles.documents[0].id,own.id);
  assert.equal((await call('member2','/api/member/data-export')).privateFiles.documents.length,0);
+});
+
+test('authentication limits are atomic, bound to source and subject, clean expired counters and reject ambiguous cookies',async t=>{
+ const {sql,request,actors}=fixture(t);
+ sql.prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,?,?)').run('expired-fixture-counter',999,0);
+ const login=(username,ip)=>request(null,'/api/auth/login','POST',{username,password:'fictional incorrect password'},'https://sandy.test',{'cf-connecting-ip':ip});
+ // Concurrent calls from a single address must admit only the first eight guesses.
+ const replies=await Promise.all(Array.from({length:12},()=>login('missing-fixture','192.0.2.10')));
+ assert.equal(replies.filter(r=>r.status===401).length,8);
+ assert.equal(replies.filter(r=>r.status===429).length,4);
+ assert.equal(sql.prepare("SELECT count(*) AS n FROM club_login_attempts WHERE key='expired-fixture-counter'").get().n,0);
+ // A separate address cannot bypass the aggregate account-name budget.
+ const distributed=await Promise.all(Array.from({length:20},(_,i)=>login('missing-fixture','198.51.100.'+(i+1))));
+ assert.equal(distributed.filter(r=>r.status===401).length,12);
+ assert.equal(distributed.filter(r=>r.status===429).length,8);
+ // Distinct usernames cannot bypass the aggregate source budget.
+ const spray=await Promise.all(Array.from({length:43},(_,i)=>login('fixture-spray-'+i,'203.0.113.7')));
+ assert.equal(spray.filter(r=>r.status===401).length,40);
+ assert.equal(spray.filter(r=>r.status===429).length,3);
+ const cookies='__Host-sandy_session='+actors.web.token+'; __Host-sandy_session='+actors.sec.token;
+ const ambiguous=await request(null,'/api/session','GET',undefined,'https://sandy.test',{Cookie:cookies});
+ assert.equal((await ambiguous.json()).authenticated,false);
+ assert.equal(sql.prepare('SELECT count(*) AS n FROM club_login_attempts WHERE key LIKE ?').get('%missing-fixture%').n,0);
 });

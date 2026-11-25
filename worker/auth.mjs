@@ -16,7 +16,7 @@ const ROLES=['webmaster','webmaster_demo','president','vice_president','secretar
 const strong=x=>typeof x==='string'&&x.length>=12&&x.length<=256;
 function constantEqual(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;
  let v=0;for(let i=0;i<a.length;i++)v|=a.charCodeAt(i)^b.charCodeAt(i);return v===0;}
-async function verifier(password,salt,secret){
+export async function verifier(password,salt,secret){
  const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const source=await crypto.subtle.sign('HMAC',key,enc.encode(password));
  const pass=await crypto.subtle.importKey('raw',source,'PBKDF2',false,['deriveBits']);
@@ -26,9 +26,12 @@ function requireCrypto(env){
  if(typeof env.SANDY_AUTH_PEPPER!=='string'||env.SANDY_AUTH_PEPPER.length<32)
   fail(503,'Authentication is not configured for this club.','auth_not_configured');
 }
-const sessionToken=req=>(req.headers.get('cookie')||'').match(/(?:^|;\s*)__Host-sandy_session=([a-f0-9]{64})(?:;|$)/)?.[1]||null;
+const sessionToken=req=>{
+ const cookies=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith(COOKIE+'='));
+ return cookies.length===1&&/^[a-f0-9]{64}$/.test(cookies[0].slice(COOKIE.length+1))?cookies[0].slice(COOKIE.length+1):null;
+};
 export async function identityFor(req,env){
- if(!env.DB?.prepare||!env.SANDY_AUTH_PEPPER)return null;
+ if(!env.DB?.prepare||typeof env.SANDY_AUTH_PEPPER!=='string'||env.SANDY_AUTH_PEPPER.length<32)return null;
  const token=sessionToken(req);if(!token)return null;
  const db=dbFor(env),digest=await hash(token);
  const row=await db.prepare('SELECT a.id,a.username,a.role,a.office_label,a.display_name,a.state FROM club_sessions s JOIN club_accounts a ON a.id=s.account_id WHERE s.digest=? AND s.expires_epoch>? AND a.state=?')
@@ -36,15 +39,24 @@ export async function identityFor(req,env){
  if(!row)return null;
  return {id:row.id,username:row.username,name:row.display_name||row.username,role:row.role,office_label:row.office_label||row.role};
 }
+// Atomic counter increments return their own result rather than rereading a
+// counter advanced by another request. IP-only and account-only budgets limit
+// password spraying and distributed guesses as well as repeated IP/account pairs.
 async function rateLimit(req,db,key){
- const bucket=Math.floor(nowSec()/900);
+ const t=nowSec(),bucket=Math.floor(t/900),expiry=(bucket+1)*900;
  const ip=req.headers.get('cf-connecting-ip')||'local';
- const digest=await hash('auth-try/'+bucket+'/'+ip+'/'+key);
- const expiry=(bucket+1)*900;
- await db.prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN expires_epoch<=? THEN 1 ELSE count+1 END,expires_epoch=?')
-  .bind(digest,expiry,nowSec(),expiry).run();
- const row=await db.prepare('SELECT count FROM club_login_attempts WHERE key=?').bind(digest).first();
- if(row?.count>8)fail(429,'Too many login attempts. Try again later.','rate_limited');
+ const budgets=[['pair/'+ip+'/'+key,8],['source/'+ip,40]];
+ if(key.startsWith('login/')||key.startsWith('change/'))budgets.push(['subject/'+key,24]);
+ const increments=await Promise.all(budgets.map(async([scope,limit])=>{
+  const digest=await hash('sandy-auth-limit-v2/'+bucket+'/'+scope);
+  return {digest,limit};
+ }));
+ // Expired counters are not authentication/audit history. Keep only current buckets.
+ // Bounded cleanup avoids unbounded storage of hashed attempts.
+ const statements=[db.prepare('DELETE FROM club_login_attempts WHERE key IN (SELECT key FROM club_login_attempts WHERE expires_epoch<=? LIMIT 200)').bind(t)];
+ for(const item of increments)statements.push(db.prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN expires_epoch<=? THEN 1 ELSE MIN(count+1,1000000) END,expires_epoch=? RETURNING count').bind(item.digest,expiry,t,expiry));
+ const results=await db.batch(statements);
+ if(results.slice(1).some((r,i)=>!r.results?.[0]||r.results[0].count>increments[i].limit))fail(429,'Too many login attempts. Try again after the current 15-minute window.','rate_limited');
 }
 function safeAccount(row){return {id:row.id,username:row.username,displayName:row.display_name||'',role:row.role,
  office:row.office_label||'',state:row.state,createdAt:row.created_utc,activatedAt:row.activated_utc||null,
@@ -60,6 +72,7 @@ export async function authEndpoint(req,env,path,identity){
   if(!env.SANDY_BOOTSTRAP_KEY||env.SANDY_BOOTSTRAP_KEY.length<32)fail(503,'Webmaster bootstrap has not been enabled in Cloudflare secrets.','bootstrap_not_configured');
   const b=await payload(req,8192),username=name(b.username),key=field(b.bootstrapKey,500);
   if(!validName(username)||!strong(b.password))fail(400,'Enter a valid webmaster username and password of at least 12 characters.','invalid_setup');
+  await rateLimit(req,db,'bootstrap');
   const count=await db.prepare('SELECT COUNT(*) AS n FROM club_accounts').first();
   if(count?.n>0)fail(409,'The first webmaster has already been created. Use the normal sign-in flow.','already_configured');
   if(!constantEqual(await hash(key),await hash(env.SANDY_BOOTSTRAP_KEY)))fail(403,'The private bootstrap key is incorrect.','invalid_bootstrap');
@@ -155,7 +168,8 @@ export async function authEndpoint(req,env,path,identity){
  }
  if(path==='/api/auth/logout'&&req.method==='POST'){
   const token=sessionToken(req);
-  if(token&&env.DB?.prepare)await db.prepare('DELETE FROM club_sessions WHERE digest=?').bind(await hash(token)).run();
+  if(token&&identity)await db.batch([db.prepare('DELETE FROM club_sessions WHERE digest=? AND account_id=?').bind(await hash(token),identity.id),audit(db,identity,'logout','account',identity.id,now(),true)]);
+  else if(token&&env.DB?.prepare)await db.prepare('DELETE FROM club_sessions WHERE digest=?').bind(await hash(token)).run();
   return json({ok:true},200,{'Set-Cookie':cookie('',0)});
  }
  if(path==='/api/demo'&&req.method==='GET'){

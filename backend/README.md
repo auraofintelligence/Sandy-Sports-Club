@@ -37,7 +37,7 @@ Voluntary C-Hours are not cash balances, wages or financial exchange. If used, t
 
 - A real Webmaster can prepare or replace a recovery link for an existing active non-Webmaster account. The link expires in 48 hours, is purpose-separated from activation, and is not sent automatically. Redeeming it revokes prior sessions. A pending link can be revoked without changing the account; sessions can be revoked without resetting the password; disabling an account removes sessions and unused links.
 - An authenticated account owner (except the view-only demo) can change their password from the sign-in page using the current password. All sessions and pending recovery links are revoked. The original Webmaster account and ID are preserved.
-- If the sole Webmaster loses both their password and active sessions, do not rerun bootstrap or create a second administrator. No self-service recovery for that scenario is implemented. Owner-controlled recovery requires a separately approved, identity-verified Cloudflare/D1 procedure with protected backup and a documented rehearsal (SEC-03/SEC-12 remain open).
+- If the sole Webmaster loses both their password and active sessions, do not rerun bootstrap or create a second administrator. No public self-service recovery for that scenario is implemented. A protected offline recovery utility and isolated rehearsal are in [RECOVERY.md](RECOVERY.md); remote execution requires separate verified owner approval and a protected atomic D1 maintenance adapter (SEC-03/SEC-12 remain open).
 
 ## Tests and deployment
 
