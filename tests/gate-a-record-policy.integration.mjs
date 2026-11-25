@@ -31,7 +31,8 @@ function fixture(t){
   const value=await res.json();assert.equal(res.status,status,JSON.stringify(value));return value;
  }
  function active(who){const id=actors[who].id;sql.prepare("INSERT INTO club_people(id,account_id,full_name,status,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,'Fictional member','active',?,?,'2026-01-01','2026-01-01')").run(randomUUID(),id,id,id)}
- return {sql,env,actors,call,active,request};
+ async function verifyAdult(who){await call('web','/api/committee/safeguards','POST',{action:'verify',accountId:actors[who].id,version:0,ageBand:'adult',guardianPermission:false,ageCheckedOffline:true})}
+ return {sql,env,actors,call,active,request,verifyAdult};
 }
 test('restricted stock, legacy desk and meeting purpose cannot escape through broad register, history or calendar routes',async t=>{
  const {call,sql,env}=fixture(t);
@@ -72,7 +73,7 @@ test('restricted stock, legacy desk and meeting purpose cannot escape through br
  await call('web','/api/records/'+stock.id+'/decision','POST',{version:1,decision:'approved',evidence:'https://example.test'},404);
 });
 test('help owner and Webmaster retain reply workflow; every alternate list, audit, member publication and edit denies disclosure',async t=>{
- const {call,sql,env,active}=fixture(t);
+ const {call,sql,env,active,verifyAdult}=fixture(t);
  const help=await call('sec','/api/webmaster/requests','POST',{subject:'Private support fixture',category:'Site or account issue',message:'Fictional private request'},201);
  for(const who of ['other','treasurer','sec','web']){
   const own=await call(who,'/api/webmaster/requests');
@@ -96,7 +97,7 @@ test('help owner and Webmaster retain reply workflow; every alternate list, audi
  assert.equal((await call('other','/api/webmaster/requests')).requests.length,0);
  assert.equal((await call('web','/api/webmaster/requests')).counters.unread,0);
  assert.equal(sql.prepare('SELECT count(*) AS n FROM club_revisions WHERE resource_id=?').get(help.id).n,2);
- env.SANDY_CLUB_APPROVALS='enabled';active('member');
+ env.SANDY_CLUB_APPROVALS='enabled';active('member');await verifyAdult('member');
  // Simulate a legacy wrongly-approved support row without touching real data.
  sql.prepare("UPDATE club_records SET status='approved' WHERE id=?").run(help.id);
  const workspace=await call('member','/api/member/workspace');
@@ -104,7 +105,7 @@ test('help owner and Webmaster retain reply workflow; every alternate list, audi
  assert.ok(!JSON.stringify(await call('member','/api/member/data-export')).includes(help.id));
 });
 test('private member preferences stay owner-only across register, suite, audit and exports',async t=>{
- const {call,env,active}=fixture(t);env.SANDY_CLUB_APPROVALS='enabled';active('member');active('member2');
+ const {call,env,active,verifyAdult}=fixture(t);env.SANDY_CLUB_APPROVALS='enabled';active('member');active('member2');await verifyAdult('member');await verifyAdult('member2');
  const saved=await call('member','/api/member/preferences','POST',{version:0,sports:['Flag football'],notes:'Private preference fixture'},201);
  assert.equal((await call('member','/api/member/data-export')).preferences.id,saved.id);
  assert.equal((await call('member2','/api/member/data-export')).preferences,null);
@@ -201,7 +202,7 @@ test('password recovery, self-change, stale tokens, expiry and disable are fail-
 });
 
 test('simultaneous edits, repeated meeting handoffs, stock retries and first preference saves are transactional',async t=>{
- const {call,request,sql,env,actors,active}=fixture(t);
+ const {call,request,sql,env,actors,active,verifyAdult}=fixture(t);
  const draft={title:'Fictional concurrent meeting',fields:{meetingType:'Working group',date:'2027-04-12',followUps:'Check nets | Treasurer | 2027-04-13'}};
  const meet=await call('web','/api/suite/meetings','POST',draft,201),path='/api/suite/meetings/'+meet.id;
  const edits=await Promise.all([request('web',path,'PATCH',{...draft,version:1,reason:'Owner review',actorId:'forged'}),request('sec',path,'PATCH',{...draft,version:1,reason:'Secretary review',actorId:'forged'})]);
@@ -231,7 +232,7 @@ test('simultaneous edits, repeated meeting handoffs, stock retries and first pre
  assert.equal((await call('treasurer','/api/suite/stock/'+stock.id)).record.version,2);
  assert.equal(sql.prepare('SELECT count(*) AS n FROM club_revisions WHERE resource_id=?').get(stock.id).n,2);
  sql.exec('DROP TRIGGER refuse_fixture_audit');
- active('member');env.SANDY_CLUB_APPROVALS='enabled';
+ active('member');env.SANDY_CLUB_APPROVALS='enabled';await verifyAdult('member');
  const prefs=await Promise.all([request('member','/api/member/preferences','POST',{version:0,sports:['Flag football']}),request('member','/api/member/preferences','POST',{version:0,sports:['Beach cricket']})]);
  assert.deepEqual(prefs.map(r=>r.status).sort(),[201,409]);
  assert.equal(sql.prepare("SELECT count(*) AS n FROM club_records WHERE json_extract(body_json,'$.type')='preferences'").get().n,1);
@@ -265,4 +266,52 @@ test('production handoff and publication authority is scoped to the current revi
  await call('web',path+'/handoff','POST',{...proposal,authorised:true},409);
  assert.equal(sql.prepare('SELECT count(*) AS n FROM studio_handoffs').get().n,2);
  assert.equal(sql.prepare('SELECT count(*) AS n FROM studio_post_links').get().n,1);
+});
+
+test('private participation checks verify age and guardian authority, gate minor access, and preserve owner export after withdrawal',async t=>{
+ const {call,sql,env,actors,active}=fixture(t);active('member');active('member2');env.SANDY_CLUB_APPROVALS='enabled';
+ const own='/api/member/safeguards',desk='/api/committee/safeguards',prefs='/api/member/preferences',id=actors.member.id;
+ const verify=(v,age,guardian,extra={},status=200,who='sec')=>call(who,desk,'POST',{action:'verify',accountId:id,version:v,ageBand:age,guardianPermission:guardian,...extra},status);
+ const initial=await call('member',own);assert.equal(initial.ageBand,'unconfirmed');assert.equal(initial.privateAccess,false);
+ assert.equal((await call('member','/api/member/workspace')).active,false);
+ await call('member',prefs,'POST',{version:0,sports:['Flag football']},403);
+ await call('member',desk+'?q=member','GET',undefined,403);await call('treasurer',desk+'?q=member','GET',undefined,403);
+ assert.equal((await call('sec',desk)).members.length,0);
+ assert.equal((await call('sec',desk+'?q=member')).members[0].accountId,id);
+ await verify(0,'under16',true,{},400);await verify(0,'under16',true,{ageCheckedOffline:true},400);
+ await verify(0,'under16',true,{ageCheckedOffline:true,guardianCheckedOffline:true,guardianName:'DO NOT STORE'},400);
+ await verify(0,'under16',true,{ageCheckedOffline:true,guardianCheckedOffline:true});
+ const child=await call('member',own);assert.equal(child.privateAccess,true);assert.equal(child.optionalParticipation,false);
+ await call('member',prefs,'POST',{version:0,sports:['Flag football'],publicationConsent:true},403);
+ const saved=await call('member',prefs,'POST',{version:0,sports:['Flag football']},201);
+ await call('member','/api/member/interest','POST',{area:'volunteer',request:'Example'},403);
+ await call('member',own,'POST',{action:'accept',version:1,termsVersion:child.termsVersion},403);
+ await verify(1,'under16',false);assert.equal((await call('member','/api/member/workspace')).active,false);
+ await call('member',prefs,'POST',{version:1,sports:['Beach cricket']},403);
+ await verify(1,'16-17',true,{ageCheckedOffline:true,guardianCheckedOffline:true},409);
+ await verify(2,'16-17',true,{ageCheckedOffline:true,guardianCheckedOffline:true});
+ assert.equal((await call('member',own)).privateAccess,true);
+ await call('member',own,'POST',{action:'accept',version:3,termsVersion:child.termsVersion},403);
+ await verify(3,'adult',false,{ageCheckedOffline:true});
+ const adult=await call('member',own);assert.equal(adult.privateAccess,true);assert.equal(adult.accepted,false);
+ await call('member',own,'POST',{action:'accept',version:4,termsVersion:'old'},409);
+ const accepted=await call('member',own,'POST',{action:'accept',version:4,termsVersion:adult.termsVersion});
+ assert.equal(accepted.optionalParticipation,true);
+ await call('member',prefs,'POST',{version:1,sports:['Flag football'],volunteer:true,publicationConsent:true,contactPreference:'email_when_consented'});
+ await call('member','/api/member/interest','POST',{area:'volunteer',request:'Example help'},201);
+ const withdrawn=await call('member',own,'POST',{action:'withdraw',version:5,termsVersion:adult.termsVersion});assert.equal(withdrawn.accepted,false);
+ const ws=await call('member','/api/member/workspace');assert.equal(ws.active,true);assert.equal(ws.preferences.fields.publicationConsent,false);assert.equal(ws.preferences.fields.volunteer,false);
+ const exported=await call('member','/api/member/data-export');assert.equal(exported.preferences.id,saved.id);assert.equal(exported.preferences.fields.publicationConsent,true);assert.equal(exported.safeguards.accepted,false);
+ assert.equal((await call('member2','/api/member/data-export')).preferences,null);
+ await call('member',own,'POST',{action:'accept',version:6,termsVersion:adult.termsVersion});
+ assert.equal((await call('member','/api/member/workspace')).preferences.fields.publicationConsent,false);
+ for(const who of ['web','sec','treasurer','other']){
+  const all=await call(who,'/api/records?kind=safeguard');assert.ok(!all.records.some(x=>x.id===child.recordId));
+  await call(who,'/api/records/'+child.recordId,'GET',undefined,404);
+  await call(who,'/api/records/'+child.recordId+'/revisions','GET',undefined,404);
+ }
+ await call('other','/api/records','POST',{kind:'safeguard',title:'Forged',body:{sandyMemberSafeguard:1,ownerId:id,fields:{ageBand:'adult'}}},400);
+ assert.equal((await call('member2',own)).ageBand,'unconfirmed');
+ assert.doesNotMatch(JSON.stringify(sql.prepare("SELECT body_json FROM club_records WHERE json_extract(body_json,'$.sandyMemberSafeguard')=1").all()),/guardianName|DO NOT STORE/);
+ env.SANDY_CLUB_APPROVALS='disabled';await verify(7,'unconfirmed',false,{},409);
 });

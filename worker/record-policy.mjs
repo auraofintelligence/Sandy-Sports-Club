@@ -3,7 +3,7 @@
 import {fail,requireRole,STAFF} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 const owns=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
-const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace'];
+const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard'];
 const safeObject=body=>body&&typeof body==='object'&&!Array.isArray(body);
 const restrictedGeneric=kind=>{
  const desks=SUITE_DESKS.filter(d=>d.kind===kind);
@@ -20,6 +20,8 @@ export function recordPurpose(kind,body){
   if(owns(body,'desk')||body.source==='sandy-committee-room-v1'||body.source==='sandy-constitution-builder')return null;
   if(marks[0]==='sandyWebmasterRequest')
    return kind==='notice'&&body.sandyWebmasterRequest===1?{type:'help',key:'help',roles:['webmaster']}:null;
+  if(marks[0]==='sandyMemberSafeguard')
+   return kind==='safeguard'&&body.sandyMemberSafeguard===1&&typeof body.ownerId==='string'&&safeObject(body.fields)?{type:'member-safeguard',key:'participation-check',roles:['webmaster','president','secretary']}:null;
   if(marks[0]==='sandyMemberWorkspace')
    return kind==='safeguard'&&body.sandyMemberWorkspace===1&&['preferences','wish'].includes(body.type)&&typeof body.ownerId==='string'?{type:'member',key:body.type,roles:[]}:null;
   const desk=SUITE_BY_KEY[body.domain];
@@ -83,6 +85,7 @@ export function recordAuditAllowed(row,identity,action){
  if(!p)return false;
  if(action.startsWith('webmaster_request_')||p.type==='help')return identity.role==='webmaster'&&p.type==='help';
  if(action.startsWith('member_preferences_')||action.startsWith('member_interest_')||p.type==='member')return false;
+ if(p.type==='member-safeguard'||action.startsWith('safeguard_'))return p.type==='member-safeguard'&&p.roles.includes(identity.role);
  return p.roles.includes(identity.role);
 }
 // Filter before applying the visible limit. The query clauses are server-owned literals.

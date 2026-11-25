@@ -11,6 +11,7 @@ import {suiteEndpoint} from './suite.mjs';
 import {memberWorkspaceEndpoint} from './member-workspace.mjs';
 import {helpEndpoint} from './help.mjs';
 import {viewMode} from './view-mode.mjs';
+import {safeguardsEndpoint} from './member-safeguards.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -47,6 +48,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
+ if(path==='/api/member/safeguards'||path==='/api/committee/safeguards')return safeguardsEndpoint(req,env,path,identity);
  if(['/api/member/preview','/api/member/workspace','/api/member/preferences','/api/member/interest','/api/member/data-export'].includes(path))
   return memberWorkspaceEndpoint(req,env,path,identity);
  if(path==='/api/member/me'||path==='/api/member/events')

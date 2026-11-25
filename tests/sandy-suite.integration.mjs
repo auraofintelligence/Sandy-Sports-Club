@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {suiteEndpoint} from '../worker/suite.mjs';
 import {memberWorkspaceEndpoint} from '../worker/member-workspace.mjs';
+import {safeguardsEndpoint} from '../worker/member-safeguards.mjs';
 import {helpEndpoint} from '../worker/help.mjs';
 const database=new DatabaseSync(':memory:');
 database.exec(readFileSync(new URL('../backend/migrations/0001_club.sql',import.meta.url),'utf8'));
@@ -112,6 +113,8 @@ test('future active member can save only own preferences, contribute interests a
  database.prepare("INSERT INTO club_people(id,account_id,full_name,membership_class,status,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,'Example Member','adult','active',1,?,?,?,?)")
   .run('88888888-8888-4888-8888-888888888888',memberId,webId,webId,'2026-11-24T09:00:00Z','2026-11-24T09:00:00Z');
  env.SANDY_CLUB_APPROVALS='enabled';
+ const verifyPath='/api/committee/safeguards';
+ await safeguardsEndpoint(new Request('https://sandy.example'+verifyPath,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',accountId:memberId,version:0,ageBand:'adult',guardianPermission:false,ageCheckedOffline:true})}),env,verifyPath,webmaster);
  async function portal(path,method='GET',body){
   const req=new Request('https://sandy.example'+path,{method,headers:{'Content-Type':'application/json'},
    ...(body?{body:JSON.stringify(body)}:{})});
