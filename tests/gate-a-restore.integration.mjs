@@ -56,6 +56,20 @@ test('isolated SQL export and restore preserve accounts, relationships, audit hi
  assert.equal(settings.version,1);
  const help=(await call(env,'/api/webmaster/requests',owner,'POST',{subject:'Fictional recovery check',category:'Committee workflow',message:'Example request, no personal information'},201)).data;
  await call(env,'/api/webmaster/requests/'+help.id,owner,'PATCH',{version:1,stage:'completed',reply:'Example resolved'});
+ // Apply the additive library migration to an existing populated club, not a
+ // recreated database. Every existing table must remain byte-for-byte equivalent.
+ const preMigration=manifest(source);
+ source.exec(readFileSync(new URL('../backend/migrations/0002_private_library.sql',import.meta.url),'utf8'));
+ const migrated=manifest(source);
+ for(const [table,value] of Object.entries(preMigration.tables))assert.deepEqual(migrated.tables[table],value,table+' changed during additive migration');
+ for(const table of ['sandy_library_documents','sandy_library_versions','sandy_library_parts'])assert.equal(migrated.tables[table].count,0);
+ env.SANDY_LIBRARY_KEY=randomBytes(32).toString('hex');env.SANDY_PRIVATE_LIBRARY_ENABLED='enabled';
+ const binary=Buffer.concat([Buffer.from('%PDF-1.4\n% fictional multi-part test bytes only\n'),Buffer.alloc(100000,32),Buffer.from('\n%%EOF\n')]);
+ const upload=(await call(env,'/api/library',owner,'POST',{title:'Fictional recovery file',scope:'governance',roles:['webmaster'],reviewDate:'2099-01-01',mediaType:'application/pdf',content:binary.toString('base64'),source:'Fictional protected backup test',consent:true},201)).data;
+ const filePath='/api/library/'+upload.id;
+ const oldTicket=(await call(env,filePath+'/ticket',owner)).data.ticket;
+ assert.ok(source.prepare('SELECT count(*) AS n FROM sandy_library_parts WHERE document_id=?').get(upload.id).n>1);
+ env.SANDY_PRIVATE_LIBRARY_ENABLED='disabled';
  const before=manifest(source);
  assert.ok(before.tables.club_revisions.count>=4);assert.ok(before.tables.club_audit.count>=4);
  // SQL export/import is the shape of the D1 restore workflow. This is an
@@ -76,7 +90,8 @@ with sqlite3.connect(dest) as restored:
  const result=spawnSync('python3',['-c',py,sourcePath,dumpPath,restorePath],{encoding:'utf8'});
  assert.equal(result.status,0,result.stderr);
  assert.equal(statSync(dumpPath).mode&0o777,0o600);assert.ok(statSync(dumpPath).size>0);
- const backupHash=sha(readFileSync(dumpPath));assert.match(backupHash,/^[a-f0-9]{64}$/);
+ const backupBytes=readFileSync(dumpPath),backupHash=sha(backupBytes);assert.match(backupHash,/^[a-f0-9]{64}$/);
+ assert.ok(!backupBytes.includes(Buffer.from(env.SANDY_LIBRARY_KEY))&&!backupBytes.includes(Buffer.from(binary.toString('base64'))),'keys and plaintext file must not appear in the SQL export');
  restored=new DatabaseSync(restorePath);restored.exec('PRAGMA foreign_keys=ON');
  assert.deepEqual(manifest(restored),before,'schema and every table match the original export');
  assert.equal(restored.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
@@ -92,6 +107,18 @@ with sqlite3.connect(dest) as restored:
  const afterLogin=await call(restoredEnv,'/api/auth/login','','POST',{username,password});
  const restoredOwner=afterLogin.cookie;
  assert.equal((await call(restoredEnv,'/api/session',restoredOwner)).data.identity.id,account.id);
+ const download=async(cookie,ticket,e=restoredEnv)=>worker.fetch(new Request(origin+filePath+'/download',{headers:{Cookie:cookie,'X-Sandy-Download':ticket}}),e);
+ assert.equal((await download(owner,oldTicket)).status,401);
+ const restoredFile=(await call(restoredEnv,filePath,restoredOwner)).data.document;
+ assert.equal(restoredFile.digest,sha(binary));assert.equal(restoredFile.contentVersion,1);assert.equal(restoredFile.source,'Fictional protected backup test');
+ const fileHistory=(await call(restoredEnv,filePath+'/history',restoredOwner)).data.history;
+ assert.equal(fileHistory.length,1);assert.equal(fileHistory[0].actorId,account.id);
+ const ticket=(await call(restoredEnv,filePath+'/ticket',restoredOwner)).data.ticket;
+ const bytes=await download(restoredOwner,ticket);assert.equal(bytes.status,200);assert.deepEqual(Buffer.from(await bytes.arrayBuffer()),binary);
+ const wrongKeyEnv={...restoredEnv,SANDY_LIBRARY_KEY:randomBytes(32).toString('hex')};
+ const wrongTicket=(await call(wrongKeyEnv,filePath+'/ticket',restoredOwner)).data.ticket;
+ assert.equal((await download(restoredOwner,wrongTicket,wrongKeyEnv)).status,503);
+ assert.equal((await call(restoredEnv,'/api/library',restoredOwner)).data.writeEnabled,false);
  const accounts=(await call(restoredEnv,'/api/accounts',restoredOwner)).data.accounts;
  assert.equal(accounts.find(a=>a.id===reserved.id)?.state,'reserved');
  assert.equal(accounts.find(a=>a.id===account.id)?.role,'webmaster');
