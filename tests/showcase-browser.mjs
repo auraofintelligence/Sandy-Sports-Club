@@ -75,8 +75,8 @@ try{
    assert.match(await p.locator('#committee-ops').textContent(),/\[EXAMPLE\]/);return;
   }
   if(key==='meetings'){
-   await wait(p,'.meeting-register-card');assert.equal(await p.locator('#committee-suite').isHidden(),true);
-   assert.match(await p.locator('.meeting-register-card').first().textContent(),/\[EXAMPLE\]/);return;
+   await wait(p,'.meeting-current');assert.equal(await p.locator('#committee-suite').isHidden(),true);
+   assert.match(await p.locator('.meeting-current-head h3').textContent(),/\[EXAMPLE\]/);return;
   }
   await wait(p,'#committee-suite .suite-record');
   assert.equal(await p.locator('#suite-desk-name').textContent(),SUITE_DESKS.find(d=>d.key===key).title);
@@ -123,7 +123,7 @@ try{
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
  await p.locator('#committee-desk-switch').selectOption('social');await wait(p,'#club-social iframe');
  await wait(p,'#committee-back');assert.equal(await p.locator('#committee-desk-switch').inputValue(),'social');
- await p.locator('#committee-desk-switch').selectOption('meetings');await wait(p,'.meeting-register-card');
+ await p.locator('#committee-desk-switch').selectOption('meetings');await wait(p,'.meeting-current');
  assert.equal(await p.locator('#meeting-desk-title').textContent(),'Meetings and minutes');
  assert.equal(await p.locator('#committee-navigation').count(),1);assert.equal(await p.locator('#club-committee').isVisible(),true);
  console.log('PASS: collapsible room directory, restricted switcher, direct desk route and return from Social Studio');
@@ -213,6 +213,36 @@ try{
  await tp.waitForFunction(()=>!document.querySelector('.ops-notice'));
  await tp.locator('[data-board-mode=archive]').click();await wait(tp,'.ops-notice');
  assert.match(await tp.locator('.ops-notice').first().textContent(),/Archived/);
+
+ await go(sp,'/club-admin.html#committee/meetings');await wait(sp,'.meeting-create summary');
+ await sp.locator('.meeting-create summary').click();
+ await sp.locator('#meeting-create [name=title]').fill('Fictional summer readiness meeting');
+ await sp.locator('#meeting-create [name=type]').selectOption('Working group');
+ await sp.locator('#meeting-create [name=date]').fill('2026-12-05');
+ await sp.locator('#meeting-create [name=location]').fill('Dunwich, proposed venue');
+ await sp.locator('#meeting-create button[type=submit]').click();await wait(sp,'.meeting-current');
+ await sp.locator('[data-meeting-stage="1"]').click();
+ await sp.locator('[data-meeting-field=notes]').fill('Proposal: compare net kits\nAction: Obtain summer kit quotes | Treasurer | 2026-12-04');
+ await sp.locator('[data-meeting-suggest]').click();
+ await sp.locator('[data-meeting-accept-suggestions]').click();
+ await sp.locator('[data-meeting-stage="2"]').click();
+ await sp.locator('[data-meeting-compose-minutes]').click();
+ await sp.locator('[data-meeting-field=reviewedForPrivacy]').check();
+ await sp.locator('[data-meeting-field=reviewedBySecretary]').check();
+ await sp.locator('[data-meeting-review]').click();
+ await sp.waitForFunction(()=>document.querySelector('.meeting-current-head .meeting-state')?.textContent==='Reviewed draft');
+ await sp.locator('[data-meeting-stage="3"]').click();
+ await sp.locator('[data-meeting-handoff]').click();
+ await sp.waitForFunction(()=>document.querySelector('.meeting-action .meeting-state')?.textContent==='Linked / outstanding');
+ await go(tp,'/club-admin.html#committee/todos');await wait(tp,'.ops-task');
+ const taskCard=tp.locator('.ops-task').filter({hasText:'Obtain summer kit quotes'});
+ await taskCard.locator('[data-task-action=complete]').click();
+ await tp.waitForFunction(()=>document.querySelector('.ops-completed').textContent.includes('Obtain summer kit quotes'));
+ await sp.locator('[data-meeting-reload]').click();
+ await sp.waitForFunction(()=>document.querySelector('.meeting-action .meeting-state')?.textContent==='Completed');
+ assert.equal(await sp.locator('[data-meeting-save]').isDisabled(),false);
+ console.log('PASS: meeting register, local notes suggestions, draft review, linked task handoff and completion reflected back in actual browser');
+
  await sc.close();await tc.close();await cc.close();
  assert.equal(live.sql.prepare("SELECT count(*) AS n FROM club_records WHERE title='Fictional Cylinder Beach net kit quote'").get().n,2);
  console.log('PASS: real fictional officer notice posting, recipient isolation, read receipt, linked task completion and archive in actual browser');
