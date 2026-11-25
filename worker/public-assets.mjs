@@ -98,7 +98,6 @@ export const PUBLIC_FILES=Object.freeze([
  "sport-netball-crossover.html",
  "sport-ultimate-and-flying-disc.html",
  "sports.html",
- "studio/PLFC-PARITY.md",
  "studio/sandy-brainstorm.js",
  "studio/sandy-studio-app.js",
  "studio/sandy-studio-preview.js",

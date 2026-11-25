@@ -113,6 +113,8 @@ try{
  assert.equal(await p.locator('#committee-suite .suite-record').count(),0);
  await desk(p,'meetings');await wait(p,'.meeting-current');await p.locator('[data-meeting-stage="3"]').click();assert.equal(await p.locator('[data-meeting-handoff]').first().isDisabled(),true);
  assert.equal(await p.locator('#committee-directory').evaluate(el=>el.open),false);
+ assert.equal(await p.locator('#committee-room-heading').isVisible(),true);
+ assert.ok(await p.evaluate(()=>Boolean(document.getElementById('committee-room-heading').compareDocumentPosition(document.getElementById('committee-navigation')) & Node.DOCUMENT_POSITION_FOLLOWING)));
  assert.equal(await p.locator('#committee-desk-switch option[value="stock"]').count(),0,'restricted desk omitted from switcher');
  await p.locator('#committee-back').click();await wait(p,'#committee-directory summary');
  assert.equal(await p.locator('#committee-suite').isHidden(),true);
