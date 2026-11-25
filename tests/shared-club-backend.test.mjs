@@ -87,15 +87,23 @@ test('public proposal and real clubhouse have distinct prominent navigation',()=
  assert.ok(css.includes('.clubhouse-menu .club-tabs{display:grid'));
 });
 
-test('real PLFC Constitution V1.2 files are referenced for comparison without copying a protected document',()=>{
- const html=read('../club-admin.html'),builder=read('../constitution.html');
+test('constitution and clubhouse copy are for Sandy members; comparison sources remain in development documentation',()=>{
+ const html=read('../club-admin.html'),builder=read('../constitution.html'),draft=read('../constitution.js'),matrix=read('../studio/PLFC-PARITY.md');
  for(const source of ['1cV_baU8tf7O4C5gdrP16gaRVFxHF_8mg','1Z1uYKTy3Mi19bub9bG749ZICbjosoW0o']){
-  assert.ok(html.includes(source),'My Clubhouse should link to actual PLFC Drive file');
-  assert.ok(builder.includes(source),'Standalone builder should link to actual PLFC Drive file');
+  assert.ok(!html.includes(source));
+  assert.ok(!builder.includes(source));
+  assert.ok(matrix.includes(source));
+ }
+ for(const path of ['club-admin.html','clubhouse.html','committee.html','constitution.html','constitution.js','index.html','club-mozzie.js','social-studio.html','social-planner.js','sources.html','build_pages.py']){
+  assert.doesNotMatch(read('../'+path),/PLFC|Point Lookout Fishing Club/i,path);
  }
  assert.ok(html.includes('Constitution builder'));
- assert.ok(html.includes('View / download PLFC PDF'));
- assert.ok(builder.includes('Compare with the original PLFC Constitution V1.2'));
+ assert.ok(builder.includes('Current Queensland rules guide'));
+ assert.ok(draft.includes('Constitution topics for clause-by-clause review'));
+ assert.ok(read('../site.js').includes('Website by Luke at'));
+ assert.ok(read('../site.js').includes('Amity Point'));
+ assert.ok(html.indexOf('id="committee-room-heading"')<html.indexOf('id="committee-navigation"'));
+ assert.ok(html.indexOf('id="committee-navigation"')<html.indexOf('id="committee-directory"'));
 });
 
 test('private Sandy clubhouse pages show the real favicon and island project links',()=>{

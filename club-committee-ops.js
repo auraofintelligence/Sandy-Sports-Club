@@ -46,10 +46,10 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  }
  function taskCard(t,v){
   return '<article class="ops-task" data-ops-id="'+e(t.id)+'"><div class="ops-card-head"><h4>'+e(t.title)+'</h4>'+badge(t.status)+'</div>'+
-   '<div class="ops-meta">'+e(office(t.office))+' · '+date(t.dueDate)+' · '+e({notice:'Committee notice',meeting:'Meeting follow-up',monthly:'Monthly standard duty',manual:'Officer task'}[t.source])+(t.legacy?' · Existing draft':'')+'</div>'+
+   '<div class="ops-meta">'+e(office(t.office))+' · '+date(t.dueDate)+' · '+e({notice:'Committee notice',meeting:'Meeting follow-up',agm:'AGM preparation',monthly:'Monthly standard duty',manual:'Officer task'}[t.source])+(t.legacy?' · Existing draft':'')+'</div>'+
    (t.details?'<p class="ops-text">'+e(t.details)+'</p>':'')+
    (t.completion?'<p class="ops-completion">Completed '+date(t.completion.at)+' · recorded by '+e(t.completion.by)+(t.completion.paper?' from returned paper sheet':' online')+'</p>':'')+
-   '<div class="ops-actions">'+(t.source==='notice'?'<button type="button" data-ops-open="notices">Open originating noticeboard</button>':'')+(t.source==='meeting'?'<button type="button" data-ops-open="meetings">Open meeting register</button>':'')+(t.source==='monthly'?'<button type="button" data-ops-open="social">Open Social Studio</button>':'')+
+   '<div class="ops-actions">'+(t.source==='notice'?'<button type="button" data-ops-open="notices">Open originating noticeboard</button>':'')+(t.source==='meeting'&&['webmaster','president','secretary','assistant_secretary'].includes(getIdentity()?.role)?'<button type="button" data-ops-open="meetings" data-meeting-source="'+e(t.sourceId)+'">Open originating meeting</button>':'')+(t.source==='monthly'?'<button type="button" data-ops-open="social">Open Social Studio</button>':'')+
    (t.canTake?'<button type="button" data-task-action="take"'+block()+'>Take this task</button>':'')+(t.canComplete?'<button type="button" data-task-action="complete"'+block()+'>Mark complete</button>':'')+
    (t.canPaper?'<button type="button" data-task-action="paper"'+block()+'>Record returned paper tick</button>':'')+
    (t.version>0?'<button type="button" data-ops-history>Officer history</button>':'')+'</div>'+
@@ -114,7 +114,7 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  root.addEventListener('click',async ev=>{
   const b=ev.target.closest('button');if(!b)return;
   if(b.hasAttribute('data-ops-refresh')){await reload();return}
-  if(b.dataset.opsOpen){await showDesk(b.dataset.opsOpen);return}
+  if(b.dataset.opsOpen){if(b.dataset.meetingSource){const url=new URL(location.href);url.searchParams.set('meeting',b.dataset.meetingSource);history.replaceState(null,'',url.pathname+url.search+url.hash)}await showDesk(b.dataset.opsOpen);return}
   if(b.dataset.boardMode){archive=b.dataset.boardMode==='archive';request=null;await reload();return}
   if(b.hasAttribute('data-ops-print')){printList();return}
   const card=b.closest('[data-ops-id]');if(!card)return;

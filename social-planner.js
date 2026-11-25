@@ -62,7 +62,7 @@ function monthFor(p){return (edits[p.id]?.date||p.date).slice(0,7)}
 function stateFor(p){return edits[p.id]?.status||"Idea"}
 function monthPosts(month){return plan.filter(p=>monthFor(p)===month)}
 
-const MEDIA_PROFILE_VERSION="2026-11-23 / PLFC-informed Sandy production presets";
+const MEDIA_PROFILE_VERSION="2026-11-23 / Sandy Sports production presets";
 const mediaProfiles={
  youtube:{video:"Shorts 1080×1920 (9:16), ~30s; standard video 1920×1080 (16:9), thumbnail 3840×2160",ad:"Video ads 1080×1920 (Shorts) or 1920×1080 (in-stream); placement preview required"},
  facebook:{video:"Organic Reels 1080×1920 (9:16), Feed 1080×1350 (4:5)",image:"Organic Feed 1080×1350 (4:5), carousel 1080×1080 (1:1)",ad:"Feed 1440×1800 (4:5); Reels/Stories premium 1440×2560 (9:16); safe-zone check"},

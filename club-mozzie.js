@@ -1,4 +1,4 @@
-// Mozzie's guided, page-aware tour. Similar to PLFC's Finnius, without pretending to be a live AI.
+// Mozzie's guided, page-aware clubhouse tour.
 (()=>{
  const panel=document.getElementById('guide-panel'),button=document.getElementById('guide-button');
  if(!panel||!button)return;
@@ -13,11 +13,11 @@
    ]},
   {key:'committee',title:'Committee room',href:'/club-admin.html#committee/notices',
    steps:[
-    ['Open the committee room','Choose Committee room from the Clubhouse menu. The available work desks match PLFC topics.'],
+    ['Open the committee room','Choose Committee room from the Clubhouse menu to find the spaces for your shared responsibilities.'],
     ['Pick one desk','Find Committee notices, To-do lists, Newsletters, Meetings, Grants, Assets, AGM jobs and more, grouped by activity.'],
-    ['Save your real working record','Select New working record, write a title, officer, date, notes and next action, then Save. It goes into shared Sandy D1.'],
+    ['Save your real working record','Open a desk and use its tools to create a notice, allocate a job, plan a meeting or save your other committee work.'],
     ['Find edits and owners','Open an existing record, choose Edit or History. You can inspect the real officer office and revision timestamps.'],
-    ['Know what is not live','Publishing, payments, formal approval, bulk email and PLFC-specific meeting processing are not automatically enabled.']
+    ['Know what is not live','Formal club approvals, payments and external publishing need separate authorisation.']
    ]},
   {key:'social',title:'Social Media Hub',href:'/club-admin.html#social',
    steps:[
@@ -29,8 +29,8 @@
   {key:'constitution',title:'Constitution builder',href:'/club-admin.html#constitution',
    steps:[
     ['Open Constitution builder','It is a working area inside My Clubhouse.'],
-    ['Compare the source','Open the original Point Lookout Fishing Club Constitution V1.2 in PDF or Word.'],
-    ['Adapt the clauses','Set objects, membership classes, committee, finances, film and safeguards for Sandy.'],
+    ['Review Queensland requirements','Use the current Queensland rules guide as you consider the proposed club rules.'],
+    ['Shape the rules','Set objects, membership classes, committee, finances, film and safeguards for Sandy.'],
     ['Save the working draft','Choose Save to shared club records for an attributed revision, or export the Markdown draft. This is not adoption.']
    ]},
   {key:'accounts',title:'Officer invitations',href:'/club-admin.html#accounts',

@@ -15,7 +15,7 @@ test('reviewed asset allowlist includes the existing public site and rejects unk
  writeFileSync(join(dir,'.gitignore'),readFileSync(join(root,'.assetsignore')));
  const tracked=spawnSync('git',['ls-files','-z'],{cwd:root,encoding:'utf8'});assert.equal(tracked.status,0);
  const actual=tracked.stdout.split('\0').filter(Boolean);
- const probes=['backup.sqlite','export.json','private.pdf','new-unreviewed.js','assets/private-photo.png','studio/private-export.csv','studio/new-unreviewed.js','backend/recovery/secret.sql','.env.production','.dev.vars.production','.wrangler/state/private.db','wrangler.full.jsonc'];
+ const probes=['backup.sqlite','export.json','private.pdf','new-unreviewed.js','assets/private-photo.png','studio/PLFC-PARITY.md','studio/private-export.csv','studio/new-unreviewed.js','backend/recovery/secret.sql','.env.production','.dev.vars.production','.wrangler/state/private.db','wrangler.full.jsonc'];
  const candidates=[...new Set([...actual,...probes])].filter(x=>x!=='.gitignore');
  for(const p of candidates){mkdirSync(dirname(join(dir,p)),{recursive:true});writeFileSync(join(dir,p),'fixture, never real data')}
  const checked=run(['check-ignore','--no-index','--stdin','-z'],candidates.join('\0')+'\0');
@@ -28,7 +28,7 @@ test('reviewed asset allowlist includes the existing public site and rejects unk
 test('Worker denies private assets and encoded variants before reaching the asset binding; private shells remain embeddable and no-store',async()=>{
  let reads=0;const env={ASSETS:{async fetch(){reads++;return new Response('synthetic asset',{headers:{'Cache-Control':'public, max-age=86400','Content-Type':'text/html'}})}}};
  const call=path=>worker.fetch(new Request('https://sandy-isolation.test'+path),env);
- for(const p of ['/backend/RECOVERY.md','/backend/recovery/owner-recovery.mjs','/worker/auth.mjs','/tests/gate-a-owner-recovery.integration.mjs','/studio/backend/schema.sql','/.env','/.git/config','/wrangler.jsonc','/backup.sqlite','/assets/private-photo.png','/backend%2frecovery%2fowner-recovery.mjs','/%62ackend/RECOVERY.md','/assets/%252e%252e/worker/auth.mjs','/api','/api%2frecords']){
+ for(const p of ['/backend/RECOVERY.md','/backend/recovery/owner-recovery.mjs','/worker/auth.mjs','/tests/gate-a-owner-recovery.integration.mjs','/studio/backend/schema.sql','/studio/PLFC-PARITY.md','/.env','/.git/config','/wrangler.jsonc','/backup.sqlite','/assets/private-photo.png','/backend%2frecovery%2fowner-recovery.mjs','/%62ackend/RECOVERY.md','/assets/%252e%252e/worker/auth.mjs','/api','/api%2frecords']){
   const response=await call(p);assert.equal(response.status,404,p);assert.match(response.headers.get('Cache-Control'),/no-store/);
  }
  assert.equal(reads,0);

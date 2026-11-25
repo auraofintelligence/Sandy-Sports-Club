@@ -59,7 +59,7 @@
 @media(max-width:980px){.club-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.club-auth-layout{grid-template-columns:1fr 1fr}.club-grid-two{grid-template-columns:1fr}}
 @media(max-width:650px){.club-app{padding:1rem .7rem 2.4rem}.club-tabs{flex-wrap:nowrap;overflow-x:auto}.club-tabs button{white-space:nowrap;flex:0 0 auto;font-size:.77rem}.club-section{padding:.8rem}.club-form-grid,.club-auth-layout{grid-template-columns:1fr}.club-record-card{flex-wrap:wrap}.club-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* One PLFC-style clubhouse navigation surface, instead of scattered wrapping tabs. */
+/* Compact clubhouse navigation. */
 .clubhouse-menu{margin:1rem 0;border:1px solid #b5d1d0;border-radius:14px;background:#f5faf8;overflow:hidden}
 .clubhouse-menu>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem;min-height:60px;padding:.9rem 1.1rem;cursor:pointer;color:#174f58}
 .clubhouse-menu>summary::-webkit-details-marker{display:none}
@@ -88,7 +88,7 @@
 .club-invite-pending{display:block;color:#315f55;font-size:.75rem;line-height:1.35;margin:.25rem 0}
 @media(max-width:650px){.club-tool-frame{min-height:1200px}.club-private-invite{padding:.75rem}}
 
-/* Verified PLFC V1.2 source, visibly separated from Sandy's editable proposed constitution. */
+/* Constitution reference layout. */
 .club-constitution-reference{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem 1rem;padding:1rem;margin:1rem 0;border:1px solid #b0d3c8;border-radius:12px;background:#f0faf4}
 .club-constitution-reference strong{flex:1 1 100%;font-size:1rem;color:#194f48}
 .club-constitution-reference a{display:inline-flex;align-items:center;min-height:42px;padding:.55rem .85rem;border:1px solid #0a7481;border-radius:8px;background:#0a7481;color:#fff;text-decoration:none;font-weight:750}
@@ -267,7 +267,7 @@
 @media(max-width:950px){.clubhouse-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.clubhouse-quick-grid{grid-template-columns:1fr}}
 
-/* Compact PLFC-style committee overview and desk navigation. */
+/* Compact committee overview and desk navigation. */
 .committee-navigation{margin:0 0 .8rem;scroll-margin-top:1rem;min-width:0}
 .committee-switcher{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;padding:.7rem;border:1px solid #b5d1d0;border-radius:10px;background:#eff7f5}
 .committee-switcher label{font-size:.8rem;font-weight:800;color:#174f58}
@@ -319,3 +319,34 @@
 
 @page sandy-worklist{size:A4;margin:12mm}
 @media print{#ops-paper-worklist{page:sandy-worklist}}
+
+/* Dedicated meeting register and agenda/minutes lifecycle. */
+.meeting-workspace{min-width:0;border:1px solid #bed9d4;border-radius:12px;padding:1rem;background:#f7fbf9}
+.meeting-desk-head,.meeting-register-bar,.meeting-register-card,.meeting-current-head,.meeting-stage-tools{display:flex;gap:.75rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.meeting-desk-head>div,.meeting-register-card>div,.meeting-current-head>div{flex:1 1 280px;min-width:0}
+.meeting-desk-head h3,.meeting-current-head h3{color:#164f59;margin:.2rem 0}.meeting-desk-head p,.meeting-register-card p,.meeting-current-head p{margin:.35rem 0;font-size:.9rem}
+.meeting-workspace button{min-height:42px;border:1px solid #9cbfb9;border-radius:8px;background:white;color:#075f6d;padding:.5rem .75rem;font:inherit;font-size:.85rem;font-weight:750;cursor:pointer}
+.meeting-workspace button:hover{background:#e3f2ed}.meeting-workspace button:disabled{opacity:.55;cursor:not-allowed}
+.meeting-workspace label{display:grid;gap:.3rem;font-size:.85rem;font-weight:750;min-width:0}
+.meeting-workspace input:not([type=checkbox]),.meeting-workspace select,.meeting-workspace textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #abcac3;border-radius:8px;background:white;padding:.5rem;min-height:42px;font:inherit}
+.meeting-register-bar label{flex:1 1 260px}.meeting-register-bar{margin:.8rem 0}
+.meeting-register-details,.meeting-create,.meeting-section,.meeting-agenda-item{border:1px solid #c1d9d3;border-radius:10px;margin:.7rem 0;padding:.65rem .85rem;background:white}
+.meeting-workspace details>summary{cursor:pointer;font-weight:800;color:#174f58;min-height:30px}
+.meeting-register-list{display:grid;gap:.5rem}.meeting-register-card{padding:.7rem;border:1px solid #dce9e4;border-radius:8px}.meeting-register-card small,.meeting-current-head small{font-size:.8rem;color:#547078}
+.meeting-create fieldset{display:grid;gap:.7rem;margin:0;padding:.6rem 0;border:0;min-width:0}.meeting-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin:.5rem 0}
+.meeting-current{margin-top:1rem;padding:.8rem;background:white;border:1px solid #c7ded9;border-radius:10px}.meeting-current-head{padding:.6rem 0}
+.meeting-state{padding:.35rem .65rem;border-radius:15px;background:#e4f2ed;color:#19565f;font-size:.78rem;font-weight:800}
+.meeting-stage-nav{display:flex;flex-wrap:wrap;gap:.4rem;background:#edf6f1;padding:.5rem;border-radius:9px;margin:.7rem 0}
+.meeting-stage-nav button{flex:1 1 115px}.meeting-stage-nav button span{display:inline-grid;place-items:center;border-radius:50%;background:#daeae4;width:23px;height:23px;margin-right:.45rem}.meeting-stage-nav button[aria-current=step]{background:#075f6d;color:white}.meeting-stage-nav button[aria-current=step] span{color:#075f6d}
+.meeting-stage-panel{display:grid;gap:.6rem;min-width:0}.meeting-stage-panel h4{margin:.25rem 0;color:#174f58}
+.meeting-stage-tools{justify-content:flex-start;margin:.4rem 0}.meeting-stage-tools h4{flex:1 1 180px}
+.meeting-item-body,.meeting-motion,.meeting-action,.meeting-suggestions{display:grid;gap:.6rem;padding:.75rem;border:1px solid #d3e6de;border-radius:8px;margin:.5rem 0}
+.meeting-motion{background:#f4f9f6}.meeting-note,.meeting-suggestions{background:#edf6f1;padding:.65rem;border-radius:8px;font-size:.88rem}.meeting-pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.meeting-workspace .meeting-check{display:flex;align-items:center;gap:.55rem}.meeting-check input{width:20px;height:20px}.meeting-workspace video{max-width:100%;max-height:320px}.meeting-workspace [data-meeting-message]{font-weight:750;color:#155e58}.meeting-workspace [data-meeting-message].bad{color:#9c2c22}
+@media(max-width:700px){.meeting-fields{grid-template-columns:1fr}.meeting-workspace,.meeting-current{padding:.65rem}.meeting-stage-nav button{flex-basis:43%}}
+
+/* The room introduction is separate from the collapsible directory and sticky switcher. */
+#committee-room-heading{padding:1rem 1.15rem;margin:.8rem 0;scroll-margin-top:1rem}
+#committee-room-heading h2{font-size:clamp(1.35rem,2.3vw,1.9rem);color:#164f59}
+#committee-room-heading>p:last-child{margin:.35rem 0 0;line-height:1.5}
+#committee-room-heading[hidden]{display:none!important}
