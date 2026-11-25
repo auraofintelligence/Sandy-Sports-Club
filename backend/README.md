@@ -59,3 +59,7 @@ Both owner role previews and independent showcase require a new D1 binding named
 4. Verify the fixture binding in an isolated deployment before the live Worker changes. All view mutations and private member export are denied. Synthetic exports can be inspected. Missing, mixed or wrong bindings fail closed.
 
 Cloudflare provisioning, actual browser workflows and restore rehearsal require additional evidence. The fixture generator and SQLite integration tests do not change live resources.
+
+## Recovery rehearsal and release controls
+
+See [Sandy recovery and release runbook](RECOVERY.md). The isolated SQL export/restore integration test does not read or modify live D1 and does not certify production backup or recovery.
