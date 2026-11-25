@@ -65,7 +65,7 @@ async function saveWish(db,identity,data){
 }
 export async function memberWorkspaceEndpoint(req,env,path,identity){
  if(path==='/api/member/preview'&&req.method==='GET'){
-  requireRole(identity,['webmaster','webmaster_demo']);
+  requireRole(identity,env.SANDY_SYNTHETIC_VIEW===true?['webmaster','member']:['webmaster','webmaster_demo']);
   return json({synthetic:true,
    profile:{name:'Illustrative demo member',town:'Example island locality',status:'preview only',membershipClass:'sample, not enrolled'},
    sports:['Mixed beach volleyball','Beach cricket'],filmClub:true,volunteer:true,

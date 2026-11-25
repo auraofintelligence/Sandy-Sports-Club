@@ -10,6 +10,7 @@ import {memberEndpoint} from './member.mjs';
 import {suiteEndpoint} from './suite.mjs';
 import {memberWorkspaceEndpoint} from './member-workspace.mjs';
 import {helpEndpoint} from './help.mjs';
+import {viewMode} from './view-mode.mjs';
 
 const defaults={
  'Cache-Control':'no-store, private',
@@ -31,6 +32,9 @@ async function handle(req,env){
  if(!path.startsWith('/api/'))return env.ASSETS?.fetch(req)||new Response('Static assets not configured.',{status:503});
  if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
  if(!['GET','HEAD'].includes(req.method))verifySameOrigin(req);
+ return viewMode(req,env,path,route);
+}
+async function route(req,env,path,effectiveIdentity){
  if(path==='/api/public-config'&&req.method==='GET')
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
    publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
@@ -39,7 +43,7 @@ async function handle(req,env){
   return respond({service:'sandy-club',storageConfigured:Boolean(env.DB?.prepare),
    authConfigured:Boolean(env.SANDY_AUTH_PEPPER?.length>=32),operationalApprovals:env.SANDY_CLUB_APPROVALS==='enabled',
    livePublishing:false,smsEnabled:false,paymentsEnabled:false});
- const identity=await identityFor(req,env);
+ const identity=effectiveIdentity===undefined?await identityFor(req,env):effectiveIdentity;
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);

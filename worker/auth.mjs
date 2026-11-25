@@ -53,7 +53,7 @@ export async function authEndpoint(req,env,path,identity){
  if(path==='/api/session'&&req.method==='GET')return json({authenticated:Boolean(identity),
   storageReady:Boolean(env.DB?.prepare),authReady:Boolean(env.SANDY_AUTH_PEPPER&&env.SANDY_AUTH_PEPPER.length>=32),
   identity:identity?{id:identity.id,username:identity.username,name:identity.name,role:identity.role,office:identity.office_label}:null,
-  mode:'shared-worker',sharedRecords:!!env.DB?.prepare,clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled'});
+  mode:'shared-worker',sharedRecords:!!env.DB?.prepare,clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',readOnly:false,viewContext:'live',canSwitchView:identity?.role==='webmaster',showcaseConfigured:Boolean(env.SANDY_SHOWCASE_DB?.prepare)});
  const db=dbFor(env);
  if(path==='/api/auth/bootstrap'&&req.method==='POST'){
   requireCrypto(env);

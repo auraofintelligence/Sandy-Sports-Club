@@ -48,3 +48,14 @@ These tests **do not replace live authenticated acceptance testing** against the
 Cloudflare GitHub Builds automatically deploys `main` using `npx wrangler deploy`. This release uses existing `club_records`, `club_revisions` and `club_audit` tables. No new D1 database, secret, ZIP upload or paid service is required for these workflow screens.
 
 Preserve PLFC's separate Worker, keys and database; they are not changed by Sandy commits.
+
+## Separate read-only showcase and role previews (Gate A)
+
+Both owner role previews and independent showcase require a new D1 binding named `SANDY_SHOWCASE_DB`. Owner previews use an HttpOnly signed cookie bound to the real Webmaster session; the independent showcase has its own high-entropy secret and no real account. The view has precedence over any live cookie and cannot fall back to live data. No production binding or deployment settings have been changed.
+
+1. Create a NEW isolated D1 database, for example `sandy-sports-showcase`, never the existing Sandy or PLFC database. Do not copy production data or credentials.
+2. Generate fresh synthetic SQL with `node backend/showcase/seed.mjs > /tmp/sandy-showcase.sql`. Verify the new database's ID and name before executing only there. The generator refuses an existing club schema at the first CREATE TABLE, produces example desks/history/help/Studio, fictional reserved officers and exactly one unlinked member. It does not emit DROP or DELETE. Do not apply the original migration first.
+3. Configure `SANDY_SHOWCASE_DB` to the new database. For independent access configure Cloudflare secret `SANDY_SHOWCASE_KEY` with 64 cryptographically random lowercase hexadecimal characters, never commit or share the key publicly. Use a separate browser session for independent sign-in. No actual invitations are created.
+4. Verify the fixture binding in an isolated deployment before the live Worker changes. All view mutations and private member export are denied. Synthetic exports can be inspected. Missing, mixed or wrong bindings fail closed.
+
+Cloudflare provisioning, actual browser workflows and restore rehearsal require additional evidence. The fixture generator and SQLite integration tests do not change live resources.
