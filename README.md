@@ -8,6 +8,8 @@ The digital clubhouse adapts the architecture and useful workflows of the Point 
 
 **README reviewed: 25 November 2026. Source snapshot: 24 November 2026.**
 
+**Development acceptance:** [Master PLFC functional parity matrix](studio/PLFC-PARITY.md). Consult this before implementing or claiming any workflow complete; update its evidence as work proceeds.
+
 ## Current deployment and public entry points
 
 [Open Sandy Sports Club](https://sandy-sports-club.auraofintelligence.workers.dev/)
@@ -99,7 +101,7 @@ No automatic posting, SMS, ad purchase, external commission or publication appro
 
 Earlier [Social Studio preview](social-studio-preview.html), [simple social planner](social-planner.html) and [founding committee demo](committee.html) are preserved as separate browser-local work. Imports require a deliberate review and save; local drafts are not official records.
 
-The [PLFC comparison notes](studio/PLFC-PARITY.md) describe an earlier stage of implementation. Their local-only/backend-not-deployed statements are historical and must be read alongside the newer [backend notes](backend/README.md), current Worker and shared Studio adapters.
+The [master PLFC functional parity matrix](studio/PLFC-PARITY.md) is the single acceptance and development reference for the entire Sandy clubhouse, including Social Studio. Its row-specific scenarios and common definition of done govern parity claims; source inspection, a matching interface or a green general CI run alone do not establish acceptance.
 
 ## Remaining PLFC-equivalence work
 
