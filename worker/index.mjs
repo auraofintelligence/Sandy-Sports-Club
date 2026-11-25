@@ -13,6 +13,7 @@ import {helpEndpoint} from './help.mjs';
 import {viewMode} from './view-mode.mjs';
 import {safeguardsEndpoint} from './member-safeguards.mjs';
 import {libraryEndpoint} from './library.mjs';
+import {meetingWorkspaceEndpoint} from './meeting-workspace.mjs';
 import {committeeOpsEndpoint} from './committee-ops.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
@@ -72,6 +73,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/interest'||path.startsWith('/api/interest/'))
   return interestEndpoint(req,env,path,identity);
  if(path==='/api/committee/notices'||path==='/api/committee/todos')return committeeOpsEndpoint(req,env,path,identity);
+ if(path==='/api/committee/meeting-workspace'||path.startsWith('/api/committee/meeting-workspace/'))return meetingWorkspaceEndpoint(req,env,path,identity);
  if(path.startsWith('/api/suite/'))return suiteEndpoint(req,env,path,identity);
  if(path==='/api/webmaster/requests'||path.startsWith('/api/webmaster/requests/'))
   return helpEndpoint(req,env,path,identity);

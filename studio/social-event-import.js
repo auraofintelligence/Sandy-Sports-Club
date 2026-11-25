@@ -39,7 +39,8 @@ export function meetingCandidates(meetings,startMonth){
   return meetings.filter(x=>limitWindow(x?.date,startMonth)&&
     typeof x.title==='string'&&x.title.trim()&&typeof x.id==='string').map(x=>({
     id:importKey('meeting',x.id),title:x.title.trim().slice(0,140),date:x.date,kind:'meeting',
-    origin:'Committee meeting register',status:x.status==='approved'?'Meeting record approved':'Meeting working record',
+    origin:'Committee meeting register',status:x.status==='approved'?'Meeting record approved':x.status==='cancelled'?'Cancelled meeting: remove from promotion':'Meeting working record',
+    inactive:x.status==='cancelled',
     description:String(x.location||'').slice(0,250)
   }));
 }

@@ -76,6 +76,7 @@ async function changed(db,desk,identity,recordId,request){
  const current=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
  const before=validBody(current,desk);
  if(!before||!suiteAllowed(current,desk,identity))fail(404,'That Sandy working record was not found in this area.','record_not_found');
+ if(before.meetingWorkspace)fail(409,'Use the dedicated meeting workspace for this record.','dedicated_workflow');
  if(before.committeeOps)fail(409,'Use the dedicated committee noticeboard or officer task list for this record.','dedicated_workflow');
  const expected=version(request.version);
  if(expected!==current.version)fail(409,'Another officer edited this record. Reload the latest version.','conflict');

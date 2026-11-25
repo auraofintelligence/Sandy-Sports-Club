@@ -21,6 +21,7 @@ export async function suiteActionEndpoint(req,env,path,identity){
  const db=dbFor(env),row=await db.prepare('SELECT * FROM club_records WHERE id=? AND kind=?').bind(recordId,domain==='stock'?'asset':'meeting').first();
  const body=readRecord(row,domain),request=await payload(req,5000),at=now();
  if(domain==='meetings'){
+  if(body.meetingWorkspace)fail(409,'Use the linked follow-up register in the meeting workspace.','dedicated_workflow');
   if(version(request.version)!==row.version)fail(409,'The meeting has changed. Reload before creating its follow-ups.','conflict');
   const lines=String(body.fields.followUps||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   if(!lines.length)fail(400,'Add actual follow-up actions to the meeting record before creating tasks.','no_followups');
