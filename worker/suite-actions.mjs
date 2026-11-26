@@ -59,8 +59,20 @@ export async function suiteActionEndpoint(req,env,path,identity){
  const direction=field(request.direction,20),qty=Number(request.quantity),note=field(request.note,500),expected=version(request.version);
  const mutationId=request.mutationId;
  if(mutationId!==undefined&&(typeof mutationId!=='string'||!isUuid(mutationId)))fail(400,'Use a valid stock movement request ID.','invalid_mutation');
- if(!['receive','issue'].includes(direction)||!Number.isInteger(qty)||qty<1||qty>100000)
-  fail(400,'Choose Receive or Issue and a positive whole quantity.','invalid_movement');
+ // receive/issue move stock; count records a stocktake; adjust is a reasoned correction.
+ const signed=direction==='adjust';
+ if(!['receive','issue','count','adjust'].includes(direction)||!Number.isInteger(qty)||(direction==='count'?qty<0:signed?qty===0:qty<1)||Math.abs(qty)>100000)
+  fail(400,'Choose Receive, Issue, Count or Adjust with a whole quantity.','invalid_movement');
+ if(signed&&!note)fail(400,'Record the reason for a stock correction.','reason_required');
+ let unitCost=null;
+ if(direction==='receive'&&request.unitCost!==undefined&&request.unitCost!==null&&request.unitCost!==''){
+  unitCost=Number(request.unitCost);if(!Number.isFinite(unitCost)||unitCost<0||unitCost>1e6)fail(400,'Use a valid unit cost in AUD.','invalid_cost');
+  unitCost=Math.round(unitCost*100)/100;
+ }
+ const supplier=direction==='receive'?field(request.supplier,150):'';
+ const today=new Date(Date.now()+36e6).toISOString().slice(0,10);
+ const movementDate=request.movementDate?dateField(request.movementDate,false):today;
+ if(movementDate>today)fail(400,'A movement cannot be dated in the future.','future_movement');
  const replay=async()=>{
   if(!mutationId)return null;
   const old=await db.prepare("SELECT resource_version,actor_id,changes_json FROM club_revisions WHERE resource_kind='record' AND resource_id=? AND json_extract(changes_json,'$.mutationId')=? LIMIT 1").bind(recordId,mutationId).first();
@@ -73,21 +85,23 @@ export async function suiteActionEndpoint(req,env,path,identity){
  const previous=await replay();if(previous)return previous;
  if(expected!==row.version)fail(409,'Stock changed. Reload the latest balance before recording this movement.','conflict');
  if(row.status==='approved'||row.status==='archived')fail(409,'This stock record is locked. Open an authorised working record.','locked');
- const fields={...body.fields},opening=Number(fields.opening||0),inward=Number(fields.inward||0),outward=Number(fields.outward||0);
- const available=opening+inward-outward;
- if(direction==='issue'&&qty>available)fail(409,'Not enough stock is available to issue that quantity.','insufficient_stock');
- fields.inward=inward+(direction==='receive'?qty:0);
- fields.outward=outward+(direction==='issue'?qty:0);
- const nextVersion=row.version+1,newBalance=opening+Number(fields.inward||0)-Number(fields.outward||0);
- const nextBody=JSON.stringify({...body,fields});
+ const fields={...body.fields},ops={adjust:0,...(body.stockOps||{})},opening=Number(fields.opening||0),inward=Number(fields.inward||0),outward=Number(fields.outward||0);
+ const available=opening+inward-outward+Number(ops.adjust||0);
+ const delta=direction==='receive'?qty:direction==='issue'?-qty:direction==='count'?qty-available:qty;
+ if(available+delta<0)fail(409,direction==='issue'?'Not enough stock is available to issue that quantity.':'A correction cannot take stock below zero.','insufficient_stock');
+ if(direction==='receive')fields.inward=inward+qty;
+ if(direction==='issue')fields.outward=outward+qty;
+ if(direction==='count'||signed)ops.adjust=Number(ops.adjust||0)+delta;
+ const nextVersion=row.version+1,newBalance=available+delta;
+ const nextBody=JSON.stringify({...body,fields,stockOps:ops});
  const [saved]=await db.batch([
   db.prepare("UPDATE club_records SET body_json=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND kind='asset' AND status NOT IN ('approved','archived')")
    .bind(nextBody,identity.id,at,recordId,row.version),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action:'stock_'+direction,actor:identity,at,
-   changes:{direction,quantity:qty,note,balanceBefore:available,balanceAfter:newBalance,fromVersion:expected,toVersion:nextVersion,...(mutationId?{mutationId}:{})},snapshot:{title:row.title,status:row.status,fields,balance:newBalance},guarded:true}),
+   changes:{direction,quantity:qty,delta,note,balanceBefore:available,balanceAfter:newBalance,movementDate,...(unitCost!==null?{unitCost}:{}),...(supplier?{supplier}:{}),fromVersion:expected,toVersion:nextVersion,...(mutationId?{mutationId}:{})},snapshot:{title:row.title,status:row.status,fields,stockOps:ops,balance:newBalance},guarded:true}),
   audit(db,identity,'stock_'+direction,'record',recordId,at,true,{fromVersion:expected,toVersion:nextVersion})
  ]);
  if(!saved.meta.changes){const previous=await replay();if(previous)return previous;fail(409,'Stock changed during this movement. Reload it.','conflict');}
- return json({ok:true,version:nextVersion,balance:newBalance,direction,quantity:qty,
+ return json({ok:true,version:nextVersion,balance:newBalance,direction,quantity:qty,delta,
   notice:'The movement and its officer attribution were recorded in Sandy D1. No sale or payment was processed.'});
 }

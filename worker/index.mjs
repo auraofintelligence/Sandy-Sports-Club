@@ -17,6 +17,7 @@ import {committeeOpsEndpoint} from './committee-ops.mjs';
 import {meetingsEndpoint} from './meetings.mjs';
 import {runSheetEndpoint} from './run-sheets.mjs';
 import {applicationsEndpoint} from './applications.mjs';
+import {financeEndpoint} from './finance.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -79,6 +80,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/committee/meetings'||path.startsWith('/api/committee/meetings/')||path.startsWith('/api/committee/minutes/')||path.startsWith('/api/committee/agm/')||path==='/api/committee/reminders')
   return meetingsEndpoint(req,env,path,identity);
  if(path==='/api/apply'||path==='/api/committee/applications'||path.startsWith('/api/committee/applications/'))return applicationsEndpoint(req,env,path,identity);
+ if(path.startsWith('/api/committee/finance/')||path.startsWith('/api/committee/equipment/'))return financeEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/events/'))return runSheetEndpoint(req,env,path,identity);
  if(path.startsWith('/api/suite/'))return suiteEndpoint(req,env,path,identity);
  if(path==='/api/webmaster/requests'||path.startsWith('/api/webmaster/requests/'))

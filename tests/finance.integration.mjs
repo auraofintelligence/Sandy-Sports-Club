@@ -1,0 +1,108 @@
+// FIN-01, FIN-04, FIN-05, FIN-06: stock ledger, stocktake and corrections, period
+// reports with missing costs and date boundaries, treasurer price control, and
+// equipment loans. Isolated fictional data; no sale, payment or message.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {fixture} from './d1-fixture.mjs';
+import {periodFor} from '../worker/finance.mjs';
+const EVIDENCE='https://example.test/fictional-price-resolution';
+const plus=n=>new Date(Date.now()+36e6+n*864e5).toISOString().slice(0,10);
+async function item(call,title,fields){return (await call('treasurer','/api/suite/stock','POST',{title,fields:{category:'Club shirts',...fields}},201)).id}
+const mv=(call,who,id,body,status)=>call(who,'/api/suite/stock/'+id+'/movement','POST',body,status);
+test('fiscal periods default to 1 July and respect quarter and month boundaries',()=>{
+ assert.deepEqual(periodFor('year','2026-07-15',7),{from:'2026-07-01',to:'2027-07-01',label:'year'});
+ assert.deepEqual(periodFor('year','2026-06-30',7),{from:'2025-07-01',to:'2026-07-01',label:'year'});
+ assert.deepEqual(periodFor('quarter','2026-08-10',7),{from:'2026-07-01',to:'2026-10-01',label:'quarter'});
+ assert.deepEqual(periodFor('quarter','2027-01-31',7),{from:'2027-01-01',to:'2027-04-01',label:'quarter'});
+ assert.deepEqual(periodFor('month','2026-12-05',7),{from:'2026-12-01',to:'2027-01-01',label:'month'});
+ assert.deepEqual(periodFor('year','2026-03-01',1),{from:'2026-01-01',to:'2027-01-01',label:'year'});
+});
+test('receive, issue, count and correct keep one reconciled ledger; reports add up',async t=>{
+ const {call,count}=fixture(t);
+ const shirt=await item(call,'Fictional club shirt',{sku:'FS-01',opening:10,price:20}),cap=await item(call,'Fictional cap',{sku:'FC-01',opening:4});
+ let v=1;const step=async(body,who='treasurer')=>{const r=await mv(call,who,shirt,{version:v,...body});v=r.version;return r};
+ await step({direction:'receive',quantity:20,unitCost:5,supplier:'Fictional printer',movementDate:'2026-06-30'});
+ await step({direction:'receive',quantity:10,movementDate:'2026-07-01'});
+ const id=crypto.randomUUID();
+ await step({direction:'issue',quantity:8,movementDate:'2026-07-02',mutationId:id,note:'Fictional event kit'});
+ assert.equal((await mv(call,'treasurer',shirt,{version:v-1,direction:'issue',quantity:8,movementDate:'2026-07-02',mutationId:id,note:'Fictional event kit'})).replayed,true);
+ assert.equal((await step({direction:'count',quantity:30,movementDate:'2026-08-15',note:'Fictional stocktake'})).delta,-2);
+ await mv(call,'treasurer',shirt,{version:v,direction:'adjust',quantity:1},400);
+ await step({direction:'adjust',quantity:1,movementDate:'2026-10-05',note:'Found one in the van'});
+ await mv(call,'treasurer',shirt,{version:v,direction:'issue',quantity:100},409);
+ await mv(call,'treasurer',shirt,{version:v,direction:'adjust',quantity:-100,note:'x'},409);
+ await mv(call,'treasurer',shirt,{version:v,direction:'receive',quantity:1,movementDate:plus(5)},400);
+ await mv(call,'sec',shirt,{version:v,direction:'issue',quantity:1},403);
+ // Two officers issuing at once cannot both draw on the same balance.
+ const both=await Promise.all([mv(call,'treasurer',shirt,{version:v,direction:'issue',quantity:20,movementDate:'2026-11-20'}).then(()=>'ok',()=>'refused'),mv(call,'web',shirt,{version:v,direction:'issue',quantity:20,movementDate:'2026-11-20'}).then(()=>'ok',()=>'refused')]);
+ assert.deepEqual(both.sort(),['ok','refused']);v++;
+ const L=await call('web','/api/committee/finance/stock/'+shirt+'/ledger');
+ assert.equal(L.balance,11);assert.equal(L.reconciles,true);assert.equal(L.movements.length,6);
+ assert.equal(count('club_revisions',"resource_id=? AND operation='stock_issue'",shirt),2);
+ const e=(await call('treasurer','/api/suite/stock/'+shirt)).record;
+ await call('treasurer','/api/suite/stock/'+shirt,'PATCH',{version:e.version,title:e.title,fields:{...e.fields,opening:50}},409);
+ await call('treasurer','/api/suite/stock/'+shirt,'PATCH',{version:e.version,title:'Fictional club shirt (navy)',fields:e.fields});
+ const R=q=>call('treasurer','/api/committee/finance/stock-report?'+q);
+ const fy=(await R('period=year&date=2026-07-15')),s=fy.items.find(i=>i.id===shirt);
+ assert.deepEqual([s.openingBalance,s.received,s.receivedCost,s.issued,s.adjusted,s.closingBalance,s.missingCostReceipts],[30,10,0,28,-1,11,1]);
+ assert.equal(s.averageUnitCost,5);assert.equal(s.valuation,55);assert.equal(s.costBasis,'recorded deliveries');
+ const c=fy.items.find(i=>i.id===cap);assert.equal(c.costBasis,'missing');assert.equal(c.valuation,null);
+ assert.equal(fy.totals.itemsMissingCost,1);assert.equal(fy.period.fiscalYearStartMonth,7);
+ const q=(await R('period=quarter&date=2026-08-10')).items.find(i=>i.id===shirt);
+ assert.deepEqual([q.openingBalance,q.received,q.issued,q.adjusted,q.closingBalance],[30,10,8,-2,30]);
+ const june=(await R('period=month&date=2026-06-15')).items.find(i=>i.id===shirt);
+ assert.deepEqual([june.openingBalance,june.received,june.receivedCost,june.closingBalance,june.valuation],[10,20,100,30,150]);
+ const csv=await call('treasurer','/api/committee/finance/stock-report?period=year&date=2026-07-15&format=csv');
+ assert.match(csv,/^title,sku,opening/);assert.match(csv,/Fictional club shirt \(navy\),FS-01,30,10,0,28,-1,11,5,recorded deliveries,55/);
+ for(const who of ['other','vp','sec','pres'])await call(who,'/api/committee/finance/stock-report','GET',undefined,403);
+ await call('treasurer','/api/committee/finance/stock-report?period=decade','GET',undefined,400);
+});
+test('price changes are proposed by the treasurer, approved separately and alerted once',async t=>{
+ const {call,env}=fixture(t);
+ const shirt=await item(call,'Fictional club shirt',{price:20});
+ const P='/api/committee/finance/stock/'+shirt+'/price',mutationId=crypto.randomUUID();
+ const proposal={action:'propose',price:25,effectiveDate:'2027-01-01',reason:'Fictional supplier increase',version:1,mutationId};
+ for(const who of ['other','pres','sec'])await call(who,P,'POST',proposal,403);
+ const p=await call('treasurer',P,'POST',proposal,201);
+ assert.equal((await call('treasurer',P,'POST',proposal)).replayed,true);
+ let alerts=(await call('web','/api/committee/finance/price-alerts')).alerts;
+ assert.deepEqual(alerts.map(a=>[a.old,a.new,a.state]),[[20,25,'proposed']]);
+ let r=(await call('treasurer','/api/suite/stock/'+shirt)).record;assert.equal(r.fields.price,20,'unconfirmed price stays a draft');
+ await call('treasurer','/api/suite/stock/'+shirt,'PATCH',{version:r.version,title:r.title,fields:{...r.fields,price:30}},409);
+ await call('web',P,'POST',{action:'approve',changeId:p.id,evidence:EVIDENCE,version:2},409);
+ env.SANDY_CLUB_APPROVALS='enabled';
+ await call('treasurer',P,'POST',{action:'approve',changeId:p.id,evidence:EVIDENCE,version:2},403);
+ await call('web',P,'POST',{action:'approve',changeId:p.id,version:2},400);
+ await call('web',P,'POST',{action:'approve',changeId:p.id,evidence:EVIDENCE,version:2});
+ await call('web',P,'POST',{action:'approve',changeId:p.id,evidence:EVIDENCE,version:3},409);
+ r=(await call('treasurer','/api/suite/stock/'+shirt)).record;assert.equal(r.fields.price,25);
+ alerts=(await call('treasurer','/api/committee/finance/price-alerts')).alerts;
+ assert.equal(alerts.length,1);assert.equal(alerts[0].state,'approved');
+ const own=await call('web',P,'POST',{action:'propose',price:27,effectiveDate:'2027-02-01',reason:'Fictional',version:3},201);
+ await call('web',P,'POST',{action:'approve',changeId:own.id,evidence:EVIDENCE,version:4},403);
+ await call('treasurer',P,'POST',{action:'propose',price:25,effectiveDate:'2027-02-01',reason:'Same',version:4},400);
+});
+test('equipment loans: one item at a time, separate returns, overdue and condition history',async t=>{
+ const {call,sql}=fixture(t);
+ const mk=async tag=>(await call('sec','/api/suite/equipment','POST',{title:'Fictional beach net '+tag,fields:{assetType:'Sport net / court',tag,quantity:1,condition:'Serviceable'}},201)).id;
+ const a=await mk('NET-1'),b=await mk('NET-2'),L=id=>'/api/committee/equipment/'+id+'/loan';
+ await call('other',L(a),'POST',{action:'issue',holder:'Fictional Amity coach',dueDate:plus(-1),version:1},400);
+ await call('other',L(a),'POST',{action:'issue',holder:'',dueDate:plus(7),version:1},400);
+ const issued=await call('other',L(a),'POST',{action:'issue',holder:'Fictional Amity coach',dueDate:plus(7),version:1});
+ await call('sec',L(a),'POST',{action:'issue',holder:'Someone else',dueDate:plus(7),version:2},409);
+ await call('sec',L(a),'POST',{action:'issue',holder:'Someone else',dueDate:plus(7),version:1},409);
+ await call('sec',L(b),'POST',{action:'issue',holder:'Fictional Dunwich school',dueDate:plus(3),version:1});
+ let list=await call('treasurer','/api/committee/equipment/loans');assert.equal(list.onLoan,2);assert.equal(list.overdue,0);
+ await call('sec',L(a),'POST',{action:'return',condition:'Inspect',note:'One pole bent',version:issued.version});
+ await call('sec',L(a),'POST',{action:'return',version:issued.version+1},409);
+ sql.prepare("UPDATE club_records SET body_json=json_set(body_json,'$.loanOps.onLoan.due',?) WHERE id=?").run(plus(-2),b);
+ list=await call('treasurer','/api/committee/equipment/loans');
+ assert.equal(list.onLoan,1);assert.equal(list.overdue,1);assert.equal(list.items.find(i=>i.id===b).onLoan.daysOverdue,2);
+ const ha=list.items.find(i=>i.id===a);assert.equal(ha.condition,'Inspect');assert.deepEqual(ha.history.map(h=>h.event),['issued','returned']);
+ const rec=(await call('sec','/api/suite/equipment/'+b)).record;
+ assert.equal(rec.fields.holder,'Fictional Dunwich school');
+ await call('sec','/api/suite/equipment/'+b,'PATCH',{version:rec.version,title:rec.title,fields:{...rec.fields,holder:'Changed'}},409);
+ await call('sec',L(a),'POST',{action:'maintenance',condition:'Repair',note:'Pole sent for repair',version:issued.version+1});
+ await call('sec',L(a),'POST',{action:'issue',holder:'x',dueDate:plus(2),version:issued.version+2},409);
+ await call('member','/api/committee/equipment/loans','GET',undefined,403);
+});

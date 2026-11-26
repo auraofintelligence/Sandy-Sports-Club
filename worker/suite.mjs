@@ -54,6 +54,13 @@ function cleanFields(desk,input){
  if(JSON.stringify(fields).length>21000)fail(413,'This working draft is too long for one version.','too_large');
  return fields;
 }
+// Ledger-backed values change only through their dedicated, audited workflow.
+const same=(a,b,keys)=>keys.every(k=>String(a[k]??'')===String(b[k]??''));
+function lockedByWorkflow(desk,before,fields){
+ if(desk.key==='stock'&&before.stockOps&&!same(fields,before.fields,['opening','inward','outward']))fail(409,'Quantities follow the movement ledger. Record a receipt, issue, count or correction instead.','use_movements');
+ if(desk.key==='stock'&&before.priceOps&&!same(fields,before.fields,['price']))fail(409,'Prices change through the treasurer price control.','price_control');
+ if(desk.key==='equipment'&&before.loanOps&&!same(fields,before.fields,['holder','outDate','returnDate','returned']))fail(409,'Loans are recorded through the equipment loan workflow.','use_loans');
+}
 function dueDate(fields){
  return ['date','eventDate','closingDate','dueDate','reviewDate','agmDate','sendAfter','received','targetDate'].map(k=>fields[k]).find(v=>/^\d{4}-\d{2}-\d{2}$/.test(v||''))||null;
 }
@@ -85,6 +92,7 @@ async function changed(db,desk,identity,recordId,request){
  if(current.status==='approved')fail(409,'A formally approved record cannot be changed as a working draft.','locked');
  const fields=cleanFields(desk,request.fields),title=field(request.title,180),status=checkStatus(request);
  if(!title)fail(400,'Enter a working title.','title_required');
+ lockedByWorkflow(desk,before,fields);
  const at=now(),nextVersion=expected+1,body={...before,fields};
  // The origin is server-owned; editing a task cannot sever its original meeting link.
  if(desk.key==='todos'&&before.sourceMeeting)fields.linkedDesk=before.sourceMeeting;
