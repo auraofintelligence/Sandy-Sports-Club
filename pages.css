@@ -139,7 +139,7 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .site-header .nav-sport-list a.nav-rules{flex:none;font-size:.76rem;font-weight:800;color:#ffcb68;text-decoration:underline;text-underline-offset:4px}
 .site-header .nav-sub a:focus-visible,.site-header .nav-sub-toggle:focus-visible{outline:3px solid #ffbf4f;outline-offset:2px}
 @media(max-width:1600px){
-  .site-header nav,.site-header nav.open{flex-wrap:nowrap}
+  .site-header nav,.site-header nav.open{flex-wrap:nowrap;justify-content:flex-start}
   .site-header nav .nav-group{display:grid;grid-template-columns:1fr auto;align-items:center;flex:none}
   .site-header nav>a{flex:none}
   .site-header nav .nav-sub{position:static;grid-column:1/-1;width:auto;margin:.35rem 0 .5rem;padding:.75rem;border-radius:14px;background:#0c2433;box-shadow:none}

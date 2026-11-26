@@ -24,7 +24,7 @@ test('the sports menu is a keyboard accessible disclosure that works in the mobi
  assert.ok(site.includes('<div class="nav-sub" id="nav-sports" hidden>'));
  assert.ok(site.includes("e.key!=='Escape'"),'Escape closes the menu');
  assert.match(css,/\.nav-sub-toggle\{[^}]*min-width:44px;min-height:44px/);
- assert.match(css,/@media\(max-width:1600px\)\{\n  \.site-header nav,\.site-header nav\.open\{flex-wrap:nowrap\}\n  \.site-header nav \.nav-group\{display:grid/,'the Menu panel shows the sports list inline without wrapping into columns');
+ assert.match(css,/@media\(max-width:1600px\)\{\n  \.site-header nav,\.site-header nav\.open\{flex-wrap:nowrap;justify-content:flex-start\}\n  \.site-header nav \.nav-group\{display:grid/,'the Menu panel shows the sports list inline without wrapping into columns');
 });
 test('every public page loads the shared navigation',()=>{
  for(const f of PUBLIC_FILES.filter(f=>f.endsWith('.html'))){
