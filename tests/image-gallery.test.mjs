@@ -22,11 +22,11 @@ test('the gallery is public, noindex and outside the main navigation',()=>{
  assert.deepEqual(linkers,['webmaster.html'],'linked from the Webmaster page only');
 });
 
-test('section 1 shows all 19 originals, section 2 every newer image, each labelled',()=>{
- const orig=section('originals'),fresh=section('new');
+test('section 1 shows all 19 originals, section 2 every newer image, section 3 the proposed balanced set, each labelled',()=>{
+ const orig=section('originals'),fresh=section('new'),proposed=section('balanced');
  for(const f of ORIGINALS)assert.ok(orig.includes('<img src="/assets/'+f+'"'),f+' missing from Originals');
  const all=readdirSync(join(root,'assets')).filter(f=>/\.(webp|png|jpe?g)$/.test(f)&&!/-\d+w\./.test(f));
- for(const f of all.filter(f=>!ORIGINALS.includes(f)))assert.ok(fresh.includes('<img src="/assets/'+f+'"'),f+' missing from New');
+ for(const f of all.filter(f=>!ORIGINALS.includes(f)))assert.ok((/^balanced-/.test(f)?proposed:fresh).includes('<img src="/assets/'+f+'"'),f+' missing from its gallery section');
  for(const m of html.matchAll(/<figure class="gallery-item"><img src="\/assets\/([^"]+)"[^>]*><figcaption><strong>([^<]+)<\/strong> <span class="gallery-status (live|removed|unused)">/g))assert.equal(m[1],m[2]);
  const labelled=[...html.matchAll(/<figure class="gallery-item"><img /g)].length;
  const captioned=[...html.matchAll(/<span class="gallery-status (?:live|removed|unused)">/g)].length;

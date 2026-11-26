@@ -7,7 +7,7 @@ The page is noindex, outside the main navigation, linked only from the Webmaster
 and exempt from the zero-reuse and card image tests by design.
 Run after any image or page change: python3 tools/build-gallery.py
 """
-import os, re, subprocess
+import json, os, re, subprocess
 from html import escape
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -71,7 +71,10 @@ def main():
     os.chdir(ROOT)
     originals = sorted(f[7:] for f in git('ls-tree', '--name-only', BASE, 'assets/').split() if IMG.search(f))
     now_files = sorted(f for f in os.listdir('assets') if IMG.search(f) and not re.search(r'-\d+w\.', f))
-    new = [f for f in now_files if f not in originals]
+    # The balanced club set is proposed only: shown in its own section, not on any page.
+    balanced = json.load(open(os.path.join('tools', 'balanced-set.json')))
+    balanced_files = {f'balanced-{n}-{slug}.webp' for n, slug, *_ in balanced}
+    new = [f for f in now_files if f not in originals and f not in balanced_files]
     cur_pages = sorted(f for f in os.listdir('.') if f.endswith('.html'))
     current = page_usage(lambda p: open(p).read(), cur_pages)
     # Brand marks are drawn by site.js in the header and footer.
@@ -158,7 +161,7 @@ def main():
         'Each image shows its filename, the page and slot where it is used or was used, and whether it is live now, removed from the site or unused. '
         'This review page is not in the main navigation and asks search engines not to index it. Concept images are concepts, not approved designs.</p>'
         f'<p>{len(originals)} originals ({count(originals)}). {len(new)} newer images ({count(new)}).</p>'
-        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a></p></section>'
+        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set (proposed)</a></p></section>'
         f'<section class="page-section alt" id="originals"><p class="eyebrow">SECTION 1</p><h2>Originals</h2><p class="lead">The {len(originals)} images in the site as of commit {BASE}, including the ones that were later deleted and have been restored as files so they display here.</p>'
         '<div class="gallery-grid">' + ''.join(figure(f) for f in originals) + '</div></section>'
         '<section class="page-section" id="side-by-side"><p class="eyebrow">COMPARE</p><h2>Originals and their replacements</h2><p class="lead">Each pair shows an original next to the image that sits in the same slot now.</p>'
@@ -166,6 +169,24 @@ def main():
         f'<section class="page-section alt" id="new"><p class="eyebrow">SECTION 2</p><h2>New images</h2><p class="lead">Every image added since commit {BASE}.</p>'
         '<div class="gallery-grid">' + ''.join(figure(f) for f in new) + '</div></section>'
     )
+    ages = {}
+    for _, _, age, _, _ in balanced:
+        ages[age] = ages.get(age, 0) + 1
+    bal = []
+    for n, slug, age, desc, slot in balanced:
+        f = f'balanced-{n}-{slug}.webp'
+        assert os.path.exists(os.path.join('assets', f)), f
+        assert f not in current, f + ' is proposed only and must not be on a page'
+        bal.append(f'<figure class="gallery-item"><img src="/assets/{f}" alt="Concept image of {escape(desc[0].lower() + desc[1:])}" loading="lazy">'
+                   f'<figcaption><strong>{escape(f)}</strong> <span class="gallery-status unused">Proposed, not on any page</span>'
+                   f'<span>Ages shown: {escape(age)}</span><span>{escape(desc)}</span><span>Could suit: {escape(slot)}</span></figcaption></figure>')
+    body += (
+        '<section class="page-section" id="balanced"><p class="eyebrow">SECTION 3</p><h2>Balanced club set (proposed)</h2>'
+        f'<p class="lead">{len(balanced)} new concept images showing a natural mix of ages across the club: '
+        + ', '.join(f'{v} {k.lower()}' for k, v in ages.items()) +
+        '. Every junior and teen scene shows coaches or adults supervising and everyone in sportswear. '
+        'None of these are on the live pages; each caption names a slot it could suit, and the owner chooses.</p>'
+        '<div class="gallery-grid">' + ''.join(bal) + '</div></section>')
     html = ('<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#102d40">'
             '<meta name="description" content="Owner review gallery of every Sandy Sports image.">'
@@ -173,7 +194,7 @@ def main():
             '<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><script src="/site.js" defer></script></head>'
             f'<body><div data-site-header></div><main id="main">{body}</main><div data-site-footer></div></body></html>')
     open(OUT, 'w').write(html)
-    print(OUT, len(originals), 'originals,', len(new), 'new,', len(pairs), 'pairs')
+    print(OUT, len(originals), 'originals,', len(new), 'new,', len(pairs), 'pairs,', len(balanced), 'proposed')
 
 
 if __name__ == '__main__':

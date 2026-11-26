@@ -65,6 +65,9 @@ test('every sport page explains how it is played and its equipment, with a sourc
   assert.ok(html.includes('<h3>The club provides</h3>')&&html.includes('<h3>Players bring</h3>'),f+' equipment lists missing');
   assert.ok(html.includes('<img src="/assets/equip-'+slug+'.webp" alt="Concept image of '),f+' has no own equipment concept image');
   assert.match(html,/<figcaption>Concept image\./,f+' equipment image is not labelled as a concept');
+  assert.match(html,/<h2>Juniors and youth pathway<\/h2>/,f+' has no juniors and youth pathway');
+  assert.match(html,/<strong>Junior friendly format(<\/strong>\. [^<]+<\/p><p class="rules-source">Source: <a href="https:|: club format, to be confirmed<\/strong>)/,f+' junior format must cite a source or say club format, to be confirmed');
+  assert.ok(html.includes('child safe policy is being developed'),f+' must say the child safe policy is being developed');
   assert.match(html,/<h3><a href="\/sports\.html#survey">Sports interest survey<\/a><\/h3>/,f+' has no whole card survey link');
  }
  assert.match(read('index.html'),/<h3><a href="\/sports\.html#survey">Sports interest survey<\/a><\/h3>/,'home page has no survey card');

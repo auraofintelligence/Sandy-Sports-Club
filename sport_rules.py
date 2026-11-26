@@ -180,3 +180,23 @@ EQUIP_ALT = {
  'Fitness and movement': 'fitness equipment laid out on sand: bands, ladder and kettlebells',
  'Island-made formats': 'equipment for new sand games laid out on sand: roundnet set and balls',
 }
+
+# Juniors and youth pathway. Official junior formats are Australian or international
+# programmes that exist today (mostly on grass, courts or indoors); any sand version at
+# Sandy Sports is a club format, to be confirmed. None of this is an official pathway.
+JUNIOR = {
+ 'Mixed beach volleyball': ('Volleyball Australia\'s Spikezone programme introduces children (about 5 to 12) to volleyball and beach volleyball with smaller courts, lower nets and softer balls.', ('Volleyball Australia: Spikezone and Have a Go', 'https://volleyball.org.au/get-involved/have-a-go/')),
+ 'Flag football': ('NFL Flag is the 5 a side, non-contact school format in Australia. American Football Australia describes a pathway from school flag to community clubs, the U15 and U17 Junior Flag Nationals and national squad selection.', ('American Football Australia: NFL Flag and the junior pathway', 'https://www.americanfootball.org.au/post/nfl-flag-sporting-schools-term-1-2027')),
+ 'Beach cricket': ('Woolworths Cricket Blast is Cricket Australia\'s entry programme for children 10 and under, using plastic bats, softer balls and short modified games.', ('Cricket Australia: Woolworths Cricket Blast', 'https://play.cricket.com.au/play/for-kids/junior-blasters')),
+ 'Beach football': ('Coles MiniRoos is Football Australia\'s junior programme of short, small sided games for primary age children.', ('Football Australia: Coles MiniRoos', 'https://www.miniroos.com.au/')),
+ 'Beach rugby league': ('Rugby league in Australia uses modified rules and a SafePlay code for each junior age group.', ('NRL: Play Rugby League', 'https://www.playrugbyleague.com/')),
+ 'Beach 5s rugby': ('Rugby Australia\'s Get into Rugby is the entry programme for children turning 4 to 7, and Tri Tag Rugby is its official non-contact format.', ('Rugby Australia: Get into Rugby and Tri Tag Rugby', 'https://www.rugby.com.au/participate/get-into-rugby/faqs')),
+ 'AirBadminton': ('BWF Shuttle Time is the Badminton World Federation\'s schools programme for children aged about 5 to 15, and its first lessons can all be played outdoors.', ('BWF Shuttle Time', 'https://shuttletime.bwfbadminton.com/about')),
+ 'Beach tennis and net games': None,
+ 'Ultimate and flying disc': None,
+ 'Beach handball': None,
+ 'Netball crossover': ('Woolworths NetSetGo is Netball Australia\'s programme for children aged 5 to 10, in three age based phases.', ('Netball Australia: Woolworths NetSetGo', 'https://netball.com.au/netsetgo')),
+ 'AFL crossover': ('NAB AFL Auskick (ages 4 to 7) and AFL Superkick (ages 7 to 12) are the AFL\'s junior programmes, with junior and youth club football after that.', ('AFL: Auskick and junior football', 'https://play.afl/play/auskick')),
+ 'Fitness and movement': None,
+ 'Island-made formats': None,
+}

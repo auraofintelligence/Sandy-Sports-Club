@@ -30,7 +30,7 @@ def put(slug,title,description,content,script=''):
     pages[slug]=f'''<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102d40"><meta name="description" content="{escape(description,quote=True)}"><title>{title} | Sandy Sports Club proposal</title><link rel="icon" href="/favicon.png" type="image/png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><script src="/site.js" defer></script>{js}</head><body><div data-site-header></div><main id="main">{content}</main><div data-site-footer></div></body></html>'''
 
 
-from sport_rules import SPORT_RULES, EQUIP_ALT, TBC
+from sport_rules import SPORT_RULES, EQUIP_ALT, TBC, JUNIOR
 SURVEY_SPORTS=['Mixed beach volleyball','Flag football','Beach cricket','Beach football','Beach rugby league','Beach 5s rugby','AirBadminton','Beach tennis and net games','Ultimate and flying disc','Beach handball','Netball crossover','AFL crossover','Fitness and movement','Island-made formats']
 def survey_card(title_for):
     return cards([('SPORTS SURVEY','Sports interest survey',f'Tell the organisers which sports you want first{title_for}, and whether you want casual play, regular training or regional competition. No names or emails.','','/sports.html#survey')])
@@ -46,6 +46,20 @@ def survey_form():
      '<label>How often would you play? (optional)<select name="frequency">'+opt(['Weekly or more','A few times a month','About once a month','A few times a year','Not sure yet'])+'</select></label>'
      '<label class="hp-field" aria-hidden="true">Leave this field empty<input name="website" tabindex="-1" autocomplete="off"></label><div class="wide" id="survey-verify" hidden></div></div>'
      '<button class="button coral" type="submit" id="survey-submit">Survey opening soon</button><p class="form-tip" id="survey-status" role="status">We do not ask for your name, email or contact details.</p></fieldset></form>')
+def junior_info(title):
+    j=JUNIOR[title]
+    if j:
+        fmt=f'<p class="rules-format"><strong>Junior friendly format</strong>. {j[0]} On sand, the Sandy Sports version would be a club format, to be confirmed.</p><p class="rules-source">Source: <a href="{j[1][1]}" rel="noopener">{j[1][0]}</a></p>'
+    else:
+        fmt='<p class="rules-format tbc"><strong>Junior friendly format: club format, to be confirmed</strong>. The club would agree a modified junior format with coaches, players and families.</p>'
+    steps=('<dl class="rules-list">'
+      '<div><dt>Proposed age groups</dt><dd>Juniors 8 to 12 and teens 13 to 17, alongside open, masters and family sessions. Age groups are to be confirmed.</dd></div>'
+      '<div><dt>1. Fun first</dt><dd>Come and try sessions and modified games that build skills and confidence.</dd></div>'
+      '<div><dt>2. Squad training</dt><dd>Regular training with qualified coaches for juniors and teens who want more.</dd></div>'
+      '<div><dt>3. Regional competition</dt><dd>Entering regional events through the sport\'s official competitions and partner clubs.</dd></div>'
+      '<div><dt>Brisbane 2032</dt><dd>About five and a half years away, the Games can be an aspiration for a teen training today. Selection runs through each sport\'s national body, not every sport here is on the Olympic programme, and the club does not claim a pathway to the Games.</dd></div>'
+      '</dl>')
+    return section('JUNIORS AND YOUTH','Juniors and youth pathway','Sandy Sports is meant to be a safe, all ages club. This is a proposed pathway, not an official one.',fmt+steps+'<p class="rules-source">The club\'s child safe policy is being developed.</p>','sunny')
 def sport_info(title,slug):
     r=SPORT_RULES[title]
     tbc=r['format']==TBC
@@ -57,6 +71,7 @@ def sport_info(title,slug):
            f'<figure class="feature-figure equip-figure"><img src="/assets/equip-{slug}.webp" alt="Concept image of {EQUIP_ALT[title]}" loading="lazy"><figcaption>Concept image. Actual club equipment is to be confirmed.</figcaption></figure></div>')
     return (section('THE GAME','About '+title,r['about'])+
             section("HOW IT'S PLAYED","How it's played",'The essentials at a glance: team size, scoring, game length, the court or field, and the key rules.',badge+rules+src,'alt')+
+            junior_info(title)+
             section('EQUIPMENT','Equipment','What the club would provide and what players bring. Lists are proposals until the club is formed and equipment is funded.',equip))
 
 put('index.html','One island, many arenas','An ambitious mixed sand sports and cultural club proposal across Dunwich (Goompi), Amity Point (Pulan) and Point Lookout (Mulumba).',
