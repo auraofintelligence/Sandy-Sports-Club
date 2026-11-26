@@ -1,9 +1,10 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
 import {setupCommitteeRoom} from './club-committee.js?v=committee-ops-20261125';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {loadNominations,mayReviewNominations} from './club-nominations-ui.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','requests','briefs','audit'];
+const allTabs=['overview','people','interests','nominations','committee','records','social','constitution','accounts','requests','briefs','audit'];
 let committeeRoom=null;
 let identity=null,sessionInfo=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'Not set';
@@ -46,6 +47,7 @@ function applyRole(session){
  const role=identity.role,staff=role!=='member'&&role!=='webmaster_demo';
  const visible=new Set(staff?['overview','committee','records','social','constitution','requests','briefs']:['overview']);
  if(maySeePeople()){visible.add('people');visible.add('interests')}
+ if(mayReviewNominations(role))visible.add('nominations');
  if(role==='webmaster')visible.add('accounts');
  if(['webmaster','president','secretary'].includes(role))visible.add('audit');
  for(const tab of allTabs){const b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.hidden=!visible.has(tab)}
@@ -64,12 +66,12 @@ function openTab(tab){
  const button=document.querySelector('[data-tab="'+tab+'"]');
  if(button?.hidden){if(tab!=='overview')openTab('overview');return}
  current=tab;
- const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee'):tab;
+ const route=tab==='committee'?(location.hash.startsWith('#committee/')?location.hash.slice(1):'committee'):tab==='nominations'&&location.hash.startsWith('#nominations/')?location.hash.slice(1):tab;
  history.replaceState(null,'',location.pathname+location.search+'#'+route);
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
- const load={overview:overview,people:loadPeople,interests:loadInterests,committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
+ const load={overview:overview,people:loadPeople,interests:loadInterests,nominations:()=>loadNominations({api,esc,status,readOnly:Boolean(sessionInfo?.readOnly)}),committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
  try{Promise.resolve(load?.()).catch(e=>status(e.message,true))}catch(e){status(e.message,true)}
  window.dispatchEvent(new CustomEvent('sandy:clubhouse-section-change',{detail:{tab}}));
 }
@@ -212,7 +214,7 @@ function bind(){
  window.addEventListener('hashchange',()=>{
   if(!identity)return;
   const hash=location.hash.slice(1);
-  const tab=hash.startsWith('committee/')?'committee':hash;
+  const tab=hash.startsWith('committee/')?'committee':hash.startsWith('nominations/')?'nominations':hash;
   if(allTabs.includes(tab))openTab(tab);
  });
  document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
@@ -336,7 +338,7 @@ function bind(){
   $('club-console').hidden=false;
   status(session.readOnly?'SYNTHETIC VIEW ONLY: '+session.viewRole.replace(/_/g,' ')+'. All displayed records are fictional; no changes can be saved.':'Connected to Sandy shared club records. Proposals are not legal club approvals.');
   const hash=location.hash.slice(1);
-  const initial=hash.startsWith('committee/')?'committee':allTabs.includes(hash)?hash:'overview';
+  const initial=hash.startsWith('committee/')?'committee':hash.startsWith('nominations/')?'nominations':allTabs.includes(hash)?hash:'overview';
   openTab(initial);
  }catch(e){$('club-exit-view').hidden=false;status('Could not open club access: '+e.message,true)}
 })();

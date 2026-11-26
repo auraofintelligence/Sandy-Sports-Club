@@ -21,6 +21,7 @@
 <button data-tab="overview" aria-current="page">Overview</button>
 <button data-tab="people">People & memberships</button>
 <button data-tab="interests">Holiday visitor interest</button>
+<button data-tab="nominations" hidden>Nominations &amp; spam caught</button>
 <button data-tab="committee">Committee room</button>
 <button data-tab="records">Advanced register</button>
 <button data-tab="social">Social Media Hub</button>
@@ -134,6 +135,13 @@
 <section id="club-interests" class="club-section" hidden><h2>Holidaymaker and community interest</h2>
 <p>Confirmed public responses are prospective supporters, not memberships. An expression of interest is only accepted after consent and abuse protection are configured.</p>
 <div class="club-table-scroll"><table><thead><tr><th>Date</th><th>Name</th><th>Town</th><th>Region</th><th>Topics</th><th>Status</th></tr></thead><tbody id="interest-rows"></tbody></table></div></section>
+<section id="club-nominations" class="club-section" hidden aria-labelledby="nominations-title"><h2 id="nominations-title">Join form nominations</h2>
+<p id="nominations-state">Online nominations are switched off. The join form prepares an email instead.</p>
+<p>Officer only (Webmaster and Secretary). A nomination is an expression of interest, not membership or an appointment. Owner alert emails carry a summary and a link here, never contact details.</p>
+<div class="club-table-scroll"><table><thead><tr><th>Received</th><th>Name</th><th>Email</th><th>Pathway</th><th>Town</th><th>Interests and offer</th><th>Alert</th></tr></thead><tbody id="nomination-rows"></tbody></table></div>
+<h2 id="spam-title">Spam caught</h2>
+<p id="spam-summary">Everything spam protection catches is kept here, separate from the register, and deleted automatically after 90 days. No instant alert is sent for these; they appear in the daily 10:00 AM digest.</p>
+<div class="club-table-scroll"><table aria-labelledby="spam-title"><thead><tr><th>Caught</th><th>Reason</th><th>What it said</th><th>Browser</th><th>Actions</th></tr></thead><tbody id="spam-rows"></tbody></table></div></section>
 <section id="club-committee" class="club-section" hidden aria-labelledby="club-committee-title">
  <header class="committee-room-heading">
   <p class="eyebrow">SANDY SPORTS · COMMITTEE WORKSPACE</p>

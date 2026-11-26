@@ -56,6 +56,7 @@ export const PUBLIC_FILES=Object.freeze([
  "club-login.html",
  "club-login.js",
  "club-mozzie.js",
+ "club-nominations-ui.js",
  "club-safeguards-ui.js",
  "club-suite-ui.js",
  "club-system.css",

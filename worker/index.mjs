@@ -18,6 +18,7 @@ import {meetingsEndpoint} from './meetings.mjs';
 import {runSheetEndpoint} from './run-sheets.mjs';
 import {applicationsEndpoint} from './applications.mjs';
 import {financeEndpoint} from './finance.mjs';
+import {nominationsEndpoint,dailyDigest} from './nominations.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -51,13 +52,15 @@ async function handle(req,env){
   return new Response(response.body,{status:response.status,headers});
  }
  if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
- if(!['GET','HEAD'].includes(req.method))verifySameOrigin(req);
+ // The public nomination form records cross-origin posts in its spam quarantine itself.
+ if(!['GET','HEAD'].includes(req.method)&&path!=='/api/nominate')verifySameOrigin(req);
  return viewMode(req,env,path,route);
 }
 async function route(req,env,path,effectiveIdentity){
  if(path==='/api/public-config'&&req.method==='GET')
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
    publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   publicNominationsReady:Boolean(env.DB?.prepare&&env.SANDY_NOMINATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicApplicationsReady:Boolean(env.DB?.prepare&&env.SANDY_APPLICATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    turnstileSiteKey:env.SANDY_TURNSTILE_SITE_KEY||null,invitationSendingEnabled:false});
  if(path==='/api/health'&&req.method==='GET')
@@ -79,6 +82,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/committee/notices'||path==='/api/committee/todos')return committeeOpsEndpoint(req,env,path,identity);
  if(path==='/api/committee/meetings'||path.startsWith('/api/committee/meetings/')||path.startsWith('/api/committee/minutes/')||path.startsWith('/api/committee/agm/')||path==='/api/committee/reminders')
   return meetingsEndpoint(req,env,path,identity);
+ if(path==='/api/nominate'||path==='/api/committee/nominations'||path==='/api/committee/spam'||path.startsWith('/api/committee/spam/'))return nominationsEndpoint(req,env,path,identity);
  if(path==='/api/apply'||path==='/api/committee/applications'||path.startsWith('/api/committee/applications/'))return applicationsEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/finance/')||path.startsWith('/api/committee/equipment/'))return financeEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/events/'))return runSheetEndpoint(req,env,path,identity);
@@ -97,6 +101,12 @@ async function route(req,env,path,effectiveIdentity){
  throw new ApiError(404,'No club service exists at this address.','not_found');
 }
 export default {
+ // Daily 10:00 AM Australia/Brisbane alert digest (cron "0 0 * * *" UTC). It does
+ // nothing unless nominations and a mail provider are switched on by the owner.
+ async scheduled(event,env,ctx){
+  const run=dailyDigest(env,event?.scheduledTime||Date.now()).catch(()=>({state:'failed'}));
+  if(ctx?.waitUntil)ctx.waitUntil(run);else await run;
+ },
  async fetch(req,env,ctx){
   try{
    const response=await handle(req,env);

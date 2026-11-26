@@ -42,6 +42,10 @@
   "vars": {
     "SANDY_CLUB_APPROVALS": "disabled",
     "SANDY_INVITES_ENABLED": "disabled",
-    "SANDY_PRIVATE_LIBRARY_ENABLED": "disabled"
+    "SANDY_PRIVATE_LIBRARY_ENABLED": "disabled",
+    "SANDY_NOMINATIONS_ENABLED": "disabled"
+  },
+  "triggers": {
+    "crons": ["0 0 * * *"]
   }
 }
