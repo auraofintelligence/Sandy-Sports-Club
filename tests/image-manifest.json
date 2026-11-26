@@ -87,6 +87,10 @@
   "dhash": "03431107412d2cb8",
   "sha256": "a8542d8c832af56928083f8f91317c787589127b32d15696e62b20da4de20992"
  },
+ "assets/balanced-23-adult-social-flag-pull.webp": {
+  "dhash": "0c496b665849cdd3",
+  "sha256": "be00eaa4ef48241ba2b90fe6ce7aaafb9770c243d28c7226a017d8f111f0d5f4"
+ },
  "assets/balanced-23-adult-social-flag.webp": {
   "dhash": "002325e3292beb47",
   "sha256": "323d6d817df5cb081205911899be5313be9e4586a9bda0a8b00f6f0e2fb0da97"
@@ -135,6 +139,10 @@
   "dhash": "633cb47434bd131d",
   "sha256": "6a0f7df5d11b57e0bb24e4d3d5f4ec57797056b8f651a7d047690c698e4e7541"
  },
+ "assets/card-asset-lighting-straddie.webp": {
+  "dhash": "efd76d65550d0a0e",
+  "sha256": "fa9a93173076cc7bbc658feedfe8d860e47b87ab60cd9d50fd1e93aa6b3bc3a5"
+ },
  "assets/card-asset-lighting.webp": {
   "dhash": "3637cf6848c8c8e4",
   "sha256": "bf78277525210bf098c74cc9ac359cfe6a80bfe6b8e4fdb848a8039b0692ec4f"
@@ -182,6 +190,10 @@
  "assets/card-cevents-holiday.webp": {
   "dhash": "d989a8c8cc4c1c90",
   "sha256": "9da7d4472ebda12421b2a51934584b53682a902741c5c395f22cde79c4bf8057"
+ },
+ "assets/card-cevents-olympic-straddie.webp": {
+  "dhash": "fddb9c2719984d27",
+  "sha256": "fd266075044f2c02bc8600e04bb6464b8c7fb806298c660a2ee6560b724fd51c"
  },
  "assets/card-cevents-olympic.webp": {
   "dhash": "000008c80e1e0e8b",
@@ -283,6 +295,10 @@
   "dhash": "c2c3c381898a8210",
   "sha256": "e77ee4bd201af5fae1a0ce9f890671980b32d939e8891161a100b79068f423f1"
  },
+ "assets/card-com-sport-straddie.webp": {
+  "dhash": "084e162256d69609",
+  "sha256": "e384b0ba1ca8a94d85886b977fe78cd021ffabb750d3d1679b54203d131b4610"
+ },
  "assets/card-com-sport.webp": {
   "dhash": "3fef6f6f46464e13",
   "sha256": "f3db7475ff01ace28799f2b2af3d9fefeeee92efb487587e398ab808b06ea63c"
@@ -359,6 +375,10 @@
   "dhash": "00c0182d2c66866a",
   "sha256": "9b3eba10d29ae2f567ee1218926344324937aaf313796b4be27236a723d8b2bd"
  },
+ "assets/card-film-broadcast-straddie.webp": {
+  "dhash": "2021491c0cac3c3c",
+  "sha256": "8502d3ca4889c031bbae7a4f03a944092eadc74b0c6eecb709e7bfcba09fb86e"
+ },
  "assets/card-film-broadcast.webp": {
   "dhash": "8098a0a3a7868198",
   "sha256": "9aa94ef13520b1699775579e273cc379a27135610c589ea3b291906a74a59b6d"
@@ -370,6 +390,10 @@
  "assets/card-film-mediahub.webp": {
   "dhash": "b4b46cb797a7e7a7",
   "sha256": "3cf99ff8b199badf99d58934318c7bb2d97676194f68fb7c96c32b25ba7c4b93"
+ },
+ "assets/card-flag-expo-straddie.webp": {
+  "dhash": "9bad6b4bd40b074b",
+  "sha256": "75ce1469ce02d5a66f1a4576fc566f2c6115f5020a5eb2c9dce3216f20cd7622"
  },
  "assets/card-flag-expo.webp": {
   "dhash": "5f272f1f216c1d5b",
@@ -422,6 +446,10 @@
  "assets/card-grant-private-investment.webp": {
   "dhash": "d486abab86caa892",
   "sha256": "2cf63b6a5e691e2ca3927845fc5927931db64d42a9f6856f52cea58de301176a"
+ },
+ "assets/card-grant-signature-event-straddie.webp": {
+  "dhash": "b98fefefdf8f8787",
+  "sha256": "82e50621f9a86996c5655e843f746038d95919414b66278f24ad1e723c9ed766"
  },
  "assets/card-grant-signature-event.webp": {
   "dhash": "3f1d3f1b539b0b33",
@@ -507,6 +535,10 @@
   "dhash": "05410104d6d1c717",
   "sha256": "21ef26e4df1ebd3c666ecfc416e2d54ca3726006e9b090342f429599dd008d0f"
  },
+ "assets/card-mem-crew-straddie.webp": {
+  "dhash": "9bdfa4b5b529a3b6",
+  "sha256": "eaee5ad6c7025ca22fcdd38859d1d787085dfd56cce6395b18d5c439527ee8ee"
+ },
  "assets/card-mem-crew.webp": {
   "dhash": "dfffb2232b131d46",
   "sha256": "b5cea882f45d98cd3a0e7258c48cd5992cd32ca660c5507116befbf46cc55ce7"
@@ -582,6 +614,10 @@
  "assets/card-prog-country.webp": {
   "dhash": "cf8f0f1f3f1e1329",
   "sha256": "7df8ace93992930d62fcdc874e27708e5474fbca31379db0b8d96e635faab6d8"
+ },
+ "assets/card-prog-expo-straddie.webp": {
+  "dhash": "fb7c66630f1e0e27",
+  "sha256": "58524151d9168c853956f39f6e77f26e88f14f967b83a3e936c684a533bb801a"
  },
  "assets/card-prog-expo.webp": {
   "dhash": "9d1f37034d6b89c9",
@@ -835,9 +871,17 @@
   "dhash": "e525a4a40e160f03",
   "sha256": "cea8fed156f54e83dbe58bdf99e9cd4db19893645abc725f1ef55c3d8f72da46"
  },
+ "assets/hero-assets-straddie.webp": {
+  "dhash": "1833339b53616519",
+  "sha256": "e6fdf0609bd0ac656856624fe2bb3237db0b82bd6f867303c3f2cc9984d1326f"
+ },
  "assets/hero-assets.webp": {
   "dhash": "37cfcecec9a2f8f8",
   "sha256": "e1608e8fdddb7df8b6872ab249340b6ebfc88a304e0f74210a2ff3beddb52a97"
+ },
+ "assets/hero-clubhouse-straddie.webp": {
+  "dhash": "071d3ac6dd3f0f27",
+  "sha256": "2bc68cf79b38885669a1d51bb48b2aa418c65b13c0ef19de660843632034cbc7"
  },
  "assets/hero-clubhouse.webp": {
   "dhash": "1739010304351f07",
@@ -846,6 +890,10 @@
  "assets/hero-committee-assets.webp": {
   "dhash": "0080819196969417",
   "sha256": "3b525b81f6e77f14d4011f595177ba222ab8a39084badd5c111e1348cf40a221"
+ },
+ "assets/hero-committee-events-straddie.webp": {
+  "dhash": "4b191d078b00b196",
+  "sha256": "42e735ac8342f412755ce320023b22ff523933099d9e47aa8aed6e2455613a06"
  },
  "assets/hero-committee-events.webp": {
   "dhash": "7f1b1b130f1707d3",

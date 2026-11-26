@@ -317,6 +317,48 @@ for _p, (_img, _alt) in _HEROES.items():
 ALT['card-index-flag.webp'] = 'Concept image of a flag football game on a sand field'
 ALT['card-index-capital.webp'] = 'Concept image of public and private partners reviewing a community sport plan'
 
+# Balanced all ages club set, approved by the owner for its suggested live slots.
+# Only AI concept slots added since b1964e4 are swapped; the 19 originals and the
+# owner's location photos are never touched. Replaced files stay in assets/ and
+# are listed in the gallery as Previously used.
+import json as _json, os as _os
+_ROOT = _os.path.dirname(_os.path.abspath(__file__))
+PROTECTED = {'flag-football-concept.webp', 'hero-community-builder.webp', 'hero-film.webp', 'hero-funding.webp', 'hero-home.webp', 'hero-markets.webp', 'hero-nearby.webp', 'hero-sports.webp', 'hero-trust.webp', 'hero-youth-elders.webp', 'modular-led-concept.webp', 'mozzie.webp', 'sandy-original-icon.png', 'sandy-original-logo.png', 'site-ballow-360-point-20.webp', 'site-ballow-aerial.webp', 'site-ballow-bay-tree.webp', 'site-ballow-roadside.webp', 'women-led-setup.webp'}
+BALANCED = _json.load(open(_os.path.join(_ROOT, 'tools', 'balanced-set.json')))
+SWAPPED = {}  # new file -> old file it replaced
+
+
+def _swap(page, title, new, alt):
+    table, key = (HERO, page) if title is None else (CARD, (page, title))
+    old = table[key]
+    assert old not in PROTECTED and not old.startswith(('site-', 'place-', 'map-')), f'{key} holds a protected image'
+    table[key] = new
+    ALT[new] = 'Concept image of ' + alt
+    SWAPPED[new] = old
+
+
+for _n, _slug, _age, _desc, _slot in BALANCED:
+    _m = re.match(r'(\S+\.html) (?:page banner|card "(.*)")$', _slot)
+    _swap(_m.group(1), _m.group(2), f'balanced-{_n}-{_slug}.webp', _desc[0].lower() + _desc[1:])
+
+# Straddie scale: concept images that showed stadiums, arenas, floodlight towers or
+# big concrete stands, redrawn at small to medium island scale in natural materials.
+STRADDIE_SCALE = [
+    ('assets.html', None, 'hero-assets-straddie', 'a small timber equipment shed and trailer beside sand courts in the bush'),
+    ('committee-events.html', None, 'hero-committee-events-straddie', 'an evening community volleyball event with families on a grassy bank'),
+    ('clubhouse.html', None, 'hero-clubhouse-straddie', 'a single storey timber clubhouse set into the dunes at dusk'),
+    ('assets.html', 'Lighting and electrical', 'card-asset-lighting-straddie', 'an electrician at a timber switchboard with low wildlife friendly court lights'),
+    ('committee-events.html', 'Olympic decade', 'card-cevents-olympic-straddie', 'a visiting youth and adult training camp on dune courts'),
+    ('committee.html', 'Sport operations', 'card-com-sport-straddie', 'volunteers of three generations setting up a court'),
+    ('film-club.html', 'Sport broadcasts', 'card-film-broadcast-straddie', 'a camera operator filming a community match with spectators on timber benches'),
+    ('flag-football.html', '2032 cultures and sport', 'card-flag-expo-straddie', 'a small foreshore expo with junior flag football, marquees and a timber stage'),
+    ('grants.html', 'Signature event potential', 'card-grant-signature-event-straddie', 'an aerial view of a small foreshore sand sport festival'),
+    ('members.html', 'Event and media crew', 'card-mem-crew-straddie', 'a mixed age volunteer crew setting up seating and shade'),
+    ('programme.html', 'Sand sport expo', 'card-prog-expo-straddie', 'a small sand sport expo in the bush with a stage and workshops'),
+]
+for _p, _t, _img, _alt in STRADDIE_SCALE:
+    _swap(_p, _t, _img + '.webp', _alt)
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',

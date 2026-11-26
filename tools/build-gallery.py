@@ -71,10 +71,12 @@ def main():
     os.chdir(ROOT)
     originals = sorted(f[7:] for f in git('ls-tree', '--name-only', BASE, 'assets/').split() if IMG.search(f))
     now_files = sorted(f for f in os.listdir('assets') if IMG.search(f) and not re.search(r'-\d+w\.', f))
-    # The balanced club set is proposed only: shown in its own section, not on any page.
+    # The balanced club set went live in its suggested slots (owner approval, 27 Nov 2026).
+    # It keeps its own section; any earlier balanced file that was redrawn is listed there too.
     balanced = json.load(open(os.path.join('tools', 'balanced-set.json')))
     balanced_files = {f'balanced-{n}-{slug}.webp' for n, slug, *_ in balanced}
-    new = [f for f in now_files if f not in originals and f not in balanced_files]
+    retired_balanced = [f for f in now_files if f.startswith('balanced-') and f not in balanced_files]
+    new = [f for f in now_files if f not in originals and not f.startswith('balanced-')]
     cur_pages = sorted(f for f in os.listdir('.') if f.endswith('.html'))
     current = page_usage(lambda p: open(p).read(), cur_pages)
     # Brand marks are drawn by site.js in the header and footer.
@@ -97,7 +99,7 @@ def main():
         if now:
             status = 'Live now'
         elif was:
-            status = 'Removed from the site'
+            status = 'Previously used'
         else:
             status = 'Unused'
         lines = [f'{escape(p)}: {escape(l)}' for p, _, l in now]
@@ -106,7 +108,7 @@ def main():
 
     def figure(img, extra=''):
         status, now, was = where(img)
-        cls = {'Live now': 'live', 'Removed from the site': 'removed', 'Unused': 'unused'}[status]
+        cls = {'Live now': 'live', 'Previously used': 'removed', 'Unused': 'unused'}[status]
         parts = [f'<figure class="gallery-item"><img src="/assets/{img}" alt="{escape(img)}" loading="lazy">',
                  f'<figcaption><strong>{escape(img)}</strong> <span class="gallery-status {cls}">{status}</span>']
         if now:
@@ -150,7 +152,7 @@ def main():
         pair_html.append(f'<div class="gallery-pair"><h3>{escape(p)}: {escape(label)}</h3><div class="gallery-pair-grid"><div><p class="eyebrow">ORIGINAL</p>{figure(old)}</div><div><p class="eyebrow">IN THAT SLOT NOW</p>{right}</div></div></div>')
 
     def count(files):
-        c = {'Live now': 0, 'Removed from the site': 0, 'Unused': 0}
+        c = {'Live now': 0, 'Previously used': 0, 'Unused': 0}
         for f in files:
             c[where(f)[0]] += 1
         return ', '.join(f'{v} {k.lower()}' for k, v in c.items())
@@ -158,10 +160,10 @@ def main():
     body = (
         '<section class="page-section gallery-intro"><p class="eyebrow">OWNER REVIEW</p><h1>Image gallery</h1>'
         '<p class="lead">Every image on the Sandy Sports proposal site, for comparing the originals with the newer images. '
-        'Each image shows its filename, the page and slot where it is used or was used, and whether it is live now, removed from the site or unused. '
-        'This review page is not in the main navigation and asks search engines not to index it. Concept images are concepts, not approved designs.</p>'
+        'Each image shows its filename, the page and slot where it is used or was used, and whether it is live now, previously used or unused. '
+        'This review page is linked from the menu and footer, and asks search engines not to index it. Concept images are concepts, not approved designs.</p>'
         f'<p>{len(originals)} originals ({count(originals)}). {len(new)} newer images ({count(new)}).</p>'
-        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set (proposed)</a></p></section>'
+        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set</a> <a class="button outline" href="#straddie-scale">Straddie scale redraws</a></p></section>'
         f'<section class="page-section alt" id="originals"><p class="eyebrow">SECTION 1</p><h2>Originals</h2><p class="lead">The {len(originals)} images in the site as of commit {BASE}, including the ones that were later deleted and have been restored as files so they display here.</p>'
         '<div class="gallery-grid">' + ''.join(figure(f) for f in originals) + '</div></section>'
         '<section class="page-section" id="side-by-side"><p class="eyebrow">COMPARE</p><h2>Originals and their replacements</h2><p class="lead">Each pair shows an original next to the image that sits in the same slot now.</p>'
@@ -172,21 +174,33 @@ def main():
     ages = {}
     for _, _, age, _, _ in balanced:
         ages[age] = ages.get(age, 0) + 1
+    import sys; sys.path.insert(0, ROOT); import image_plan
+    def swap_pair(new_img, title):
+        old_img = image_plan.SWAPPED.get(new_img)
+        left = figure(old_img) if old_img else '<figure class="gallery-item gallery-empty"><figcaption>No earlier image in this slot.</figcaption></figure>'
+        return (f'<div class="gallery-pair"><h3>{escape(title)}</h3><div class="gallery-pair-grid"><div><p class="eyebrow">PREVIOUSLY USED</p>{left}</div>'
+                f'<div><p class="eyebrow">IN THAT SLOT NOW</p>{figure(new_img)}</div></div></div>')
     bal = []
     for n, slug, age, desc, slot in balanced:
         f = f'balanced-{n}-{slug}.webp'
         assert os.path.exists(os.path.join('assets', f)), f
-        assert f not in current, f + ' is proposed only and must not be on a page'
-        bal.append(f'<figure class="gallery-item"><img src="/assets/{f}" alt="Concept image of {escape(desc[0].lower() + desc[1:])}" loading="lazy">'
-                   f'<figcaption><strong>{escape(f)}</strong> <span class="gallery-status unused">Proposed, not on any page</span>'
-                   f'<span>Ages shown: {escape(age)}</span><span>{escape(desc)}</span><span>Could suit: {escape(slot)}</span></figcaption></figure>')
+        assert f in current, f + ' was approved for a live slot and must be on its page'
+        bal.append(swap_pair(f, f'{n}. {desc} ({age}). Slot: {slot}'))
+    retired = ''.join(figure(f, 'Earlier draft of a balanced image, redrawn before it went live.') for f in retired_balanced)
     body += (
-        '<section class="page-section" id="balanced"><p class="eyebrow">SECTION 3</p><h2>Balanced club set (proposed)</h2>'
-        f'<p class="lead">{len(balanced)} new concept images showing a natural mix of ages across the club: '
+        '<section class="page-section" id="balanced"><p class="eyebrow">SECTION 3</p><h2>Balanced club set</h2>'
+        f'<p class="lead">{len(balanced)} concept images showing a natural mix of ages across the club: '
         + ', '.join(f'{v} {k.lower()}' for k, v in ages.items()) +
         '. Every junior and teen scene shows coaches or adults supervising and everyone in sportswear. '
-        'None of these are on the live pages; each caption names a slot it could suit, and the owner chooses.</p>'
-        '<div class="gallery-grid">' + ''.join(bal) + '</div></section>')
+        'The owner approved them for their suggested slots, so each pair shows the image previously used in that slot next to the balanced image there now. '
+        'No original and no location photo was replaced.</p>'
+        + ''.join(bal) + (f'<div class="gallery-grid">{retired}</div>' if retired else '') + '</section>')
+    scale = [f'{img}.webp' for _, _, img, _ in image_plan.STRADDIE_SCALE]
+    body += (
+        '<section class="page-section alt" id="straddie-scale"><p class="eyebrow">SECTION 4</p><h2>Straddie scale redraws</h2>'
+        f'<p class="lead">{len(scale)} concept images that showed stadiums, arenas, floodlight towers or large concrete stands, redrawn at a small to medium island scale '
+        'with low impact natural materials set into the dunes and bush. Each pair shows the image previously used next to the redraw in that slot now.</p>'
+        + ''.join(swap_pair(f, ', '.join(f'{p}: {l}' for p, _, l in current.get(f, [])) or f) for f in scale) + '</section>')
     html = ('<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#102d40">'
             '<meta name="description" content="Owner review gallery of every Sandy Sports image.">'
@@ -194,7 +208,7 @@ def main():
             '<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><script src="/site.js" defer></script></head>'
             f'<body><div data-site-header></div><main id="main">{body}</main><div data-site-footer></div></body></html>')
     open(OUT, 'w').write(html)
-    print(OUT, len(originals), 'originals,', len(new), 'new,', len(pairs), 'pairs,', len(balanced), 'proposed')
+    print(OUT, len(originals), 'originals,', len(new), 'new,', len(pairs), 'pairs,', len(balanced), 'balanced,', len(scale), 'redraws')
 
 
 if __name__ == '__main__':

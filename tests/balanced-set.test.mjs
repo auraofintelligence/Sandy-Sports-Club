@@ -1,26 +1,61 @@
-// Owner rule (26 Nov 2026): the balanced club image set is proposed only. It appears in
-// the gallery's "Balanced club set (proposed)" section and on no live page, so no
-// existing image changes until the owner chooses.
+// Owner approval (27 Nov 2026): the balanced club image set goes live, each image in
+// the slot its gallery caption named. The images it replaced stay as files and are
+// listed in the gallery as Previously used. No original and no location photo is
+// replaced, and every image is still used on at most one live page slot.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {PUBLIC_FILES} from '../worker/public-assets.mjs';
 const root=new URL('..',import.meta.url).pathname;
-const set=JSON.parse(readFileSync(join(root,'tools/balanced-set.json'),'utf8'));
-test('balanced club set: 30 proposed images with a fair age mix, only in the gallery',()=>{
+const read=p=>readFileSync(join(root,p),'utf8');
+const set=JSON.parse(read('tools/balanced-set.json'));
+const pages=PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html');
+const gallery=read('image-gallery.html');
+const block=(html,title)=>{
+ for(const m of html.matchAll(/<article class="card[^"]*">((?:(?!<\/?article).)*?)<\/article>/gs)){
+  const h=m[1].match(/<h3>(?:<a [^>]*>)?([^<]*)/);
+  if(h&&h[1].trim()===title)return m[1];
+ }
+ return null;
+};
+test('balanced club set: 30 images with a fair age mix',()=>{
  assert.equal(set.length,30);
  const ages={};for(const [,,age] of set)ages[age]=(ages[age]||0)+1;
  const youth=(ages.Juniors||0)+(ages.Teens||0);
  assert.ok(youth>=8&&youth<set.length/2,'youth should be a fair share, not the majority');
  for(const k of ['Adults','Seniors','Families and mixed ages'])assert.ok(ages[k]>=3,k+' under represented');
- const gallery=readFileSync(join(root,'image-gallery.html'),'utf8');
- assert.match(gallery,/<h2>Balanced club set \(proposed\)<\/h2>/);
- const pages=PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html');
+ assert.match(gallery,/<h2>Balanced club set<\/h2>/);
+});
+test('each balanced image is live in exactly its suggested slot and nowhere else',()=>{
  for(const [n,slug,,,slot] of set){
   const f=`assets/balanced-${n}-${slug}.webp`;
   assert.ok(existsSync(join(root,f))&&PUBLIC_FILES.includes(f),f+' missing or not public');
-  assert.ok(gallery.includes(`/${f}"`)&&gallery.includes('Could suit: '+slot.replace(/"/g,'&quot;')),f+' not labelled in the gallery');
-  for(const p of pages)assert.ok(!readFileSync(join(root,p),'utf8').includes(f),f+' must not be wired into '+p);
+  assert.ok(gallery.includes(`/${f}"`),f+' not in the gallery');
+  const m=slot.match(/^(\S+\.html) (?:page banner|card "(.*)")$/);
+  assert.ok(m,slot);
+  const html=read(m[1]);
+  if(m[2]===undefined)assert.match(html,new RegExp(`<section class="page-hero"><img src="/${f.replace(/[.]/g,'\\.')}"`),f+' should be the banner of '+m[1]);
+  else{const b=block(html,m[2]);assert.ok(b&&b.includes(`/${f}"`),f+' should be on the '+m[2]+' card of '+m[1]);}
+  const uses=pages.reduce((c,p)=>c+(read(p).split(`/${f}"`).length-1),0);
+  assert.equal(uses,1,f+' must be used once');
  }
+});
+test('the images the balanced set replaced stay as files and show as Previously used',()=>{
+ const pairs=gallery.slice(gallery.indexOf('id="balanced"'),gallery.indexOf('id="straddie-scale"'));
+ const prev=[...pairs.matchAll(/PREVIOUSLY USED<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"[^>]*><figcaption><strong>[^<]+<\/strong> <span class="gallery-status removed">Previously used<\/span>/g)].map(m=>m[1]);
+ assert.equal(prev.length,30,'every balanced slot shows the image it replaced');
+ for(const f of prev){
+  assert.ok(existsSync(join(root,'assets',f)),f+' file kept');
+  for(const p of pages)assert.ok(!read(p).includes(`/assets/${f}"`),f+' should no longer be live on '+p);
+ }
+});
+test('Straddie scale redraws replace the oversized concept images and keep the old files',()=>{
+ const sec=gallery.slice(gallery.indexOf('id="straddie-scale"'));
+ const now=[...sec.matchAll(/IN THAT SLOT NOW<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
+ const prev=[...sec.matchAll(/PREVIOUSLY USED<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(now.length,11);assert.equal(prev.length,11);
+ for(const f of now){assert.match(f,/-straddie\.webp$/);assert.ok(PUBLIC_FILES.includes('assets/'+f),f+' public');assert.equal(pages.reduce((c,p)=>c+(read(p).split(`/assets/${f}"`).length-1),0),1,f+' used once');}
+ for(const f of prev){assert.ok(existsSync(join(root,'assets',f)),f+' kept');for(const p of pages)assert.ok(!read(p).includes(`/assets/${f}"`),f+' no longer live');}
+ assert.ok(pages.every(p=>!read(p).includes('/assets/hero-assets.webp"')),'the stadium image is off the Assets page');
 });

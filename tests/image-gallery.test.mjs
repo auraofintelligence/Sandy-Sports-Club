@@ -28,7 +28,7 @@ test('the gallery is public, noindex, out of the sitemap and linked from the nav
  assert.ok(!read('sitemap.xml').includes('image-gallery'),'kept out of the sitemap');
 });
 
-test('section 1 shows all 19 originals, section 2 every newer image, section 3 the proposed balanced set, each labelled',()=>{
+test('section 1 shows all 19 originals, section 2 every newer image, section 3 the balanced set, each labelled',()=>{
  const orig=section('originals'),fresh=section('new'),proposed=section('balanced');
  for(const f of ORIGINALS)assert.ok(orig.includes('<img src="/assets/'+f+'"'),f+' missing from Originals');
  const all=readdirSync(join(root,'assets')).filter(f=>/\.(webp|png|jpe?g)$/.test(f)&&!/-\d+w\./.test(f));
