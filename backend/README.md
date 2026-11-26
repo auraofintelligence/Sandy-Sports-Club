@@ -15,6 +15,10 @@ The club is still a proposal. No claim is made that every PLFC workflow or exter
 - `worker/records.mjs`: legacy shared generic records, still available for existing drafts
 - `worker/authority.mjs`: formal decisions on one exact record version and a separate member release step; fails closed while `SANDY_CLUB_APPROVALS` is disabled
 - `worker/suite.mjs` and `worker/suite-actions.mjs`: validated structured workflows, role controls, D1 revisions/audit, meeting follow-up tasks, audited stock receive/issue
+- `worker/meetings.mjs` and `studio/sandy-agm-jobs.js`: meeting schedule and cancellation, attendance and quorum, ordered agenda and motions, recorded outcomes, generated draft minutes, one task per meeting action, a separately approved and released member minutes edition, AGM preparation jobs and in-app meeting reminders
+- `worker/run-sheets.mjs`: event run-sheet jobs on the Volunteers desk, capacity-safe shift claims and assignment, helper tasks, completion and a printable roster with office labels only
+- `worker/applications.mjs`: membership and volunteer applications from a switched-off public form or a consented interest, review, recommendation and a gated decision that leaves the person pending (no account, invitation, activation or payment)
+- `worker/finance.mjs`: stock ledger with stocktake counts and corrections, month/quarter/financial-year stock reports with missing-cost flags and CSV, treasurer price proposals approved by a different officer, and equipment loans with overdue and custody history
 - `studio/sandy-suite-spec.js`: 29 Sandy-specific domain workflows, adapting PLFC for sand sports, film, facilities, membership, grants, events and governance
 - `club-suite-ui.js` and `club-workflow-assist.js`: stage-by-stage forms, editing, CSV/Markdown/ICS export, minutes drafts, newsletters, stock calculations and review packs
 - `club-committee.js` and `club-admin.html`: the actual Committee room in My Clubhouse, preview roles, Social Studio, constitution builder and office invitations
@@ -28,6 +32,11 @@ The club is still a proposal. No claim is made that every PLFC workflow or exter
 
 - `SANDY_CLUB_APPROVALS=disabled`: no formal approvals, memberships or published club claims
 - `SANDY_INVITES_ENABLED=disabled`: no new officer setup link can be issued or redeemed. Opening activation requires a separate owner-approved configuration change and an explicit real Webmaster action; no automated delivery. Active-account recovery and revocation are separate manual actions, not new appointments.
+- `SANDY_APPLICATIONS_ENABLED` (unset): the public application form stays closed; it also needs Turnstile
+- `SANDY_MEETING_QUORUM` (unset): quorum shows as "owner to confirm" until the adopted rules set a number
+- `SANDY_MEETING_REMINDER_DAYS` (default 7): in-app reminder window only; nothing is emailed or texted
+- `SANDY_FISCAL_YEAR_START_MONTH` (default 7): stock reports use a 1 July financial year unless the owner sets another month
+- AGM job deadlines in `studio/sandy-agm-jobs.js` are placeholders until checked against the adopted constitution and Queensland requirements
 - No paid API, payments, SMS, automated social publishing or advertising expenditure
 - The one synthetic member is labelled preview-only; no real account or private member data is seeded
 - Real writes record officer account, office, UTC timestamp, changes and revision number. The Webmaster role-preview does not impersonate another identity
