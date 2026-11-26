@@ -10,10 +10,13 @@ async function setup(t){
  return {...f,ev,RS:'/api/committee/events/'+ev+'/run-sheet'};
 }
 test('jobs are added once, shown on the Volunteers desk and protected from generic edits',async t=>{
- const {call,RS,ev}=await setup(t);
+ const {call,request,RS,ev}=await setup(t);
  const requestId=crypto.randomUUID(),job={title:'Set up nets',start:'07:00',finish:'08:00',capacity:2,notes:'Two portable nets'};
- const [a,b]=await Promise.all([call('sec',RS,'POST',{action:'add',requestId,job},201),call('sec',RS,'POST',{action:'add',requestId,job}).catch(()=>null)]);
- assert.ok(a.created);if(b)assert.equal(b.created,false);
+ // Two concurrent retries of one request: exactly one creates the job, whichever wins the race.
+ const both=await Promise.all([0,1].map(()=>request('sec',RS,'POST',{action:'add',requestId,job}).then(async r=>({status:r.status,body:await r.json()}))));
+ assert.equal(both.filter(x=>x.status===201&&x.body.created===true).length,1,JSON.stringify(both));
+ const other=both.find(x=>x.status!==201);assert.ok(other&&((other.status===200&&other.body.created===false)||other.status===409),JSON.stringify(both));
+ const a=both.find(x=>x.status===201).body;
  await call('treasurer',RS,'POST',{action:'add',job},403);
  await call('sec',RS,'POST',{action:'add',job:{...job,finish:'06:00'}},400);
  await call('sec',RS,'POST',{action:'add',job:{...job,capacity:0}},400);
