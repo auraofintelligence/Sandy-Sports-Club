@@ -7,6 +7,7 @@ import {setupWorkflowAssist} from './club-workflow-assist.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const safeFilename=s=>String(s||'record').toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,60);
 const statusValues=['proposal','draft','review','scheduled','completed','archived','rejected'];
+const deciders=['webmaster','president','secretary'],releaseDesks=['events','news','member-notice'];
 const statusNames=['Proposal','Draft','For review','Scheduled (not approved)','Completed record','Archived','Not proceeding'];
 function download(name,text,type='text/plain;charset=utf-8'){
  const href=URL.createObjectURL(new Blob([text],{type}));
@@ -54,10 +55,10 @@ function control(field,value){
 export function setupSandySuite({api,status,getIdentity}){
  const root=document.getElementById('committee-suite');
  if(!root)return {open(){return Promise.resolve()}};
- let desk=null,rows=[],editing=null,step=0,query='',filter='';
+ let desk=null,rows=[],editing=null,step=0,query='',filter='',approvalsOff=true;
  root.innerHTML=
  '<div class="suite-heading"><div><p class="eyebrow">SANDY SPORTS · SHARED WORKFLOWS</p><h3 id="suite-desk-name"></h3><p id="suite-desk-intro"></p></div><span id="suite-count"></span></div>'+
- '<p class="suite-boundary">Every Save writes an attributed revision to Sandy D1. Formal approvals, bulk invitations, outbound email, SMS, sales and social publishing remain disabled.</p>'+
+ '<p class="suite-boundary">Every Save writes an attributed revision to Sandy D1. Formal decisions need lawful club authority and stay switched off until then; bulk invitations, outbound email, SMS, sales and social publishing remain disabled.</p>'+
  '<div class="suite-filters"><label>Search<input id="suite-search" type="search" placeholder="Title or officer"></label><label>Stage<select id="suite-filter"><option value="">All stages</option>'+
  statusValues.map((v,i)=>'<option value="'+v+'">'+statusNames[i]+'</option>').join('')+'</select></label>'+
  '<button id="suite-new" type="button">New working record</button><button id="suite-export" type="button">Export CSV</button><button id="suite-reload" type="button">Refresh</button></div>'+
@@ -80,19 +81,31 @@ export function setupSandySuite({api,status,getIdentity}){
   return [row.title,row.status,row.fields.owner,row.fields.officer,row.fields.editor,row.fields.chair,row.fields.funder,
    row.fields.sandyOwner,row.fields.organisation].filter(Boolean).join(' ').toLowerCase();
  }
+ function decisionForm(row){
+  const options=[['approved','Approve this version'],['returned','Return for changes'],['rejected','Not proceeding']];
+  if(releaseDesks.includes(desk.key))options.push(['release','Release approved version to members']);
+  return '<form data-decision-form class="suite-decision" hidden><p>'+(approvalsOff?'Formal decisions are switched off until the club has lawful governing authority. Saving here will be refused and nothing changes.':'Records an authorised decision on version '+row.version+' only. Approval does not show anything to members; release is a separate step. Nothing is emailed or published outside the clubhouse.')+'</p>'+
+   '<label>Decision<select name="decision">'+options.map(([v,t])=>'<option value="'+v+'">'+t+'</option>').join('')+'</select></label>'+
+   '<label>Minute or motion reference (HTTPS link)<input name="evidence" type="url" required placeholder="https://"></label>'+
+   '<label>Reason<input name="reason" maxlength="500"></label>'+
+   '<button type="submit">Record decision</button></form>';
+ }
  function drawList(){
   find('suite-count').textContent=rows.length+' saved records';
   const visible=rows.filter(row=>(!filter||row.status===filter)&&(!query||currentSearch(row).includes(query)));
   list.innerHTML=visible.map(row=>
    '<article class="suite-record" data-suite-id="'+esc(row.id)+'"><div><strong>'+esc(row.title)+'</strong>'+
    '<p>'+esc(row.status)+' · '+(row.eventDate?esc(row.eventDate):'Undated')+' · Version '+row.version+'</p>'+
+   (row.released?'<p class="suite-decision-state" data-decision-state="released">Released to members (this version)</p>':row.status==='approved'?'<p class="suite-decision-state" data-decision-state="approved">Formally approved'+(releaseDesks.includes(desk.key)?', not yet released to members':'')+'</p>':'')+
    '<small>Last edit: '+esc(row.updatedAt||'')+' · '+esc(row.updatedBy||'')+'</small></div>'+
    '<div class="suite-record-buttons"><button type="button" data-suite-action="open">Open/edit</button>'+
    '<button type="button" data-suite-action="history">Officer history</button><button type="button" data-suite-action="md">Download draft</button>'+
    (['meetings','events','agm','sport-programme','venues','film'].includes(desk.key)?'<button type="button" data-suite-action="ics">Calendar file</button>':'')+
    (desk.key==='meetings'?'<button type="button" data-suite-action="followups">Create officer to-dos</button>':'')+
    (desk.key==='stock'?'<button type="button" data-suite-action="movement">Receive / issue stock</button>':'')+
+   (deciders.includes(getIdentity()?.role)?'<button type="button" data-suite-action="decision">Formal decision</button>':'')+
    '</div>'+
+   (deciders.includes(getIdentity()?.role)?decisionForm(row):'')+
    (desk.key==='stock'?'<form data-stock-move class="suite-stock-move" hidden>'+
     '<label>Movement<select name="direction"><option value="receive">Receive stock</option><option value="issue">Issue stock</option></select></label>'+
     '<label>Quantity<input name="quantity" type="number" min="1" step="1" required></label>'+
@@ -139,10 +152,11 @@ export function setupSandySuite({api,status,getIdentity}){
   const schema=SUITE_BY_KEY[key];
   if(!schema||!schema.roles.includes(getIdentity()?.role)){say('This role cannot access the selected desk.',true);return}
   desk=schema;rows=[];editing=null;query='';filter='';safeguard.open(key);
-  if(isReadOnlyView()){root.querySelector('.suite-boundary').textContent='Synthetic example records, read-only. Open records and review stages, history and example exports without saving.';protectView('#suite-new,#suite-save,[data-suite-action="followups"],[data-suite-action="movement"],[data-stock-move] button[type=submit]',root)}
+  if(isReadOnlyView()){root.querySelector('.suite-boundary').textContent='Synthetic example records, read-only. Open records and review stages, history and example exports without saving.';protectView('#suite-new,#suite-save,[data-suite-action="followups"],[data-suite-action="movement"],[data-stock-move] button[type=submit],[data-suite-action="decision"],[data-decision-form] button',root)}
   find('suite-search').value='';find('suite-filter').value='';
   find('suite-desk-name').textContent=desk.title;find('suite-desk-intro').textContent=desk.purpose;
   find('suite-notice').hidden=true;close();root.hidden=false;
+  try{approvalsOff=(await api('/api/suite/desks')).disabled?.approvals!==false}catch{approvalsOff=true}
   await Promise.all([refresh(),library.open(key)]);
  }
  find('suite-search').addEventListener('input',event=>{query=event.target.value.toLowerCase();drawList()});
@@ -174,6 +188,18 @@ export function setupSandySuite({api,status,getIdentity}){
   finally{button.disabled=false}
  });
  list.addEventListener('submit',async event=>{
+  const decision=event.target.closest('[data-decision-form]');
+  if(decision){
+   event.preventDefault();if(isReadOnlyView())return;
+   const card=decision.closest('[data-suite-id]'),r=rows.find(x=>x.id===card?.dataset.suiteId);if(!r)return;
+   const input=Object.fromEntries(new FormData(decision)),button=decision.querySelector('[type=submit]');button.disabled=true;
+   try{
+    const result=await api('/api/suite/'+desk.key+'/'+r.id+'/decision',{method:'POST',data:{version:r.version,decision:input.decision,evidence:input.evidence,reason:input.reason}});
+    say((result.released?'Released to members: ':'Decision recorded: ')+r.title+' · version '+result.version+'. No message was sent.');
+    await refresh();
+   }catch(error){say('Decision not recorded: '+error.message,true);button.disabled=false}
+   return;
+  }
   const form=event.target.closest('[data-stock-move]');
   if(!form)return;
   event.preventDefault();
@@ -205,6 +231,7 @@ export function setupSandySuite({api,status,getIdentity}){
    }
    if(button.dataset.suiteAction==='md')download('sandy-'+desk.key+'-'+safeFilename(r.title)+'.md',recordMarkdown(desk,r),'text/markdown;charset=utf-8');
    if(button.dataset.suiteAction==='ics')download('sandy-'+desk.key+'-'+safeFilename(r.title)+'.ics',ics(r),'text/calendar;charset=utf-8');
+   if(button.dataset.suiteAction==='decision'){const f=card.querySelector('[data-decision-form]');if(f){f.hidden=!f.hidden;if(!f.hidden)f.querySelector('select').focus()}}
    if(button.dataset.suiteAction==='movement'){
     const form=card.querySelector('[data-stock-move]');if(form)form.hidden=!form.hidden;
    }

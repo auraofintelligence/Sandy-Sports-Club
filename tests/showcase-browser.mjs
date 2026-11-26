@@ -28,6 +28,9 @@ for(const role of STAFF){
  live.sql.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc) VALUES(?,?,?,?,?,'active','fictional','fictional',?)").run(id,'fixture-'+role,role,role,'Fixture live '+role,stamp);
  live.sql.prepare('INSERT INTO club_sessions VALUES(?,?,0,4102444800)').run(digest(token),id);
 }
+{const id=randomUUID(),token=randomBytes(32).toString('hex');actors.member={id,token};
+ live.sql.prepare("INSERT INTO club_accounts(id,username,role,office_label,display_name,state,password_salt,password_verifier,created_utc) VALUES(?,?,?,?,?,'active','fictional','fictional',?)").run(id,'fixture-member','member','member','Fixture live member',stamp);
+ live.sql.prepare('INSERT INTO club_sessions VALUES(?,?,0,4102444800)').run(digest(token),id);}
 live.sql.prepare("INSERT INTO club_records(id,kind,title,body_json,status,created_by,updated_by,created_utc,updated_utc) VALUES(?,'social_idea','PRIVATE LIVE SENTINEL','{}','draft',?,?,?,?)").run(randomUUID(),actors.webmaster.id,actors.webmaster.id,stamp,stamp);
 const env={DB:live.DB,SANDY_SHOWCASE_DB:showcase.DB,SANDY_AUTH_PEPPER:randomBytes(32).toString('hex'),SANDY_SHOWCASE_KEY:randomBytes(32).toString('hex'),SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled'};
 const snapshot=sql=>Object.fromEntries(sql.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map(({name})=>[name,sql.prepare('SELECT * FROM '+name+' ORDER BY rowid').all()]));
@@ -212,6 +215,59 @@ try{
  await sc.close();await tc.close();await cc.close();
  assert.equal(live.sql.prepare("SELECT count(*) AS n FROM club_records WHERE title='Fictional Cylinder Beach net kit quote'").get().n,2);
  console.log('PASS: real fictional officer notice posting, recipient isolation, read receipt, linked task completion and archive in actual browser');
+
+ // Formal decision, member release and private member reply through the actual screens.
+ const evFields={};for(const f of SUITE_DESKS.find(d=>d.key==='events').fields)evFields[f.key]=f.type==='checkbox'?false:f.type==='select'?f.options[0]:f.type==='date'?'2027-01-16':f.type==='time'?(f.key==='endTime'?'18:00':'16:00'):f.type==='number'?1:f.type==='url'?'':'Fictional Cylinder Beach volleyball';
+ const dc=await context('secretary'),dp=await makePage(dc),pc=await context('president'),pp=await makePage(pc);
+ await go(dp,'/club-admin.html');await wait(dp,'#club-console');
+ const created=await dp.evaluate(async fields=>(await (await fetch('/api/suite/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Fictional summer volleyball evening',fields})})).json()),evFields);
+ assert.ok(created.id,'event created');
+ const decide=async(p,decision)=>{
+  await go(p,'/club-admin.html?desk=events#committee/events');await p.reload({waitUntil:'domcontentloaded'});await wait(p,'#committee-suite [data-suite-id="'+created.id+'"]');
+  const card=p.locator('[data-suite-id="'+created.id+'"]');
+  // The desk may redraw once while its records load; reopen the form until it is shown.
+  for(let i=0;i<5&&!await card.locator('[data-decision-form]').isVisible();i++){await card.locator('[data-suite-action=decision]').click();await p.waitForTimeout(200)}
+  await card.locator('[data-decision-form] [name=decision]').selectOption(decision);
+  await card.locator('[data-decision-form] [name=evidence]').fill('https://example.test/fictional-minute');
+  await card.locator('[data-decision-form] [name=reason]').fill('Fictional browser acceptance');
+  await p.evaluate(()=>{document.getElementById('suite-notice').hidden=true});
+  await card.locator('[data-decision-form] button[type=submit]').click();
+  await p.waitForFunction(()=>!document.getElementById('suite-notice').hidden);
+  return p.locator('#suite-notice').textContent();
+ };
+ assert.match(await decide(pp,'approved'),/Decision not recorded: Formal club approval is disabled/);
+ assert.equal(live.sql.prepare('SELECT count(*) AS n FROM studio_decisions').get().n,0);
+ env.SANDY_CLUB_APPROVALS='enabled';
+ try{
+  assert.match(await decide(pp,'approved'),/Decision recorded/);
+  await wait(pp,'[data-suite-id="'+created.id+'"] [data-decision-state=approved]');
+  assert.match(await decide(dp,'release'),/Released to members/);
+  await wait(dp,'[data-suite-id="'+created.id+'"] [data-decision-state=released]');
+  // Committee officers do not get the decision control.
+  const oc=await context('committee'),op=await makePage(oc);
+  await go(op,'/club-admin.html?desk=events#committee/events');await wait(op,'#committee-suite [data-suite-id="'+created.id+'"]');
+  assert.equal(await op.locator('[data-suite-action=decision]').count(),0);await oc.close();
+  // A verified fictional member replies from the member calendar.
+  live.sql.prepare("INSERT INTO club_people(id,account_id,full_name,status,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,'Fixture member','active',?,?,?,?)").run(randomUUID(),actors.member.id,actors.webmaster.id,actors.webmaster.id,stamp,stamp);
+  const verify=await worker.fetch(new Request(origin+'/api/committee/safeguards',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json',Cookie:'__Host-sandy_session='+actors.webmaster.token},body:JSON.stringify({action:'verify',accountId:actors.member.id,version:0,ageBand:'adult',guardianPermission:false,ageCheckedOffline:true})}),env);
+  assert.equal(verify.status,200);
+  const mc=await context('member'),mp=await makePage(mc);
+  await go(mp,'/member-home.html#calendar');await wait(mp,'[data-rsvp-value=going]');
+  assert.match(await mp.locator('#member-events').textContent(),/Fictional summer volleyball evening/);
+  await mp.locator('[data-rsvp-value=going]').click();
+  await mp.waitForFunction(()=>document.querySelector('[data-rsvp-value=going]')?.getAttribute('aria-pressed')==='true');
+  await mp.locator('[data-rsvp-value=maybe]').click();
+  await mp.waitForFunction(()=>document.querySelector('[data-rsvp-value=maybe]')?.getAttribute('aria-pressed')==='true');
+  assert.equal(live.sql.prepare("SELECT json_extract(body_json,'$.fields.response') AS r FROM club_records WHERE json_extract(body_json,'$.type')='rsvp'").get().r,'maybe');
+  assert.equal(await mp.locator('a[href="/api/member/calendar.ics"]').count(),1);
+  // Withdrawal shows an in-app notice to the member.
+  assert.match(await decide(dp,'returned'),/Decision recorded/);
+  await mp.reload({waitUntil:'domcontentloaded'});await wait(mp,'#member-events .club-status');
+  assert.match(await mp.locator('#member-events').textContent(),/withdrawn or cancelled since you replied/);
+  await mc.close();
+ }finally{env.SANDY_CLUB_APPROVALS='disabled'}
+ await dc.close();await pc.close();
+ console.log('PASS: approve and release in the actual events desk, refused while authority is off, member reply and withdrawal notice in the member calendar');
 
  assert.deepEqual(errors,[],'no uncaught browser JavaScript errors');
  console.log('PASS: both complete database snapshots unchanged and no uncaught browser errors');
