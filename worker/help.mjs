@@ -32,7 +32,7 @@ export async function helpEndpoint(req,env,path,identity){
     .bind(rid,subject,JSON.stringify(body),identity.id,identity.id,at,at),
    revision(db,{kind:'record',resourceId:rid,resourceVersion:1,action:'webmaster_request_submitted',actor:identity,at,
     snapshot:{subject,category,message}}),
-   audit(db,identity,'webmaster_request_submitted','record',rid,at)
+   audit(db,identity,'webmaster_request_submitted','record',rid,at,false,{fromVersion:0,toVersion:1})
   ]);
   return json({ok:true,id:rid,version:1,note:'Request saved privately for webmaster review. No email was sent.'},201);
  }

@@ -32,6 +32,8 @@ function clean(b,env){
   source:field(b.source,150),notes:field(b.notes,4000)
  };
 }
+// Record only real field names that changed; never echo arbitrary client keys into history.
+const changedFields=(before,after)=>Object.keys(after).filter(k=>JSON.stringify(before[k]??null)!==JSON.stringify(after[k]??null));
 function editColumns(data){
  return [data.name,data.preferredName,data.email,data.mobile,data.membershipClass,data.status,data.joinedOn,data.renewalOn,data.gender,data.town,data.audienceRegion,
   data.contactConsent?1:0,data.publicationConsent?1:0,data.source,data.notes];
@@ -68,7 +70,7 @@ export async function peopleEndpoint(req,env,path,identity){
    db.prepare('INSERT INTO club_people(id,'+sqlFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
     .bind(personId,...editColumns(data),identity.id,identity.id,at,at),
    revision(db,{kind:'person',resourceId:personId,resourceVersion:1,action:'created',actor:identity,at,snapshot:data}),
-   audit(db,identity,'person_created','person',personId,at)
+   audit(db,identity,'person_created','person',personId,at,false,{fromVersion:0,toVersion:1})
   ]);
   return json({ok:true,id:personId,version:1,person:data},201);
  }
@@ -89,8 +91,8 @@ export async function peopleEndpoint(req,env,path,identity){
     db.prepare('UPDATE club_people SET account_id=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND (account_id IS NULL OR account_id=?)')
      .bind(accountId,identity.id,at,personId,expected,accountId),
     revision(db,{kind:'person',resourceId:personId,resourceVersion:expected+1,action:'account_linked',actor:identity,at,
-      snapshot:{...view(row),accountId},changes:{accountId},guarded:true}),
-    audit(db,identity,'member_account_linked','person',personId,at,true)
+      snapshot:{...view(row),accountId},changes:{accountId,fromVersion:expected,toVersion:expected+1},guarded:true}),
+    audit(db,identity,'member_account_linked','person',personId,at,true,{fromVersion:expected,toVersion:expected+1})
    ]);
    if(!changed.meta.changes)fail(409,'This person was updated by another officer.','conflict');
    return json({ok:true,version:expected+1});
@@ -103,8 +105,8 @@ export async function peopleEndpoint(req,env,path,identity){
     db.prepare('UPDATE club_people SET '+sqlFields.split(',').map(k=>k+'=?').join(',')+',version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
       .bind(...editColumns(data),identity.id,at,personId,expected),
     revision(db,{kind:'person',resourceId:personId,resourceVersion:expected+1,action:'updated',actor:identity,at,snapshot:data,
-      changes:{updatedFields:Object.keys(b).filter(k=>k!=='version')},guarded:true}),
-    audit(db,identity,'person_updated','person',personId,at,true)
+      changes:{updatedFields:changedFields(view(row),data),fromVersion:expected,toVersion:expected+1,reason:field(b.reason,500)||'Directory edit'},guarded:true}),
+    audit(db,identity,'person_updated','person',personId,at,true,{fromVersion:expected,toVersion:expected+1})
    ]);
    if(!result.meta.changes)fail(409,'This record changed while saving. Reload it.','conflict');
    return json({ok:true,id:personId,version:expected+1});

@@ -34,7 +34,7 @@ export async function briefsEndpoint(req,env,path,identity){
    db.prepare('INSERT INTO studio_briefs(id,'+saveFields+',version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?,?,?)')
     .bind(briefId,...values(b),identity.id,identity.id,at,at),
    revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:1,action:'created',actor:identity,at,snapshot:b}),
-   audit(db,identity,'production_brief_created','studio-brief',briefId,at)
+   audit(db,identity,'production_brief_created','studio-brief',briefId,at,false,{fromVersion:0,toVersion:1})
   ]);
   return json({ok:true,id:briefId,version:1},201);
  }
@@ -58,8 +58,8 @@ export async function briefsEndpoint(req,env,path,identity){
    db.prepare('UPDATE studio_briefs SET '+saveFields.split(',').map(f=>f+'=?').join(',')+',version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
     .bind(...values(data),identity.id,at,briefId,expected),
    revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:expected+1,action:'updated',actor:identity,at,
-    snapshot:data,changes:{changed:Object.keys(b).filter(x=>x!=='version')},guarded:true}),
-   audit(db,identity,'production_brief_updated','studio-brief',briefId,at,true)
+    snapshot:data,changes:{changed:publicFields.filter(k=>JSON.stringify(toView(row)[k]??null)!==JSON.stringify(data[k]??null)),fromVersion:expected,toVersion:expected+1,reason:field(b.reason,500)||'Brief edit'},guarded:true}),
+   audit(db,identity,'production_brief_updated','studio-brief',briefId,at,true,{fromVersion:expected,toVersion:expected+1})
   ]);
   if(!result.meta.changes)fail(409,'This brief changed before the update completed.','conflict');
   return json({ok:true,id:briefId,version:expected+1});
@@ -79,8 +79,8 @@ export async function briefsEndpoint(req,env,path,identity){
    db.prepare("INSERT INTO studio_decisions(id,entity_type,entity_id,entity_version,decision,scope_json,evidence_url,authorised_actor,authorised_office,decided_utc) SELECT ?,'studio_brief',?,?,?,?,?,?,?,? WHERE changes()=1")
     .bind(decisionId,briefId,newVersion,decision,JSON.stringify({title:row.title,producer:row.producer}),evidence,identity.id,identity.office_label,at),
    revision(db,{kind:'studio-brief',resourceId:briefId,resourceVersion:newVersion,action:'decision_'+decision,actor:identity,at,
-    snapshot:{...toView(row),status:newStatus,version:newVersion},changes:{decision,evidence},guarded:true}),
-   audit(db,identity,'studio_decision_'+decision,'studio-brief',briefId,at,true)
+    snapshot:{...toView(row),status:newStatus,version:newVersion},changes:{decision,evidence,fromVersion:expected,toVersion:newVersion,reason:field(b.reason,500)||'Formal decision'},guarded:true}),
+   audit(db,identity,'studio_decision_'+decision,'studio-brief',briefId,at,true,{fromVersion:expected,toVersion:newVersion})
   ]);
   if(!result.meta.changes)fail(409,'This brief changed while recording the decision.','conflict');
   return json({ok:true,decisionId,version:newVersion});

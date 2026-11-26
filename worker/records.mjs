@@ -52,7 +52,7 @@ export async function recordsEndpoint(req,env,path,identity){
    db.prepare('INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,1,?,?,?,?)')
     .bind(recordId,record.kind,record.title,JSON.stringify(record.body),record.status,record.eventDate,identity.id,identity.id,at,at),
    revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'created',actor:identity,at,snapshot:record}),
-   audit(db,identity,'record_created','record',recordId,at)
+   audit(db,identity,'record_created','record',recordId,at,false,{fromVersion:0,toVersion:1})
   ]);
   return json({ok:true,id:recordId,version:1},201);
  }
@@ -79,7 +79,7 @@ export async function recordsEndpoint(req,env,path,identity){
     db.prepare('UPDATE club_records SET title=?,body_json=?,status=?,event_date=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND status!=?')
      .bind(record.title,JSON.stringify(record.body),record.status,record.eventDate,identity.id,at,recordId,expected,'approved'),
     revision(db,{kind:'record',resourceId:recordId,resourceVersion:expected+1,action:'edited',actor:identity,at,snapshot:record,
-     changes:{changed:Object.keys(b).filter(k=>k!=='version')},guarded:true}),
+     changes:{changed:['title','status','eventDate','body'].filter(k=>JSON.stringify(before[k]??null)!==JSON.stringify(record[k]??null)),fromVersion:expected,toVersion:expected+1,reason:field(b.reason,500)||'Working edit'},guarded:true}),
     audit(db,identity,'record_edited','record',recordId,at,true,{fromVersion:expected,toVersion:expected+1})
    ]);
    if(!result.meta.changes)fail(409,'The record changed during saving.','conflict');
