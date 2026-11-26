@@ -79,6 +79,7 @@ async function changed(db,desk,identity,recordId,request){
  if(!before||!suiteAllowed(current,desk,identity))fail(404,'That Sandy working record was not found in this area.','record_not_found');
  if(before.committeeOps)fail(409,'Use the dedicated committee noticeboard or officer task list for this record.','dedicated_workflow');
  if(before.runSheet)fail(409,'Use the event run sheet for this shift.','dedicated_workflow');
+ if(before.application)fail(409,'Use the applications workflow for this application.','dedicated_workflow');
  const expected=version(request.version);
  if(expected!==current.version)fail(409,'Another officer edited this record. Reload the latest version.','conflict');
  if(current.status==='approved')fail(409,'A formally approved record cannot be changed as a working draft.','locked');
@@ -134,7 +135,7 @@ export async function suiteEndpoint(req,env,path,identity){
  if(!body||!suiteAllowed(row,desk,identity))fail(404,'That record is not in this working area.','record_not_found');
  if(decision&&req.method==='POST'){
   // Dedicated noticeboard and task records follow their own closure workflow.
-  if(body.committeeOps||body.runSheet)fail(409,'Use the dedicated committee noticeboard, officer task list or event run sheet for this record.','dedicated_workflow');
+  if(body.committeeOps||body.runSheet||body.application)fail(409,'Use the dedicated committee noticeboard, officer task list or event run sheet for this record.','dedicated_workflow');
   return decideRecord(req,env,db,identity,row,'suite');
  }
  if(history&&req.method==='GET'){

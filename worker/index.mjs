@@ -16,6 +16,7 @@ import {libraryEndpoint} from './library.mjs';
 import {committeeOpsEndpoint} from './committee-ops.mjs';
 import {meetingsEndpoint} from './meetings.mjs';
 import {runSheetEndpoint} from './run-sheets.mjs';
+import {applicationsEndpoint} from './applications.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -56,6 +57,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/public-config'&&req.method==='GET')
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
    publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   publicApplicationsReady:Boolean(env.DB?.prepare&&env.SANDY_APPLICATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    turnstileSiteKey:env.SANDY_TURNSTILE_SITE_KEY||null,invitationSendingEnabled:false});
  if(path==='/api/health'&&req.method==='GET')
   return respond({service:'sandy-club',storageConfigured:Boolean(env.DB?.prepare),
@@ -76,6 +78,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/committee/notices'||path==='/api/committee/todos')return committeeOpsEndpoint(req,env,path,identity);
  if(path==='/api/committee/meetings'||path.startsWith('/api/committee/meetings/')||path.startsWith('/api/committee/minutes/')||path.startsWith('/api/committee/agm/')||path==='/api/committee/reminders')
   return meetingsEndpoint(req,env,path,identity);
+ if(path==='/api/apply'||path==='/api/committee/applications'||path.startsWith('/api/committee/applications/'))return applicationsEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/events/'))return runSheetEndpoint(req,env,path,identity);
  if(path.startsWith('/api/suite/'))return suiteEndpoint(req,env,path,identity);
  if(path==='/api/webmaster/requests'||path.startsWith('/api/webmaster/requests/'))

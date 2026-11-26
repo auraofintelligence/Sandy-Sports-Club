@@ -114,7 +114,7 @@ export async function peopleEndpoint(req,env,path,identity){
  }
  fail(404,'Unknown membership-directory operation.','not_found');
 }
-async function verifyTurnstile(token,req,secret){
+export async function verifyTurnstile(token,req,secret){
  try{
   const data=new URLSearchParams({secret,response:token,remoteip:req.headers.get('cf-connecting-ip')||''});
   const response=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body:data,signal:AbortSignal.timeout(8000)});
