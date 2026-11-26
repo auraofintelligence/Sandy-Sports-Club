@@ -3,7 +3,7 @@
 import {fail,requireRole,STAFF} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 const owns=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
-const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard','sandyCommitteeReceipt'];
+const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard','sandyCommitteeReceipt','sandyMinutesEdition'];
 const safeObject=body=>body&&typeof body==='object'&&!Array.isArray(body);
 const restrictedGeneric=kind=>{
  const desks=SUITE_DESKS.filter(d=>d.kind===kind);
@@ -20,6 +20,8 @@ export function recordPurpose(kind,body){
   if(owns(body,'desk')||body.source==='sandy-committee-room-v1'||body.source==='sandy-constitution-builder')return null;
   if(marks[0]==='sandyCommitteeReceipt')
    return kind==='notice'&&body.sandyCommitteeReceipt===1&&typeof body.ownerId==='string'&&typeof body.noticeId==='string'?{type:'committee-receipt',key:'receipt',roles:[]}:null;
+  if(marks[0]==='sandyMinutesEdition')
+   return kind==='governance'&&body.sandyMinutesEdition===1&&typeof body.sourceMeeting==='string'&&typeof body.text==='string'?{type:'minutes-edition',key:'minutes-edition',roles:SUITE_BY_KEY.meetings.roles}:null;
   if(marks[0]==='sandyWebmasterRequest')
    return kind==='notice'&&body.sandyWebmasterRequest===1?{type:'help',key:'help',roles:['webmaster']}:null;
   if(marks[0]==='sandyMemberSafeguard')
@@ -96,6 +98,7 @@ export const RELEASE_KEY='sandyRelease';
 // Only member-facing purposes can be released; internal desks never reach members.
 export function releasable(row){
  const p=purposeOf(row);
+ if(p?.type==='minutes-edition')return true;
  if(!p||!['generic','suite'].includes(p.type))return false;
  if(row.kind==='notice')return p.key==='member-notice'||p.key==='legacy:member-notice';
  return ['event','newsletter'].includes(row.kind);

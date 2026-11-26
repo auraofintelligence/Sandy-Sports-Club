@@ -14,7 +14,7 @@ export function rejectClientRelease(body){
  * Record a decision against the current version of a record whose purpose and office
  * access the caller has already verified. `area` labels audit actions (record or suite).
  */
-export async function decideRecord(req,env,db,identity,row,area){
+export async function decideRecord(req,env,db,identity,row,area,{beforeRelease}={}){
  ensureApprover(identity,env);
  const b=await payload(req,8192),decision=field(b.decision,32),expected=version(b.version);
  if(!DECISIONS.includes(decision))fail(400,'Choose approve, reject, return for changes or release to members.','invalid_decision');
@@ -29,6 +29,7 @@ export async function decideRecord(req,env,db,identity,row,area){
   if(!releasable(row))fail(400,'Only member events, newsletters and member notices can be released to members.','release_not_applicable');
   if(row.status!=='approved')fail(409,'Approve this exact version before releasing it to members.','approval_required');
   if(releasedVersion(row))fail(409,'This version is already released to members.','already_released');
+  if(beforeRelease)await beforeRelease();
   const approval=await db.prepare("SELECT id FROM studio_decisions WHERE entity_type='record' AND entity_id=? AND entity_version=? AND decision='approved' LIMIT 1").bind(row.id,row.version).first();
   if(!approval)fail(409,'An approval for this exact record version must exist before release.','approval_required');
   approvalId=approval.id;newStatus='approved';stored='publish_authorised';

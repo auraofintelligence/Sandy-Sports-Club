@@ -149,7 +149,7 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
   const prefs=(await ownRecords(db,identity,'preferences'))[0]||null;
   if(prefs&&(!enrolled||!safeguards.optionalParticipation||prefs.fields.sharingRevision!==safeguards.version))prefs.fields={...prefs.fields,volunteer:false,contactPreference:'no_contact',publicationConsent:false};
   const wishes=await ownRecords(db,identity,'wish');
-  let events=[],notices=[],newsletters=[],rsvp={mine:[],updates:[]};
+  let events=[],notices=[],newsletters=[],minutes=[],rsvp={mine:[],updates:[]};
   if(active){
    const ev=await visibleRecords(db,"WHERE kind='event' AND status='approved' AND event_date>=date('now','+10 hours')",[],'event_date,id',40,memberPublicationAllowed);
    const rs=await rsvpState(db,identity);rsvp=rs;
@@ -158,9 +158,11 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
    notices=ns.map(r=>({id:r.id,title:r.title,date:r.updated_utc}));
    const nl=await visibleRecords(db,"WHERE kind='newsletter' AND status='approved'",[],'updated_utc DESC,id DESC',18,memberPublicationAllowed);
    newsletters=nl.map(r=>({id:r.id,title:r.title,date:r.updated_utc}));
+   const mn=await visibleRecords(db,"WHERE kind='governance' AND status='approved' AND json_extract(body_json,'$.sandyMinutesEdition')=1",[],'COALESCE(event_date,updated_utc) DESC,id DESC',24,memberPublicationAllowed);
+   minutes=mn.map(r=>({id:r.id,title:r.title,date:r.event_date||r.updated_utc,text:JSON.parse(r.body_json).text}));
   }
   const displayProfile=profile?{...profile,consent_publication:active&&safeguards.optionalParticipation&&!!profile.consent_publication?1:0,consent_contact:active&&safeguards.optionalParticipation&&!!profile.consent_contact?1:0}:null;
-  return json({active,enrolled,safeguards,profile:displayProfile,preferences:prefs,wishes,events,notices,newsletters,eventUpdates:rsvp.updates,
+  return json({active,enrolled,safeguards,profile:displayProfile,preferences:prefs,wishes,events,notices,newsletters,minutes,eventUpdates:rsvp.updates,
    notice:active?'Your personal record and authorised club information.':enrolled?'A verified age group and any required guardian permission are needed for member self-service. Your own data remains available.':'The club is not established, or your account is not linked to an approved membership. No draft events or private committee material is displayed.'});
  }
  if(path==='/api/member/data-export'&&req.method==='GET'){

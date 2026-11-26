@@ -34,7 +34,7 @@ export async function recordsEndpoint(req,env,path,identity){
   requireRole(identity,STAFF);
   const records=await list(db,'meeting',row=>calendarAllowed(row,identity));
   return json({meetings:records.map(r=>({id:r.id,title:r.title,date:r.eventDate,
-    location:r.body.location||r.body.fields?.location||'',status:r.status==='approved'?'approved':'draft'}))});
+    location:r.body.location||r.body.fields?.location||'',status:r.body.meetingOps?.cancelled?'cancelled':r.status==='approved'?'approved':'draft'}))});
  }
  if(path==='/api/records'&&req.method==='GET'){
   const kind=field(url.searchParams.get('kind'),40);
