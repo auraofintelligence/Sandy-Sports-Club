@@ -86,6 +86,91 @@ CARD = {('places.html', '10-12 Ballow Road candidate'): 'site-ballow-bay-tree.we
         ('places.html', 'Amity Point (Pulan) sports and recreation reserve'): 'place-amity-point-reserve-satellite.webp',
         ('places.html', 'Point Lookout (Mulumba) sports park'): 'place-point-lookout-sports-park-satellite.webp'}
 
+
+# Card images restored after the zero-reuse pass: every card on the key pages carries its own unique image.
+_CARDS = [
+    ('index.html', 'Mixed beach volleyball', 'card-index-volleyball', 'mixed beach volleyball players on a premium sand court'),
+    ('index.html', 'Flag football', 'card-index-flag', 'a flag football game on a sand field'),
+    ('index.html', 'Distributed facilities', 'card-index-three-towns', 'sport facilities spread across three island towns'),
+    ('index.html', 'Adaptable clubhouses', 'card-index-clubhouses', 'an adaptable modern clubhouse beside sand courts'),
+    ('index.html', 'A premium outdoor LED cinema', 'card-index-led-cinema', 'a premium outdoor LED cinema wall with audience seating at dusk'),
+    ('index.html', 'Public and private backing', 'card-index-capital', 'public and private partners reviewing a community sport plan'),
+    ('index.html', 'A home for players', 'card-index-members', 'club members relaxing together after a game'),
+    ('index.html', 'Organise together', 'card-index-committee', 'a volunteer committee organising together'),
+    ('index.html', 'Keep it coherent', 'card-index-webmaster', 'a club webmaster keeping the website and records up to date'),
+    ('facilities.html', 'Mixed volleyball campus', 'card-fac-volleyball-campus', 'a multi-court mixed beach volleyball campus'),
+    ('facilities.html', 'Larger sport zones', 'card-fac-field-zones', 'larger sand field zones for team sports'),
+    ('facilities.html', 'Lighting and power', 'card-fac-lighting', 'sports lighting and power over sand courts at night'),
+    ('facilities.html', 'Dressing rooms and showers', 'card-fac-dressing-rooms', 'clean modern dressing rooms and showers'),
+    ('facilities.html', 'Equipment and maintenance', 'card-fac-equipment', 'an equipment store and court maintenance'),
+    ('facilities.html', 'Meeting and media room', 'card-fac-media-room', 'a meeting and media room overlooking the courts'),
+    ('film-club.html', 'Film festivals and cinema', 'card-film-festival', 'an outdoor film festival screening on a permanent LED wall'),
+    ('film-club.html', 'Production and skill transfer', 'card-film-mediahub', 'young people learning film production in a media room'),
+    ('film-club.html', 'Sport broadcasts', 'card-film-broadcast', 'a sport broadcast crew filming beach sport'),
+    ('flag-football.html', 'Mixed social flag', 'card-flag-social', 'a mixed social flag football game on sand'),
+    ('flag-football.html', 'Sand conditioning crossover', 'card-flag-train', 'athletes doing sand conditioning drills'),
+    ('flag-football.html', '2032 cultures and sport', 'card-flag-expo', 'a flag football showcase during a culture and sport day'),
+    ('programme.html', 'Mixed sand leagues', 'card-prog-leagues', 'a mixed sand league evening under lights'),
+    ('programme.html', 'Outdoor cinema', 'card-prog-cinema', 'an outdoor cinema night on a premium LED wall'),
+    ('programme.html', 'Makers and food', 'card-prog-markets', 'island makers and food stalls at a sport day'),
+    ('programme.html', 'Sand sport expo', 'card-prog-expo', 'a sand sport expo with several codes on show'),
+    ('programme.html', 'Skills transfer', 'card-prog-youth', 'young people learning event and media skills'),
+    ('programme.html', 'Cultural programmes', 'card-prog-country', 'a cultural programme gathering on country by the water'),
+    ('join.html', 'Founding interest', 'card-join-founding', 'people registering founding interest in the club'),
+    ('join.html', 'Committee nomination', 'card-join-committee', 'members discussing committee nominations'),
+    ('join.html', 'Existing clubs', 'card-join-clubs', 'existing local clubs meeting to work together'),
+    ('clubhouse.html', 'My sport and teams', 'card-ch-teams', 'a team gathering before a sand sport game'),
+    ('clubhouse.html', 'Island calendar and people', 'card-ch-calendar', 'members planning the island sport calendar'),
+    ('clubhouse.html', 'Skills and media', 'card-ch-skills', 'members building media and event skills'),
+    ('clubhouse.html', 'Meeting and action desk', 'card-ch-meeting', 'a club meeting working through actions'),
+    ('clubhouse.html', 'Facilities and asset desk', 'card-ch-facilities', 'volunteers checking club facilities and assets'),
+    ('clubhouse.html', 'Grant and investment desk', 'card-ch-fund', 'members preparing a grant and investment case'),
+    ('committee.html', 'Governance and meetings', 'card-com-governance', 'a committee governance meeting'),
+    ('committee.html', 'Sport operations', 'card-com-sport', 'sport operations being organised courtside'),
+    ('committee.html', 'Events and summer programme', 'card-com-events', 'a summer event being set up beside sand courts'),
+    ('committee.html', 'Film club governance', 'card-com-film', 'film club officers planning a screening programme'),
+    ('committee.html', 'Grants and investment', 'card-com-grants', 'officers working on grants and investment'),
+    ('committee.html', 'Facilities and assets', 'card-com-facilities', 'officers inspecting club facilities and assets'),
+    ('committee.html', 'Membership and welfare', 'card-com-welfare', 'membership and welfare volunteers welcoming players'),
+    ('committee.html', 'Webmaster and communications', 'card-com-webmaster', 'a webmaster managing club communications'),
+    ('members.html', 'Sport and teams', 'card-mem-teams', 'members playing in mixed sand sport teams'),
+    ('members.html', 'Skills and learning', 'card-mem-skills', 'members learning new skills together'),
+    ('members.html', 'Calendar and availability', 'card-mem-calendar', 'members checking the club calendar and availability'),
+    ('members.html', 'Film club membership', 'card-mem-film', 'film club members at an LED wall screening'),
+    ('members.html', 'Event and media crew', 'card-mem-crew', 'an event and media crew at work'),
+    ('members.html', 'Shared equipment', 'card-mem-equipment', 'shared club equipment ready for use'),
+]
+for _p, _t, _img, _alt in _CARDS:
+    CARD[(_p, _t)] = _img + '.webp'
+    ALT[_img + '.webp'] = 'Concept image of ' + _alt
+
+# Unique hero images for the internal member and committee pages.
+_HEROES = {
+    'assets.html': ('hero-assets', 'a club asset store with organised sport equipment'),
+    'committee-assets.html': ('hero-committee-assets', 'officers reviewing club facilities and assets'),
+    'committee-events.html': ('hero-committee-events', 'an event team setting up a summer programme'),
+    'committee-film.html': ('hero-committee-film', 'a film crew with a camera jib at a sand court at golden hour'),
+    'committee-funding.html': ('hero-committee-funding', 'a clubhouse function room set for a funding partners dinner'),
+    'committee-governance.html': ('hero-committee-governance', 'founding committee members walking a waterfront reserve at sunrise'),
+    'committee-members.html': ('hero-committee-members', 'a family sport day registration under shade sails'),
+    'committee-publishing.html': ('hero-committee-publishing', 'a courtside photographer reviewing shots at a beach sport event'),
+    'committee-sport.html': ('hero-committee-sport', 'coaches from several sports meeting courtside'),
+    'committee.html': ('hero-committee', 'a clubhouse committee room glowing at dusk above sand courts'),
+    'clubhouse.html': ('hero-clubhouse', 'a premium beachside clubhouse lit at night'),
+    'members.html': ('hero-members', 'a members lounge looking onto sand courts and the bay'),
+    'member-calendar.html': ('hero-member-calendar', 'a sunrise over an island coastline with three headlands'),
+    'member-crew.html': ('hero-member-crew', 'an event crew assembling spectator seating beside a sand court'),
+    'member-equipment.html': ('hero-member-equipment', 'a club equipment trailer waiting at an island ferry terminal'),
+    'member-film.html': ('hero-member-film', 'young filmmakers flying a drone over a beach volleyball session'),
+    'member-sports.html': ('hero-member-sports', 'netball and rugby players warming up on neighbouring sand fields'),
+    'member-training.html': ('hero-member-training', 'an outdoor first aid and coaching class under a beach pavilion'),
+    'sources.html': ('hero-sources', 'a researcher reading a report on the foreshore at golden hour'),
+    'webmaster.html': ('hero-webmaster', 'a clubhouse entrance with a public foyer and a secure members door at night'),
+}
+for _p, (_img, _alt) in _HEROES.items():
+    HERO[_p] = _img + '.webp'
+    ALT[_img + '.webp'] = 'Concept image of ' + _alt
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',
