@@ -19,7 +19,7 @@ const plusDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString()
 // Owner policy defaults: quorum is unset until the adopted constitution says otherwise.
 export const quorumDefault=env=>{const n=Number(env.SANDY_MEETING_QUORUM);return Number.isInteger(n)&&n>0&&n<100?n:null};
 export const reminderDays=env=>{const n=Number(env.SANDY_MEETING_REMINDER_DAYS);return Number.isInteger(n)&&n>=0&&n<=60?n:7};
-async function stableId(value){
+export async function stableId(value){
  const b=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('sandy-meetings-v1/'+value))).slice(0,16);
  b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
@@ -32,7 +32,7 @@ async function loadDeskRecord(db,desk,recordId,actor){
  if(!body||!suiteAllowed(row,desk,actor))fail(404,'That record is not in this working area.','record_not_found');
  return {row,body};
 }
-function writeRecord(db,actor,row,body,op,{status=row.status,eventDate=row.event_date,title=row.title,changes={},extra=[]}={}){
+export function writeRecord(db,actor,row,body,op,{status=row.status,eventDate=row.event_date,title=row.title,changes={},extra=[]}={}){
  const at=now(),next=row.version+1;
  return {at,next,statements:[
   db.prepare('UPDATE club_records SET title=?,body_json=?,status=?,event_date=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
@@ -40,7 +40,7 @@ function writeRecord(db,actor,row,body,op,{status=row.status,eventDate=row.event
   revision(db,{kind:'record',resourceId:row.id,resourceVersion:next,action:op,actor,at,snapshot:{title,status,...body},changes:{...changes,fromVersion:row.version,toVersion:next},guarded:true}),
   audit(db,actor,op,'record',row.id,at,true,{fromVersion:row.version,toVersion:next}),...extra]};
 }
-async function commit(db,w,message='This meeting changed. Reload before saving.'){
+export async function commit(db,w,message='This meeting changed. Reload before saving.'){
  const out=await db.batch(w.statements);
  if(!out[0].meta.changes)fail(409,message,'conflict');
  return out;
