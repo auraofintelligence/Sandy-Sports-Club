@@ -141,7 +141,15 @@ export async function suiteEndpoint(req,env,path,identity){
   return json({history:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
  }
  if(decision)fail(405,'Formal decisions are recorded with POST only.','method_not_allowed');
- if(!history&&req.method==='GET')return json({record:summary(row,body)});
+ if(!history&&req.method==='GET'){
+  // Event organisers see reply totals only; individual member replies stay private.
+  if(desk.key==='events'){
+   const q=await db.prepare("SELECT json_extract(body_json,'$.fields.response') AS response,count(*) AS n FROM club_records WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberWorkspace')=1 AND json_extract(body_json,'$.type')='rsvp' AND json_extract(body_json,'$.eventId')=? GROUP BY response").bind(recordId).all();
+   const totals={going:0,maybe:0,not_going:0};for(const r of q.results||[])if(Object.hasOwn(totals,r.response))totals[r.response]=r.n;
+   return json({record:{...summary(row,body),rsvpTotals:totals}});
+  }
+  return json({record:summary(row,body)});
+ }
  if(!history&&req.method==='PATCH')return changed(db,desk,identity,recordId,await payload(req,26000));
  fail(405,'This Sandy workflow only supports reading and saving working drafts.','method_not_allowed');
 }

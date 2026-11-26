@@ -27,6 +27,24 @@ function cardList(data,empty){
  return data?.length?data.map(row=>'<article class="member-item"><strong>'+safe(row.title)+'</strong>'+
   '<span>'+safe(row.date||row.updatedAt||'')+'</span></article>').join(''):'<p>'+safe(empty)+'</p>';
 }
+const replyLabels={going:'Going',maybe:'Maybe',not_going:'Not going'};
+// Released events with a private personal reply, change/withdrawal notices and a calendar file.
+function renderEvents(){
+ const updates=(workspace.eventUpdates||[]).map(u=>'<p class="club-status bad" role="status">'+safe(u.title)+': '+(u.change==='withdrawn'?'withdrawn or cancelled since you replied.':'details changed'+(u.previousDate&&u.previousDate!==u.date?' (was '+safe(u.previousDate)+', now '+safe(u.date)+')':'')+'. Please confirm your reply.')+'</p>').join('');
+ const list=workspace.events?.length?workspace.events.map(row=>'<article class="member-item"><strong>'+safe(row.title)+'</strong><span>'+safe(row.date)+'</span>'+
+  '<span role="group" aria-label="Your reply to '+safe(row.title)+'">'+Object.entries(replyLabels).map(([value,text])=>'<button type="button" data-rsvp-event="'+safe(row.id)+'" data-rsvp-value="'+value+'" data-rsvp-version="'+safe(row.rsvpVersion||0)+'" aria-pressed="'+(row.myRsvp===value)+'"'+(workspace.active&&!preview?'':' disabled')+'>'+text+'</button>').join(' ')+'</span></article>').join('')+
+  (workspace.active&&!preview?'<p><a href="/api/member/calendar.ics" download>Download released events as a calendar file</a>. It does not update automatically; download again after changes.</p>':''):
+  '<p>No released upcoming events. Planned club dates remain private proposals.</p>';
+ $('member-events').innerHTML=updates+list;
+}
+document.addEventListener('click',async event=>{
+ const button=event.target.closest?.('[data-rsvp-event]');if(!button||!workspace?.active||preview)return;
+ button.disabled=true;
+ try{
+  await api('/api/member/rsvp','POST',{eventId:button.dataset.rsvpEvent,response:button.dataset.rsvpValue,version:Number(button.dataset.rsvpVersion)||0});
+  workspace=await api('/api/member/workspace');showReal();banner('Your reply was saved privately. No message was sent.');
+ }catch(error){banner(error.message,true);button.disabled=false}
+});
 function fillProfile(profile){
  $('member-profile').innerHTML=profile?'<p><strong>Name:</strong> '+safe(profile.full_name||profile.name)+'</p>'+
   '<p><strong>Class:</strong> '+safe(profile.membership_class||profile.membershipClass||'Not specified')+'</p>'+
@@ -67,7 +85,7 @@ function showReal(){
   ['Renewal',profile?.renewal_on||'Not recorded']
  ].map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+safe(a)+'</span></div>').join('');
  fillProfile(profile);
- $('member-events').innerHTML=cardList(workspace.events,'No formally approved upcoming events. Planned club dates remain private proposals.');
+ renderEvents();
  $('member-notices').innerHTML=cardList(workspace.notices,'No authorised member notices have been released.');
  $('member-newsletters').innerHTML=cardList(workspace.newsletters,'No formally released newsletters in the archive.');
  $('member-interest-list').innerHTML=workspace.wishes?.length?workspace.wishes.map(r=>'<p>'+safe(r.fields?.area)+': '+safe(r.fields?.request)+'</p>').join(''):

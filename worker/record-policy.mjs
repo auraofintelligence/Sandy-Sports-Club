@@ -25,7 +25,7 @@ export function recordPurpose(kind,body){
   if(marks[0]==='sandyMemberSafeguard')
    return kind==='safeguard'&&body.sandyMemberSafeguard===1&&typeof body.ownerId==='string'&&safeObject(body.fields)?{type:'member-safeguard',key:'participation-check',roles:['webmaster','president','secretary']}:null;
   if(marks[0]==='sandyMemberWorkspace')
-   return kind==='safeguard'&&body.sandyMemberWorkspace===1&&['preferences','wish'].includes(body.type)&&typeof body.ownerId==='string'?{type:'member',key:body.type,roles:[]}:null;
+   return kind==='safeguard'&&body.sandyMemberWorkspace===1&&(['preferences','wish'].includes(body.type)||body.type==='rsvp'&&typeof body.eventId==='string')&&typeof body.ownerId==='string'?{type:'member',key:body.type,roles:[]}:null;
   const desk=SUITE_BY_KEY[body.domain];
   return body.sandySuiteVersion===1&&desk&&desk.kind===kind&&safeObject(body.fields)?{type:'suite',key:desk.key,roles:desk.roles}:null;
  }
