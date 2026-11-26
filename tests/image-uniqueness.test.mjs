@@ -17,7 +17,10 @@ const IMG=/\.(webp|png|jpe?g|gif|avif)$/i;
 const base=f=>f.replace(/-\d+w(?=\.[a-z]+$)/i,'');
 const manifest=JSON.parse(readFileSync(join(root,'tests/image-manifest.json'),'utf8'));
 const assetImages=readdirSync(join(root,'assets')).filter(f=>IMG.test(f)).map(f=>'assets/'+f);
-const textFiles=PUBLIC_FILES.filter(f=>['.html','.js','.css'].includes(extname(f)));
+// The owner's review gallery shows every image on purpose, so it is exempt from the
+// one-place rule. An image shown only in the gallery is kept for the owner's comparison.
+const GALLERY='image-gallery.html';
+const textFiles=PUBLIC_FILES.filter(f=>['.html','.js','.css'].includes(extname(f))&&f!==GALLERY);
 
 function placements(){
  // Map image group -> list of "file#section" places it is referenced.
@@ -51,9 +54,10 @@ test('every non-brand image is used in exactly one public page section',()=>{
  assert.deepEqual(problems,[],problems.join('\n'));
 });
 
-test('every shipped image is used somewhere (no orphan or retired images)',()=>{
+test('every shipped image is used on a page or shown in the owner gallery (no orphans)',()=>{
  const uses=placements();
- const orphans=assetImages.filter(f=>!BRAND.has(f)&&!uses.has(base(f)));
+ const gallery=readFileSync(join(root,GALLERY),'utf8');
+ const orphans=assetImages.filter(f=>!BRAND.has(f)&&!uses.has(base(f))&&!gallery.includes('/'+base(f)+'"'));
  assert.deepEqual(orphans,[]);
  for(const f of assetImages)assert.ok(PUBLIC_FILES.includes(f),f+' missing from PUBLIC_FILES');
 });
@@ -80,7 +84,15 @@ test('no two image files are the same picture (exact or perceptual near-duplicat
  assert.deepEqual(close,[],close.join('\n'));
 });
 
-test('retired inflatable and low-quality images are gone',()=>{
+test('the originals from b1964e4 are kept as files and the home page shows them in their original slots',()=>{
  for(const f of ['hero-film.webp','hero-home.webp','hero-sports.webp','modular-led-concept.webp','women-led-setup.webp'])
-  assert.ok(!assetImages.includes('assets/'+f),f+' should stay retired');
+  assert.ok(assetImages.includes('assets/'+f),f+' should be restored');
+ const home=readFileSync(join(root,'index.html'),'utf8');
+ assert.match(home,/<section class="page-hero"><img src="\/assets\/hero-home\.webp"/);
+ for(const [title,img] of [['Mixed beach volleyball','hero-sports'],['Flag football','flag-football-concept'],['Adaptable clubhouses','hero-trust'],['A premium outdoor LED cinema','modular-led-concept'],['Public and private backing','hero-funding']]){
+  const card=home.match(new RegExp('<article class="card[^"]*"><img src="/assets/([\\w.-]+)"(?:(?!</article>)[\\s\\S])*?<h3><a [^>]*>'+title+'<'));
+  assert.ok(card,'home card '+title+' missing');
+  assert.equal(card[1],img+'.webp','home card '+title+' should show its original image');
+ }
+ assert.match(home,/<figure class="feature-figure"><img src="\/assets\/hero-community-builder\.webp"/);
 });

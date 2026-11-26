@@ -98,3 +98,15 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .page-hero.no-image{min-height:340px;background:radial-gradient(circle at 82% 18%,#2f8f8a55,transparent 42%),radial-gradient(circle at 12% 90%,#f2a65a33,transparent 40%),linear-gradient(135deg,#071f2c,#123d52 55%,#1d5a6b)}.page-hero.no-image:after{background:linear-gradient(0deg,#08273599,transparent 70%)}
 .photo-strip.place-context{grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:1.4rem}.photo-strip.place-context img{height:auto;max-height:520px;object-fit:contain;background:#fff;border:1px solid #d7e4e3}@media(max-width:700px){.photo-strip.place-context{grid-template-columns:1fr}}
 .hp-field{position:absolute!important;left:-10000px!important;width:1px;height:1px;overflow:hidden}.nomination-done{padding:1.4rem 1.6rem;border-radius:16px;background:#e6f4ef;border:1px solid #9fd0bd}.nomination-done h3{margin:.1rem 0 .4rem}
+/* Owner image gallery (image-gallery.html) */
+.gallery-intro h1{margin:.2rem 0 .6rem}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem;max-width:1320px}
+.gallery-item{margin:0;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(16,45,64,.12)}
+.gallery-item img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;background:#e8eef2}
+.gallery-item figcaption{display:flex;flex-direction:column;gap:.3rem;padding:.7rem .85rem;font-size:.86rem;line-height:1.35;word-break:break-word}
+.gallery-status{align-self:flex-start;padding:.1rem .5rem;border-radius:999px;font-size:.75rem;font-weight:700}
+.gallery-status.live{background:#d8f3e3;color:#0d5a2f}.gallery-status.removed{background:#fde2d8;color:#8a2a0b}.gallery-status.unused{background:#e6e9f0;color:#38425a}
+.gallery-pair{max-width:1320px;margin:1.4rem 0}.gallery-pair h3{margin:0 0 .5rem;font-size:1rem}
+.gallery-pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.gallery-empty{padding:1rem;min-height:120px;display:flex;align-items:center}
+@media(max-width:700px){.gallery-pair-grid{grid-template-columns:1fr}}

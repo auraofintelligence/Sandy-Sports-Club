@@ -259,9 +259,21 @@
   "dhash": "ebf7fbf77a5c33b3",
   "sha256": "cd2e345739642c5576005f8713c9c63711bbba2939fd0296c61b3c1a4f65f3fd"
  },
+ "assets/hero-constitution.webp": {
+  "dhash": "cb64d4f14b0b3333",
+  "sha256": "6d9642a28d73f24d167a5681fce1710d4bf3efe719936954d4de3e7d610bbcad"
+ },
+ "assets/hero-film.webp": {
+  "dhash": "0b0e4beb3b252f4f",
+  "sha256": "074c8073226a7a8e33d2ed005a431e10a8c79f1d04721beaba5eaa8de46a12b9"
+ },
  "assets/hero-funding.webp": {
   "dhash": "893896060e17071f",
   "sha256": "0281d121b148ff19dad2cc7c458241f7f720450de6a4c9d0bac929dbf7dbab73"
+ },
+ "assets/hero-home.webp": {
+  "dhash": "0f3f9e3d36c79794",
+  "sha256": "bc32cc66634bec77202cc050963cb1223769a4f45267760cda785e586a9d27d8"
  },
  "assets/hero-markets.webp": {
   "dhash": "0c28305a4b6d6c47",
@@ -303,6 +315,10 @@
   "dhash": "68680004c158d8e1",
   "sha256": "79526e7c2c3cf53c5177b51ca3eef85012a0b1611428c39099dfa4fad02e77e5"
  },
+ "assets/hero-sports.webp": {
+  "dhash": "3f1f0d5f4f242323",
+  "sha256": "7c098c225405d7d3ee414ec0aae3658b365b0217d58975519b35e7697e8d4e67"
+ },
  "assets/hero-trust.webp": {
   "dhash": "371d3d275a52938b",
   "sha256": "e96d913acf864145be8cf79bd3c70abd3d579f6f21ecd1cfd429425ab65946ac"
@@ -322,6 +338,10 @@
  "assets/led-cinema-screen-campaign.webp": {
   "dhash": "e63e9adaffdbb1dc",
   "sha256": "ac8869d285145fb9787672313cee0a565944c7b724537e5b4ae2eae7470701bc"
+ },
+ "assets/modular-led-concept.webp": {
+  "dhash": "0b03232343159494",
+  "sha256": "4ee958fa1b2b73784c105ac71d16c09aeba1747d1f2ca863dbd34df3aaf2ee1f"
  },
  "assets/mozzie.webp": {
   "dhash": "e870f2b0f178686a",
@@ -454,5 +474,9 @@
  "assets/venue-sports-precinct.webp": {
   "dhash": "3f1fea0e073b3224",
   "sha256": "956b38397f8e39d89cfcc7066ab17a4394ed770628870a6387ea827dca51b7c9"
+ },
+ "assets/women-led-setup.webp": {
+  "dhash": "0fdf75e6e7275699",
+  "sha256": "186709e5291ccd6b6b8b3abe9df58731fc667b3fef9db4f97586831a0257a951"
  }
 }

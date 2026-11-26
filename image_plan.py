@@ -27,6 +27,10 @@ ALT = {
     'hero-youth-elders.webp': 'Concept image of young people and elders together at a beach sport day',
     'hero-nearby.webp': 'Concept image of a planning table with an island map',
     'hero-trust.webp': 'Concept image of a club meeting planning shared responsibility',
+    'hero-home.webp': 'Concept image of a Sandy Sports beach sport scene on the island',
+    'hero-sports.webp': 'Concept image of mixed beach volleyball on a sand court',
+    'modular-led-concept.webp': 'Concept image of a modular LED screen for club film nights',
+    'hero-constitution.webp': 'Concept image of a founding committee meeting around a timber table to agree club rules',
     'site-ballow-aerial.webp': 'Actual aerial photograph of the 10-12 Ballow Road candidate site',
     'site-ballow-bay-tree.webp': 'Actual photo of the tree, slope and bay edge at 10-12 Ballow Road',
 }
@@ -63,19 +67,19 @@ def kind(img):
 
 # Page hero image by page file. Pages not listed get a no-image hero.
 HERO = {
-    'index.html': 'venue-home-hero.webp',
+    'index.html': 'hero-home.webp',
     'sports.html': 'venue-sports-precinct.webp',
-    'sport-flag-football.html': 'flag-football-concept.webp',
+    'sport-flag-football.html': 'card-index-flag.webp',
     'flag-football.html': 'flag-football-pathway.webp',
     'places.html': 'site-ballow-aerial.webp',
     'facilities.html': 'venue-clubhouse-pavilion.webp',
     'film-club.html': 'led-cinema-film-club.webp',
     'donate.html': 'led-cinema-screen-campaign.webp',
     'programme.html': 'hero-markets.webp',
-    'grants.html': 'hero-funding.webp',
+    'grants.html': 'card-index-capital.webp',
     'join.html': 'hero-youth-elders.webp',
     'space-planner.html': 'hero-nearby.webp',
-    'constitution.html': 'hero-trust.webp',
+    'constitution.html': 'hero-constitution.webp',
 }
 for s in SPORTS:
     HERO[f'sport-{s}.html'] = f'sport-{s}.webp'
@@ -144,6 +148,19 @@ for _p, _t, _img, _alt in _CARDS:
     CARD[(_p, _t)] = _img + '.webp'
     ALT[_img + '.webp'] = 'Concept image of ' + _alt
 
+# Owner correction: the home page keeps its original images from b1964e4 in their
+# original slots. The newer images those slots used move to other pages or stay
+# unused (shown on the owner's image gallery page), so zero reuse still holds.
+HOME_ORIGINALS = {
+    'Mixed beach volleyball': 'hero-sports.webp',
+    'Flag football': 'flag-football-concept.webp',
+    'Adaptable clubhouses': 'hero-trust.webp',
+    'A premium outdoor LED cinema': 'modular-led-concept.webp',
+    'Public and private backing': 'hero-funding.webp',
+}
+for _t, _img in HOME_ORIGINALS.items():
+    CARD[('index.html', _t)] = _img
+
 # Unique hero images for the internal member and committee pages.
 _HEROES = {
     'assets.html': ('hero-assets', 'a club asset store with organised sport equipment'),
@@ -170,6 +187,8 @@ _HEROES = {
 for _p, (_img, _alt) in _HEROES.items():
     HERO[_p] = _img + '.webp'
     ALT[_img + '.webp'] = 'Concept image of ' + _alt
+ALT['card-index-flag.webp'] = 'Concept image of a flag football game on a sand field'
+ALT['card-index-capital.webp'] = 'Concept image of public and private partners reviewing a community sport plan'
 
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
