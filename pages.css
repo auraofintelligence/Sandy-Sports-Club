@@ -120,3 +120,33 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .survey-state{background:#fff3d6;border:1px solid #f0c56a;border-radius:14px;padding:1rem 1.2rem;margin:0 0 1.2rem;max-width:950px}
 .survey-form fieldset{border:0;padding:0;margin:0}.survey-form legend{font:800 1.3rem Outfit,sans-serif;margin-bottom:.6rem}.survey-form fieldset:disabled select,.survey-form fieldset:disabled .button{opacity:.65;cursor:not-allowed}
 .survey-table{width:100%;border-collapse:collapse;margin:0 0 1.3rem}.survey-table th,.survey-table td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid #d9e7e2}.survey-table select{width:100%;min-height:44px;padding:.5rem;border:1px solid #98b7b2;border-radius:9px;font:inherit}.table-wrap{overflow-x:auto}
+/* Sports menu in the main navigation (27 Nov 2026) */
+.site-header .nav-group{position:relative;display:flex;align-items:center;gap:.15rem}
+.site-header .nav-sub-toggle{display:inline-grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:1px solid #4d7486;border-radius:10px;background:transparent;color:#fff;cursor:pointer}
+.site-header .nav-sub-toggle::before{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+.site-header .nav-sub-toggle[aria-expanded="true"]::before{transform:translateY(2px) rotate(225deg)}
+.site-header .nav-sub-toggle:hover,.site-header .nav-sub-toggle[aria-expanded="true"]{background:#28566b;border-color:#ffbf4f;color:#ffbf4f}
+.site-header .nav-sub{position:absolute;top:calc(100% + .7rem);left:0;width:min(760px,92vw);padding:1.1rem 1.2rem 1.2rem;background:#102d40;border:1px solid #396071;border-radius:18px;box-shadow:0 22px 46px #08273590;z-index:40}
+.site-header .nav-sub[hidden]{display:none}
+.site-header .nav-sub-head{display:flex;flex-wrap:wrap;gap:.5rem;padding-bottom:.85rem;margin-bottom:.75rem;border-bottom:1px solid #396071}
+.site-header .nav-sub-head a{display:inline-flex;align-items:center;min-height:44px;padding:.45rem 1rem;border:1px solid #ffbf4f;border-radius:100px;font-weight:800;text-decoration:none;color:#ffbf4f}
+.site-header .nav-sub-head a:hover,.site-header .nav-sub-head a:focus-visible{background:#ffbf4f;color:#102d40}
+.site-header .nav-sub-title{margin:0 0 .5rem;font-size:.72rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#b9d3d4}
+.site-header .nav-sport-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.15rem 1rem}
+.site-header .nav-sport-list li{display:flex;align-items:center;justify-content:space-between;gap:.6rem;border-radius:10px}
+.site-header .nav-sport-list li:hover{background:#17394b}
+.site-header .nav-sport-list a{display:flex;align-items:center;min-height:44px;padding:.35rem .6rem;border-radius:10px;text-decoration:none;font-weight:700;white-space:normal}
+.site-header .nav-sport-list a.nav-rules{flex:none;font-size:.76rem;font-weight:800;color:#ffcb68;text-decoration:underline;text-underline-offset:4px}
+.site-header .nav-sub a:focus-visible,.site-header .nav-sub-toggle:focus-visible{outline:3px solid #ffbf4f;outline-offset:2px}
+@media(max-width:1600px){
+  .site-header nav,.site-header nav.open{flex-wrap:nowrap}
+  .site-header nav .nav-group{display:grid;grid-template-columns:1fr auto;align-items:center;flex:none}
+  .site-header nav>a{flex:none}
+  .site-header nav .nav-sub{position:static;grid-column:1/-1;width:auto;margin:.35rem 0 .5rem;padding:.75rem;border-radius:14px;background:#0c2433;box-shadow:none}
+  .site-header nav .nav-sub-head{gap:.4rem}
+  .site-header nav .nav-sub-head a{padding:.4rem .8rem;font-size:.85rem}
+  .site-header nav .nav-sport-list{grid-template-columns:1fr}
+  .site-header nav .nav-sport-list li{display:grid;grid-template-columns:1fr auto;gap:.2rem}
+  .site-header nav .nav-sport-list a{padding:.35rem .5rem;font-size:.9rem}
+  .site-header nav .nav-sport-list a.nav-rules{font-size:.72rem}
+}

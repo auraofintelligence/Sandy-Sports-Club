@@ -12,12 +12,24 @@ const pages = [
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
   ['facilities.html','Facilities'],['programme.html','Events & film'],
-  ['grants.html','Funding'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
+  ['grants.html','Funding'],['image-gallery.html','Gallery'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
 ];
+// Sports menu: every sport page, with a direct link to its rules and equipment.
+const sportMenu=[
+  ['sport-mixed-beach-volleyball.html','Mixed beach volleyball'],['sport-flag-football.html','Flag football'],
+  ['sport-beach-cricket.html','Beach cricket'],['sport-beach-football.html','Beach football'],
+  ['sport-beach-rugby-league.html','Beach rugby league'],['sport-beach-5s-rugby.html','Beach 5s rugby'],
+  ['sport-airbadminton.html','AirBadminton'],['sport-beach-tennis-and-net-games.html','Beach tennis and net games'],
+  ['sport-ultimate-and-flying-disc.html','Ultimate and flying disc'],['sport-beach-handball.html','Beach handball'],
+  ['sport-netball-crossover.html','Netball crossover'],['sport-afl-crossover.html','AFL crossover'],
+  ['sport-fitness-and-movement.html','Fitness and movement'],['sport-island-made-formats.html','Island-made formats']
+];
+const sportsSub=`<div class="nav-sub" id="nav-sports" hidden><div class="nav-sub-head"><a href="/sports.html" ${here==='sports.html'?'aria-current="page"':''}>All sports</a><a href="/sports.html#survey">Sports survey</a><a href="/flag-football.html" ${here==='flag-football.html'?'aria-current="page"':''}>Flag football pathway</a></div><p class="nav-sub-title">Each sport: about, rules and equipment</p><ul class="nav-sport-list">${sportMenu.map(([url,label])=>`<li><a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a><a class="nav-rules" href="/${url}#how-its-played" aria-label="${label}: rules and equipment">Rules and equipment</a></li>`).join('')}</ul></div>`;
 const mainSectionFor = page => {
   if(page==='index.html')return 'index.html';
   if(page==='sports.html'||page==='flag-football.html'||page.startsWith('sport-'))return 'sports.html';
   if(page==='places.html')return 'places.html';
+  if(page==='image-gallery.html')return 'image-gallery.html';
   if(['facilities.html','space-planner.html','assets.html'].includes(page))return 'facilities.html';
   if(['programme.html','film-club.html'].includes(page))return 'programme.html';
   if(['grants.html','donate.html'].includes(page))return 'grants.html';
@@ -25,7 +37,8 @@ const mainSectionFor = page => {
   if(['club-admin.html','club-login.html','member-home.html','social-studio.html'].includes(page))return 'club-admin.html';
   return 'clubhouse.html';
 };
-const nav = primaryPages.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':mainSectionFor(here)===url?'data-section-active="true"':''}>${label}</a>`).join('');
+const navLink=(url,label)=>`<a href="/${url}" ${here===url?'aria-current="page"':mainSectionFor(here)===url?'data-section-active="true"':''}>${label}</a>`;
+const nav = primaryPages.map(([url,label])=>url==='sports.html'?`<div class="nav-group">${navLink(url,label)}<button type="button" class="nav-sub-toggle" aria-expanded="false" aria-controls="nav-sports" aria-label="Show the sports menu"></button>${sportsSub}</div>`:navLink(url,label)).join('');
 document.querySelector('[data-site-header]')?.insertAdjacentHTML('afterbegin',`<a class="skip" href="#main">Skip to content</a><div class="proposal-strip"><strong>CLUB PROPOSAL</strong><span>Facilities, events and membership shown here are proposed, unless explicitly marked otherwise.</span></div><header class="site-header"><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>MINJERRIBAH · STRADDIE</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button><nav id="nav" aria-label="Main navigation">${nav}</nav><a class="header-signin" id="club-header-account" href="/club-login.html" ${here==='club-login.html'?'aria-current="page"':''}>Sign in</a><a class="header-cta" href="/join.html" ${here==='join.html'?'aria-current="page"':''}>Help build it</a></header>`);
 // PLFC-style private clubhouse entry: show the actual dashboard when a real session exists.
 // The endpoint checks the HttpOnly session cookie; nothing about the role is cached locally.
@@ -46,7 +59,7 @@ fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
  .catch(()=>{});
 // Shared navigation is assembled once for every page.
 const footerSections = [
-  ['Explore',[['sports.html','Sports catalogue'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club']]],
+  ['Explore',[['sports.html','Sports catalogue'],['sports.html#survey','Sports survey'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club'],['image-gallery.html','Image gallery']]],
   ['Build & back',[['join.html','Get involved'],['interest.html','Express interest'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
   ['Clubhouse & tools',[['clubhouse.html','Club proposal (illustrated)'],['member-home.html','My membership (future)'],['members.html','Member demo'],['club-admin.html','My Clubhouse (working dashboard)'],['club-login.html','Secure sign-in'],['committee.html','Legacy planning demo'],['social-studio.html','Social Studio'],['social-studio-preview.html','Earlier browser drafts'],['webmaster.html','Webmaster demo']]]
 ];
@@ -78,7 +91,7 @@ const pageGroups = [
   ['Places and facilities',[pages[4],pages[7],pages[8],route('assets','Asset wish list')]],
   ['Events, film and backing',[pages[5],pages[6],pages[9],pages[10],pages[11],route('interest','Express interest')]],
   ['Member clubhouse',[pages[12],route('member-home','My membership (future)'),pages[13],...memberGuide]],
-  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17]]]
+  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17],route('image-gallery','Image gallery')]]
 ];
 const allPages = pageGroups.flatMap(([,items])=>items);
 const pageLink = ([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`;
@@ -109,11 +122,17 @@ document.querySelectorAll('.card > img').forEach(img=>{
 const menu=document.querySelector('.menu-toggle'), navEl=document.querySelector('#nav');
 menu?.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));navEl.classList.toggle('open',open)});
 navEl?.addEventListener('click',e=>{if(e.target.closest('a')){navEl.classList.remove('open');menu.setAttribute('aria-expanded','false')}});
+const subToggle=document.querySelector('.nav-sub-toggle'),subMenu=document.querySelector('#nav-sports');
+function sportsMenu(open,focusToggle){if(!subToggle)return;subToggle.setAttribute('aria-expanded',String(open));subMenu.hidden=!open;subToggle.setAttribute('aria-label',open?'Hide the sports menu':'Show the sports menu');if(!open&&focusToggle)subToggle.focus()}
+subToggle?.addEventListener('click',()=>sportsMenu(subMenu.hidden));
+subMenu?.addEventListener('click',e=>{if(e.target.closest('a'))sportsMenu(false)});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(subMenu&&!subMenu.hidden){sportsMenu(false,true);return}if(navEl?.classList.contains('open')){navEl.classList.remove('open');menu.setAttribute('aria-expanded','false');menu.focus()}});
+document.addEventListener('click',e=>{if(subMenu&&!subMenu.hidden&&!e.target.closest('.nav-group'))sportsMenu(false)});
 const guide=document.querySelector('#guide-panel'),guideButton=document.querySelector('#guide-button');
 function guideOpen(open){guide.hidden=!open;guideButton.setAttribute('aria-expanded',String(open));if(open)document.querySelector('#guide-close').focus();else guideButton.focus()}
 guideButton?.addEventListener('click',()=>guideOpen(guide.hidden));document.querySelector('#guide-close')?.addEventListener('click',()=>guideOpen(false));
 guide?.addEventListener('click',e=>{if(e.target.closest('a'))guideOpen(false)});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guide&&!guide.hidden)guideOpen(false)});
-document.querySelector('.footer-bottom')?.insertAdjacentHTML('beforeend','<span><a href="/index.html#page-directory">All pages</a> · <a href="/sources.html">Sources & credits</a> · <a href="/LICENCE.md">Interim licence</a> · <a href="https://auraofintelligence.github.io/strange-but-true/">Strange But True</a></span>');
+document.querySelector('.footer-bottom')?.insertAdjacentHTML('beforeend','<span><a href="/index.html#page-directory">All pages</a> · <a href="/image-gallery.html">Image gallery</a> · <a href="/sources.html">Sources & credits</a> · <a href="/LICENCE.md">Interim licence</a> · <a href="https://auraofintelligence.github.io/strange-but-true/">Strange But True</a></span>');
 document.body.insertAdjacentHTML('beforeend','<button class="back-to-top" type="button" aria-label="Back to top" title="Back to top" hidden>↑<span>Top</span></button>');
 const backToTop=document.querySelector('.back-to-top');
 function updateBackToTop(){backToTop.hidden=window.scrollY<450}

@@ -70,7 +70,7 @@ def sport_info(title,slug):
     equip=(f'<div class="equip-grid"><div class="equip-lists"><div><h3>The club provides</h3>{li(r["provides"])}</div><div><h3>Players bring</h3>{li(r["bring"])}</div></div>'
            f'<figure class="feature-figure equip-figure"><img src="/assets/equip-{slug}.webp" alt="Concept image of {EQUIP_ALT[title]}" loading="lazy"><figcaption>Concept image. Actual club equipment is to be confirmed.</figcaption></figure></div>')
     return (section('THE GAME','About '+title,r['about'])+
-            section("HOW IT'S PLAYED","How it's played",'The essentials at a glance: team size, scoring, game length, the court or field, and the key rules.',badge+rules+src,'alt')+
+            section("HOW IT'S PLAYED","How it's played",'The essentials at a glance: team size, scoring, game length, the court or field, and the key rules.',badge+rules+src,'alt').replace('<section class="page-section','<section id="how-its-played" class="page-section',1)+
             junior_info(title)+
             section('EQUIPMENT','Equipment','What the club would provide and what players bring. Lists are proposals until the club is formed and equipment is funded.',equip))
 

@@ -13,13 +13,19 @@ const html=read('image-gallery.html');
 const ORIGINALS=['flag-football-concept.webp','hero-community-builder.webp','hero-film.webp','hero-funding.webp','hero-home.webp','hero-markets.webp','hero-nearby.webp','hero-sports.webp','hero-trust.webp','hero-youth-elders.webp','modular-led-concept.webp','mozzie.webp','sandy-original-icon.png','sandy-original-logo.png','site-ballow-360-point-20.webp','site-ballow-aerial.webp','site-ballow-bay-tree.webp','site-ballow-roadside.webp','women-led-setup.webp'];
 const section=id=>html.split('id="'+id+'"')[1].split('</section>')[0];
 
-test('the gallery is public, noindex and outside the main navigation',()=>{
+test('the gallery is public, noindex, out of the sitemap and linked from the navigation',()=>{
  assert.ok(PUBLIC_FILES.includes('image-gallery.html'));
  assert.match(html,/<meta name="robots" content="noindex, nofollow">/);
  assert.ok(!read('sitemap.xml').includes('image-gallery'),'not in the sitemap');
- assert.ok(!read('site.js').includes('image-gallery'),'not in the site header, footer or navigation');
- const linkers=PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html'&&read(f).includes('/image-gallery.html'));
- assert.deepEqual(linkers,['webmaster.html'],'linked from the Webmaster page only');
+ // 27 Nov 2026 owner request: the gallery must be easy to find, so it is linked from the
+ // main navigation, the footer and the page directory on every page. It stays noindex
+ // and out of the sitemap.
+ const site=read('site.js');
+ assert.ok(site.includes("['image-gallery.html','Gallery']"),'in the main navigation');
+ assert.ok(site.includes("['image-gallery.html','Image gallery']"),'in the footer');
+ assert.ok(site.includes('<a href="/image-gallery.html">Image gallery</a>'),'in the footer links');
+ assert.ok(read('webmaster.html').includes('/image-gallery.html'),'still linked from the Webmaster page');
+ assert.ok(!read('sitemap.xml').includes('image-gallery'),'kept out of the sitemap');
 });
 
 test('section 1 shows all 19 originals, section 2 every newer image, section 3 the proposed balanced set, each labelled',()=>{
