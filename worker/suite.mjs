@@ -3,7 +3,8 @@
 import {ApiError,fail,json,now,id,dbFor,payload,field,dateField,https,version,requireRole,revision,audit} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 import {suiteActionEndpoint} from './suite-actions.mjs';
-import {suiteBody,suiteAllowed,visibleRecords} from './record-policy.mjs';
+import {decideRecord} from './authority.mjs';
+import {suiteBody,suiteAllowed,visibleRecords,releasedVersion} from './record-policy.mjs';
 const statuses=['proposal','draft','review','scheduled','completed','archived','rejected'];
 const exactDate=value=>dateField(value||'',true);
 const isRecordId=value=>/^[a-f0-9-]{36}$/.test(value||'');
@@ -60,7 +61,7 @@ function summary(row,parsed){
  const body=parsed||JSON.parse(row.body_json);
  return {id:row.id,domain:body.domain,title:row.title,status:row.status,eventDate:row.event_date,
   fields:body.fields,version:row.version,createdBy:row.created_by,updatedBy:row.updated_by,
-  createdAt:row.created_utc,updatedAt:row.updated_utc};
+  createdAt:row.created_utc,updatedAt:row.updated_utc,released:releasedVersion(row)};
 }
 const validBody=suiteBody;
 function checkStatus(data){
@@ -119,9 +120,9 @@ export async function suiteEndpoint(req,env,path,identity){
    fields:d.fields
   })),disabled:{approvals:env.SANDY_CLUB_APPROVALS!=='enabled',automaticInvites:env.SANDY_INVITES_ENABLED!=='enabled',liveEmail:true,livePayments:true,livePublishing:true}});
  }
- const match=path.match(/^\/api\/suite\/([a-z][a-z0-9-]*)(?:\/([a-f0-9-]{36})(?:\/(history))?)?$/);
+ const match=path.match(/^\/api\/suite\/([a-z][a-z0-9-]*)(?:\/([a-f0-9-]{36})(?:\/(history|decision))?)?$/);
  if(!match)fail(404,'Unknown Sandy clubhouse service.','suite_not_found');
- const desk=SUITE_BY_KEY[match[1]],recordId=match[2],history=match[3];
+ const desk=SUITE_BY_KEY[match[1]],recordId=match[2],history=match[3]==='history',decision=match[3]==='decision';
  authorised(identity,desk);
  const db=dbFor(env);
  if(!recordId&&req.method==='GET')return json({records:await list(db,desk,identity),domain:desk.key});
@@ -130,10 +131,16 @@ export async function suiteEndpoint(req,env,path,identity){
  const row=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
  const body=validBody(row,desk);
  if(!body||!suiteAllowed(row,desk,identity))fail(404,'That record is not in this working area.','record_not_found');
+ if(decision&&req.method==='POST'){
+  // Dedicated noticeboard and task records follow their own closure workflow.
+  if(body.committeeOps)fail(409,'Use the dedicated committee noticeboard or officer task list for this record.','dedicated_workflow');
+  return decideRecord(req,env,db,identity,row,'suite');
+ }
  if(history&&req.method==='GET'){
   const q=await db.prepare("SELECT resource_version AS version,at_utc AS at,actor_id AS actorId,actor_office AS office,actor_role AS role,operation,changes_json AS changes FROM club_revisions WHERE resource_kind='record' AND resource_id=? ORDER BY resource_version DESC LIMIT 100").bind(recordId).all();
   return json({history:(q.results||[]).map(x=>({...x,changes:JSON.parse(x.changes)}))});
  }
+ if(decision)fail(405,'Formal decisions are recorded with POST only.','method_not_allowed');
  if(!history&&req.method==='GET')return json({record:summary(row,body)});
  if(!history&&req.method==='PATCH')return changed(db,desk,identity,recordId,await payload(req,26000));
  fail(405,'This Sandy workflow only supports reading and saving working drafts.','method_not_allowed');

@@ -1,6 +1,7 @@
-import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,revision,audit,https} from './shared.mjs';
 const types=['event','meeting','task','calendar','grant','asset','equipment','fundraising','film','sponsor','partner','volunteer','newsletter','notice','governance','production','safeguard','social_idea'];
 const states=['proposal','draft','review','scheduled','completed','archived','rejected'];
+import {decideRecord,rejectClientRelease} from './authority.mjs';
 import {genericAllowed,requireGeneric,requireGenericWrite,calendarAllowed,visibleRecords} from './record-policy.mjs';
 const convert=row=>({
  id:row.id,kind:row.kind,title:row.title,body:JSON.parse(row.body_json),status:row.status,eventDate:row.event_date,
@@ -11,6 +12,7 @@ function validate(body){
  if(!types.includes(kind)||!title||!states.includes(status))fail(400,'Choose a recognised club record type, title and planning status.','invalid_record');
  if(body.body&& (typeof body.body!=='object'||Array.isArray(body.body)))fail(400,'Working details must be a JSON object.','invalid_record');
  const data=body.body||{};
+ rejectClientRelease(data);
  const size=JSON.stringify(data);
  if(size.length>24000)fail(413,'Working details are too large.','too_large');
  // An imported object may contain untrusted text but is never executed as HTML.
@@ -83,28 +85,7 @@ export async function recordsEndpoint(req,env,path,identity){
    if(!result.meta.changes)fail(409,'The record changed during saving.','conflict');
    return json({ok:true,id:recordId,version:expected+1});
   }
-  if(match[2]==='decision'&&req.method==='POST'){
-   ensureApprover(identity,env);
-   const b=await payload(req,8192),decision=field(b.decision,32);
-   if(!['approved','rejected','returned'].includes(decision))fail(400,'Choose approve, reject or return for changes.','invalid_decision');
-   if(row.version!==version(b.version))fail(409,'Review the latest record version before deciding.','conflict');
-   const evidence=https(b.evidence);
-   if(!evidence)fail(400,'Record a supporting HTTPS decision reference.','evidence_required');
-   const newStatus=decision==='approved'?'approved':decision==='rejected'?'rejected':'review';
-   const newVersion=row.version+1;
-   const decisionId=id();
-   const [saved]=await db.batch([
-    db.prepare('UPDATE club_records SET status=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=?')
-     .bind(newStatus,identity.id,at,recordId,row.version),
-    db.prepare("INSERT INTO studio_decisions(id,entity_type,entity_id,entity_version,decision,scope_json,evidence_url,authorised_actor,authorised_office,decided_utc) SELECT ?,'record',?,?,?,?,?,?,?,? WHERE changes()=1")
-     .bind(decisionId,recordId,newVersion,decision,JSON.stringify({kind:row.kind,title:row.title}),evidence,identity.id,identity.office_label,at),
-    revision(db,{kind:'record',resourceId:recordId,resourceVersion:newVersion,action:'decision_'+decision,actor:identity,at,
-      snapshot:{...convert(row),status:newStatus,version:newVersion},changes:{decision,evidence},guarded:true}),
-    audit(db,identity,'record_decision_'+decision,'record',recordId,at,true,{fromVersion:row.version,toVersion:newVersion})
-   ]);
-   if(!saved.meta.changes)fail(409,'This record was already decided or changed.','conflict');
-   return json({ok:true,id:recordId,version:newVersion,decisionId,decision,decidedAt:at});
-  }
+  if(match[2]==='decision'&&req.method==='POST')return decideRecord(req,env,db,identity,row,'record');
  }
  fail(404,'Unknown committee record operation.','not_found');
 }

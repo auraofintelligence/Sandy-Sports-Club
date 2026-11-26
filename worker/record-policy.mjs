@@ -92,12 +92,26 @@ export function calendarAllowed(row,identity){
  const p=purposeOf(row);
  return Boolean(p&&['suite','generic'].includes(p.type)&&p.roles.includes(identity?.role)&&['event','meeting'].includes(row.kind));
 }
-export function memberPublicationAllowed(row){
+export const RELEASE_KEY='sandyRelease';
+// Only member-facing purposes can be released; internal desks never reach members.
+export function releasable(row){
  const p=purposeOf(row);
- if(!p||row.status!=='approved'||!['generic','suite'].includes(p.type))return false;
- // Internal notices are not member publications, even if their working status says approved.
+ if(!p||!['generic','suite'].includes(p.type))return false;
  if(row.kind==='notice')return p.key==='member-notice'||p.key==='legacy:member-notice';
  return ['event','newsletter'].includes(row.kind);
+}
+// A release is valid only for the exact current version it was recorded against.
+export function releasedVersion(row){
+ if(!row||row.status!=='approved')return false;
+ try{
+  const r=JSON.parse(row.body_json)?.[RELEASE_KEY];
+  return Boolean(r&&typeof r==='object'&&typeof r.decisionId==='string'&&typeof r.approvalId==='string'&&r.version===row.version);
+ }catch{return false}
+}
+export function memberPublicationAllowed(row){
+ // Approval alone is not member release: an explicit release decision must cover
+ // the exact current version. Internal notices are never member publications.
+ return releasable(row)&&releasedVersion(row);
 }
 export function recordAuditAllowed(row,identity,action){
  if(!row||!identity)return false;
