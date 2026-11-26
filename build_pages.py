@@ -15,8 +15,11 @@ def cards(items,columns=''):
     for tag,title,copy,img,href in items:
         alt='Actual aerial photo of 10-12 Ballow Road in Dunwich (Goompi)' if img=='site-ballow-aerial.webp' else 'Illustrative scene'
         photo=f'<img src="/assets/{img}" alt="{alt}" loading="lazy">' if img else ''
-        link=f'<a href="{href}">Explore further</a>' if href else ''
-        out+=f'<article class="card">{photo}<div class="inner"><span class="tag">{tag}</span><h3>{title}</h3><p>{copy}</p>{link}</div></article>'
+        # Whole-card link: the title anchor is stretched over the card (one link, title as its name).
+        if href:
+            out+=f'<article class="card card-link">{photo}<div class="inner"><span class="tag">{tag}</span><h3><a href="{href}">{title}</a></h3><p>{copy}</p><span class="card-cue" aria-hidden="true">{'&nearr;' if href.startswith('http') else '&rarr;'}</span></div></article>'
+        else:
+            out+=f'<article class="card">{photo}<div class="inner"><span class="tag">{tag}</span><h3>{title}</h3><p>{copy}</p></div></article>'
     return out+'</div>'
 
 def section(kicker,title,body,extra='',tone=''):
