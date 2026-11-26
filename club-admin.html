@@ -22,6 +22,7 @@
 <button data-tab="people">People & memberships</button>
 <button data-tab="interests">Holiday visitor interest</button>
 <button data-tab="nominations" hidden>Nominations &amp; spam caught</button>
+<button data-tab="survey" hidden>Sports survey results</button>
 <button data-tab="committee">Committee room</button>
 <button data-tab="records">Advanced register</button>
 <button data-tab="social">Social Media Hub</button>
@@ -142,6 +143,12 @@
 <h2 id="spam-title">Spam caught</h2>
 <p id="spam-summary">Everything spam protection catches is kept here, separate from the register, and deleted automatically after 90 days. No instant alert is sent for these; they appear in the daily 10:00 AM digest.</p>
 <div class="club-table-scroll"><table aria-labelledby="spam-title"><thead><tr><th>Caught</th><th>Reason</th><th>What it said</th><th>Browser</th><th>Actions</th></tr></thead><tbody id="spam-rows"></tbody></table></div></section>
+<section id="club-survey" class="club-section" hidden aria-labelledby="survey-admin-title"><h2 id="survey-admin-title">Sports interest survey</h2>
+<p id="survey-admin-state">The public survey is switched off; sports.html shows "Survey opening soon".</p>
+<p>Officer only (Webmaster and Secretary). Answers are anonymous: the survey asks for no names, emails or contact details. Totals help plan which sports to start with; they are not bookings or memberships.</p>
+<p><a class="button small" href="/api/committee/survey.csv" download>Download all answers (CSV)</a></p>
+<div class="club-table-scroll"><table><thead><tr id="survey-goal-head"><th>Sport</th><th>Chosen</th><th>First choice</th><th>Average priority</th><th>Casual play</th><th>Regular training</th><th>Compete in regional competitions</th></tr></thead><tbody id="survey-rows"></tbody></table></div>
+<ul id="survey-extra"></ul></section>
 <section id="club-committee" class="club-section" hidden aria-labelledby="club-committee-title">
  <header class="committee-room-heading">
   <p class="eyebrow">SANDY SPORTS · COMMITTEE WORKSPACE</p>

@@ -6,11 +6,12 @@ import {readFileSync} from 'node:fs';
 import {randomUUID,randomBytes,createHash} from 'node:crypto';
 import worker from '../worker/index.mjs';
 export const ROLE_ACTORS=[['web','webmaster'],['pres','president'],['vp','vice_president'],['sec','secretary'],['asst','assistant_secretary'],['treasurer','treasurer'],['other','committee'],['member','member'],['member2','member'],['demo','webmaster_demo']];
-export function fixture(t,{actors:list=ROLE_ACTORS,library=false,nominations=false}={}){
+export function fixture(t,{actors:list=ROLE_ACTORS,library=false,nominations=false,survey=false}={}){
  const sql=new DatabaseSync(':memory:');t.after(()=>sql.close());
  sql.exec(readFileSync(new URL('../backend/migrations/0001_club.sql',import.meta.url),'utf8'));
  if(library)sql.exec(readFileSync(new URL('../backend/migrations/0002_private_library.sql',import.meta.url),'utf8'));
  if(nominations)sql.exec(readFileSync(new URL('../backend/migrations/0003_nominations.sql',import.meta.url),'utf8'));
+ if(survey)sql.exec(readFileSync(new URL('../backend/migrations/0004_survey.sql',import.meta.url),'utf8'));
  let pending=Promise.resolve();
  const DB={prepare(query){
   const q=sql.prepare(query),bind=(...args)=>({first:async()=>q.get(...args)||null,all:async()=>({results:q.all(...args)}),run:async()=>{if(/\bRETURNING\b/i.test(query)){const results=q.all(...args);return {results,meta:{changes:results.length}}}return {meta:{changes:Number(q.run(...args).changes)}}}});

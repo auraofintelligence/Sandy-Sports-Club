@@ -19,6 +19,7 @@ import {runSheetEndpoint} from './run-sheets.mjs';
 import {applicationsEndpoint} from './applications.mjs';
 import {financeEndpoint} from './finance.mjs';
 import {nominationsEndpoint,dailyDigest} from './nominations.mjs';
+import {surveyEndpoint} from './survey.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -52,8 +53,8 @@ async function handle(req,env){
   return new Response(response.body,{status:response.status,headers});
  }
  if(!['GET','POST','PATCH','HEAD'].includes(req.method))throw new ApiError(405,'That method is not supported.','method_not_allowed');
- // The public nomination form records cross-origin posts in its spam quarantine itself.
- if(!['GET','HEAD'].includes(req.method)&&path!=='/api/nominate')verifySameOrigin(req);
+ // The public nomination form and sports survey record cross-origin posts in the spam quarantine themselves.
+ if(!['GET','HEAD'].includes(req.method)&&path!=='/api/nominate'&&path!=='/api/survey')verifySameOrigin(req);
  return viewMode(req,env,path,route);
 }
 async function route(req,env,path,effectiveIdentity){
@@ -61,6 +62,7 @@ async function route(req,env,path,effectiveIdentity){
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
    publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicNominationsReady:Boolean(env.DB?.prepare&&env.SANDY_NOMINATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   publicSurveyReady:Boolean(env.DB?.prepare&&env.SANDY_SURVEY_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicApplicationsReady:Boolean(env.DB?.prepare&&env.SANDY_APPLICATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    turnstileSiteKey:env.SANDY_TURNSTILE_SITE_KEY||null,invitationSendingEnabled:false});
  if(path==='/api/health'&&req.method==='GET')
@@ -83,6 +85,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/committee/meetings'||path.startsWith('/api/committee/meetings/')||path.startsWith('/api/committee/minutes/')||path.startsWith('/api/committee/agm/')||path==='/api/committee/reminders')
   return meetingsEndpoint(req,env,path,identity);
  if(path==='/api/nominate'||path==='/api/committee/nominations'||path==='/api/committee/spam'||path.startsWith('/api/committee/spam/'))return nominationsEndpoint(req,env,path,identity);
+ if(path==='/api/survey'||path==='/api/committee/survey'||path==='/api/committee/survey.csv')return surveyEndpoint(req,env,path,identity);
  if(path==='/api/apply'||path==='/api/committee/applications'||path.startsWith('/api/committee/applications/'))return applicationsEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/finance/')||path.startsWith('/api/committee/equipment/'))return financeEndpoint(req,env,path,identity);
  if(path.startsWith('/api/committee/events/'))return runSheetEndpoint(req,env,path,identity);

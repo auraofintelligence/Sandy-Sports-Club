@@ -22,10 +22,10 @@ export const nominationsOpen=env=>Boolean(env.SANDY_NOMINATIONS_ENABLED==='enabl
 const iso=ms=>new Date(ms).toISOString();
 const hourKey=ms=>iso(ms).slice(0,13);
 
-async function sourceHash(req,env){
+export async function sourceHash(req,env,scope='nominations-v1'){
  const ip=req.headers.get('cf-connecting-ip')||'';
  if(!ip)return '';
- const key=await crypto.subtle.importKey('raw',new TextEncoder().encode((env.SANDY_AUTH_PEPPER||'')+'/nominations-v1'),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode((env.SANDY_AUTH_PEPPER||'')+'/'+scope),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const sig=new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(ip)));
  return Array.from(sig.slice(0,12),b=>b.toString(16).padStart(2,'0')).join('');
 }

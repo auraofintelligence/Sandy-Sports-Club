@@ -110,3 +110,13 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .gallery-pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .gallery-empty{padding:1rem;min-height:120px;display:flex;align-items:center}
 @media(max-width:700px){.gallery-pair-grid{grid-template-columns:1fr}}
+/* Sport pages: how it's played and equipment (26 Nov 2026) */
+.rules-format{display:inline-block;background:#e6f4ef;border:1px solid #9fd0bd;border-radius:12px;padding:.7rem 1rem;max-width:980px}.rules-format.tbc{background:#fff3d6;border-color:#f0c56a}
+.rules-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.4rem 0;max-width:1200px}.rules-list>div{background:white;border-radius:16px;padding:1.1rem 1.3rem;box-shadow:0 8px 24px #102d4010}.rules-list dt{font:800 1.05rem Outfit,sans-serif;margin-bottom:.4rem}.rules-list dd{margin:0;line-height:1.6}
+.rules-source{font-weight:700}.rules-source a{color:#b7442c;text-underline-offset:4px}
+.equip-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:2rem;align-items:start;max-width:1200px}.equip-lists{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.equip-lists>div{background:white;border-radius:16px;padding:1.1rem 1.3rem;box-shadow:0 8px 24px #102d4010}.equip-lists h3{font-size:1.15rem}.equip-lists ul{margin:0;padding-left:1.2rem;line-height:1.7}.equip-figure{margin:0}
+@media(max-width:900px){.equip-grid,.equip-lists{grid-template-columns:1fr}}
+/* Sports interest survey */
+.survey-state{background:#fff3d6;border:1px solid #f0c56a;border-radius:14px;padding:1rem 1.2rem;margin:0 0 1.2rem;max-width:950px}
+.survey-form fieldset{border:0;padding:0;margin:0}.survey-form legend{font:800 1.3rem Outfit,sans-serif;margin-bottom:.6rem}.survey-form fieldset:disabled select,.survey-form fieldset:disabled .button{opacity:.65;cursor:not-allowed}
+.survey-table{width:100%;border-collapse:collapse;margin:0 0 1.3rem}.survey-table th,.survey-table td{text-align:left;padding:.45rem .5rem;border-bottom:1px solid #d9e7e2}.survey-table select{width:100%;min-height:44px;padding:.5rem;border:1px solid #98b7b2;border-radius:9px;font:inherit}.table-wrap{overflow-x:auto}

@@ -9,7 +9,11 @@ import {readFileSync,existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {PUBLIC_FILES} from '../worker/public-assets.mjs';
 const root=new URL('..',import.meta.url).pathname;
-const KEY_PAGES=['index','facilities','film-club','flag-football','programme','join','places','clubhouse','committee','members'];
+const FIRST_KEY_PAGES=['index','facilities','film-club','flag-football','programme','join','places','clubhouse','committee','members'];
+// 26 Nov 2026: every card on every public page now has an image (new images only went on
+// cards that had none). The gallery page is a gallery, not a card page.
+const KEY_PAGES=[...new Set([...FIRST_KEY_PAGES,...PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html').map(f=>f.replace(/\.html$/,'')).filter(p=>readFileSync(join(root,p+'.html'),'utf8').includes('<article class="card'))])];
+const SPORT_PAGES=PUBLIC_FILES.filter(f=>/^sport-[\w-]+\.html$/.test(f));
 const HERO_PAGES=PUBLIC_FILES.filter(f=>f.endsWith('.html')).filter(f=>readFileSync(join(root,f),'utf8').includes('class="page-hero'));
 const read=p=>readFileSync(join(root,p),'utf8');
 
@@ -46,4 +50,22 @@ test('every referenced image exists and is a public file (no 404s)',()=>{
   }
  }
  assert.ok(n>100,'expected over 100 image references across the site');
+});
+
+test('every sport page explains how it is played and its equipment, with a source and a survey link',()=>{
+ assert.equal(SPORT_PAGES.length,14);
+ for(const f of SPORT_PAGES){
+  const html=read(f),slug=f.slice(6,-5);
+  assert.match(html,/<h2>How it's played<\/h2>/,f+' has no How it\'s played section');
+  assert.ok(html.includes('<dt>Key rules</dt>'),f+' rules miss Key rules');
+  assert.ok((html.match(/<dt>/g)||[]).length>=5,f+' needs team size, scoring or format, length, space and key rules');
+  assert.match(html,/<p class="rules-format( tbc)?"><strong>(Official format: [^<]+|Club format, to be confirmed)<\/strong>/,f+' does not say whether its format is official or to be confirmed');
+  assert.match(html,/<p class="rules-source">Source: <a href="https:\/\/[^"]+"/,f+' has no official rules source link');
+  assert.match(html,/<h2>Equipment<\/h2>/,f+' has no Equipment section');
+  assert.ok(html.includes('<h3>The club provides</h3>')&&html.includes('<h3>Players bring</h3>'),f+' equipment lists missing');
+  assert.ok(html.includes('<img src="/assets/equip-'+slug+'.webp" alt="Concept image of '),f+' has no own equipment concept image');
+  assert.match(html,/<figcaption>Concept image\./,f+' equipment image is not labelled as a concept');
+  assert.match(html,/<h3><a href="\/sports\.html#survey">Sports interest survey<\/a><\/h3>/,f+' has no whole card survey link');
+ }
+ assert.match(read('index.html'),/<h3><a href="\/sports\.html#survey">Sports interest survey<\/a><\/h3>/,'home page has no survey card');
 });

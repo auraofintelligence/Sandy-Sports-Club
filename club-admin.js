@@ -2,9 +2,10 @@ import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-vi
 import {setupCommitteeRoom} from './club-committee.js?v=committee-ops-20261125';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 import {loadNominations,mayReviewNominations} from './club-nominations-ui.js';
+import {loadSurvey,mayReviewSurvey} from './club-survey-ui.js';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const allTabs=['overview','people','interests','nominations','committee','records','social','constitution','accounts','requests','briefs','audit'];
+const allTabs=['overview','people','interests','nominations','survey','committee','records','social','constitution','accounts','requests','briefs','audit'];
 let committeeRoom=null;
 let identity=null,sessionInfo=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
 const date=s=>s?String(s).slice(0,10):'Not set';
@@ -48,6 +49,7 @@ function applyRole(session){
  const visible=new Set(staff?['overview','committee','records','social','constitution','requests','briefs']:['overview']);
  if(maySeePeople()){visible.add('people');visible.add('interests')}
  if(mayReviewNominations(role))visible.add('nominations');
+ if(mayReviewSurvey(role))visible.add('survey');
  if(role==='webmaster')visible.add('accounts');
  if(['webmaster','president','secretary'].includes(role))visible.add('audit');
  for(const tab of allTabs){const b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.hidden=!visible.has(tab)}
@@ -71,7 +73,7 @@ function openTab(tab){
  const sectionLabel=$('clubhouse-current');
  if(sectionLabel)sectionLabel.textContent=button?.textContent?.trim()||'Overview';
  for(const t of allTabs){$('club-'+t).hidden=t!==tab;const b=document.querySelector('[data-tab="'+t+'"]');if(b)b.setAttribute('aria-current',t===tab?'page':'false')}
- const load={overview:overview,people:loadPeople,interests:loadInterests,nominations:()=>loadNominations({api,esc,status,readOnly:Boolean(sessionInfo?.readOnly)}),committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
+ const load={overview:overview,people:loadPeople,interests:loadInterests,nominations:()=>loadNominations({api,esc,status,readOnly:Boolean(sessionInfo?.readOnly)}),survey:()=>loadSurvey({api,esc}),committee:()=>committeeRoom?.open(),records:loadRecords,social:()=>loadEmbeddedTool('social'),constitution:()=>loadEmbeddedTool('constitution'),accounts:loadAccounts,requests:()=>window.SandyHelp?.load(),briefs:loadBriefs,audit:loadAudit}[tab];
  try{Promise.resolve(load?.()).catch(e=>status(e.message,true))}catch(e){status(e.message,true)}
  window.dispatchEvent(new CustomEvent('sandy:clubhouse-section-change',{detail:{tab}}));
 }

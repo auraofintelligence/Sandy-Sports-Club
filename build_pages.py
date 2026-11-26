@@ -29,6 +29,36 @@ def put(slug,title,description,content,script=''):
     js=f'<script src="/{script}" defer></script>' if script else ''
     pages[slug]=f'''<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#102d40"><meta name="description" content="{escape(description,quote=True)}"><title>{title} | Sandy Sports Club proposal</title><link rel="icon" href="/favicon.png" type="image/png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><script src="/site.js" defer></script>{js}</head><body><div data-site-header></div><main id="main">{content}</main><div data-site-footer></div></body></html>'''
 
+
+from sport_rules import SPORT_RULES, EQUIP_ALT, TBC
+SURVEY_SPORTS=['Mixed beach volleyball','Flag football','Beach cricket','Beach football','Beach rugby league','Beach 5s rugby','AirBadminton','Beach tennis and net games','Ultimate and flying disc','Beach handball','Netball crossover','AFL crossover','Fitness and movement','Island-made formats']
+def survey_card(title_for):
+    return cards([('SPORTS SURVEY','Sports interest survey',f'Tell the organisers which sports you want first{title_for}, and whether you want casual play, regular training or regional competition. No names or emails.','','/sports.html#survey')])
+def survey_form():
+    rows=''.join(f'<tr><th scope="row">{t}</th><td><select name="goal-{i}" aria-label="{t}: what you want"><option value="">Not for me</option><option value="casual">Casual play</option><option value="training">Regular training</option><option value="compete">Compete in regional competitions</option></select></td><td><select name="rank-{i}" aria-label="{t}: priority"><option value="">Any order</option>'+''.join(f'<option value="{n}">{n}</option>' for n in range(1,15))+'</select></td></tr>' for i,t in enumerate(SURVEY_SPORTS))
+    opt=lambda items:'<option value="">Prefer not to say</option>'+''.join(f'<option>{x}</option>' for x in items)
+    return ('<div class="survey-state" id="survey-state" role="status"><strong>Survey opening soon.</strong> The organisers are getting the survey ready. You can look at the questions now; answers can be sent once it opens.</div>'
+     '<form class="interest-form survey-form" id="survey-form"><fieldset id="survey-fields" disabled><legend>Which sports do you want, and how?</legend>'
+     '<p class="form-tip">For each sport you are interested in, choose what you want. Add a priority number (1 is your top choice) if you would like to rank them.</p>'
+     '<div class="table-wrap"><table class="survey-table"><thead><tr><th scope="col">Sport</th><th scope="col">What you want</th><th scope="col">Priority</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+     '<div class="form-grid"><label>Age group (optional)<select name="ageGroup">'+opt(['Under 12','12 to 17','18 to 29','30 to 49','50 to 64','65 and over'])+'</select></label>'
+     '<label>Town (optional)<select name="town">'+opt(['Dunwich','Amity','Point Lookout','Visitor','Other'])+'</select></label>'
+     '<label>How often would you play? (optional)<select name="frequency">'+opt(['Weekly or more','A few times a month','About once a month','A few times a year','Not sure yet'])+'</select></label>'
+     '<label class="hp-field" aria-hidden="true">Leave this field empty<input name="website" tabindex="-1" autocomplete="off"></label><div class="wide" id="survey-verify" hidden></div></div>'
+     '<button class="button coral" type="submit" id="survey-submit">Survey opening soon</button><p class="form-tip" id="survey-status" role="status">We do not ask for your name, email or contact details.</p></fieldset></form>')
+def sport_info(title,slug):
+    r=SPORT_RULES[title]
+    tbc=r['format']==TBC
+    badge=f'<p class="rules-format{" tbc" if tbc else ""}"><strong>{r["format"]}</strong>'+('. Details below are a starting point for the club to settle with players and partner clubs.' if tbc else '. Summary only; the official rules are the source.')+'</p>'
+    rules='<dl class="rules-list">'+''.join(f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k,v in r['rules'])+'</dl>'
+    src=f'<p class="rules-source">Source: <a href="{r["source"][1]}" rel="noopener">{r["source"][0]}</a></p>'
+    li=lambda xs:'<ul>'+''.join(f'<li>{x}</li>' for x in xs)+'</ul>'
+    equip=(f'<div class="equip-grid"><div class="equip-lists"><div><h3>The club provides</h3>{li(r["provides"])}</div><div><h3>Players bring</h3>{li(r["bring"])}</div></div>'
+           f'<figure class="feature-figure equip-figure"><img src="/assets/equip-{slug}.webp" alt="Concept image of {EQUIP_ALT[title]}" loading="lazy"><figcaption>Concept image. Actual club equipment is to be confirmed.</figcaption></figure></div>')
+    return (section('THE GAME','About '+title,r['about'])+
+            section("HOW IT'S PLAYED","How it's played",'The essentials at a glance: team size, scoring, game length, the court or field, and the key rules.',badge+rules+src,'alt')+
+            section('EQUIPMENT','Equipment','What the club would provide and what players bring. Lists are proposals until the club is formed and equipment is funded.',equip))
+
 put('index.html','One island, many arenas','An ambitious mixed sand sports and cultural club proposal across Dunwich (Goompi), Amity Point (Pulan) and Point Lookout (Mulumba).',
     hero('MINJERRIBAH · NORTH STRADBROKE ISLAND','One island.<br>Three towns.<br>World-class possibilities.','A proposed network of adaptable sand sport facilities, clubhouses and cultural spaces. Mixed beach volleyball leads, with flag football, cricket, rugby and more sharing the surface. Island clubs keep their identities and gain another arena.','hero-home.webp')+
     section('THE CLUB WE COULD BUILD','A sporting island with room to grow','Think local weekly play, major invitationals, youth pathways, mixed leagues and international cultural exchange. Imagine a connected Dunwich (Goompi), Amity Point (Pulan) and Point Lookout (Mulumba) programme, with facilities chosen for fit and resilience.',cards([
@@ -44,6 +74,7 @@ put('index.html','One island, many arenas','An ambitious mixed sand sports and c
       ('COMMITTEE','Organise together','Agendas, decisions, jobs, facilities, grant evidence, assets and programmes by role.','','/committee.html'),
       ('WEBMASTER','Keep it coherent','Content review, accounts, permissions, publication, audits and an isolated demo workspace.','','/webmaster.html')]))+
     section('BRISBANE 2032 HORIZON','Build an island-scale legacy','Training camps, mixed competitions, school-to-club pathways and sand sport expos can connect island participation to the wider sporting decade. No Games venue designation or organiser relationship is claimed.','<div class="link-row"><a class="button coral" href="/sports.html">Explore every sport</a><a class="button outline" href="/places.html">Explore the sites</a><a class="button outline" href="/clubhouse.html">Open the clubhouse map</a></div>','sunny')+
+    section('HAVE YOUR SAY','Which sports should come first?','A short, anonymous survey will help the organisers decide which sports to start with and how people want to play.',survey_card(''))+
     section('JOIN THE BUILD','Nominate, organise, back the assets','Summer is a chance to assemble the founding team, partner clubs and first programme. Put your hand up for membership, a committee role, a film crew, a sport desk or a founding contribution.','<div class="link-row"><a class="button coral" href="/join.html">Nominate to join</a><a class="button outline" href="/donate.html">Explore the screen campaign</a></div>'))
 
 sports=[
@@ -74,8 +105,9 @@ put('sports.html','Sports catalogue','Fourteen sand sport and training formats w
       ('BEACH SOCCER','16 nations','FIFA Beach Soccer World Cup 2025 field.','','https://www.fifa.com/en/tournaments/mens/beachsoccerworldcup/seychelles-2025'),
       ('BEACH HANDBALL','Youth Olympics','Dakar 2026 programme.','','https://www.olympics.com/ioc/dakar-2026')],'four'))+
     section('SPORTS CATALOGUE','Fourteen ways to play','These are programme proposals, not confirmed activities. Select formats with clubs and participants, then fit fields and equipment to the site.',cards([(icon,title,copy,'', '/flag-football.html' if title=='Flag football' else '/sport-'+__import__('re').sub(r'[^a-z0-9]+','-',title.lower()).strip('-')+'.html') for icon,title,copy in sports],'four'),'alt')+
+    '<section class="page-section sunny" id="survey"><p class="eyebrow">SPORTS SURVEY</p><h2>Sports interest survey</h2><p class="lead">Help decide which sports the club starts with. Choose the sports you want, rank them if you like, and say whether you want casual play, regular training or to compete in regional competitions. Age group, town and how often are optional. No names or emails.</p>'+survey_form()+'</section>'+
     section('CROSSOVER MODEL','Existing clubs gain another surface','Rugby league, cricket, football, tennis, bowls, surfing and other island clubs already have histories and members. Sandy Sports can host joint events and complementary training without absorbing them. Agreements would spell out coaching, insurance, equipment, safeguarding, schedules and recognition.','<div class="link-row"><a class="button coral" href="/space-planner.html">Try the space planner</a><a class="button outline" href="/flag-football.html">Flag football pathway</a></div>')+
-    section('OLYMPIC DECADE','World-class opportunity, island character','Training camps, mixed competitions, school-to-club pathways and sand sport expos can connect local participation to the wider Brisbane 2032 horizon. The 2032 sport programme is not yet final.','','sunny'))
+    section('OLYMPIC DECADE','World-class opportunity, island character','Training camps, mixed competitions, school-to-club pathways and sand sport expos can connect local participation to the wider Brisbane 2032 horizon. The 2032 sport programme is not yet final.','','sunny'),'survey.js')
 
 put('flag-football.html','Flag football','A dedicated flag football proposal connecting Minjerribah with Gold Coast development and Brisbane 2032 ambition.',
     hero('A BIG CROSS-CODE OPPORTUNITY','Flag football belongs in the main event.',"The NFL's Australia and New Zealand office and APAC academy are on the Gold Coast. Australian and US governing bodies are developing flag football, which makes its Olympic debut in Los Angeles 2028. Straddie could add an island training and cultural exchange opportunity.",'flag-football-concept.webp')+
@@ -349,10 +381,9 @@ for _,title,summary in sports:
     skill,detail=sport_skills[title]
     put(f'sport-{slug}.html',title,summary,
         hero('SAND SPORTS FIELD GUIDE',title,summary,'flag-football-concept.webp' if title=='Flag football' else 'hero-sports.webp')+
-        section('SKILLS DESK',skill,detail,cards([
-          ('LEARN','Introduction','A welcoming first session with safe movement, equipment and format explained.','','/member-training.html'),
-          ('PLAY','Mixed and social formats','Design teams with participants and the relevant existing island clubs.','','/member-sports.html'),
-          ('GROW','Club and visiting pathways','Coaches, officials, volunteers and invitationals can build depth.','','/committee-sport.html')]))+
+        sport_info(title,slug)+
+        section('SKILLS DESK',skill,detail,'<div class="link-row"><a class="button outline" href="/member-training.html">Introduction sessions</a><a class="button outline" href="/member-sports.html">Mixed and social formats</a><a class="button outline" href="/committee-sport.html">Club and visiting pathways</a></div>')+
+        section('HAVE YOUR SAY','Should the club offer '+title+'?','Rank '+title+' against the other sports and tell us how you would like to play.',survey_card(', including '+title))+
         section('FACILITY FIT','Match the game to the ground','Court or field dimensions, run-off, surface, lighting, storage and access require a sport-specific check. The editable planner is a starting envelope, not a rulebook.',f'<div class="link-row"><a class="button coral" href="/space-planner.html">Test the space</a><a class="button outline" href="/join.html">Nominate for this sport</a><a class="button outline" href="/sports.html">All sports</a></div>','sunny'))
 constitution_form='''<form id="constitution-form" class="interest-form"><div class="form-grid">
 <label>Proposed name<input name="name" value="Sandy Sports Club Inc." required></label><label>Financial year end<input name="year" value="30 June" required></label>

@@ -25,7 +25,8 @@ test('every linked card is one whole-card link named by its title',()=>{
    assert.match(c.body,/<span class="card-cue" aria-hidden="true">&(?:rarr|nearr);<\/span>/,page+': decorative cue is hidden from assistive technology');
   }
  }
- assert.ok(linked>=100,'expected the public card grids to be checked, found '+linked);
+ // 26 Nov 2026: the 42 imageless sport page skills cards became a button row; 15 survey cards were added.
+ assert.ok(linked>=95,'expected the public card grids to be checked, found '+linked);
 });
 test('the page builder emits whole-card links',()=>{
  const py=read('build_pages.py');
