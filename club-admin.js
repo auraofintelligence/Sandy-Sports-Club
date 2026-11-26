@@ -6,7 +6,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;', '>':'
 const allTabs=['overview','people','interests','committee','records','social','constitution','accounts','requests','briefs','audit'];
 let committeeRoom=null;
 let identity=null,sessionInfo=null,current='overview',sort='name',direction='asc',page=0,people=[],records=[],personById=new Map(),recordById=new Map();
-const date=s=>s?String(s).slice(0,10):'—';
+const date=s=>s?String(s).slice(0,10):'Not set';
 function status(msg,bad=false){$('club-status').textContent=msg;$('club-status').className='club-status'+(bad?' bad':'')}
 async function api(path,{method='GET',data}={}){
  const response=await viewFetch(path,{method,credentials:'same-origin',cache:'no-store',
@@ -93,11 +93,11 @@ async function loadPeople(){
  people=data.people;personById=new Map(people.map(p=>[p.id,p]));
  $('people-rows').innerHTML=people.map(p=>
   '<tr><td>'+esc(p.name)+'</td><td>'+esc(p.membershipClass)+'</td><td>'+esc(p.status)+'</td><td>'+esc(date(p.joinedOn))+'</td>'+
-  '<td>'+esc(date(p.renewalOn))+'</td><td>'+esc(p.gender||'—')+'</td><td>'+esc(p.town||'—')+'</td>'+
-  '<td>'+esc(p.audienceRegion||'—')+'</td><td><button type="button" data-person="'+p.id+'">Edit</button></td></tr>'
+  '<td>'+esc(date(p.renewalOn))+'</td><td>'+esc(p.gender||'Not set')+'</td><td>'+esc(p.town||'Not set')+'</td>'+
+  '<td>'+esc(p.audienceRegion||'Not set')+'</td><td><button type="button" data-person="'+p.id+'">Edit</button></td></tr>'
  ).join('')||'<tr><td colspan="9">No records match these filters. No memberships have been fabricated.</td></tr>';
  const total=data.total||0;
- $('people-paging').innerHTML='Showing '+(page*100+Math.min(1,people.length))+'–'+(page*100+people.length)+' of '+total+
+ $('people-paging').innerHTML='Showing '+(page*100+Math.min(1,people.length))+' to '+(page*100+people.length)+' of '+total+
   ' <button type="button" id="people-prev" '+(page<=0?'disabled':'')+'>Previous</button>'+
   ' <button type="button" id="people-next" '+((page+1)*100>=total?'disabled':'')+'>Next</button>';
  $('people-prev')?.addEventListener('click',()=>{page=Math.max(0,page-1);loadPeople().catch(e=>status(e.message,true))});

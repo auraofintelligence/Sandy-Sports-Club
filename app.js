@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s);
 const sport=$('#sport'), length=$('#length'), width=$('#width'), buffer=$('#buffer'), count=$('#count'), columns=$('#columns'), gap=$('#gap');
 const presets={
   volleyball:{length:16,width:8,buffer:3,note:'FIVB playing court 16 × 8 m; 3 m free zone minimum.'},
-  football:{length:36,width:27,buffer:3,note:'Beach soccer pitch 35–37 × 26–28 m. External buffer here is a planning assumption.'},
+  football:{length:36,width:27,buffer:3,note:'Beach soccer pitch 35 to 37 m by 26 to 28 m. External buffer here is a planning assumption.'},
   cricket:{length:40,width:30,buffer:4,note:'Editable social cricket sketch. A club must choose ball, boundary and safe run-off.'},
   flag:{length:50,width:25,buffer:4,note:'Illustrative sand adaptation, not an official flag football field.'},
   rugby:{length:40,width:25,buffer:4,note:'Illustrative beach rugby / league crossover. Set format with the clubs.'},

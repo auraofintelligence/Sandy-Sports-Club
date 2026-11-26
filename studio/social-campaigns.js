@@ -302,7 +302,7 @@ export function setupAnnualCampaigns({mount,api,esc,isActive,onUse,reviewOnly=fa
       '<div class="annual-limit-range-grid">'+
       range('Minimum','🔽',id+'Min',batch.limits[id+'Min'],20)+
       range('Maximum','🔼',id,batch.limits[id],20)+'</div>'+
-      '<small>'+batch.limits[id+'Min']+'–'+batch.limits[id]+' suggested posts per day</small></fieldset>').join('');
+      '<small>'+batch.limits[id+'Min']+' to '+batch.limits[id]+' suggested posts per day</small></fieldset>').join('');
     const layers=CAMPAIGN_LAYERS.map(layer=>{
       const row=batch.layers[layer.id];
       return '<article class="annual-topic-card"><div class="annual-topic-top"><span class="annual-topic-icon" aria-hidden="true">'+(LAYER_ICONS[layer.id]||'📌')+'</span>'+

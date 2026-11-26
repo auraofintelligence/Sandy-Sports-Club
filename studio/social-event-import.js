@@ -30,7 +30,7 @@ export function clubEventCandidates(events,startMonth){
   return events.filter(x=>['open','closed'].includes(x?.status)&&limitWindow(x.date,startMonth)&&
     typeof x.title==='string'&&x.title.trim()&&typeof x.id==='string').map(x=>({
     id:importKey('event',x.id),title:x.title.trim().slice(0,140),date:x.date,kind:'event',
-    origin:'Club event run sheet',status:x.status==='closed'?'Closed run sheet — check before promotion':'Planning run sheet',
+    origin:'Club event run sheet',status:x.status==='closed'?'Closed run sheet, check before promotion':'Planning run sheet',
     inactive:x.status==='closed',description:String(x.goal||'').slice(0,250)
   }));
 }

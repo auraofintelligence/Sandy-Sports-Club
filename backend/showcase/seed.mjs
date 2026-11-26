@@ -29,7 +29,7 @@ const explicit={
  },
  "news": {
   "title": "Straddie sport and screen community update",
-  "headline": "Straddie summer 2026–27: sport, skills and community",
+  "headline": "Straddie summer 2026-27: sport, skills and community",
   "lead": "A fictional newsletter exploring Sandy Sports activities across Dunwich / Goompi, Amity Point / Pulan and Point Lookout / Mulumba.",
   "articles": "Cylinder and Home Beach: locals and tourists\nAdder Rock and Flinders Beach: camper outreach\nEight-week summer portable sports and bracelet fundraising campaign\nPermanent facility possibilities in all three towns",
   "eventRoundup": "Illustrative 5 December to 29 January planning window; Queensland state school holidays run 12 December to 26 January. Dates and beach suitability remain subject to permissions and conditions.",

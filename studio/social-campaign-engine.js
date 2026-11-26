@@ -812,9 +812,9 @@ export const scopeSettingsFor=(settings,scope,key)=>scope==='day'?
   scope==='week'?(settings.weekOverrides?.[key]||monthSettingsFor(settings,key)):
   monthSettingsFor(settings,key);
 export const POSTING_DAY_TYPES=Object.freeze([
-  {id:'weekday',label:'Weekday (Mon–Thu)',icon:'☀️'},
+  {id:'weekday',label:'Weekday (Mon to Thu)',icon:'☀️'},
   {id:'friday',label:'Friday',icon:'✨'},
-  {id:'weekend',label:'Weekend (Sat–Sun)',icon:'🏖️'},
+  {id:'weekend',label:'Weekend (Sat to Sun)',icon:'🏖️'},
   {id:'longWeekend',label:'Long weekend',icon:'🧳'},
   {id:'publicHoliday',label:'Public holiday',icon:'🎉'},
   {id:'holiday',label:'QLD school holidays',icon:'🎒'}
@@ -1162,7 +1162,7 @@ export function generateCampaignYear(startMonth,settings=defaultCampaignSettings
     // The existing social post editor supports only the four connected club channels.
     // The Noticeboard is a separate, unconnected pilot and is never sent there.
     p.channels=p.destinations.filter(id=>id!=='noticeboard');
-    p.storyboard=p.durationSeconds? p.sections.length>1?['0–3s: Hook',...p.sections.map((s,i)=>'Segment '+(i+1)+': '+s),'Final 3s: Club link / call to action']:['0–3s: Hook','3–24s: '+p.sections[0],'24–30s: Call to action']:[];
+    p.storyboard=p.durationSeconds? p.sections.length>1?['0-3s: Hook',...p.sections.map((s,i)=>'Segment '+(i+1)+': '+s),'Final 3s: Club link / call to action']:['0-3s: Hook','3-24s: '+p.sections[0],'24-30s: Call to action']:[];
   }
   return {startMonth,posts,days:dayCards,totals:{posts:posts.length,videos:posts.filter(p=>p.durationSeconds).length,combined:composites.length,omitted:dayCards.reduce((n,d)=>n+d.omitted,0)}};
 }

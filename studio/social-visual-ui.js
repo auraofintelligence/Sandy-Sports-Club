@@ -227,7 +227,7 @@ export function renderCalendarDialog({day,view,postId,posts,plan,esc,getEdit,rev
   }
   return '<dialog class="annual-day-dialog" data-annual-day-dialog aria-label="Posts for '+esc(formatted)+'">'+headline+
     '<p class="annual-dialog-lead">'+today.length+' post '+(today.length===1?'idea':'ideas')+' planned for this day. '+
-    (dayData?.manualPlan?'Individually planned posts. ':dayData?.minimum?'Posting target: '+dayData.minimum+'–'+dayData.maximum+' ideas. ':'')+
+    (dayData?.manualPlan?'Individually planned posts. ':dayData?.minimum?'Posting target: '+dayData.minimum+' to '+dayData.maximum+' ideas. ':'')+
     'Select one to review or edit.</p>'+
     hourlyGuide(today,getEdit,esc)+
     '<div class="annual-day-posts">'+(today.length?today.map(post=>{

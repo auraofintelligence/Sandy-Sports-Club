@@ -135,7 +135,7 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
    sports:['Mixed beach volleyball','Beach cricket'],filmClub:true,volunteer:true,
    examplePlans:[{title:'[EXAMPLE] Cylinder Beach or Home Beach portable volleyball pilot',date:'2026-12-12'},{title:'[EXAMPLE] Dunwich / Goompi community cinema planning',date:'2027-01-09'},{title:'[EXAMPLE] Adder Rock or Flinders Beach camper activity proposal',date:'2026-12-19'}],
    exampleNotice:'Eight-week summer campaign planning, 5 December 2026 to 29 January 2027. Cylinder Beach and Home Beach for locals and tourists; Adder Rock and Flinders Beach for camper-focused outreach. Founder reports erosion at Amity and limited sand at Main Beach. Permanent facility possibilities remain separate in all three towns. Venue permission, tide, weather, transport and safety checks required. Nothing booked.',
-   exampleNewsletter:'Straddie summer 2026–27: sport, skills and community (fictional December issue, not sent)',
+   exampleNewsletter:'Straddie summer 2026-27: sport, skills and community (fictional December issue, not sent)',
    areas:['My sports','Calendar','Volunteering','Film club','Member notices','My privacy choices'],
    notice:'A synthetic role-layout preview; no real memberships, fees, accounts or messages are created.'});
  }

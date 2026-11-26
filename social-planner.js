@@ -67,7 +67,7 @@ const mediaProfiles={
  youtube:{video:"Shorts 1080×1920 (9:16), ~30s; standard video 1920×1080 (16:9), thumbnail 3840×2160",ad:"Video ads 1080×1920 (Shorts) or 1920×1080 (in-stream); placement preview required"},
  facebook:{video:"Organic Reels 1080×1920 (9:16), Feed 1080×1350 (4:5)",image:"Organic Feed 1080×1350 (4:5), carousel 1080×1080 (1:1)",ad:"Feed 1440×1800 (4:5); Reels/Stories premium 1440×2560 (9:16); safe-zone check"},
  instagram:{video:"Organic Reels/Stories 1080×1920 (9:16)",image:"Organic Feed 1080×1440 (3:4) or 1080×1350 (4:5); carousel 1080×1080",ad:"Feed image 1440×1800 (4:5); Reels/Stories premium 1440×2560 (9:16); verify Feed video placement"},
- tiktok:{video:"Vertical 1080×1920 (9:16), 30s combination",image:"Photo post 1080×1920 (9:16)",ad:"In-feed 1080×1920 (9:16); 21–34s typical creative; carousel placement varies"},
+ tiktok:{video:"Vertical 1080×1920 (9:16), 30s combination",image:"Photo post 1080×1920 (9:16)",ad:"In-feed 1080×1920 (9:16); 21 to 34s typical creative; carousel placement varies"},
  noticeboard:{video:"Proposed static adaptation only: TV 1920×1080, kiosk 1080×1920",image:"Proposed TV 1920×1080 (16:9), kiosk 1080×1920 (9:16), responsive web notice",ad:"Not available: no live noticeboard ad service or expenditure"}
 };
 function specsForPost(p){
@@ -88,7 +88,7 @@ function brief(post){
  const open=["Show the concept, then invite a response.","Begin with a question or demonstration.","Use one clear example before explaining the proposal.","Offer a useful takeaway; do not promise an event."][post.seq%4];
  let action="Ask: "+cat.cta;
  let related=post.relatedTopic||cat.topics[(cat.topics.indexOf(post.topic)+1+cat.topics.length)%cat.topics.length];
- let format=style==="video"?"30-second two-topic sequence: 0–3s hook; 3–14s "+post.topic+"; 14–25s "+related+"; 25–30s CTA. Overlap 2 seconds if extended into adjacent clips.":style==="poll"?"Use one specific answerable question and a small set of choices.":"Use concise text and one clear illustrative visual.";
+ let format=style==="video"?"30-second two-topic sequence: 0-3s hook; 3-14s "+post.topic+"; 14-25s "+related+"; 25-30s CTA. Overlap 2 seconds if extended into adjacent clips.":style==="poll"?"Use one specific answerable question and a small set of choices.":"Use concise text and one clear illustrative visual.";
  let caveat=cat.id==="safety"?" WEATHER/SAFETY HOLD: obtain and date-stamp verified Bureau of Meteorology or official guidance shortly before publication; never invent a future forecast.":cat.id==="events"?" EVENTS HOLD: mention actual dates or countdowns only after the organiser confirms permissions and the event.":cat.id==="funding"?" FUNDRAISING HOLD: no raffle, donation or grant claim without eligible entity, review and approval.":cat.id==="news"?" PROGRESS HOLD: describe only work actually completed.":" Clearly identify Sandy Sports as a proposal, not an operating club.";
  return open+" Creative approach: "+post.angle+". "+format+" "+action+caveat;
 }
@@ -109,7 +109,7 @@ function refreshStats(){
  const video=plan.filter(p=>effectivePost(p).format==="video").length;
  const total=plan.length,daysUsed=new Set(plan.map(p=>(edits[p.id]?.date||p.date))).size;
  $("sp-results").hidden=false;
- $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Dates available</small></div><div class="sp-stat"><strong>'+total+'</strong><small>Draft slots you selected</small></div><div class="sp-stat"><strong>'+daysUsed+'</strong><small>Dates with planned slots</small></div><div class="sp-stat"><strong>'+(total?Math.round(video*100/total)+"%":"—")+'</strong><small>Video share of scheduled slots</small></div>';
+ $("sp-stats").innerHTML='<div class="sp-stat"><strong>365</strong><small>Dates available</small></div><div class="sp-stat"><strong>'+total+'</strong><small>Draft slots you selected</small></div><div class="sp-stat"><strong>'+daysUsed+'</strong><small>Dates with planned slots</small></div><div class="sp-stat"><strong>'+(total?Math.round(video*100/total)+"%":"0%")+'</strong><small>Video share of scheduled slots</small></div>';
 }
 const matches=p=>{
  const category=$("sp-cat").value,channel=$("sp-channel").value,paid=$("sp-paid").value;

@@ -54,12 +54,12 @@ export function renderAnalyticsPanel({summary=[],patterns=[],unlinked=[],recordC
     headers.map(h=>'<option value="'+esc(h)+'"'+(mapping[field]===h?' selected':'')+'>'+esc(h)+'</option>').join('')+
     '</select></label>').join('')+'</div>':'';
   const metricCards=summary.length?'<div class="annual-metrics-platforms">'+summary.map(item=>{
-    const rate=item.views?((item.interactions/item.views)*100).toFixed(1):'—';
+    const rate=item.views?((item.interactions/item.views)*100).toFixed(1):'n/a';
     const max=Math.max(...summary.map(x=>x.views),1);
     return '<article class="annual-metric-card"><div><strong>'+esc(item.platform)+'</strong><span>'+item.posts+' linked posts</span></div>'+
       '<div><strong>'+item.views.toLocaleString('en-AU')+'</strong><span>Reported visibility</span></div>'+
       '<div><strong>'+item.interactions.toLocaleString('en-AU')+'</strong><span>Interactions</span></div>'+
-      '<div><strong>'+rate+(rate==='—'?'':'%')+'</strong><span>Interactions / views*</span></div>'+
+      '<div><strong>'+rate+(rate==='n/a'?'':'%')+'</strong><span>Interactions / views*</span></div>'+
       '<div class="annual-metric-bar"><i style="width:'+Math.round(item.views/max*100)+'%"></i></div></article>';
   }).join('')+'</div>':'<p>No linked platform reports yet. Import a CSV after you export it from a social platform.</p>';
   const pendingList=unlinked.slice(0,100),unlinkedOptions=pendingList.map(x=>

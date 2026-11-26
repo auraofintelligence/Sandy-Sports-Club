@@ -1,4 +1,4 @@
-SANDY SPORTS CLUB — EXACT DEPLOYMENT SOURCE BUNDLE
+SANDY SPORTS CLUB: EXACT DEPLOYMENT SOURCE BUNDLE
 Repository: https://github.com/auraofintelligence/Sandy-Sports-Club
 Source commit: 6c7b35442a305cf1b20d1dfc3d2880c03c6f2bd5
 Generated for handoff to Lee (Cloudflare AI).
@@ -32,7 +32,7 @@ FILE COUNT: 16
 
 
 ===== BEGIN FILE backend/README.md =====
-# Sandy Sports Club — activating shared Cloudflare records
+# Sandy Sports Club: activating shared Cloudflare records
 
 **Status:** the Worker API, D1 migration, sign-in, member/committee screens and Social Studio client have been prepared in this repository. **They are not live merely because GitHub has these files.** The currently deployed \`wrangler.jsonc\` remains assets-only until the required Sandy database and secrets are provisioned.
 
@@ -47,7 +47,7 @@ Use a **new, independent D1 database** for Sandy. Do not reuse PLFC's database, 
 3. Apply \`backend/migrations/0001_club.sql\` using Wrangler D1 migrations against the **remote Sandy DB**: \`npx wrangler d1 migrations apply DB --remote --config wrangler.full.jsonc\`. Review the target name and backup before applying.
 4. Set two independently generated high-entropy secrets on the *Sandy* Worker, via Cloudflare's dashboard or \`npx wrangler secret put SANDY_AUTH_PEPPER\` and \`npx wrangler secret put SANDY_BOOTSTRAP_KEY\`. Each must be at least 32 characters. **Never put these values in GitHub, chats or exported reports.**
 5. Keep \`SANDY_CLUB_APPROVALS="disabled"\` and \`SANDY_INVITES_ENABLED="disabled"\`. Do not enable them as an installation step.
-6. Replace the live repository's \`wrangler.jsonc\` with the reviewed full configuration **only after** steps 1–5 have succeeded and the tests pass. The existing public files remain in their current root and \`.assetsignore\` excludes Worker source, database schema, tests and secrets from static delivery.
+6. Replace the live repository's \`wrangler.jsonc\` with the reviewed full configuration **only after** steps 1 to 5 have succeeded and the tests pass. The existing public files remain in their current root and \`.assetsignore\` excludes Worker source, database schema, tests and secrets from static delivery.
 7. Verify \`/api/health\` reports \`storageConfigured:true\` and \`authConfigured:true\`. Confirm \`/api/session\` does not report any identity when signed out.
 8. Visit \`/club-login.html\`, open "First webmaster setup", and use the private bootstrap key to create the actual webmaster username/password. This is permitted **once only** while the accounts table is empty. Remove \`SANDY_BOOTSTRAP_KEY\` from Cloudflare secrets immediately afterward.
 9. Log in at \`/club-login.html\` and visit \`/club-admin.html\`. Reserve desired office-holder accounts without issuing invitations. Create a \`webmaster_demo\` reserved account only when needed; the server exposes synthetic, view-only demo information to that role.
@@ -2139,9 +2139,9 @@ export const scopeSettingsFor=(settings,scope,key)=>scope==='day'?
   scope==='week'?(settings.weekOverrides?.[key]||monthSettingsFor(settings,key)):
   monthSettingsFor(settings,key);
 export const POSTING_DAY_TYPES=Object.freeze([
-  {id:'weekday',label:'Weekday (Mon–Thu)',icon:'☀️'},
+  {id:'weekday',label:'Weekday (Mon to Thu)',icon:'☀️'},
   {id:'friday',label:'Friday',icon:'✨'},
-  {id:'weekend',label:'Weekend (Sat–Sun)',icon:'🏖️'},
+  {id:'weekend',label:'Weekend (Sat to Sun)',icon:'🏖️'},
   {id:'longWeekend',label:'Long weekend',icon:'🧳'},
   {id:'publicHoliday',label:'Public holiday',icon:'🎉'},
   {id:'holiday',label:'QLD school holidays',icon:'🎒'}
@@ -2489,7 +2489,7 @@ export function generateCampaignYear(startMonth,settings=defaultCampaignSettings
     // The existing social post editor supports only the four connected club channels.
     // The Noticeboard is a separate, unconnected pilot and is never sent there.
     p.channels=p.destinations.filter(id=>id!=='noticeboard');
-    p.storyboard=p.durationSeconds? p.sections.length>1?['0–3s: Hook',...p.sections.map((s,i)=>'Segment '+(i+1)+': '+s),'Final 3s: Club link / call to action']:['0–3s: Hook','3–24s: '+p.sections[0],'24–30s: Call to action']:[];
+    p.storyboard=p.durationSeconds? p.sections.length>1?['0-3s: Hook',...p.sections.map((s,i)=>'Segment '+(i+1)+': '+s),'Final 3s: Club link / call to action']:['0-3s: Hook','3-24s: '+p.sections[0],'24-30s: Call to action']:[];
   }
   return {startMonth,posts,days:dayCards,totals:{posts:posts.length,videos:posts.filter(p=>p.durationSeconds).length,combined:composites.length,omitted:dayCards.reduce((n,d)=>n+d.omitted,0)}};
 }
