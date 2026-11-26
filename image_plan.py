@@ -366,7 +366,7 @@ for _p, _t, _img, _alt in STRADDIE_SCALE:
 # swapped in. Old files stay listed in the gallery, except the two the owner had deleted.
 DELETED = {'hero-constitution.webp', 'card-fac-dressing-rooms.webp'}
 STANDARD_REDRAWS = [
-    ('hero-constitution.webp', 'hero-constitution-committee', 'a women led committee of all ages reviewing the draft constitution on a clubhouse deck by the bay'),
+    ('hero-constitution.webp', 'hero-constitution-committee', 'a young Aboriginal woman leading a sporty, women led club committee reviewing the draft constitution on a clubhouse deck by the bay'),
     ('card-const-ai-assets.webp', 'card-const-ai-assets-equal', 'two women and a young man keeping the club asset register in the equipment store'),
     ('card-const-voting.webp', 'card-const-voting-equal', 'members of all ages voting by show of hands at a general meeting chaired by a woman'),
     ('card-com-governance.webp', 'card-com-governance-equal', 'a members meeting on the lawn led by a young woman and a First Nations elder'),
