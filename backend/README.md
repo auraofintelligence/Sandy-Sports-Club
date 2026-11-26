@@ -13,11 +13,12 @@ The club is still a proposal. No claim is made that every PLFC workflow or exter
 - `worker/auth.mjs`: password login, real Webmaster, reserved staff accounts, manually prepared 48-hour officer invitation links
 - `worker/people.mjs`: prospective people, membership class, consent, town, joining/renewal fields and revision controls
 - `worker/records.mjs`: legacy shared generic records, still available for existing drafts
+- `worker/authority.mjs`: formal decisions on one exact record version and a separate member release step; fails closed while `SANDY_CLUB_APPROVALS` is disabled
 - `worker/suite.mjs` and `worker/suite-actions.mjs`: validated structured workflows, role controls, D1 revisions/audit, meeting follow-up tasks, audited stock receive/issue
 - `studio/sandy-suite-spec.js`: 29 Sandy-specific domain workflows, adapting PLFC for sand sports, film, facilities, membership, grants, events and governance
 - `club-suite-ui.js` and `club-workflow-assist.js`: stage-by-stage forms, editing, CSV/Markdown/ICS export, minutes drafts, newsletters, stock calculations and review packs
 - `club-committee.js` and `club-admin.html`: the actual Committee room in My Clubhouse, preview roles, Social Studio, constitution builder and office invitations
-- `worker/member-workspace.mjs` and `member-home.js`: member-only preferences, interests, own-data export and one synthetic preview member (not a login)
+- `worker/member-workspace.mjs` and `member-home.js`: member-only preferences, interests, private replies to released events, a private calendar file, own-data export and one synthetic preview member (not a login)
 - `social-studio.html` and `studio/`: shared day/week/month social campaign planning
 - `constitution.html` and `constitution.js`: Sandy constitution builder plus original PLFC Constitution V1.2 comparison in the PLFC Google Drive
 
