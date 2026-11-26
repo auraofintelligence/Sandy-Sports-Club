@@ -47,7 +47,7 @@ async function save(db,identity,accountId,row,fields,action){
   .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at,...args,accountId);
  const [result]=await db.batch([write,
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action,actor:identity,at,changes:{fromVersion:nextVersion-1,toVersion:nextVersion,reason:action},snapshot:fields,guarded:true}),
-  audit(db,identity,action,'record',recordId,at,true)]);
+  audit(db,identity,action,'record',recordId,at,true,{fromVersion:nextVersion-1,toVersion:nextVersion})]);
  if(!result.meta.changes)fail(409,'The participation check changed. Reload before saving.','conflict');
  return memberSafeguardFlags(db,accountId);
 }

@@ -55,4 +55,9 @@ test('one winner per version on every versioned editor; rejected saves leave no 
  const entry=(await call('sec','/api/audit?kind=person')).audit.find(a=>a.resourceId===person.id&&a.action==='person_updated');
  assert.equal(entry.fromVersion,1);assert.equal(entry.toVersion,2);
  await call('other','/api/audit','GET',undefined,403);await call('treasurer','/api/audit','GET',undefined,403);await call('member','/api/audit','GET',undefined,403);
+ // Stock movements and meeting follow-ups also carry version transitions in the audit index.
+ const stock=await call('treasurer','/api/suite/stock','POST',{title:'Fictional nets',fields:{sku:'NET-1',category:'Sports gear',opening:2,inward:0,outward:0}},201);
+ await call('treasurer','/api/suite/stock/'+stock.id+'/movement','POST',{version:1,direction:'receive',quantity:1,note:'Fictional'});
+ const moved=JSON.parse(sql.prepare("SELECT context_json FROM club_audit WHERE resource_id=? AND action='stock_receive'").get(stock.id).context_json);
+ assert.equal(moved.fromVersion,1);assert.equal(moved.toVersion,2);
 });

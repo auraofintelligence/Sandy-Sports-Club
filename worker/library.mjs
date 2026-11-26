@@ -117,7 +117,7 @@ export async function libraryEndpoint(req,env,path,actor){
    db.prepare("INSERT INTO sandy_library_documents(id,owner_id,title,scope,roles_json,state,version,content_version,review_date,created_utc,updated_utc,updated_by) SELECT ?,?,?,?,?,'private',1,1,?,?,?,?"+guard).bind(doc,actor.id,title,scope,JSON.stringify(roles),reviewDate,at,at,actor.id,...(flags?participationArgs(actor,flags):[])),
    ...parts.statements,
    revision(db,{kind:'library',resourceId:doc,resourceVersion:1,action:'library_uploaded',actor,at,snapshot:{title,scope,roles,reviewDate,contentVersion:1,digest:parts.hash,source:content.source},guarded:true}),
-   audit(db,actor,'library_uploaded','library',doc,at,true)
+   audit(db,actor,'library_uploaded','library',doc,at,true,{fromVersion:0,toVersion:1})
   ]);
   if(!saved.meta.changes)fail(409,'Your participation changed. No file was saved.','conflict');
   return json({ok:true,id:doc,version:1},201);
@@ -170,7 +170,7 @@ export async function libraryEndpoint(req,env,path,actor){
   const [result]=await db.batch([
    db.prepare("UPDATE sandy_library_documents SET roles_json=?,review_date=?,state=?,version=version+1,updated_utc=?,updated_by=? WHERE id=? AND version=? AND state='private'").bind(JSON.stringify(roles),reviewDate,state,at,actor.id,doc,row.version),
    revision(db,{kind:'library',resourceId:doc,resourceVersion:next,action:'library_'+b.action,actor,at,changes:{reason,fromVersion:row.version,toVersion:next},snapshot:{title:row.title,scope:row.scope,roles,reviewDate,state,contentVersion:row.content_version},guarded:true}),
-   audit(db,actor,'library_'+b.action,'library',doc,at,true)
+   audit(db,actor,'library_'+b.action,'library',doc,at,true,{fromVersion:row.version,toVersion:next})
   ]);
   if(!result.meta.changes)fail(409,'Document changed. Reload before saving.','conflict');
   return json({ok:true,version:next});
@@ -188,7 +188,7 @@ export async function libraryEndpoint(req,env,path,actor){
    db.prepare("UPDATE sandy_library_documents SET content_version=?,version=version+1,updated_utc=?,updated_by=? WHERE id=? AND version=? AND state='private'"+(flags?' AND '+participationGuard:'')).bind(v,at,actor.id,doc,row.version,...(flags?participationArgs(actor,flags):[])),
    ...parts.statements,
    revision(db,{kind:'library',resourceId:doc,resourceVersion:next,action:'library_replaced',actor,at,changes:{fromVersion:row.version,toVersion:next},snapshot:{title:row.title,scope:row.scope,contentVersion:v,digest:parts.hash,source:c.source},guarded:true}),
-   audit(db,actor,'library_replaced','library',doc,at,true)
+   audit(db,actor,'library_replaced','library',doc,at,true,{fromVersion:row.version,toVersion:next})
   ]);
   if(!result.meta.changes)fail(409,'Document changed. Reload before saving.','conflict');
   return json({ok:true,version:next,contentVersion:v});

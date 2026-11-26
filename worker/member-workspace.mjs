@@ -35,8 +35,8 @@ async function savePreference(db,identity,fields,expected,flags){
   const [updated]=await db.batch([
    db.prepare("UPDATE club_records SET body_json=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND version=? AND "+participationGuard)
     .bind(JSON.stringify(body),identity.id,at,current.id,current.version,...participationArgs(identity,flags)),
-   revision(db,{kind:'record',resourceId:current.id,resourceVersion:nextVersion,action:'member_preferences_updated',actor:identity,at,snapshot:fields,guarded:true}),
-   audit(db,identity,'member_preferences_updated','record',current.id,at,true)
+   revision(db,{kind:'record',resourceId:current.id,resourceVersion:nextVersion,action:'member_preferences_updated',actor:identity,at,snapshot:fields,changes:{fromVersion:current.version,toVersion:nextVersion},guarded:true}),
+   audit(db,identity,'member_preferences_updated','record',current.id,at,true,{fromVersion:current.version,toVersion:nextVersion})
   ]);
   if(!updated.meta.changes)fail(409,'Your preferences were updated elsewhere. Reload before saving.','conflict');
   return json({ok:true,id:current.id,version:nextVersion});
@@ -47,7 +47,7 @@ async function savePreference(db,identity,fields,expected,flags){
   db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) SELECT ?,'safeguard','Private member preferences',?,'draft',NULL,1,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM club_records WHERE kind='safeguard' AND created_by=? AND json_extract(body_json,'$.sandyMemberWorkspace')=1 AND json_extract(body_json,'$.ownerId')=? AND json_extract(body_json,'$.type')='preferences') AND "+participationGuard)
    .bind(recordId,JSON.stringify(body),identity.id,identity.id,at,at,identity.id,identity.id,...participationArgs(identity,flags)),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'member_preferences_created',actor:identity,at,snapshot:fields,guarded:true}),
-  audit(db,identity,'member_preferences_created','record',recordId,at,true)
+  audit(db,identity,'member_preferences_created','record',recordId,at,true,{fromVersion:0,toVersion:1})
  ]);
  if(!inserted.meta.changes)fail(409,'Your preferences were created in another session. Reload before saving.','conflict');
  return json({ok:true,id:recordId,version:1},201);
@@ -64,7 +64,7 @@ async function saveWish(db,identity,data,flags){
   db.prepare("INSERT INTO club_records(id,kind,title,body_json,status,event_date,version,created_by,updated_by,created_utc,updated_utc) SELECT ?,'safeguard',?,?,'proposal',NULL,1,?,?,?,? WHERE "+participationGuard)
    .bind(recordId,'Member '+area+' interest',JSON.stringify(body),identity.id,identity.id,at,at,...participationArgs(identity,flags)),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:1,action:'member_interest_recorded',actor:identity,at,snapshot:body.fields,guarded:true}),
-  audit(db,identity,'member_interest_recorded','record',recordId,at,true)
+  audit(db,identity,'member_interest_recorded','record',recordId,at,true,{fromVersion:0,toVersion:1})
  ]);
  if(!saved.meta.changes)fail(409,'Your participation check changed. Reload before saving.','conflict');
  return json({ok:true,id:recordId},201);

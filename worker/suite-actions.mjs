@@ -45,7 +45,7 @@ export async function suiteActionEndpoint(req,env,path,identity){
      .bind(taskId,actionText,bodyJSON,due||null,identity.id,identity.id,at,at,recordId,row.version,recordId,i),
     revision(db,{kind:'record',resourceId:taskId,resourceVersion:1,action:'meeting_followup_created',actor:identity,at,
      snapshot:{sourceMeeting:recordId,sourceIndex:i,sourceVersion:row.version,title:actionText,fields},guarded:true}),
-    audit(db,identity,'meeting_followup_created','record',taskId,at,true)
+    audit(db,identity,'meeting_followup_created','record',taskId,at,true,{fromVersion:0,toVersion:1})
    );
   }
   const results=stmts.length?await db.batch(stmts):[];
@@ -85,7 +85,7 @@ export async function suiteActionEndpoint(req,env,path,identity){
    .bind(nextBody,identity.id,at,recordId,row.version),
   revision(db,{kind:'record',resourceId:recordId,resourceVersion:nextVersion,action:'stock_'+direction,actor:identity,at,
    changes:{direction,quantity:qty,note,balanceBefore:available,balanceAfter:newBalance,fromVersion:expected,toVersion:nextVersion,...(mutationId?{mutationId}:{})},snapshot:{title:row.title,status:row.status,fields,balance:newBalance},guarded:true}),
-  audit(db,identity,'stock_'+direction,'record',recordId,at,true)
+  audit(db,identity,'stock_'+direction,'record',recordId,at,true,{fromVersion:expected,toVersion:nextVersion})
  ]);
  if(!saved.meta.changes){const previous=await replay();if(previous)return previous;fail(409,'Stock changed during this movement. Reload it.','conflict');}
  return json({ok:true,version:nextVersion,balance:newBalance,direction,quantity:qty,
