@@ -37,7 +37,7 @@ test('Worker denies private assets and encoded variants before reaching the asse
   assert.equal(response.headers.get('X-Frame-Options'),'SAMEORIGIN');assert.match(response.headers.get('Content-Security-Policy'),/frame-ancestors 'self'/);
  }
  assert.equal(reads,5);
- assert.match((await call('/assets/hero-home.webp')).headers.get('Cache-Control'),/public/);
+ assert.match((await call('/assets/venue-home-hero.webp')).headers.get('Cache-Control'),/public/);
  const config=JSON.parse(readFileSync(join(root,'wrangler.jsonc'),'utf8'));
  assert.equal(config.name,'sandy-sports-club');assert.equal(config.d1_databases.length,2);
  assert.deepEqual(config.d1_databases[1],{binding:'SANDY_SHOWCASE_DB',database_name:'sandy-sports-clubhouse-showcase',database_id:'fbc64621-a57a-43e7-8138-717576d167c2'});

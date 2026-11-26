@@ -103,7 +103,7 @@ if(here==='index.html')footer?.querySelector('.footer-bottom')?.insertAdjacentHT
 document.querySelectorAll('.card > img').forEach(img=>{
   const label=document.createElement('small');
   label.className='image-kind';
-  label.textContent=img.getAttribute('src')==='/assets/site-ballow-aerial.webp'?'Actual Ballow Road photo':'Concept image';
+  label.textContent=img.dataset.kind||((img.getAttribute('src')||'').startsWith('/assets/site-ballow-')?'Actual Ballow Road photo':'Concept image');
   img.insertAdjacentElement('afterend',label);
 });
 const menu=document.querySelector('.menu-toggle'), navEl=document.querySelector('#nav');

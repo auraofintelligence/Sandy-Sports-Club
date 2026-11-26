@@ -54,7 +54,7 @@ try{
   if([301,302,307,308].includes(response.status)){const next=new URL(response.headers.get('Location'),origin);response=await go(next.pathname+next.search)}
   assert.equal(response.status,200,path);assert.match(response.headers.get('Cache-Control')||'',/no-store/,path);assert.equal(response.headers.get('X-Frame-Options'),'SAMEORIGIN',path);
  }
- const image=await go('/assets/hero-home.webp');assert.equal(image.status,200);assert.match(image.headers.get('Content-Type')||'',/image/);
+ const image=await go('/assets/venue-home-hero.webp');assert.equal(image.status,200);assert.match(image.headers.get('Content-Type')||'',/image/);
  const username='fictional-wrangler-owner',password='fictional-test-password-'+randomUUID();
  await jsonCall('/api/auth/bootstrap','POST',{username,password,bootstrapKey},'',201);
  const login=await jsonCall('/api/auth/login','POST',{username,password}),owner=cookie(login,'__Host-sandy_session');assert.ok(owner);
