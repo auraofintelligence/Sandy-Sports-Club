@@ -51,11 +51,30 @@ test('the images the balanced set replaced stay as files and show as Previously 
  }
 });
 test('Straddie scale redraws replace the oversized concept images and keep the old files',()=>{
- const sec=gallery.slice(gallery.indexOf('id="straddie-scale"'));
+ const sec=gallery.slice(gallery.indexOf('id="straddie-scale"'),gallery.indexOf('id="people-standard"'));
  const now=[...sec.matchAll(/IN THAT SLOT NOW<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
  const prev=[...sec.matchAll(/PREVIOUSLY USED<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
  assert.equal(now.length,11);assert.equal(prev.length,11);
  for(const f of now){assert.match(f,/-straddie\.webp$/);assert.ok(PUBLIC_FILES.includes('assets/'+f),f+' public');assert.equal(pages.reduce((c,p)=>c+(read(p).split(`/assets/${f}"`).length-1),0),1,f+' used once');}
  for(const f of prev){assert.ok(existsSync(join(root,'assets',f)),f+' kept');for(const p of pages)assert.ok(!read(p).includes(`/assets/${f}"`),f+' no longer live');}
  assert.ok(pages.every(p=>!read(p).includes('/assets/hero-assets.webp"')),'the stadium image is off the Assets page');
+});
+test('committee balance and child safe amenities redraws are live, and the two deleted images are gone everywhere',()=>{
+ const sec=gallery.slice(gallery.indexOf('id="people-standard"'));
+ const now=[...sec.matchAll(/IN THAT SLOT NOW<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
+ assert.ok(now.length>=22);
+ for(const f of now){assert.ok(PUBLIC_FILES.includes('assets/'+f),f+' public');assert.equal(pages.reduce((c,p)=>c+(read(p).split(`/assets/${f}"`).length-1),0),1,f+' used once');}
+ for(const f of ['hero-constitution.webp','card-fac-dressing-rooms.webp']){
+  assert.ok(!existsSync(join(root,'assets',f)),f+' deleted');
+  assert.ok(!PUBLIC_FILES.includes('assets/'+f),f+' not public');
+  assert.ok(!gallery.includes(f),f+' not in the gallery');
+  for(const p of pages)assert.ok(!read(p).includes(f),f+' not on '+p);
+ }
+ assert.match(read('facilities.html'),/Private, lockable, fully enclosed shower and change cubicles, an accessible family change room/);
+ assert.ok(gallery.includes('Concept set for early promotion; to be replaced with real island photography.'));
+});
+test('the LED screen is described as mobile and segmented, and the original stays on the home card',()=>{
+ for(const p of ['index.html','film-club.html','donate.html'])assert.match(read(p),/mobile, segmented LED/,p);
+ assert.ok(read('index.html').includes('/assets/modular-led-concept.webp"'),'home LED card keeps the original');
+ assert.match(read('donate.html'),/<section class="page-hero"><img src="\/assets\/led-cinema-screen-campaign\.webp" alt="Concept image of a mobile, segmented LED screen[^"]*">[\s\S]*?<small class="caption">[^<]*mobile, segmented LED panels/);
 });

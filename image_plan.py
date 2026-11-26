@@ -19,7 +19,7 @@ ALT = {
     'venue-sports-precinct.webp': 'Concept image of an aerial view over a multi-court sand sport precinct with a green-roof clubhouse',
     'venue-clubhouse-pavilion.webp': 'Concept image of a timber and glass clubhouse pavilion with a deck facing a sand court',
     'led-cinema-film-club.webp': 'Concept image of a permanent outdoor LED cinema wall in a timber frame with lounge seating beside the bay at twilight',
-    'led-cinema-screen-campaign.webp': 'Concept image of a semi-permanent modular outdoor LED cinema wall with quality seating at golden hour',
+    'led-cinema-screen-campaign.webp': 'Concept image of a mobile, segmented LED screen of modular panels set up with seating at golden hour, ready to move to venues across the island',
     'flag-football-concept.webp': 'Concept image of a flag football game on sand',
     'flag-football-pathway.webp': 'Concept image of a junior flag football development clinic on a sand field',
     'hero-markets.webp': 'Concept image of an island sport and culture day with markets',
@@ -359,6 +359,42 @@ STRADDIE_SCALE = [
 for _p, _t, _img, _alt in STRADDIE_SCALE:
     _swap(_p, _t, _img + '.webp', _alt)
 
+# People and safety standard (owner, 27 Nov 2026): committee, governance, constitution
+# and member images show women led or gender balanced groups across a mixed age range,
+# everyone in sportswear or everyday clothes; amenities show private, lockable, fully
+# enclosed cubicles with non slip drained floors. Failing images were redrawn and
+# swapped in. Old files stay listed in the gallery, except the two the owner had deleted.
+DELETED = {'hero-constitution.webp', 'card-fac-dressing-rooms.webp'}
+STANDARD_REDRAWS = [
+    ('hero-constitution.webp', 'hero-constitution-committee', 'a women led committee of all ages reviewing the draft constitution on a clubhouse deck by the bay'),
+    ('card-const-ai-assets.webp', 'card-const-ai-assets-equal', 'two women and a young man keeping the club asset register in the equipment store'),
+    ('card-const-voting.webp', 'card-const-voting-equal', 'members of all ages voting by show of hands at a general meeting chaired by a woman'),
+    ('card-com-governance.webp', 'card-com-governance-equal', 'a members meeting on the lawn led by a young woman and a First Nations elder'),
+    ('card-com-welfare.webp', 'card-com-welfare-equal', 'a woman first aid officer caring for a teenage player with a young volunteer'),
+    ('card-cassets-site-fit.webp', 'card-cassets-site-fit-equal', 'a facilities subcommittee site visit led by a First Nations woman'),
+    ('card-cassets-stewardship.webp', 'card-cassets-stewardship-equal', 'a woman equipment officer signing out volleyballs to a member'),
+    ('hero-committee-assets.webp', 'hero-committee-assets-equal', 'two women and a man surveying a possible court site by the bay'),
+    ('card-cfilm-screen-ops.webp', 'card-cfilm-screen-ops-equal', 'a woman and a young man checking a modular LED screen at dusk'),
+    ('card-cfilm-live-broadcast.webp', 'card-cfilm-live-broadcast-equal', 'a small club film crew of a woman, a teenage girl and a man covering beach handball'),
+    ('card-cfund-investment.webp', 'card-cfund-investment-equal', 'a woman treasurer presenting an investment pack to two partners in the clubhouse'),
+    ('card-cpub-roles.webp', 'card-cpub-roles-equal', 'a young woman webmaster updating account roles with the club secretary'),
+    ('card-csport-league.webp', 'card-csport-league-equal', 'a mixed sport subcommittee arranging a tournament bracket'),
+    ('card-mequip-led.webp', 'card-mequip-led-equal', 'a mixed volunteer crew assembling modular LED panels'),
+    ('card-mem-skills.webp', 'card-mem-skills-equal', 'a woman coach running a mixed age volleyball skills clinic'),
+    ('card-mfilm-exchange.webp', 'card-mfilm-exchange-equal', 'a filmmaker, a First Nations artist and a young photographer reviewing footage by the bay'),
+    ('card-mtrain-competition.webp', 'card-mtrain-competition-equal', 'a woman referee and a young scorer running a beach handball match'),
+    ('hero-member-crew.webp', 'hero-member-crew-equal', 'a mixed age crew of women and men building low timber bench seating'),
+    ('hero-member-training.webp', 'hero-member-training-equal', 'a woman instructor leading a first aid class under a beach pavilion'),
+    ('card-cmem-youth-family.webp', 'card-cmem-youth-family-equal', 'women and men coaches with families at a come and try session'),
+    ('card-fac-dressing-rooms.webp', 'card-fac-dressing-rooms-private', 'private lockable shower and change cubicles with solid timber doors, an accessible family room and a non slip drained floor'),
+    ('card-asset-showers.webp', 'card-asset-showers-private', 'a timber amenities block with private lockable cubicles, an accessible family room and an outdoor sand rinse station'),
+]
+for _old, _img, _alt in STANDARD_REDRAWS:
+    _keys = [('h', k) for k, v in HERO.items() if v == _old] + [('c', k) for k, v in CARD.items() if v == _old]
+    assert len(_keys) == 1, (_old, _keys)
+    _kind, _key = _keys[0]
+    _swap(_key, None, _img + '.webp', _alt) if _kind == 'h' else _swap(_key[0], _key[1], _img + '.webp', _alt)
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',
@@ -378,12 +414,15 @@ CARD_RE = re.compile(r'(<article class="card[^"]*">)(<img [^>]*>)?((?:(?!</?arti
 FIG_RE = re.compile(r'<figure( class="[^"]*")?><img src="/assets/([^"]+)"(?: srcset="[^"]*" sizes="[^"]*")? alt="([^"]*)"([^>]*)>(.*?)</figure>', re.S)
 
 
+HERO_CAPTION = {'donate.html': 'Concept image only; not an approved design. The screen would be mobile, segmented LED panels that can be set up at venues across the island.'}
+
+
 def _hero(page):
     def rep(m):
         img = HERO.get(page)
         if not img:
             return f'<section class="page-hero no-image">{m.group(1)}</section>'
-        cap = REAL_CAPTION if img.startswith('site-ballow-') else CONCEPT_CAPTION
+        cap = REAL_CAPTION if img.startswith('site-ballow-') else HERO_CAPTION.get(page, CONCEPT_CAPTION)
         return f'<section class="page-hero"><img src="/assets/{img}" alt="{ALT[img]}">{m.group(1)}<small class="caption">{cap}</small></section>'
     return rep
 

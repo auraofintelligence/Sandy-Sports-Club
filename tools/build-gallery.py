@@ -159,11 +159,12 @@ def main():
 
     body = (
         '<section class="page-section gallery-intro"><p class="eyebrow">OWNER REVIEW</p><h1>Image gallery</h1>'
+        '<p class="gallery-note"><strong>Concept set for early promotion; to be replaced with real island photography.</strong></p>'
         '<p class="lead">Every image on the Sandy Sports proposal site, for comparing the originals with the newer images. '
         'Each image shows its filename, the page and slot where it is used or was used, and whether it is live now, previously used or unused. '
         'This review page is linked from the menu and footer, and asks search engines not to index it. Concept images are concepts, not approved designs.</p>'
         f'<p>{len(originals)} originals ({count(originals)}). {len(new)} newer images ({count(new)}).</p>'
-        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set</a> <a class="button outline" href="#straddie-scale">Straddie scale redraws</a></p></section>'
+        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set</a> <a class="button outline" href="#straddie-scale">Straddie scale redraws</a> <a class="button outline" href="#people-standard">Committee balance and amenities</a></p></section>'
         f'<section class="page-section alt" id="originals"><p class="eyebrow">SECTION 1</p><h2>Originals</h2><p class="lead">The {len(originals)} images in the site as of commit {BASE}, including the ones that were later deleted and have been restored as files so they display here.</p>'
         '<div class="gallery-grid">' + ''.join(figure(f) for f in originals) + '</div></section>'
         '<section class="page-section" id="side-by-side"><p class="eyebrow">COMPARE</p><h2>Originals and their replacements</h2><p class="lead">Each pair shows an original next to the image that sits in the same slot now.</p>'
@@ -201,6 +202,23 @@ def main():
         f'<p class="lead">{len(scale)} concept images that showed stadiums, arenas, floodlight towers or large concrete stands, redrawn at a small to medium island scale '
         'with low impact natural materials set into the dunes and bush. Each pair shows the image previously used next to the redraw in that slot now.</p>'
         + ''.join(swap_pair(f, ', '.join(f'{p}: {l}' for p, _, l in current.get(f, [])) or f) for f in scale) + '</section>')
+    std = []
+    for old_img, img, _ in image_plan.STANDARD_REDRAWS:
+        f = img + '.webp'
+        title = ', '.join(f'{p}: {l}' for p, _, l in current.get(f, [])) or f
+        if old_img in image_plan.DELETED:
+            assert not os.path.exists(os.path.join('assets', old_img)), old_img + ' should be deleted'
+            left = f'<figure class="gallery-item gallery-empty"><figcaption>The previous image was deleted at the owner\'s request.</figcaption></figure>'
+            std.append(f'<div class="gallery-pair"><h3>{escape(title)}</h3><div class="gallery-pair-grid"><div><p class="eyebrow">DELETED</p>{left}</div>'
+                       f'<div><p class="eyebrow">IN THAT SLOT NOW</p>{figure(f)}</div></div></div>')
+        else:
+            std.append(swap_pair(f, title))
+    body += (
+        '<section class="page-section" id="people-standard"><p class="eyebrow">SECTION 5</p><h2>Committee balance and child safe amenities</h2>'
+        f'<p class="lead">{len(std)} images redrawn to the club standard: committee, governance, constitution and member scenes show women led or gender balanced groups '
+        'across a mixed age range, and amenities show private, lockable, fully enclosed cubicles, an accessible family room and non slip drained floors. '
+        'Each pair shows the image previously used next to the redraw in that slot now. Two earlier images were deleted at the owner\'s request.</p>'
+        + ''.join(std) + '</section>')
     html = ('<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#102d40">'
             '<meta name="description" content="Owner review gallery of every Sandy Sports image.">'
