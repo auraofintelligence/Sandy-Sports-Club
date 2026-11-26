@@ -164,7 +164,7 @@ def main():
         'Each image shows its filename, the page and slot where it is used or was used, and whether it is live now, previously used or unused. '
         'This review page is linked from the menu and footer, and asks search engines not to index it. Concept images are concepts, not approved designs.</p>'
         f'<p>{len(originals)} originals ({count(originals)}). {len(new)} newer images ({count(new)}).</p>'
-        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set</a> <a class="button outline" href="#straddie-scale">Straddie scale redraws</a> <a class="button outline" href="#people-standard">Committee balance and amenities</a></p></section>'
+        '<p><a class="button outline" href="#originals">Originals</a> <a class="button outline" href="#side-by-side">Side by side</a> <a class="button outline" href="#new">New images</a> <a class="button outline" href="#balanced">Balanced club set</a> <a class="button outline" href="#straddie-scale">Straddie scale redraws</a> <a class="button outline" href="#people-standard">Committee balance and amenities</a> <a class="button outline" href="#sitewide">Site wide pass</a></p></section>'
         f'<section class="page-section alt" id="originals"><p class="eyebrow">SECTION 1</p><h2>Originals</h2><p class="lead">The {len(originals)} images in the site as of commit {BASE}, including the ones that were later deleted and have been restored as files so they display here.</p>'
         '<div class="gallery-grid">' + ''.join(figure(f) for f in originals) + '</div></section>'
         '<section class="page-section" id="side-by-side"><p class="eyebrow">COMPARE</p><h2>Originals and their replacements</h2><p class="lead">Each pair shows an original next to the image that sits in the same slot now.</p>'
@@ -219,6 +219,12 @@ def main():
         'across a mixed age range, and amenities show private, lockable, fully enclosed cubicles, an accessible family room and non slip drained floors. '
         'Each pair shows the image previously used next to the redraw in that slot now. Two earlier images were deleted at the owner\'s request.</p>'
         + ''.join(std) + '</section>')
+    site = [swap_pair(img + '.webp', ', '.join(f'{p}: {l}' for p, _, l in current.get(img + '.webp', [])) or img) for _, img, _ in image_plan.SITEWIDE_REDRAWS]
+    body += (
+        '<section class="page-section alt" id="sitewide"><p class="eyebrow">SECTION 6</p><h2>Balanced site wide pass</h2>'
+        f'<p class="lead">{len(site)} more concept images redrawn so the site shows a natural mix of ages and genders, First Nations people included respectfully, '
+        'at Straddie small to medium scale with no stadiums. Each pair shows the image previously used next to the redraw in that slot now.</p>'
+        + ''.join(site) + '</section>')
     html = ('<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<meta name="robots" content="noindex, nofollow"><meta name="theme-color" content="#102d40">'
             '<meta name="description" content="Owner review gallery of every Sandy Sports image.">'

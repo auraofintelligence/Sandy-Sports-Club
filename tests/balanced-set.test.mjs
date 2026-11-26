@@ -60,7 +60,7 @@ test('Straddie scale redraws replace the oversized concept images and keep the o
  assert.ok(pages.every(p=>!read(p).includes('/assets/hero-assets.webp"')),'the stadium image is off the Assets page');
 });
 test('committee balance and child safe amenities redraws are live, and the two deleted images are gone everywhere',()=>{
- const sec=gallery.slice(gallery.indexOf('id="people-standard"'));
+ const sec=gallery.slice(gallery.indexOf('id="people-standard"'),gallery.indexOf('id="sitewide"'));
  const now=[...sec.matchAll(/IN THAT SLOT NOW<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"/g)].map(m=>m[1]);
  assert.ok(now.length>=22);
  for(const f of now){assert.ok(PUBLIC_FILES.includes('assets/'+f),f+' public');assert.equal(pages.reduce((c,p)=>c+(read(p).split(`/assets/${f}"`).length-1),0),1,f+' used once');}
@@ -77,4 +77,15 @@ test('the LED screen is described as mobile and segmented, and the original stay
  for(const p of ['index.html','film-club.html','donate.html'])assert.match(read(p),/mobile, segmented LED/,p);
  assert.ok(read('index.html').includes('/assets/modular-led-concept.webp"'),'home LED card keeps the original');
  assert.match(read('donate.html'),/<section class="page-hero"><img src="\/assets\/led-cinema-screen-campaign\.webp" alt="Concept image of a mobile, segmented LED screen[^"]*">[\s\S]*?<small class="caption">[^<]*mobile, segmented LED panels/);
+});
+
+test('site wide pass redraws are live once each and paired in the gallery',()=>{
+ const sec=gallery.slice(gallery.indexOf('id="sitewide"'));
+ const news=['sport-flag-football-island','grants-capital-island','card-stat-paris-island','card-stat-adelaide-island','card-stat-rankings-island','card-stat-beach-soccer-island','card-grant-infrastructure-equal','card-grant-private-investment-equal','card-sport-beach-cricket-family','card-sport-beach-rugby-league-mixed','card-sport-island-made-formats-mixed','card-survey-afl-crossover-mixed','card-survey-beach-handball-mixed','card-survey-beach-rugby-league-mixed','card-asset-broadcast-mixed','card-asset-mobile-panels-mixed','card-asset-resilience-mixed','card-ch-facilities-mixed'];
+ for(const n of news){
+  const uses=pages.filter(p=>read(p).includes('/assets/'+n+'.webp'));
+  assert.equal(uses.length,1,n+' live once');
+  assert.ok(sec.includes('/assets/'+n+'.webp'),n+' paired in the gallery');
+ }
+ assert.equal((sec.match(/Previously used/g)||[]).length,18);
 });

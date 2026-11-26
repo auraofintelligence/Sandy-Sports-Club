@@ -395,6 +395,34 @@ for _old, _img, _alt in STANDARD_REDRAWS:
     _kind, _key = _keys[0]
     _swap(_key, None, _img + '.webp', _alt) if _kind == 'h' else _swap(_key[0], _key[1], _img + '.webp', _alt)
 
+# Balanced site wide pass (owner approval, 27 Nov 2026): the remaining concept images that
+# showed one gender only, adults only where a mix fits, or stadium scale were redrawn.
+SITEWIDE_REDRAWS = [
+    ('card-index-flag.webp', 'sport-flag-football-island', 'mixed social flag football on island sand with a woman referee and families watching'),
+    ('card-index-capital.webp', 'grants-capital-island', 'a mixed build team framing a modest timber clubhouse beside sand courts'),
+    ('card-stat-paris.webp', 'card-stat-paris-island', 'island families watching beach volleyball on a mobile LED screen on the foreshore'),
+    ('card-stat-adelaide.webp', 'card-stat-adelaide-island', 'a teenage girls pair practising blocks with their coach on a dune court'),
+    ('card-stat-rankings.webp', 'card-stat-rankings-island', 'a junior and teen development squad practising serves at sunrise with two coaches'),
+    ('card-stat-beach-soccer.webp', 'card-stat-beach-soccer-island', 'a mixed teen beach soccer session with women and men coaches'),
+    ('card-grant-infrastructure.webp', 'card-grant-infrastructure-equal', 'small scale sand court works with a woman engineer and a First Nations environmental officer'),
+    ('card-grant-private-investment.webp', 'card-grant-private-investment-equal', 'partners reviewing a model of timber sand courts on a bayside deck'),
+    ('card-sport-beach-cricket.webp', 'card-sport-beach-cricket-family', 'three generations playing family beach cricket'),
+    ('card-sport-beach-rugby-league.webp', 'card-sport-beach-rugby-league-mixed', 'mixed beach rugby league with a woman referee'),
+    ('card-sport-island-made-formats.webp', 'card-sport-island-made-formats-mixed', 'families and elders trying an island made rebound net game'),
+    ('card-survey-afl-crossover.webp', 'card-survey-afl-crossover-mixed', 'Australian football players of mixed ages answering a survey on a phone'),
+    ('card-survey-beach-handball.webp', 'card-survey-beach-handball-mixed', 'beach handball players of mixed ages answering the survey on a bench'),
+    ('card-survey-beach-rugby-league.webp', 'card-survey-beach-rugby-league-mixed', 'beach rugby league players answering a club poll at sunset'),
+    ('card-asset-broadcast.webp', 'card-asset-broadcast-mixed', 'a woman producer, a teenage volunteer and an older camera operator in a small courtside booth'),
+    ('card-asset-mobile-panels.webp', 'card-asset-mobile-panels-mixed', 'two volunteers setting up a small mobile screen from segmented LED panels'),
+    ('card-asset-resilience.webp', 'card-asset-resilience-mixed', 'a mixed crew securing a shade sail before a storm'),
+    ('card-ch-facilities.webp', 'card-ch-facilities-mixed', 'facilities volunteers walking a headland site with a First Nations man'),
+]
+for _old, _img, _alt in SITEWIDE_REDRAWS:
+    _keys = [('h', k) for k, v in HERO.items() if v == _old] + [('c', k) for k, v in CARD.items() if v == _old]
+    assert len(_keys) == 1, (_old, _keys)
+    _kind, _key = _keys[0]
+    _swap(_key, None, _img + '.webp', _alt) if _kind == 'h' else _swap(_key[0], _key[1], _img + '.webp', _alt)
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',
