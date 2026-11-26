@@ -1211,6 +1211,30 @@
   "dhash": "0890b1b8acb6c663",
   "sha256": "91345ddd4d8b6915651a04b826191a97c2aca958dab3b63acf579002d5aadc1b"
  },
+ "assets/real-amity-point-jetty.webp": {
+  "dhash": "0c333517eff91c2d",
+  "sha256": "bf566707c63a1c1aea079afbde13644da4ff48882913dd70cd31baf9ea3c7a40"
+ },
+ "assets/real-brown-lake-bummiera.webp": {
+  "dhash": "0c80706000303838",
+  "sha256": "81eeabc3c22dcd4269736e087b9eeb3fed98490143ed8e20731dcd8bf17cd6a0"
+ },
+ "assets/real-dunwich-beach-barges.webp": {
+  "dhash": "0f0d083c5bd91f97",
+  "sha256": "a455dc3878420808169f031c0c7895b8a4d1926f134df144e98b85fb5759e70c"
+ },
+ "assets/real-gorge-walk-point-lookout.webp": {
+  "dhash": "3206040127330185",
+  "sha256": "390ab06933bf6102c661e88bf6e548619d1530605c1cf13206e61f3bf96ec837"
+ },
+ "assets/real-main-beach-point-lookout.webp": {
+  "dhash": "000063be8f47e6ec",
+  "sha256": "344fe31ebf43e626cb3012451b106d29f9b20d3e0dd5b5ee72258f4134c58faa"
+ },
+ "assets/real-straddie-aerial.webp": {
+  "dhash": "d9230bc7ce7befef",
+  "sha256": "c89a2b38a03610e8bb6369c39a22f2a83261dac4110cd2bbd93099f37ca59bed"
+ },
  "assets/sandy-original-icon.png": {
   "dhash": "4d294b4b0f065327",
   "sha256": "5c676fc569de924dee6903f91172ad9d70129016626ace26a03f0f751006d22e"

@@ -8,6 +8,7 @@ Brand assets (logo, icon, favicon, mozzie mascot) are UI marks, exempt from the 
 import re
 
 CONCEPT_CAPTION = 'Concept image only; not an approved design. No facility or event is confirmed.'
+REAL_CREDIT = {}
 REAL_CAPTION = 'Actual Ballow Road site photo; other sites are not depicted.'
 
 SPORTS = ['mixed-beach-volleyball', 'beach-cricket', 'beach-football', 'beach-rugby-league', 'beach-5s-rugby',
@@ -60,6 +61,8 @@ def srcset(img):
 
 
 def kind(img):
+    if img in REAL_CREDIT:
+        return f' data-kind="Photo: {REAL_CREDIT[img][0]}, {REAL_CREDIT[img][1]}"'
     if img in MAP:
         return ' data-kind="Site context map, not a design"'
     return ''
@@ -423,6 +426,40 @@ for _old, _img, _alt in SITEWIDE_REDRAWS:
     _kind, _key = _keys[0]
     _swap(_key, None, _img + '.webp', _alt) if _kind == 'h' else _swap(_key[0], _key[1], _img + '.webp', _alt)
 
+# Real island photography (owner rule, 27 Nov 2026): AI images are only for sport, club and
+# cinema content. Concept images whose main subject was the island itself were replaced with
+# reusable Wikimedia Commons photographs. Full credits are in LICENSE.md.
+# new file -> (old file, author, licence, subject, alt)
+REAL_PHOTOS = {
+    'real-straddie-aerial.webp': ('card-index-three-towns.webp', 'J Brew', 'CC BY-SA 2.0', 'aerial view of North Stradbroke Island',
+        'Photo of an aerial view over the northern end of Minjerribah (North Stradbroke Island) and Moreton Bay'),
+    'real-main-beach-point-lookout.webp': ('hero-member-calendar.webp', 'S. Newrick', 'CC BY-SA 4.0', 'Main Beach from Point Lookout',
+        'Photo of Main Beach stretching south from Point Lookout (Mulumba) on Minjerribah'),
+    'real-amity-point-jetty.webp': ('card-const-sport-place.webp', 'Pacificwizard', 'CC0', 'Amity Point jetty at sunset',
+        'Photo of the grassed foreshore and jetty at Amity Point (Pulan) in the late afternoon'),
+    'real-brown-lake-bummiera.webp': ('card-prog-country.webp', 'John Tann', 'CC BY 2.0', 'Bummiera (Brown Lake)',
+        'Photo of Bummiera (Brown Lake) on Minjerribah reflecting clouds and bush'),
+    'real-gorge-walk-point-lookout.webp': ('card-ch-calendar.webp', 'Saruman-the-white', 'CC BY-SA 4.0', 'the Gorge Walk at Point Lookout',
+        'Photo of rocky headlands and clear water seen from the Gorge Walk at Point Lookout'),
+    'real-dunwich-beach-barges.webp': ('card-src-ballow-hub.webp', 'Debra Jordan', 'CC BY 3.0', 'the beach at Dunwich',
+        'Photo of a wave splashing over old barge remains on the beach at Dunwich (Goompi)'),
+}
+REAL_SOURCES = {
+    'real-main-beach-point-lookout.webp': ('https://commons.wikimedia.org/wiki/File:View_of_Main_Beach_from_Point_Lookout_(North_Stradbroke_Island).JPG', 'https://creativecommons.org/licenses/by-sa/4.0'),
+    'real-amity-point-jetty.webp': ('https://commons.wikimedia.org/wiki/File:Amity_Point_Jetty_at_Sunset._North_Stradbroke_Island,_Queensland,_Australia.jpg', 'https://creativecommons.org/publicdomain/zero/1.0/deed.en'),
+    'real-brown-lake-bummiera.webp': ('https://commons.wikimedia.org/wiki/File:Brown_Lake_-_Boumiera_(49698290361).jpg', 'https://creativecommons.org/licenses/by/2.0'),
+    'real-gorge-walk-point-lookout.webp': ('https://commons.wikimedia.org/wiki/File:Gorge_Walk_North_Stradbroke_Island.JPG', 'https://creativecommons.org/licenses/by-sa/4.0'),
+    'real-straddie-aerial.webp': ('https://commons.wikimedia.org/wiki/File:North_Stradbroke_Island_01.jpg', 'https://creativecommons.org/licenses/by-sa/2.0'),
+    'real-dunwich-beach-barges.webp': ('https://commons.wikimedia.org/wiki/File:Summer_Splash_(217752559).jpeg', 'https://creativecommons.org/licenses/by/3.0'),
+}
+for _new, (_old, _who, _lic, _what, _alt) in REAL_PHOTOS.items():
+    _keys = [('h', k) for k, v in HERO.items() if v == _old] + [('c', k) for k, v in CARD.items() if v == _old]
+    assert len(_keys) == 1, (_old, _keys)
+    _kind, _key = _keys[0]
+    _swap(_key, None, _new, '') if _kind == 'h' else _swap(_key[0], _key[1], _new, '')
+    ALT[_new] = _alt
+    REAL_CREDIT[_new] = (_who, _lic, _what)
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',
@@ -451,6 +488,9 @@ def _hero(page):
         if not img:
             return f'<section class="page-hero no-image">{m.group(1)}</section>'
         cap = REAL_CAPTION if img.startswith('site-ballow-') else HERO_CAPTION.get(page, CONCEPT_CAPTION)
+        if img in REAL_CREDIT:
+            who, lic, what = REAL_CREDIT[img]
+            cap = f'Real photo: {what} by {who}, {lic}, via Wikimedia Commons; cropped and resized. Facilities and events on this page are proposed.'
         return f'<section class="page-hero"><img src="/assets/{img}" alt="{ALT[img]}">{m.group(1)}<small class="caption">{cap}</small></section>'
     return rep
 

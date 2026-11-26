@@ -80,7 +80,7 @@ test('the LED screen is described as mobile and segmented, and the original stay
 });
 
 test('site wide pass redraws are live once each and paired in the gallery',()=>{
- const sec=gallery.slice(gallery.indexOf('id="sitewide"'));
+ const sec=gallery.slice(gallery.indexOf('id="sitewide"'),gallery.indexOf('id="real-island"'));
  const news=['sport-flag-football-island','grants-capital-island','card-stat-paris-island','card-stat-adelaide-island','card-stat-rankings-island','card-stat-beach-soccer-island','card-grant-infrastructure-equal','card-grant-private-investment-equal','card-sport-beach-cricket-family','card-sport-beach-rugby-league-mixed','card-sport-island-made-formats-mixed','card-survey-afl-crossover-mixed','card-survey-beach-handball-mixed','card-survey-beach-rugby-league-mixed','card-asset-broadcast-mixed','card-asset-mobile-panels-mixed','card-asset-resilience-mixed','card-ch-facilities-mixed'];
  for(const n of news){
   const uses=pages.filter(p=>read(p).includes('/assets/'+n+'.webp'));
