@@ -10,6 +10,8 @@ import re
 CONCEPT_CAPTION = 'Concept image only; not an approved design. No facility or event is confirmed.'
 REAL_CREDIT = {}
 REAL_KIND = {}
+# Cards whose photo credit sits in a muted line under the image instead of over it.
+CREDIT_BELOW = {'real-three-towns.webp'}
 REAL_CAPTION = 'Actual Ballow Road site photo; other sites are not depicted.'
 
 SPORTS = ['mixed-beach-volleyball', 'beach-cricket', 'beach-football', 'beach-rugby-league', 'beach-5s-rugby',
@@ -63,7 +65,8 @@ def srcset(img):
 
 def kind(img):
     if img in REAL_KIND:
-        return f' data-kind="{REAL_KIND[img]}"'
+        below = ' data-credit="below"' if img in CREDIT_BELOW else ''
+        return f' data-kind="{REAL_KIND[img]}"{below}'
     if img in REAL_CREDIT:
         return f' data-kind="Photo: {REAL_CREDIT[img][0]}, {REAL_CREDIT[img][1]}"'
     if img in MAP:
@@ -448,7 +451,7 @@ REAL_PHOTOS = {
         'Photo of a wave splashing over old barge remains on the beach at Dunwich (Goompi)'),
     # Owner feedback: the aerial did not read as three towns, so the card now shows one real photo of each town.
     'real-three-towns.webp': ('real-straddie-aerial.webp', 'Tanya Dedyukhina, Pacificwizard and NJM2010', 'CC BY 3.0 and CC0', 'Dunwich, Amity Point and Point Lookout',
-        'Three real photos side by side: the Harold Walker jetty at Dunwich, the beach at Amity Point at sunset and the Point Lookout lighthouse, each labelled with its town name'),
+        'Three real photos side by side: Harold Walker Jetty, Dunwich; the beach at Amity Point at sunset; and the Point Lookout lighthouse, each labelled with its town name'),
 }
 REAL_KIND['real-three-towns.webp'] = 'Photos: Tanya Dedyukhina, CC BY 3.0; Pacificwizard, CC0; NJM2010, CC0'
 REAL_PARTS = {'real-three-towns.webp': [
