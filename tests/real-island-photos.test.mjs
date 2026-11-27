@@ -8,13 +8,21 @@ const root=join(dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>readFileSync(join(root,p),'utf8');
 const pages=PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html');
 const REAL={
- 'real-straddie-aerial':['card-index-three-towns','J Brew','CC BY-SA 2.0'],
  'real-main-beach-point-lookout':['hero-member-calendar','S. Newrick','CC BY-SA 4.0'],
  'real-amity-point-jetty':['card-const-sport-place','Pacificwizard','CC0'],
  'real-brown-lake-bummiera':['card-prog-country','John Tann','CC BY 2.0'],
  'real-gorge-walk-point-lookout':['card-ch-calendar','Saruman-the-white','CC BY-SA 4.0'],
  'real-dunwich-beach-barges':['card-src-ballow-hub','Debra Jordan','CC BY 3.0'],
 };
+test('the three towns card shows a credited real photo of each town',()=>{
+ const home=read('index.html'),licence=read('LICENSE.md'),gallery=read('image-gallery.html');
+ assert.ok(home.includes('<img src="/assets/real-three-towns.webp"'),'home card shows the three towns composite');
+ assert.ok(home.includes('data-kind="Photos: Tanya Dedyukhina, CC BY 3.0; Pacificwizard, CC0; NJM2010, CC0"'),'every panel credited on the card');
+ assert.ok(!home.includes('real-straddie-aerial'),'aerial no longer on the home page');
+ const sec=gallery.slice(gallery.indexOf('id="real-island"'));
+ assert.ok(sec.includes('/assets/real-straddie-aerial.webp')&&sec.includes('/assets/real-three-towns.webp'),'aerial kept in the gallery as previously used');
+ for(const who of ['Tanya Dedyukhina','Pacificwizard','NJM2010'])assert.ok(licence.includes(who)&&sec.includes(who),who+' credited');
+});
 test('island scenery uses credited real photographs, not AI images',()=>{
  const gallery=read('image-gallery.html'),licence=read('LICENSE.md');
  const sec=gallery.slice(gallery.indexOf('id="real-island"'));

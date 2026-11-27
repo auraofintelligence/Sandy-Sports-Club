@@ -9,6 +9,7 @@ import re
 
 CONCEPT_CAPTION = 'Concept image only; not an approved design. No facility or event is confirmed.'
 REAL_CREDIT = {}
+REAL_KIND = {}
 REAL_CAPTION = 'Actual Ballow Road site photo; other sites are not depicted.'
 
 SPORTS = ['mixed-beach-volleyball', 'beach-cricket', 'beach-football', 'beach-rugby-league', 'beach-5s-rugby',
@@ -61,6 +62,8 @@ def srcset(img):
 
 
 def kind(img):
+    if img in REAL_KIND:
+        return f' data-kind="{REAL_KIND[img]}"'
     if img in REAL_CREDIT:
         return f' data-kind="Photo: {REAL_CREDIT[img][0]}, {REAL_CREDIT[img][1]}"'
     if img in MAP:
@@ -443,8 +446,18 @@ REAL_PHOTOS = {
         'Photo of rocky headlands and clear water seen from the Gorge Walk at Point Lookout'),
     'real-dunwich-beach-barges.webp': ('card-src-ballow-hub.webp', 'Debra Jordan', 'CC BY 3.0', 'the beach at Dunwich',
         'Photo of a wave splashing over old barge remains on the beach at Dunwich (Goompi)'),
+    # Owner feedback: the aerial did not read as three towns, so the card now shows one real photo of each town.
+    'real-three-towns.webp': ('real-straddie-aerial.webp', 'Tanya Dedyukhina, Pacificwizard and NJM2010', 'CC BY 3.0 and CC0', 'Dunwich, Amity Point and Point Lookout',
+        'Three real photos side by side: the Harold Walker jetty at Dunwich, the beach at Amity Point at sunset and the Point Lookout lighthouse, each labelled with its town name'),
 }
+REAL_KIND['real-three-towns.webp'] = 'Photos: Tanya Dedyukhina, CC BY 3.0; Pacificwizard, CC0; NJM2010, CC0'
+REAL_PARTS = {'real-three-towns.webp': [
+    ('Dunwich', 'Herold Walker jetty', 'Tanya Dedyukhina', 'CC BY 3.0', 'https://creativecommons.org/licenses/by/3.0', 'https://commons.wikimedia.org/wiki/File:Herold_Walker_jetty_-_panoramio.jpg'),
+    ('Amity Point', 'Amity Point at sunset', 'Pacificwizard', 'CC0', 'https://creativecommons.org/publicdomain/zero/1.0/deed.en', 'https://commons.wikimedia.org/wiki/File:Amity_Point_at_Sunset._North_Stradbroke_Island,_Queensland,_Australia.jpg'),
+    ('Point Lookout', 'Point Lookout lighthouse', 'NJM2010', 'CC0', 'https://creativecommons.org/publicdomain/zero/1.0/deed.en', 'https://commons.wikimedia.org/wiki/File:Point_Lookout_Stradbroke_lighthouse_2021.jpg'),
+]}
 REAL_SOURCES = {
+    'real-three-towns.webp': ('https://commons.wikimedia.org/wiki/File:Herold_Walker_jetty_-_panoramio.jpg', 'https://creativecommons.org/licenses/by/3.0'),
     'real-main-beach-point-lookout.webp': ('https://commons.wikimedia.org/wiki/File:View_of_Main_Beach_from_Point_Lookout_(North_Stradbroke_Island).JPG', 'https://creativecommons.org/licenses/by-sa/4.0'),
     'real-amity-point-jetty.webp': ('https://commons.wikimedia.org/wiki/File:Amity_Point_Jetty_at_Sunset._North_Stradbroke_Island,_Queensland,_Australia.jpg', 'https://creativecommons.org/publicdomain/zero/1.0/deed.en'),
     'real-brown-lake-bummiera.webp': ('https://commons.wikimedia.org/wiki/File:Brown_Lake_-_Boumiera_(49698290361).jpg', 'https://creativecommons.org/licenses/by/2.0'),

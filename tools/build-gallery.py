@@ -229,7 +229,10 @@ def main():
     for img, (old, who, lic, what, alt) in image_plan.REAL_PHOTOS.items():
         src = image_plan.REAL_SOURCES[img]
         real.append(swap_pair(img, ', '.join(f'{p}: {l}' for p, _, l in current.get(img, [])) or img)
-                    + f'<p class="source-note">Photo: {escape(what)} by {escape(who)}, <a href="{src[1]}">{escape(lic)}</a>, via <a href="{src[0]}">Wikimedia Commons</a>. Cropped to 16:9 and resized to 1280 by 720 WebP.</p>')
+                    + (''.join(f'<p class="source-note">{escape(town)} panel: {escape(subj)} by {escape(a)}, <a href="{lu}">{escape(l)}</a>, via <a href="{pg}">Wikimedia Commons</a>.</p>' for town, subj, a, l, lu, pg in image_plan.REAL_PARTS[img])
+                       + '<p class="source-note">Each photo cropped to a portrait panel, joined into one 1280 by 720 WebP, with a town name label added.</p>'
+                       if img in getattr(image_plan, 'REAL_PARTS', {}) else
+                       f'<p class="source-note">Photo: {escape(what)} by {escape(who)}, <a href="{src[1]}">{escape(lic)}</a>, via <a href="{src[0]}">Wikimedia Commons</a>. Cropped to 16:9 and resized to 1280 by 720 WebP.</p>'))
     body += (
         '<section class="page-section" id="real-island"><p class="eyebrow">SECTION 7</p><h2>Real island photography</h2>'
         f'<p class="lead">AI images are used only for sport, club and cinema content. The {len(real)} concept images whose main subject was the island itself were replaced with real photographs '

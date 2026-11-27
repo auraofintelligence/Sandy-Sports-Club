@@ -312,6 +312,7 @@ export const PUBLIC_FILES=Object.freeze([
  "assets/real-gorge-walk-point-lookout.webp",
  "assets/real-main-beach-point-lookout.webp",
  "assets/real-straddie-aerial.webp",
+ "assets/real-three-towns.webp",
  "assets/sandy-original-icon.png",
  "assets/sandy-original-logo.png",
  "assets/site-ballow-360-point-20.webp",
