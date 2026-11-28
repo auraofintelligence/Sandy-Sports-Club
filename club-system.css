@@ -453,3 +453,15 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 .access-note{font-size:.85rem;color:#3e5a5f}
 .committee-access{margin:.6rem 0;background:white;border:1px solid #c8dfd9;border-radius:10px;padding:.6rem .8rem}.committee-access summary{cursor:pointer;font-weight:800;color:#0b5970}
 body.desk-focus .committee-access{display:none}
+/* Assets, loans and grants */
+#committee-money-desk form,#committee-money-desk fieldset{display:grid;gap:.6rem;border:0;padding:0;margin:0;min-width:0}
+#committee-money-desk label{display:grid;gap:.3rem;font-weight:700;font-size:.85rem}
+#committee-money-desk label.ops-check{display:flex!important;align-items:center;gap:.5rem}
+#committee-money-desk input:not([type=checkbox]),#committee-money-desk select,#committee-money-desk textarea{width:100%;min-width:0;padding:.55rem;border:1px solid #a9c6c0;border-radius:8px;font:inherit}
+#committee-money-desk form button[type=submit]{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
+#committee-money-desk .mo-inline{display:flex!important;flex-wrap:wrap;gap:.5rem;align-items:end}
+#committee-money-desk .mo-inline button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.55rem .85rem;font-weight:800;cursor:pointer}
+#committee-money-desk .mo-inline button[type=submit]{background:#0d7a88;color:white}
+#committee-money-desk .ops-actions .pd-cancel{border:1px solid #9b2520;background:white;color:#9b2520;border-radius:8px;padding:.5rem .8rem;font-weight:800;cursor:pointer}
+.mo-filter{display:flex!important;align-items:center;gap:.5rem;margin:.6rem 0}.mo-filter select{width:auto!important}
+.mo-late{color:#9b2520}#mo-desk-title:focus{outline:none}
