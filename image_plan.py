@@ -478,6 +478,25 @@ for _new, (_old, _who, _lic, _what, _alt) in REAL_PHOTOS.items():
     ALT[_new] = _alt
     REAL_CREDIT[_new] = (_who, _lic, _what)
 
+# Owner image review, 28 Nov 2026: slots whose picture did not match the card. Each
+# takes an unused image from the gallery, so zero reuse still holds. The images they
+# replace stay as files and show in the gallery as Previously used.
+OWNER_FIXES = [
+    # Pickleball on a blue hard court did not suit a sand club card.
+    ('sports.html', 'Beach tennis and net games', 'card-sport-beach-tennis-and-net-games.webp', 'a beach tennis doubles point on sand'),
+    # A scenic headland with nobody in it did not suit "Island calendar and people".
+    ('clubhouse.html', 'Island calendar and people', 'card-ch-teams.webp', 'club members in a huddle on the sand outside the clubhouse'),
+    # An empty function room did not suit the grants and opportunity register desk.
+    ('committee-funding.html', None, 'card-com-grants.webp', 'an officer keeping the club grants register up to date'),
+]
+# card-com-grants moves here from the retired committee.html redirect page, which nobody sees;
+# that card takes another unused gallery image so it still has one.
+_swap('committee.html', 'Grants and investment', 'card-cfund-investment.webp', 'partners reviewing a club investment pack')
+OWNER_RETIRED = {'balanced-15-seniors-pickleball.webp', 'real-gorge-walk-point-lookout.webp'}
+for _p, _t, _img, _alt in OWNER_FIXES:
+    _swap(_p, _t, _img, _alt)
+
+
 # Inline figures: (page, old src) -> new src, or None to remove the figure.
 FIGURE = {
     ('index.html', 'hero-community-builder.webp'): 'hero-community-builder.webp',

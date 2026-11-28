@@ -28,6 +28,8 @@ test('island scenery uses credited real photographs, not AI images',()=>{
  const sec=gallery.slice(gallery.indexOf('id="real-island"'));
  for(const [img,[old,who,lic]] of Object.entries(REAL)){
   const uses=pages.filter(p=>read(p).includes('/assets/'+img+'.webp'));
+  // Owner image review, 28 Nov 2026: the Gorge Walk photo came off "Island calendar and people" (no people in it).
+  if(img==='real-gorge-walk-point-lookout'){assert.equal(uses.length,0);assert.ok(sec.includes('/assets/'+img+'.webp')&&licence.includes(who),img+' kept and credited');continue}
   assert.equal(uses.length,1,img+' live once');
   const html=read(uses[0]);
   assert.ok(html.includes(`data-kind="Photo: ${who}, ${lic}"`)||html.includes(`by ${who}, ${lic}, via Wikimedia Commons`),img+' carries a visible credit');

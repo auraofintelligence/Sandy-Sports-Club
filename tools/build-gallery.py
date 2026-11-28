@@ -185,7 +185,8 @@ def main():
     for n, slug, age, desc, slot in balanced:
         f = f'balanced-{n}-{slug}.webp'
         assert os.path.exists(os.path.join('assets', f)), f
-        assert f in current, f + ' was approved for a live slot and must be on its page'
+        # Owner image review, 28 Nov 2026: a few approved images were taken back off their slots.
+        assert f in current or f in image_plan.OWNER_RETIRED, f + ' was approved for a live slot and must be on its page'
         bal.append(swap_pair(f, f'{n}. {desc} ({age}). Slot: {slot}'))
     retired = ''.join(figure(f, 'Earlier draft of a balanced image, redrawn before it went live.') for f in retired_balanced)
     body += (

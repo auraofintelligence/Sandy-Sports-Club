@@ -10,6 +10,9 @@ import {PUBLIC_FILES} from '../worker/public-assets.mjs';
 const root=new URL('..',import.meta.url).pathname;
 const read=p=>readFileSync(join(root,p),'utf8');
 const set=JSON.parse(read('tools/balanced-set.json'));
+// Owner image review, 28 Nov 2026: pickleball on a hard court came off the beach tennis card,
+// which went back to its beach tennis image. It stays in the set and the gallery.
+const RETIRED=new Set(['balanced-15-seniors-pickleball.webp']),BACK=new Set(['card-sport-beach-tennis-and-net-games.webp','card-ch-teams.webp']);
 const pages=PUBLIC_FILES.filter(f=>f.endsWith('.html')&&f!=='image-gallery.html');
 const gallery=read('image-gallery.html');
 const block=(html,title)=>{
@@ -30,6 +33,7 @@ test('balanced club set: 30 images with a fair age mix',()=>{
 test('each balanced image is live in exactly its suggested slot and nowhere else',()=>{
  for(const [n,slug,,,slot] of set){
   const f=`assets/balanced-${n}-${slug}.webp`;
+  if(RETIRED.has(f.slice(7))){assert.ok(gallery.includes(`/${f}"`)&&pages.every(p=>!read(p).includes(`/${f}"`)),f+' retired: in the gallery, not live');continue}
   assert.ok(existsSync(join(root,f))&&PUBLIC_FILES.includes(f),f+' missing or not public');
   assert.ok(gallery.includes(`/${f}"`),f+' not in the gallery');
   const m=slot.match(/^(\S+\.html) (?:page banner|card "(.*)")$/);
@@ -43,10 +47,12 @@ test('each balanced image is live in exactly its suggested slot and nowhere else
 });
 test('the images the balanced set replaced stay as files and show as Previously used',()=>{
  const pairs=gallery.slice(gallery.indexOf('id="balanced"'),gallery.indexOf('id="straddie-scale"'));
- const prev=[...pairs.matchAll(/PREVIOUSLY USED<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"[^>]*><figcaption><strong>[^<]+<\/strong> <span class="gallery-status removed">Previously used<\/span>/g)].map(m=>m[1]);
+ const prev=[...pairs.matchAll(/PREVIOUSLY USED<\/p><figure class="gallery-item"><img src="\/assets\/([^"]+)"[^>]*><figcaption><strong>[^<]+<\/strong> <span class="gallery-status (?:removed|live)">(?:Previously used|Live now)<\/span>/g)].map(m=>m[1]);
  assert.equal(prev.length,30,'every balanced slot shows the image it replaced');
  for(const f of prev){
+  if(!BACK.has(f))assert.ok(pairs.includes(`/assets/${f}" alt="${f}" loading="lazy"><figcaption><strong>${f}</strong> <span class="gallery-status removed">`),f+' shows as Previously used');
   assert.ok(existsSync(join(root,'assets',f)),f+' file kept');
+  if(BACK.has(f))continue;
   for(const p of pages)assert.ok(!read(p).includes(`/assets/${f}"`),f+' should no longer be live on '+p);
  }
 });
