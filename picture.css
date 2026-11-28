@@ -12,3 +12,5 @@
 .picture-current img{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#eef6f8}
 body.needs-picture #member-panel{display:none!important}
 #picture-step{max-width:900px}
+.verified-tick{display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;margin-left:.3em;border-radius:50%;background:#1d9bf0;color:#fff;font-size:.8em;font-weight:700;line-height:1;vertical-align:.05em}
+#wm-verify{border:2px solid #1d9bf0;border-radius:12px;padding:1rem;margin:1rem 0}

@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS club_member_profiles(
  avatar_id TEXT NOT NULL DEFAULT '',
  photo TEXT,
  picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),
+ id_verified_utc TEXT,
+ id_verified_by TEXT,
+ id_verified_type TEXT NOT NULL DEFAULT '',
  version INTEGER NOT NULL DEFAULT 1,
  updated_utc TEXT NOT NULL
 );

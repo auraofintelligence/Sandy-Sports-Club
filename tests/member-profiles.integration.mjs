@@ -61,3 +61,24 @@ test('picture is required for the directory; photos only reach connections and t
  const own=await f.request(ana,'/api/member/photo/'+benView.accountId);assert.equal(own.status,200);assert.equal(own.headers.get('content-type'),'image/jpeg');
  assert.equal((await f.request('web','/api/member/photo/'+benView.accountId)).status,200);
 });
+test('blue tick: only committee or Webmaster can verify ID in person; members see the tick; no ID numbers kept',async t=>{
+ const f=fixture(t,{actors:[['web','webmaster'],['sec','secretary']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
+ const ana=await join(f,'ana'),ben=await join(f,'ben');
+ for(const who of [ana,ben])await f.call(who,'/api/member/picture','POST',{avatarId:'angler-03'});
+ const p=await f.call(ben,'/api/member/profile');assert.equal(p.profile.verified,false);
+ await f.call(ben,'/api/member/profile','POST',{version:p.profile.version,directoryVisible:true,sports:[],availability:[],crewSkills:[],helping:[],skillLevel:''});
+ const benId=(await f.call('web','/api/committee/member-profiles')).members.find(m=>m.username==='ben').accountId;
+ const verify={action:'verify',accountId:benId,idType:'Driver licence',dob:'1991-07-04',sighted:true};
+ await f.call(ana,'/api/committee/verify-id','POST',verify,403);
+ await f.call('sec','/api/committee/verify-id','POST',{...verify,sighted:false},400);
+ await f.call('sec','/api/committee/verify-id','POST',{...verify,idType:'Library card'},400);
+ const r=await f.call('sec','/api/committee/verify-id','POST',verify);assert.equal(r.dobCorrected,true);
+ assert.equal((await f.call(ben,'/api/member/profile')).profile.verified,true);
+ assert.equal((await f.call(ben,'/api/member/profile')).profile.dob,'1991-07-04');
+ assert.equal((await f.call(ana,'/api/member/directory')).members[0].verified,true);
+ const listed=(await f.call('web','/api/committee/member-profiles')).members.find(m=>m.username==='ben');
+ assert.equal(listed.idCheck.type,'Driver licence');assert.equal(listed.idCheck.by,'sec');
+ await f.call('web','/api/committee/verify-id','POST',{action:'revoke',accountId:benId});
+ assert.equal((await f.call(ana,'/api/member/directory')).members[0].verified,false);
+ assert.equal(f.count('club_audit',"action IN ('id_verified_in_person','id_verification_revoked')"),2);
+});

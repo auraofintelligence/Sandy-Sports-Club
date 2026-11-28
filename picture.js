@@ -28,4 +28,5 @@ export function picturePicker(mount,{who={},current=null,name='picture',onChange
   }
  });
 }
+export const verifiedBadge=on=>on?'<span class="verified-tick" role="img" title="ID verified in person" aria-label="ID verified in person">✓</span>':'';
 export const pictureSrc=(p,photoUrl)=>p?.type==='photo'&&photoUrl?photoUrl:p?.avatarId?avatarUrl(p.avatarId):'/favicon.png';

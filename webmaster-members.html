@@ -22,7 +22,9 @@
 <button type="submit">Publish to members</button><p role="status" id="wm-announce-status"></p></form>
 <h3>Live announcements</h3><div id="wm-announcements"></div><div id="wm-rsvps"></div></section>
 <section class="club-panel"><h2>Birthdays this month</h2><p>Members and children with a birthday this month, ready for birthday offers.</p><div class="table-scroll"><table class="club-table" id="wm-birthdays"></table></div></section>
-<section class="club-panel"><h2>Founding members</h2><p><button type="button" data-csv="members">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-members"></table></div></section>
+<section class="club-panel"><h2>Founding members</h2>
+<form id="wm-verify" hidden><h3>Verify ID: <span id="wm-verify-name"></span></h3><div class="club-form-grid"><label>ID sighted<select name="idType" required><option>Driver licence</option><option>Passport</option><option>Proof of age card</option><option>Photo ID card</option><option>Other government photo ID</option></select></label><label>Date of birth on the ID<input type="date" name="dob" required></label></div><label class="club-consent"><input type="checkbox" name="sighted" required> I saw this person's photo ID in person and it matches them. (Do not record ID numbers.)</label><button type="submit">Give blue tick</button> <button type="button" id="wm-verify-cancel">Cancel</button><p role="status" id="wm-verify-status"></p></form>
+<p><button type="button" data-csv="members">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-members"></table></div></section>
 <section class="club-panel"><h2>Children registered by guardians</h2><p><button type="button" data-csv="children">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-children"></table></div></section>
 <section class="club-panel"><h2>Interest sign-ups</h2><p>People who registered interest but have not joined. Most recent 30. <button type="button" data-csv="interest">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-interest"></table></div></section>
 </div>

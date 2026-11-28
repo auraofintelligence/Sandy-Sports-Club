@@ -80,7 +80,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/join')return joinEndpoint(req,env,path,identity);
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
  if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
- if(['/api/member/profile','/api/member/picture','/api/member/directory','/api/member/connections','/api/committee/member-profiles'].includes(path)||path.startsWith('/api/member/photo/'))return profilesEndpoint(req,env,path,identity);
+ if(['/api/member/profile','/api/member/picture','/api/member/directory','/api/member/connections','/api/committee/member-profiles','/api/committee/verify-id'].includes(path)||path.startsWith('/api/member/photo/'))return profilesEndpoint(req,env,path,identity);
  if(path==='/api/library'||path.startsWith('/api/library/'))return libraryEndpoint(req,env,path,identity);
  if(path==='/api/member/safeguards'||path==='/api/committee/safeguards')return safeguardsEndpoint(req,env,path,identity);
  if(['/api/member/preview','/api/member/workspace','/api/member/preferences','/api/member/interest','/api/member/data-export','/api/member/rsvp','/api/member/calendar.ics'].includes(path))

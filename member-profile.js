@@ -1,5 +1,5 @@
 // My profile, required picture, Members directory and Film Club crew roster inside My Membership.
-import {picturePicker,pictureSrc} from './picture.js';
+import {picturePicker,pictureSrc,verifiedBadge} from './picture.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const levels={new:'New to it',social:'Social',competitive:'Competitive',coach:'Coach'};
 const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null;
@@ -24,12 +24,13 @@ async function savePicture(choice,statusEl){
   if(document.body.classList.contains('needs-picture')){document.body.classList.remove('needs-picture');$('picture-step').hidden=true;loadDirectory();loadRoster()}
  }catch(error){statusEl.textContent=error.message}
 }
-function showPicture(){$('profile-picture').src=pictureSrc(profile.picture,photoUrl&&photoUrl+'?v='+profile.version)}
+function showPicture(){$('profile-picture').src=pictureSrc(profile.picture,photoUrl&&photoUrl+'?v='+profile.version);
+ $('profile-verified').innerHTML=profile.verified?verifiedBadge(true)+' ID verified in person':'No blue tick yet. Show your photo ID to a committee member at a club session to get verified.'}
 function card(m){
  const tags=[...m.sports,m.skillLevel?levels[m.skillLevel]:'',m.filmMember?'Film Club':''].filter(Boolean);
  const action={none:'<button type="button" data-act="request">Connect</button>',requested:'<span>Request sent</span> <button type="button" data-act="remove">Cancel</button>',
   incoming:'<button type="button" data-act="accept">Accept</button> <button type="button" data-act="decline">Decline</button>',connected:'<span>Connected</span> <button type="button" data-act="remove">Remove</button>'}[m.connection]||'';
- return '<article class="member-item with-pic" data-member="'+safe(m.accountId)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(m.picture,m.photoUrl))+'" loading="lazy"><strong>'+safe(m.name)+(m.town?' · '+safe(m.town):'')+'</strong>'+
+ return '<article class="member-item with-pic" data-member="'+safe(m.accountId)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(m.picture,m.photoUrl))+'" loading="lazy"><strong>'+safe(m.name)+verifiedBadge(m.verified)+(m.town?' · '+safe(m.town):'')+'</strong>'+
   (m.bio?'<span>'+safe(m.bio)+'</span>':'')+(tags.length?'<span>'+safe(tags.join(' · '))+'</span>':'')+
   (m.crewSkills.length?'<span>Crew: '+safe(m.crewSkills.join(', '))+'</span>':'')+(m.helping.length?'<span>Can help with: '+safe(m.helping.join(', '))+'</span>':'')+
   (m.contact?'<span>'+safe([m.contact.email,m.contact.mobile].filter(Boolean).join(' · '))+'</span>':'')+

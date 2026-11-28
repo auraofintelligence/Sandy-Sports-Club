@@ -1,10 +1,10 @@
 // Sandy member profiles: sports, skill, availability, Film Club and crew skills, helping out.
 // Directory is opt-in and adult members only. Connections are mutual; either side can block.
 // Contact details are shown only to connected members, and only if the member chose to share them.
-import {fail,json,now,dbFor,payload,field,version,requireRole,audit,membersOpen} from './shared.mjs';
+import {fail,json,now,dbFor,payload,field,version,requireRole,audit,membersOpen,STAFF} from './shared.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
-import {validAvatar} from '../avatars.js';
-const DDL=[`CREATE TABLE IF NOT EXISTS club_member_profiles(account_id TEXT PRIMARY KEY REFERENCES club_accounts(id),bio TEXT NOT NULL DEFAULT '',sports_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(sports_json)),skill_level TEXT NOT NULL DEFAULT '' CHECK(skill_level IN ('','new','social','competitive','coach')),availability_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(availability_json)),film_member INTEGER NOT NULL DEFAULT 0 CHECK(film_member IN (0,1)),crew_skills_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(crew_skills_json)),helping_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(helping_json)),directory_visible INTEGER NOT NULL DEFAULT 0 CHECK(directory_visible IN (0,1)),show_town INTEGER NOT NULL DEFAULT 0 CHECK(show_town IN (0,1)),share_contact INTEGER NOT NULL DEFAULT 0 CHECK(share_contact IN (0,1)),dob TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),version INTEGER NOT NULL DEFAULT 1,updated_utc TEXT NOT NULL)`,
+import {validAvatar,validDob,ageOn} from '../avatars.js';
+const DDL=[`CREATE TABLE IF NOT EXISTS club_member_profiles(account_id TEXT PRIMARY KEY REFERENCES club_accounts(id),bio TEXT NOT NULL DEFAULT '',sports_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(sports_json)),skill_level TEXT NOT NULL DEFAULT '' CHECK(skill_level IN ('','new','social','competitive','coach')),availability_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(availability_json)),film_member INTEGER NOT NULL DEFAULT 0 CHECK(film_member IN (0,1)),crew_skills_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(crew_skills_json)),helping_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(helping_json)),directory_visible INTEGER NOT NULL DEFAULT 0 CHECK(directory_visible IN (0,1)),show_town INTEGER NOT NULL DEFAULT 0 CHECK(show_town IN (0,1)),share_contact INTEGER NOT NULL DEFAULT 0 CHECK(share_contact IN (0,1)),dob TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),id_verified_utc TEXT,id_verified_by TEXT,id_verified_type TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,updated_utc TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS club_member_connections(low_id TEXT NOT NULL REFERENCES club_accounts(id),high_id TEXT NOT NULL REFERENCES club_accounts(id),requested_by TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('pending','connected','blocked')),blocked_by TEXT,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,PRIMARY KEY(low_id,high_id),CHECK(low_id<high_id))`];
 const ready=new WeakSet();
 export async function ensureProfileTables(env,db){if(ready.has(env))return;for(const sql of DDL)await db.prepare(sql).run();ready.add(env)}
@@ -13,6 +13,7 @@ export const CREW=['Camera','Sound','Editing','Directing','Writing','Acting','Li
 export const HELPING=['Setting up courts','Running a session','Coaching','First aid','Events and markets','Social media','Grants and admin','Driving and transport','Cooking and catering'];
 export const AVAILABILITY=['Weekday morning','Weekday afternoon','Weekday evening','Weekend morning','Weekend afternoon','School holidays','Occasional events'];
 const SKILLS=['','new','social','competitive','coach'];
+export const ID_TYPES=['Driver licence','Passport','Proof of age card','Photo ID card','Other government photo ID'];
 // Photos arrive as a small square JPEG data URL prepared in the browser.
 export function cleanPhoto(value,fail){
  if(typeof value!=='string'||value.length>200000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(value))fail(400,'Upload a JPG, PNG or WebP photo.','invalid_photo');
@@ -27,8 +28,8 @@ const pictureOf=r=>r&&r.picture_type?{type:r.picture_type,avatarId:r.avatar_id||
 const photoUrl=id=>'/api/member/photo/'+id;
 const pick=(list,allowed)=>Array.isArray(list)?[...new Set(list.filter(x=>allowed.includes(x)))]:[];
 const parse=s=>{try{return JSON.parse(s||'[]')}catch{return []}};
-const blank=()=>({picture:null,dob:'',bio:'',sports:[],skillLevel:'',availability:[],filmMember:false,crewSkills:[],helping:[],directoryVisible:false,showTown:false,shareContact:false,version:0});
-function shape(r){return r?{picture:pictureOf(r),dob:r.dob||'',bio:r.bio,sports:parse(r.sports_json),skillLevel:r.skill_level,availability:parse(r.availability_json),filmMember:!!r.film_member,
+const blank=()=>({picture:null,dob:'',verified:false,verifiedAt:null,bio:'',sports:[],skillLevel:'',availability:[],filmMember:false,crewSkills:[],helping:[],directoryVisible:false,showTown:false,shareContact:false,version:0});
+function shape(r){return r?{picture:pictureOf(r),dob:r.dob||'',verified:!!r.id_verified_utc,verifiedAt:r.id_verified_utc||null,bio:r.bio,sports:parse(r.sports_json),skillLevel:r.skill_level,availability:parse(r.availability_json),filmMember:!!r.film_member,
  crewSkills:parse(r.crew_skills_json),helping:parse(r.helping_json),directoryVisible:!!r.directory_visible,showTown:!!r.show_town,shareContact:!!r.share_contact,version:r.version}:blank()}
 const pair=(a,b)=>a<b?[a,b]:[b,a];
 async function requireMember(env,db,identity){
@@ -49,10 +50,29 @@ export async function profilesEndpoint(req,env,path,identity){
  const db=dbFor(env);
  if(path==='/api/committee/member-profiles'){
   requireRole(identity,['webmaster']);await ensureProfileTables(env,db);
-  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,m.* FROM club_accounts a
-   JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id WHERE a.role='member' ORDER BY p.joined_on DESC,a.username LIMIT 1000`).all();
+  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,m.*,v.username AS verifier FROM club_accounts a
+   JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id LEFT JOIN club_accounts v ON v.id=m.id_verified_by WHERE a.role='member' ORDER BY p.joined_on DESC,a.username LIMIT 1000`).all();
   return json({members:results.map(r=>({accountId:r.id,username:r.username,name:r.full_name,preferredName:r.preferred_name,town:r.town,email:r.email,mobile:r.mobile,
-   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
+   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
+ }
+ // Blue tick: a committee member or the Webmaster sighted photo ID in person and confirmed the date of birth.
+ // Only the ID type is kept; ID numbers and copies of documents are never stored.
+ if(path==='/api/committee/verify-id'){
+  requireRole(identity,STAFF);if(req.method!=='POST')fail(405,'Use the verify form.','method_not_allowed');await ensureProfileTables(env,db);
+  const b=await payload(req,1000),target=field(b.accountId,40),at=now();
+  const member=await db.prepare("SELECT a.id,m.dob,m.id_verified_utc FROM club_accounts a JOIN club_member_profiles m ON m.account_id=a.id WHERE a.id=? AND a.role='member' AND a.state='active'").bind(target).first();
+  if(!member)fail(404,'That member has no profile yet. Ask them to finish joining first.','member_not_found');
+  if(b.action==='revoke'){
+   await db.prepare('UPDATE club_member_profiles SET id_verified_utc=NULL,id_verified_by=NULL,id_verified_type=\'\',version=version+1,updated_utc=? WHERE account_id=?').bind(at,target).run();
+   await audit(db,identity,'id_verification_revoked','profile',target,at).run();return json({ok:true,verified:false});
+  }
+  if(b.action!=='verify')fail(400,'Choose verify or revoke.','invalid_action');
+  if(b.sighted!==true)fail(400,'Confirm you sighted the photo ID in person.','sighting_required');
+  const type=field(b.idType,40);if(!ID_TYPES.includes(type))fail(400,'Choose the type of ID you sighted.','invalid_id_type');
+  const dob=field(b.dob,10);if(!validDob(dob)||ageOn(dob)<18)fail(400,'Enter the date of birth shown on the ID (18 or over).','invalid_dob');
+  await db.prepare('UPDATE club_member_profiles SET dob=?,id_verified_utc=?,id_verified_by=?,id_verified_type=?,version=version+1,updated_utc=? WHERE account_id=?').bind(dob,at,identity.id,type,at,target).run();
+  await audit(db,identity,'id_verified_in_person','profile',target,at).run();
+  return json({ok:true,verified:true,dobCorrected:dob!==member.dob});
  }
  const photoMatch=path.match(/^\/api\/member\/photo\/([a-f0-9-]{36})$/);
  if(photoMatch&&req.method==='GET'){
@@ -108,7 +128,7 @@ export async function profilesEndpoint(req,env,path,identity){
    return true;
   }).map(r=>{
    const p=shape(r),l=link(r.id),connected=l?.state==='connected';
-   return {accountId:r.id,picture:{type:connected&&r.picture_type==='photo'?'photo':'avatar',avatarId:r.avatar_id},photoUrl:connected&&r.picture_type==='photo'?photoUrl(r.id):null,name:r.preferred_name||r.full_name,town:p.showTown?r.town:'',bio:p.bio,sports:p.sports,skillLevel:p.skillLevel,availability:p.availability,
+   return {accountId:r.id,verified:!!r.id_verified_utc,picture:{type:connected&&r.picture_type==='photo'?'photo':'avatar',avatarId:r.avatar_id},photoUrl:connected&&r.picture_type==='photo'?photoUrl(r.id):null,name:r.preferred_name||r.full_name,town:p.showTown?r.town:'',bio:p.bio,sports:p.sports,skillLevel:p.skillLevel,availability:p.availability,
     filmMember:p.filmMember,crewSkills:p.crewSkills,helping:p.helping,
     connection:!l?'none':l.state==='connected'?'connected':l.requested_by===identity.id?'requested':'incoming',
     ...(connected&&p.shareContact?{contact:{email:r.email,mobile:r.mobile}}:{})};
