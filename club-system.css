@@ -386,3 +386,11 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 /* Phones: one slim row for Back + desk switcher, so the sticky bar doesn't eat the screen. */
 @media(max-width:560px){.committee-switcher{flex-wrap:nowrap;padding:.45rem;gap:.4rem}.committee-switcher label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.committee-switcher button{flex:0 0 auto;padding:.45rem .6rem;font-size:.8rem}.committee-switcher select{flex:1 1 auto}}
 .mt-item-meta{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.mt-item-meta input{flex:1 1 12rem}
+/* AGM jobs: a dated run-up to the meeting. */
+.agm-jobs{list-style:none;margin:.6rem 0;padding:0;display:grid;gap:.45rem}
+.agm-job{display:grid;grid-template-columns:minmax(0,10rem) minmax(0,1fr) auto;gap:.7rem;align-items:center;border:1px solid #dbe9e5;border-left:5px solid #1c6349;border-radius:10px;padding:.6rem .75rem;background:white}
+.agm-job.agm-none{border-left-color:#a3b3b0}.agm-job.agm-soon{border-left-color:#c58a00}.agm-job.agm-overdue{border-left-color:#9b2520}.agm-job.agm-done{opacity:.7}
+.agm-when{display:grid;font-size:.82rem}.agm-when span,.agm-what span{color:#4b6468;font-size:.8rem}.agm-what{display:grid;gap:.15rem}
+.agm-state{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.agm-state button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.35rem .6rem;font-weight:800;cursor:pointer;font-size:.8rem}
+@media(max-width:620px){.agm-job{grid-template-columns:1fr}.agm-state{justify-content:flex-start}}

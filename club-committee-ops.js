@@ -58,10 +58,10 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  }
  function taskCard(t,v){
   return '<article class="ops-task" data-ops-id="'+e(t.id)+'"><div class="ops-card-head"><h4>'+e(t.title)+'</h4>'+badge(t.status)+'</div>'+
-   '<div class="ops-meta">'+e(office(t.office))+' · '+date(t.dueDate)+' · '+e({notice:'Committee notice',meeting:'Meeting follow-up',monthly:'Monthly standard duty',manual:'Officer task'}[t.source])+(t.legacy?' · Existing draft':'')+'</div>'+
+   '<div class="ops-meta">'+e(office(t.office))+' · '+date(t.dueDate)+' · '+e({notice:'Committee notice',meeting:'Meeting follow-up',agm:'AGM job',monthly:'Monthly standard duty',manual:'Officer task'}[t.source])+(t.legacy?' · Existing draft':'')+'</div>'+
    (t.details?'<p class="ops-text">'+e(t.details)+'</p>':'')+
    (t.completion?'<p class="ops-completion">Completed '+date(t.completion.at)+' · recorded by '+e(t.completion.by)+(t.completion.paper?' from returned paper sheet':' online')+'</p>':'')+
-   '<div class="ops-actions">'+(t.source==='notice'?'<button type="button" data-ops-open="notices">Open originating noticeboard</button>':'')+(t.source==='meeting'?'<button type="button" data-ops-open="meetings">Open meeting register</button>':'')+(t.source==='monthly'?'<button type="button" data-ops-open="social">Open Social Studio</button>':'')+
+   '<div class="ops-actions">'+(t.source==='notice'?'<button type="button" data-ops-open="notices">Open originating noticeboard</button>':'')+(t.source==='meeting'?'<button type="button" data-ops-open="meetings">Open meeting register</button>':'')+(t.source==='agm'?'<button type="button" data-ops-open="agm">Open AGM jobs</button>':'')+(t.source==='monthly'?'<button type="button" data-ops-open="social">Open Social Studio</button>':'')+
    (t.canTake?'<button type="button" data-task-action="take"'+block()+'>Take this task</button>':'')+(t.canComplete?'<button type="button" data-task-action="complete"'+block()+'>Mark complete</button>':'')+
    (t.canPaper?'<button type="button" data-task-action="paper"'+block()+'>Record returned paper tick</button>':'')+
    (t.version>0?'<button type="button" data-ops-history>Officer history</button>':'')+'</div>'+

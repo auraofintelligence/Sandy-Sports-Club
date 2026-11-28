@@ -8,6 +8,7 @@
 !/club-committee.js
 !/club-committee-ops.js
 !/club-meetings.js
+!/club-agm.js
 !/calendar-ui.js
 !/member-calendar-tab.js
 !/calendar.css
@@ -465,6 +466,7 @@
 !/studio/sandy-studio-preview.js
 !/studio/sandy-studio.css
 !/studio/sandy-suite-spec.js
+!/studio/sandy-agm-jobs.js
 !/studio/sandy-topic-icons.svg
 !/studio/sandy-workflows.js
 !/studio/social-campaign-engine.js
