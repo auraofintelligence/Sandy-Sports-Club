@@ -21,7 +21,7 @@ async function initialise(){
     'error-callback':()=>{challengeToken='';button.disabled=true;message('Verification was interrupted. Please retry.',true)}
    });
   }else button.disabled=false;
-  message('Ready when you are. Registering interest is free and does not sign you up to anything.');
+  message('Free, and it does not sign you up to anything.');
  }catch{message('The secure shared club service is not yet connected. No personal data will be sent or saved by this page.',true)}
 }
 form.addEventListener('submit',async event=>{
@@ -40,7 +40,7 @@ form.addEventListener('submit',async event=>{
   if(!response.ok)throw Error(result.error||'Shared registration could not be completed.');
   form.reset();challengeToken='';
   if(window.turnstile&&challengeId!==null)window.turnstile.reset(challengeId);
-  message('Thanks, you are on the list. We will be in touch about the summer come-and-try days.');
+  message('Thanks, you are on the list.');state.insertAdjacentHTML('beforeend',' Ready to be part of it? <a href="/member-join.html">Join free</a>.');
  }catch(error){
   message('Your information has not been confirmed as saved: '+error.message,true);
   challengeToken='';if(window.turnstile&&challengeId!==null)window.turnstile.reset(challengeId);

@@ -13,16 +13,17 @@ const idCell=m=>({__html:m.idCheck?'Verified '+safe(m.idCheck.at.slice(0,10))+' 
 const pic=src=>({__html:'<img class="member-pic" alt="" loading="lazy" src="'+safe(src)+'">'});
 const table=(el,head,rows)=>{$(el).innerHTML='<thead><tr>'+head.map(h=>'<th scope="col">'+safe(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c&&c.__html?c.__html:safe(c))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody>'};
 const yes=v=>v?'Yes':'';
+const joined=i=>data.members.some(m=>(m.email||'').toLowerCase()===(i.email||'').toLowerCase());
 const shownMembers=()=>{const f=$('wm-filter')?.value||'all';return data.members.filter(m=>f==='all'||(f==='verified')===!!m.idCheck)};
 const today=()=>new Date(Date.now()+10*3600000).toISOString().slice(0,10);
 const age=dob=>{if(!dob)return '';const [y,m,d]=dob.split('-').map(Number),[ty,tm,td]=today().split('-').map(Number);return ty-y-((tm<m||(tm===m&&td<d))?1:0)};
 const rows={
  members:()=>shownMembers().map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),{__html:safe(m.name)+verifiedBadge(!!m.idCheck),text:m.name},idCell(m),m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.dob,age(m.profile.dob)]),
  children:()=>data.children.map(c=>[pic(pictureSrc(c.picture,c.photoUrl)),c.fullName,c.preferredName,c.dob,c.age,c.gender,c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
- interest:()=>data.interest.map(i=>[i.firstName,i.email,i.town,i.audienceRegion,(i.interests||[]).join('; '),i.comments,(i.createdAt||'').slice(0,10)])};
+ interest:()=>data.interest.map(i=>[joined(i)?'Yes':'Not yet',i.firstName,i.email,i.town,i.audienceRegion,(i.interests||[]).join('; '),i.comments,(i.createdAt||'').slice(0,10)])};
 const heads={members:['Picture','Name','ID check','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory','Gender','Date of birth','Age'],
  children:['Picture','Child','Called','Date of birth','Age','Gender','Wants to try','Photos OK','Guardian','Guardian username','Guardian email','Guardian mobile','Added'],
- interest:['First name','Email','Town','Connection','Interests','Comments','Date']};
+ interest:['Joined?','First name','Email','Town','Connection','Interests','Comments','Date']};
 function csv(kind){
  const cell=v=>{if(v&&v.__html)v=v.text||'';let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
  const text=[heads[kind],...rows[kind]()].map(r=>r.map(cell).join(',')).join('\r\n');
@@ -60,6 +61,12 @@ $('wm-remind').addEventListener('click',()=>{
  const body=$('wm-filter').value==='unverified'?'Hi! Next time you are at a Sandy Sports session, bring your photo ID and show it to a committee member to get your blue tick. It only takes a minute.':'';
  location.href='mailto:?bcc='+encodeURIComponent(list.map(m=>m.email).join(','))+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
  $('wm-remind-note').textContent='Opened your email app with '+list.length+' address(es) in BCC.'+(skipped?' '+skipped+' skipped (no email consent).':'');
+});
+$('wm-invite-join').addEventListener('click',()=>{
+ const list=[...new Set(data.interest.filter(i=>i.email&&!joined(i)).map(i=>i.email))];
+ if(!list.length){$('wm-invite-note').textContent='Everyone who registered interest has joined.';return}
+ location.href='mailto:?bcc='+encodeURIComponent(list.join(','))+'&subject='+encodeURIComponent('Join Sandy Sports free')+'&body='+encodeURIComponent('Thanks for registering interest in Sandy Sports. Founding membership is free and takes a minute: '+location.origin+'/member-join.html');
+ $('wm-invite-note').textContent='Opened your email app with '+list.length+' address(es) in BCC.';
 });
 let verifying=null;
 document.addEventListener('click',async e=>{

@@ -3,7 +3,7 @@
 // Date of birth is required (18+ to join; also used for birthday offers). Children are added later by a joined guardian.
 import {fail,json,now,epoch,id,dbFor,payload,field,bool,revision,audit} from './shared.mjs';
 import {verifier} from './auth.mjs';
-import {publicFormAllowed} from './people.mjs';
+import {publicFormAllowed,verifyTurnstile} from './people.mjs';
 import {TERMS,TERMS_VERSION} from './member-safeguards.mjs';
 import {ensureProfileTables} from './profiles.mjs';
 import {GENDERS,validDob,ageOn} from '../avatars.js';
@@ -34,6 +34,7 @@ export async function joinEndpoint(req,env,path,identity){
  if(!validDob(dob)||ageOn(dob)>110)fail(400,'Enter your date of birth.','invalid_dob');
  if(ageOn(dob)<18)fail(400,'You need to be 18 or over to join yourself. A parent or guardian can join and add you from their member area.','adult_required');
  if(b.termsAccepted!==true||b.termsVersion!==TERMS_VERSION)fail(400,'Read and accept the participation terms.','terms_required');
+ if(env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY&&!await verifyTurnstile(field(b.turnstileToken,2000),req,env.SANDY_TURNSTILE_SECRET))fail(403,'Complete the verification before joining.','verification_required');
  if(!await publicFormAllowed(env,req,'join',5))fail(429,'Too many sign-ups from this connection. Please try again in 15 minutes.','rate_limited');
  const db=dbFor(env);
  await ensureProfileTables(env,db);

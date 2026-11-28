@@ -42,6 +42,7 @@
   "vars": {
     "SANDY_CLUB_APPROVALS": "disabled",
     "SANDY_FOUNDING_MEMBERS": "enabled",
+    "SANDY_TURNSTILE_SITE_KEY": "0x4AAAAAAGWn1PR25KcNBdiH",
     "SANDY_INVITES_ENABLED": "enabled",
     "SANDY_PRIVATE_LIBRARY_ENABLED": "disabled",
     "SANDY_NOMINATIONS_ENABLED": "disabled",
