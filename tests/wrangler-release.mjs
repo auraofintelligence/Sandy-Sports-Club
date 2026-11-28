@@ -15,7 +15,7 @@ const fixtureSecret=()=>randomBytes(32).toString('hex');
 const authPepper=fixtureSecret(),bootstrapKey=fixtureSecret(),showcaseKey=fixtureSecret();
 config.name='sandy-release-isolated-test';config.workers_dev=false;
 config.d1_databases=[{binding:'DB',database_name:'sandy-fixture-live',database_id:randomUUID(),migrations_dir:'backend/migrations'},{binding:'SANDY_SHOWCASE_DB',database_name:'sandy-fixture-demo',database_id:randomUUID()}];
-config.vars={SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled',SANDY_PRIVATE_LIBRARY_ENABLED:'disabled',SANDY_AUTH_PEPPER:authPepper,SANDY_BOOTSTRAP_KEY:bootstrapKey,SANDY_SHOWCASE_KEY:showcaseKey};
+config.vars={SANDY_FOUNDING_MEMBERS:'enabled',SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled',SANDY_PRIVATE_LIBRARY_ENABLED:'disabled',SANDY_AUTH_PEPPER:authPepper,SANDY_BOOTSTRAP_KEY:bootstrapKey,SANDY_SHOWCASE_KEY:showcaseKey};
 const wrangler=join(root,'node_modules/.bin/wrangler'),env={...process.env,CI:'true',WRANGLER_SEND_METRICS:'false'};
 for(const key of Object.keys(env))if(/^(CLOUDFLARE_|CF_API_|CF_ACCOUNT_)/.test(key))delete env[key];
 const persist=join(tmp,'local-only'),fixturePath=join(tmp,'showcase.sql'),sentinels=[join(root,'assets','unreviewed-private-fixture.txt'),join(root,'studio','unreviewed-private-fixture.js')];
@@ -78,7 +78,17 @@ try{
  const binary=await go('/api/library/'+doc.id+'/download','GET',undefined,show,{'X-Sandy-Download':ticket});
  assert.equal(binary.status,200);assert.equal(Buffer.from(await binary.arrayBuffer()).toString('base64'),'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7ZkAAAAASUVORK5CYII=');
  assert.equal((await jsonCall('/api/accounts','GET',undefined,owner)).data.accounts.length,2);
- console.log('PASS: isolated actual Wrangler/workerd assets, D1 login/atomic task creation, separate showcase and encrypted binary download');
+ // Founding membership on real workerd/D1: join, members area, profile, family, announcement RSVP (tables created on first use).
+ const joined=await jsonCall('/api/join','POST',{fullName:'Fictional Wrangler Founder',email:'founder@example.test',town:'Amity Point',audienceRegion:'local',username:'fictional-founder',password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1'},'',201);
+ const member=cookie(joined,'__Host-sandy_session');assert.ok(member,'join issues a session');
+ assert.equal((await jsonCall('/api/member/workspace','GET',undefined,member)).data.active,true);
+ await jsonCall('/api/member/profile','POST',{version:0,bio:'Fictional',sports:['Mixed beach volleyball'],skillLevel:'social',availability:[],filmMember:true,crewSkills:['Camera'],helping:[],directoryVisible:true,showTown:false,shareContact:false},member);
+ await jsonCall('/api/member/family','POST',{action:'add',fullName:'Fictional Junior',ageBand:'under16',relationship:'parent',interests:[],photoPermission:false,guardianDeclaration:true},member,201);
+ const ann=(await jsonCall('/api/committee/announcements','POST',{action:'create',title:'Fictional come and try',eventDate:'2099-01-10',rsvp:true},owner,201)).data;
+ await jsonCall('/api/member/announcements','POST',{id:ann.id,response:'going',children:1},member);
+ assert.equal((await jsonCall('/api/committee/families','GET',undefined,owner)).data.children.length,1);
+ assert.equal((await jsonCall('/api/committee/member-profiles','GET',undefined,owner)).data.members.length,1);
+ console.log('PASS: isolated actual Wrangler/workerd assets, D1 login/atomic task creation, separate showcase, encrypted binary download and founding member onboarding');
 }finally{
  if(child?.pid){try{process.kill(-child.pid,'SIGTERM')}catch{}await new Promise(r=>setTimeout(r,300));try{process.kill(-child.pid,'SIGKILL')}catch{}}
  for(const file of [configPath,...sentinels])rmSync(file,{force:true});
