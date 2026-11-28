@@ -9,10 +9,12 @@ export async function ensureAnnouncements(env,db){if(ready.has(env))return;await
  // Events the committee chooses to show on the public calendar (no RSVPs or names are public).
  const cols=new Set(((await db.prepare('PRAGMA table_info(club_announcements)').all()).results||[]).map(c=>c.name));
  if(!cols.has('public_calendar'))await db.prepare('ALTER TABLE club_announcements ADD COLUMN public_calendar INTEGER NOT NULL DEFAULT 0').run();
+ // Links a calendar listing back to the committee event it was published from.
+ if(!cols.has('source_id'))await db.prepare("ALTER TABLE club_announcements ADD COLUMN source_id TEXT NOT NULL DEFAULT ''").run();
  ready.add(env)}
 const ensure=ensureAnnouncements;
 const responses=['going','maybe','not_going'];
-const shape=r=>({id:r.id,title:r.title,body:r.body,eventDate:r.event_date,eventTime:r.event_time,location:r.location,rsvp:!!r.rsvp,audience:r.audience,publicCalendar:!!r.public_calendar,createdAt:r.created_utc,
+const shape=r=>({id:r.id,title:r.title,body:r.body,eventDate:r.event_date,eventTime:r.event_time,location:r.location,rsvp:!!r.rsvp,audience:r.audience,publicCalendar:!!r.public_calendar,sourceId:r.source_id||'',createdAt:r.created_utc,
  ...(r.going!==undefined?{counts:{going:r.going,maybe:r.maybe,notGoing:r.not_going,children:r.kids}}:{}),...(r.my_response!==undefined?{myResponse:r.my_response,myChildren:r.my_children||0}:{})});
 const COUNTS=`(SELECT COUNT(*) FROM club_announcement_rsvps x WHERE x.announcement_id=a.id AND x.response='going') AS going,
  (SELECT COUNT(*) FROM club_announcement_rsvps x WHERE x.announcement_id=a.id AND x.response='maybe') AS maybe,
@@ -45,8 +47,9 @@ export async function announcementsEndpoint(req,env,path,identity){
   if(!['all','film','unverified'].includes(audience))fail(400,'Choose who it is for.','invalid_announcement');
   const eventDate=dateField(b.eventDate),rsvp=b.rsvp===true&&!!eventDate?1:0,annId=id();
   const publicCalendar=b.publicCalendar===true&&!!eventDate&&audience==='all'?1:0;
-  await db.prepare('INSERT INTO club_announcements(id,title,body,event_date,event_time,location,rsvp,audience,public_calendar,created_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
-   .bind(annId,title,body,eventDate,field(b.eventTime,40),field(b.location,140),rsvp,audience,publicCalendar,identity.id,at,at).run();
+  const sourceId=/^[a-f0-9-]{36}$/.test(b.sourceId||'')?b.sourceId:'';
+  await db.prepare('INSERT INTO club_announcements(id,title,body,event_date,event_time,location,rsvp,audience,public_calendar,source_id,created_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
+   .bind(annId,title,body,eventDate,field(b.eventTime,40),field(b.location,140),rsvp,audience,publicCalendar,sourceId,identity.id,at,at).run();
   await audit(db,identity,'announcement_published','announcement',annId,at).run();
   return json({ok:true,id:annId},201);
  }

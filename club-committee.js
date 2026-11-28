@@ -4,6 +4,7 @@ import {setupCommitteeOperations} from './club-committee-ops.js?v=20261128';
 import {setupMeetingsDesk} from './club-meetings.js?v=20261128';
 import {setupAgmDesk} from './club-agm.js?v=20261128';
 import {setupMembersDesks,MEMBER_DESKS} from './club-members-desks.js?v=20261128';
+import {setupEventsDesk} from './club-events.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
  {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
@@ -17,7 +18,7 @@ const DESKS=[
  {key:'automations',group:'Governance',label:'Membership automations',kind:'governance',description:'Plan optional future reminders. No automated member messages are enabled.'},
  {key:'ready-setco',group:'Governance',label:'Ready SETCO decisions',kind:'partner',description:'Record proposed co-operative referrals and handovers. This does not create a partnership or an authorised transfer.'},
  {key:'access',group:'Governance',label:'Manage club access',tab:'accounts',webmaster:true,description:'Reserve accounts and manually prepare prospective committee password invitations.'},
- {key:'events',group:'Events and funding',label:'Events and fundraising',kind:'event',description:'Record proposed sport, cultural and fundraising events, staffing and follow-ups.'},
+ {key:'events',group:'Events and funding',label:'Events and run sheets',kind:'event',description:'Plan the event, roster helpers, publish to the calendar, debrief.'},
  {key:'fundraising',group:'Events and funding',label:'Fundraising register',kind:'fundraising',description:'Track fundraising proposals and their next steps. No payments or financial approvals occur here.'},
  {key:'equipment',group:'Events and funding',label:'Club assets and loans',kind:'equipment',description:'Document planned equipment, proposed loans and maintenance tasks. No binding loan contract is issued.'},
  {key:'sponsors',group:'Events and funding',label:'Sponsors and supporters',kind:'sponsor',description:'Track prospective sponsor conversations and suggested contributions.'},
@@ -43,6 +44,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const meetingsDesk=setupMeetingsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const agmDesk=setupAgmDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const membersDesk=setupMembersDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
+ const eventsDesk=setupEventsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
  const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
@@ -74,7 +76,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
  const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -159,10 +161,11 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
-  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();
+  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();
   if(scroll)window.scrollTo({top:0,behavior:'auto'});
   if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingsDesk.open();return}
   if(key==='agm'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await agmDesk.open();return}
+  if(key==='events'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await eventsDesk.open();return}
   if(MEMBER_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await membersDesk.open(key);return}
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;

@@ -114,7 +114,7 @@ test('private Sandy clubhouse pages show the real favicon and island project lin
 test('PLFC committee room desks are available as real shared drafts with attribution and safe gates',()=>{
  const html=read('../club-admin.html'),menu=read('../club-committee.js'),admin=read('../club-admin.js');
  const labels=['Committee notices','To-do lists','Newsletter desk','Social Studio','Officer handover',
-  'Meetings and minutes','Events and fundraising','Club assets and loans','Sponsors and supporters','Grant register',
+  'Meetings and minutes','Events and run sheets','Club assets and loans','Sponsors and supporters','Grant register',
   'Results, prizes and sponsors','Member age and permissions','AGM jobs','Applications',
   'Invite returning members','Membership automations','Ready SETCO decisions','Documents','Manage club access',
   'Shop, stock and prices'];

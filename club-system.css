@@ -416,3 +416,18 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 #committee-members-desk .ops-compose input:not([type=checkbox]),#committee-members-desk .ops-compose select,#committee-members-desk .ops-compose textarea{width:100%;min-width:0;padding:.55rem;border:1px solid #a9c6c0;border-radius:8px;font:inherit}
 #committee-members-desk .ops-compose button[type=submit]{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
 #md-desk-title:focus,#agm-desk-title:focus{outline:none}
+/* Events and run sheets */
+.ev-jobs{list-style:none;margin:.6rem 0;padding:0;display:grid;gap:.45rem}
+.ev-jobs li{display:grid;grid-template-columns:minmax(0,8rem) minmax(0,1fr) auto;gap:.7rem;align-items:center;background:white;border:1px solid #dbe9e5;border-radius:10px;padding:.6rem .75rem}
+.ev-job-time{font-weight:800;color:#164f59;font-size:.88rem}.ev-job-what{display:grid;gap:.15rem}.ev-job-what span{font-size:.82rem;color:#3e5a5f}
+.ev-job-actions{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.ev-job-actions button,.ops-boundary button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.35rem .6rem;font-weight:800;cursor:pointer;font-size:.8rem}
+.ev-preview{background:#f1f9f7;border:1px solid #c8dfd9;border-radius:10px;padding:.6rem .75rem;margin:0}
+.ev-danger{border:1px solid #9b2520!important;background:#9b2520!important;color:white!important;border-radius:8px;padding:.5rem .8rem;font-weight:800;cursor:pointer}
+#ev-desk-title:focus{outline:none}
+#committee-events-desk .ops-compose label,#committee-events-desk form label{display:grid;gap:.3rem;font-weight:700;font-size:.85rem}
+#committee-events-desk .ops-check{display:flex!important;align-items:center;gap:.5rem}
+#committee-events-desk input:not([type=checkbox]),#committee-events-desk select,#committee-events-desk textarea{width:100%;min-width:0;padding:.55rem;border:1px solid #a9c6c0;border-radius:8px;font:inherit}
+#committee-events-desk form,#committee-events-desk fieldset{display:grid;gap:.6rem;border:0;padding:0;margin:0;min-width:0}
+#committee-events-desk form button[type=submit]{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
+@media(max-width:620px){.ev-jobs li{grid-template-columns:1fr}.ev-job-actions{justify-content:flex-start}}
