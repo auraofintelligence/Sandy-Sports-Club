@@ -49,6 +49,9 @@
 !/member-join.js
 !/member-family.js
 !/member-profile.js
+!/member-announcements.js
+!/webmaster-members.html
+!/webmaster-members.js
 !/member-calendar.html
 !/member-crew.html
 !/member-equipment.html

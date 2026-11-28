@@ -23,6 +23,7 @@ import {surveyEndpoint} from './survey.mjs';
 import {joinEndpoint,joinOpen} from './join.mjs';
 import {familyEndpoint} from './family.mjs';
 import {profilesEndpoint} from './profiles.mjs';
+import {announcementsEndpoint} from './announcements.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -77,6 +78,7 @@ async function route(req,env,path,effectiveIdentity){
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
  if(path==='/api/join')return joinEndpoint(req,env,path,identity);
+ if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
  if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
  if(['/api/member/profile','/api/member/directory','/api/member/connections','/api/committee/member-profiles'].includes(path))return profilesEndpoint(req,env,path,identity);
  if(path==='/api/library'||path.startsWith('/api/library/'))return libraryEndpoint(req,env,path,identity);

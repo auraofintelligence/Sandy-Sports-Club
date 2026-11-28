@@ -1,0 +1,28 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#102d40">
+<title>Members &amp; onboarding | Sandy Sports Webmaster</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css">
+<script defer src="/site.js"></script><script type="module" src="/webmaster-members.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="club-app-heading"><p class="eyebrow">WEBMASTER · MEMBERS &amp; ONBOARDING</p><h1>Members &amp; onboarding</h1>
+<p>Founding members, families, interest sign-ups, announcements and RSVPs in one place. <a href="/club-admin.html">Back to My Clubhouse</a></p></div>
+<div id="wm-state" class="club-status" role="status">Checking your Webmaster session…</div>
+<div id="wm-panel" hidden>
+<div class="club-summary" id="wm-summary"></div>
+<section class="club-panel"><h2>Post an announcement or event</h2>
+<form id="wm-announce" class="member-workspace-form"><div class="club-form-grid">
+ <label>Title<input name="title" required maxlength="140"></label>
+ <label>Who it is for<select name="audience"><option value="all">All members</option><option value="film">Film Club members</option></select></label>
+ <label>Event date <small>(optional)</small><input type="date" name="eventDate"></label>
+ <label>Time <small>(optional)</small><input name="eventTime" maxlength="40" placeholder="4pm to 6pm"></label>
+ <label>Location <small>(optional)</small><input name="location" maxlength="140" placeholder="Cylinder Beach"></label>
+</div>
+<label>Message<textarea name="body" rows="4" maxlength="4000"></textarea></label>
+<label class="club-consent"><input type="checkbox" name="rsvp"> Ask members to RSVP (needs an event date)</label>
+<button type="submit">Publish to members</button><p role="status" id="wm-announce-status"></p></form>
+<h3>Live announcements</h3><div id="wm-announcements"></div><div id="wm-rsvps"></div></section>
+<section class="club-panel"><h2>Founding members</h2><p><button type="button" data-csv="members">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-members"></table></div></section>
+<section class="club-panel"><h2>Children registered by guardians</h2><p><button type="button" data-csv="children">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-children"></table></div></section>
+<section class="club-panel"><h2>Interest sign-ups</h2><p>People who registered interest but have not joined. Most recent 30. <button type="button" data-csv="interest">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-interest"></table></div></section>
+</div>
+</main><div data-site-footer></div></body></html>
