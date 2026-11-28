@@ -114,6 +114,14 @@ export async function peopleEndpoint(req,env,path,identity){
  }
  fail(404,'Unknown membership-directory operation.','not_found');
 }
+// Public form guard when Turnstile is not configured: hashed per-connection limit per 15 minutes.
+export async function publicFormAllowed(env,req,scope,limit=8){
+ const bucket=Math.floor(Date.now()/900000),ip=req.headers.get('cf-connecting-ip')||'local';
+ const input=new TextEncoder().encode((env.SANDY_AUTH_PEPPER||'sandy')+'/public-form/'+scope+'/'+bucket+'/'+ip);
+ const key='pf:'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',input)),x=>x.toString(16).padStart(2,'0')).join('');
+ const row=await dbFor(env).prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count').bind(key,(bucket+1)*900).first();
+ return Number(row?.count||1)<=limit;
+}
 export async function verifyTurnstile(token,req,secret){
  try{
   const data=new URLSearchParams({secret,response:token,remoteip:req.headers.get('cf-connecting-ip')||''});
@@ -124,10 +132,14 @@ export async function verifyTurnstile(token,req,secret){
 export async function interestEndpoint(req,env,path,identity){
  const db=dbFor(env),at=now();
  if(path==='/api/interest'&&req.method==='POST'){
-  if(!env.SANDY_TURNSTILE_SECRET)fail(503,'Public interest registration is not yet activated.','registration_not_ready');
   const b=await payload(req,8500);
   if(!bool(b.contactConsent))fail(400,'Explicit consent is required before recording contact information.','consent_required');
-  if(!await verifyTurnstile(field(b.turnstileToken,2000),req,env.SANDY_TURNSTILE_SECRET))fail(403,'Complete the verification before submitting.','verification_required');
+  if(env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY){
+   if(!await verifyTurnstile(field(b.turnstileToken,2000),req,env.SANDY_TURNSTILE_SECRET))fail(403,'Complete the verification before submitting.','verification_required');
+  }else{
+   if(field(b.website,200))return json({ok:true,notice:'Expression of interest recorded.'},201);
+   if(!await publicFormAllowed(env,req,'interest'))fail(429,'Too many submissions from this connection. Please try again in 15 minutes.','rate_limited');
+  }
   const name=field(b.firstName,80),email=field(b.email,254),town=field(b.town,100),region=field(b.audienceRegion,20)||'other';
   if(!name||!email||!email.includes('@')||!regions.includes(region))fail(400,'Enter your name, email and visitor or locality category.','invalid_interest');
   const interests=Array.isArray(b.interests)?b.interests.filter(x=>typeof x==='string').slice(0,20).map(x=>field(x,60)):[];

@@ -60,7 +60,7 @@ async function handle(req,env){
 async function route(req,env,path,effectiveIdentity){
  if(path==='/api/public-config'&&req.method==='GET')
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
-   publicInterestReady:Boolean(env.DB?.prepare&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
+   publicInterestReady:Boolean(env.DB?.prepare),
    publicNominationsReady:Boolean(env.DB?.prepare&&env.SANDY_NOMINATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicSurveyReady:Boolean(env.DB?.prepare&&env.SANDY_SURVEY_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicApplicationsReady:Boolean(env.DB?.prepare&&env.SANDY_APPLICATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
