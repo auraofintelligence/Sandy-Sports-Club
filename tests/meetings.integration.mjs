@@ -145,3 +145,24 @@ test('AGM jobs generate once, follow a date change, and leave completed jobs alo
  assert.equal(all.find(x=>x.id===notice.id).dueDate,'2027-08-07','completed job kept');
  assert.equal(all.find(x=>/Close nominations/.test(x.title)).dueDate,'2027-08-28');
 });
+
+test('rule 4B: every meeting is archived on video and audio, permanently, and every member can watch it',async t=>{
+ const {call}=fixture(t);
+ const id=await meeting(call),pub=await meeting(call,day(5),'Public meeting');
+ let m=(await call('sec',M+id)).meeting;assert.equal(m.archive,null);
+ await call('sec',M+id,'POST',{action:'archive',version:m.version,video:'http://insecure.example/v'},400);
+ let r=await call('sec',M+id,'POST',{action:'archive',version:m.version,video:'https://video.example/meeting-1',audio:'https://audio.example/meeting-1.mp3'});
+ assert.equal(r.archive.video,'https://video.example/meeting-1');
+ // Members see it; working groups and informal chats are not part of the archive.
+ const list=(await call('member','/api/member/meetings')).meetings;
+ assert.deepEqual(list.map(x=>[x.id,x.archive.video,x.archive.audio]),[[id,'https://video.example/meeting-1','https://audio.example/meeting-1.mp3']]);
+ // A link can be replaced (the old one stays in history) but never removed.
+ m=(await call('sec',M+id)).meeting;
+ await call('sec',M+id,'POST',{action:'archive',version:m.version,video:''},400);
+ r=await call('sec',M+id,'POST',{action:'archive',version:m.version,video:'https://video.example/meeting-1-full',transcript:'https://docs.example/t1'});
+ assert.equal(r.archive.history,1);assert.equal(r.archive.audio,'https://audio.example/meeting-1.mp3');
+ // Members see the transcript as soon as it is archived.
+ assert.equal((await call('member','/api/member/meetings')).meetings[0].archive.transcript,'https://docs.example/t1');
+ await call(null,'/api/member/meetings','GET',undefined,401);
+ assert.ok(pub);
+});

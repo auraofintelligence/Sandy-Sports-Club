@@ -79,7 +79,7 @@ function validate(data){
  if(!PATHWAYS.includes(data.pathway))return 'Choose how you want to contribute.';
  if(data.town&&!TOWNS.includes(data.town))return 'Choose a town from the list.';
  if(!data.consent)return 'Confirm that you understand this is an expression of interest.';
- if(data.pathway==='Committee nomination'&&!data.recordingConsent)return 'Standing for office includes agreeing to meetings being recorded (draft constitution rule 4B). Tick that box to continue.';
+ if(data.pathway==='Committee nomination'&&!data.recordingConsent)return 'Standing for office includes agreeing to every meeting being recorded on video and audio and archived for members (draft constitution rule 4B). Tick that box to continue.';
  return '';
 }
 async function publicNominate(req,env){

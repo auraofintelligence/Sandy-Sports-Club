@@ -14,7 +14,7 @@ import {viewMode} from './view-mode.mjs';
 import {safeguardsEndpoint} from './member-safeguards.mjs';
 import {libraryEndpoint} from './library.mjs';
 import {committeeOpsEndpoint} from './committee-ops.mjs';
-import {meetingsEndpoint} from './meetings.mjs';
+import {meetingsEndpoint,memberMeetingsEndpoint} from './meetings.mjs';
 import {runSheetEndpoint} from './run-sheets.mjs';
 import {applicationsEndpoint} from './applications.mjs';
 import {financeEndpoint} from './finance.mjs';
@@ -92,6 +92,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
  if(path==='/api/member/notifications')return notifyPrefsEndpoint(req,env,identity);
  if(path==='/api/member/film')return filmEndpoint(req,env,identity);
+ if(path==='/api/member/meetings')return memberMeetingsEndpoint(req,env,identity);
  if(path==='/api/member/news')return memberNewsEndpoint(req,env,identity);
  if(path==='/api/committee/news')return committeeNewsEndpoint(req,env,identity);
  if(['/api/calendar','/api/calendar.ics','/api/member/calendar','/api/member/club-calendar.ics'].includes(path))return calendarEndpoint(req,env,path,identity);

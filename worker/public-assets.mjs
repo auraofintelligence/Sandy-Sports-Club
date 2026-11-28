@@ -351,6 +351,7 @@ export const PUBLIC_FILES=Object.freeze([
  "calendar-ui.js",
  "member-calendar-tab.js",
  "member-notify.js",
+ "member-meetings.js",
  "mozzie-search.js",
  "committee-desks.js",
  "how-it-works.js",

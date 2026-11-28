@@ -30,7 +30,7 @@ const F=[
  day('transferDate','Target handover date','Handover'),list('duties','Regular duties','Checklist'),list('openTasks','Outstanding tasks','Checklist'),
  list('resources','Document links and assets to transfer','Checklist'),notes('handoverNotes','Handover notes','Review'),check('recipientAcknowledged','Recipient has acknowledged responsibilities','Review')]},
  {key:'meetings',title:'Meetings and minutes',kind:'meeting',group:'Governance',purpose:'Create the meeting, assemble the agenda, record notes, review draft minutes, assign actions and export a calendar invitation.',fields:[
- choice('meetingType','Meeting type',['Management committee','Founding meeting','Annual general meeting','General meeting','Special meeting','Working group','Informal discussion'],'Schedule'),
+ choice('meetingType','Meeting type',['Management committee','Founding meeting','Annual general meeting','General meeting','Special meeting','Public meeting','Working group','Informal discussion'],'Schedule'),
  day('date','Meeting date','Schedule'),time('startTime','Start time (Brisbane)','Schedule'),time('endTime','End time (Brisbane)','Schedule'),
  txt('location','Venue / online link description','Schedule'),txt('chair','Chair / facilitator','Schedule'),txt('minuteTaker','Minute taker','Schedule'),
  list('attendees','Attendees and apologies','Attendance'),txt('quorum','Quorum requirement / observed attendance','Attendance'),

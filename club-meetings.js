@@ -3,9 +3,9 @@
 // switched off until the club has a lawful committee (SANDY_CLUB_APPROVALS).
 import {isReadOnlyView} from './club-view-client.js';
 const OFFICES={webmaster:'Webmaster',president:'President',vice_president:'Vice President',secretary:'Secretary',assistant_secretary:'Assistant Secretary',treasurer:'Treasurer',committee:'Committee officer'};
-const TYPES=['Management committee','Founding meeting','Annual general meeting','General meeting','Special meeting','Working group','Informal discussion'];
+const TYPES=['Management committee','Founding meeting','Annual general meeting','General meeting','Special meeting','Public meeting','Working group','Informal discussion'];
 const OUTCOMES={carried:'Carried',lost:'Lost',deferred:'Deferred',withdrawn:'Withdrawn',noted:'Noted'};
-const STANDARD=['Welcome and apologies','Recording of this meeting (rule 4B)','Minutes of the last meeting','Correspondence','Treasurer’s report','General business','Next meeting'];
+const STANDARD=['Welcome and apologies','Recording of this meeting: video and audio, archived (rule 4B)','Minutes of the last meeting','Correspondence','Treasurer’s report','General business','Next meeting'];
 const STEPS=[['agenda','1 Agenda'],['day','2 On the day'],['minutes','3 Minutes'],['follow','4 Follow up']];
 const longDate=d=>d?new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'Australia/Brisbane'}).format(new Date(d+'T12:00:00+10:00')):'No date yet';
 const lines=s=>String(s||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean);
@@ -55,8 +55,8 @@ export function setupMeetingsDesk({api,esc:e,status,showDesk}){
  function dayStep(){
   const a=meeting.attendance;
   const quorum=a?(a.quorumRequired?a.present.length+' present of '+a.quorumRequired+' needed: '+(a.quorumMet?'quorum met':'quorum NOT met'):a.present.length+' present. Quorum not set yet.'):'';
-  const general=/general meeting|founding/i.test(meeting.type||'');
-  return '<p class="ops-boundary">'+(general?'Recording (rule 4B): this meeting is recorded and streamed to members. Point the camera at the chair and presenters, and show people the off-camera area.':'Recording (rule 4B): announce that the Secretary is recording to help write the minutes. Pause for confidential items and anything about a child.')+'</p>'+
+  const t=meeting.fields?.meetingType||meeting.type||'',pub=/public/i.test(t),general=/general meeting|founding|special/i.test(t);
+  return '<p class="ops-boundary">Rule 4B: record video and audio from opening to close, without pausing'+(pub?', and stream it live to the public on <a href="/club-admin.html#committee/island-news">Island news and live</a>':general?', and stream it live to members':'')+'. Add the recording to the archive under step 3.</p>'+
    '<section class="mt-block"><h5>Who came</h5><form data-mt-attendance><fieldset'+dis()+'><div class="ops-form-grid">'+
    '<label>Present (one per line)<textarea name="present" rows="4">'+e((a?.present||[]).join('\n'))+'</textarea></label>'+
    '<label>Apologies (one per line)<textarea name="apologies" rows="4">'+e((a?.apologies||[]).join('\n'))+'</textarea></label></div>'+
@@ -76,13 +76,19 @@ export function setupMeetingsDesk({api,esc:e,status,showDesk}){
       '<button type="button" data-mt-add-job'+dis()+'>Add a job</button></article>';
     }).join('')+'<div class="ops-actions"><button type="button" class="mt-primary" data-mt-save-agenda'+dis()+'>Save notes and jobs</button></div></section>':'<p class="ops-empty">Add agenda items first.</p>');
  }
+ function archiveBox(){
+  const a=meeting.archive||{},link=(k,l)=>a[k]?'<a href="'+e(a[k])+'" target="_blank" rel="noopener">'+l+'</a>':'';
+  return '<section class="mt-block"><h5>Meeting archive (rule 4B)</h5><p class="mt-help">Add the video, audio and transcript. They are kept permanently and every member can watch them. A link can be replaced, never removed; replaced links stay in the history.</p>'+
+   ([link('video','Video'),link('audio','Audio'),link('transcript','Transcript')].filter(Boolean).join(' · ')||'<p class="ops-empty">Nothing archived yet.</p>')+(a.history?'<p class="mt-help">'+a.history+' earlier link'+(a.history===1?'':'s')+' kept in the history.</p>':'')+
+   (meeting.cancelled||ro()?'':'<form data-mt-archive><div class="ops-form-grid"><label>Video link<input type="url" name="video" placeholder="https://" value="'+e(a.video||'')+'"></label><label>Audio link<input type="url" name="audio" placeholder="https://" value="'+e(a.audio||'')+'"></label><label>Transcript link<input type="url" name="transcript" placeholder="https://" value="'+e(a.transcript||'')+'"></label></div><button type="submit">Save to the archive</button></form>')+'</section>';
+ }
  function minutesStep(){
   const text=meeting.minutes?.committeeDraft;
   return '<p class="mt-help">Start from the agenda, attendance and outcomes, then correct the wording.</p>'+
    (text?'':'<p>No draft minutes yet.</p>')+
    '<form data-mt-minutes><fieldset'+dis()+'><label>Draft minutes<textarea name="text" rows="16" maxlength="20000">'+e(text||meeting.generatedMinutes)+'</textarea></label>'+
    '<div class="ops-actions"><button type="submit" class="mt-primary">Save draft minutes</button><button type="button" data-mt-rebuild>Rebuild from the agenda</button><button type="button" data-mt-download>Download minutes</button></div></fieldset></form>'+
-   '<p class="mt-help">Rule 4B: once these minutes are approved, delete the committee meeting recording and any transcript.</p>'+
+   archiveBox()+
    '<p class="ops-boundary">'+(meeting.minutesApproved?'These minutes are approved and locked.':'Approving minutes switches on once the club has an elected committee. Until then they stay as drafts.')+'</p>';
  }
  function followStep(){
@@ -182,6 +188,7 @@ export function setupMeetingsDesk({api,esc:e,status,showDesk}){
    return act({action:'outcome',itemId:form.dataset.mtOutcome,outcome:v.outcome,votes},'Outcome recorded.',{reloadAgenda:!dirty});
   }
   if(form.matches('[data-mt-minutes]'))return act({action:'minutes',text:v.text},'Draft minutes saved.');
+  if(form.matches('[data-mt-archive]'))return act({action:'archive',video:v.video,audio:v.audio,transcript:v.transcript},'Saved to the meeting archive.');
   if(form.matches('[data-mt-schedule]'))return act({action:'schedule',date:v.date,startTime:v.startTime,endTime:v.endTime,location:v.location,reason:v.reason},r=>r.unchanged?'Nothing changed.':'New time saved.');
   if(form.matches('[data-mt-cancel]')){if(!confirm('Cancel “'+meeting.title+'”? It stays on record as cancelled.'))return;return act({action:'cancel',reason:v.reason},'Meeting cancelled.')}
  });

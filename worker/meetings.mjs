@@ -24,7 +24,12 @@ export async function stableId(value){
  b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
 }
-const opsOf=body=>({agenda:[],attendance:null,minutes:null,schedule:[],cancelled:null,...(body.meetingOps||{})});
+const opsOf=body=>({agenda:[],attendance:null,minutes:null,schedule:[],cancelled:null,archive:null,...(body.meetingOps||{})});
+// Rule 4B: video, audio and transcript links for the meeting archive. Kept permanently: a link can be
+// added or replaced (the old one stays in the archive's history) but never removed.
+const ARCHIVE_PARTS=['video','audio','transcript'];
+function httpsLink(v){const s=String(v||'').trim();if(!s)return '';try{const u=new URL(s);if(u.protocol!=='https:')throw 0;return u.href.slice(0,500)}catch{fail(400,'Archive links must start with https://.','invalid_archive_link')}}
+export const archiveView=a=>a?{video:a.video||'',audio:a.audio||'',transcript:a.transcript||'',updatedAt:a.updatedAt||null,updatedBy:a.updatedBy||'',history:(a.history||[]).length}:null;
 async function loadDeskRecord(db,desk,recordId,actor){
  if(!uuid.test(recordId||''))fail(404,'That record identifier is invalid.','record_not_found');
  const row=await db.prepare('SELECT * FROM club_records WHERE id=?').bind(recordId).first();
@@ -98,7 +103,7 @@ async function view(db,env,row,body,actor){
  const editions=await visibleRecords(db,"WHERE kind='governance' AND json_extract(body_json,'$.sandyMinutesEdition')=1 AND json_extract(body_json,'$.sourceMeeting')=?",[row.id],'updated_utc DESC,id DESC',10,r=>purposeOf(r)?.type==='minutes-edition'&&purposeOf(r).roles.includes(actor.role));
  return {id:row.id,title:row.title,status:row.status,version:row.version,fields:body.fields,
   formal:body.fields.meetingType!=='Informal discussion'&&body.fields.meetingType!=='Working group',
-  cancelled:o.cancelled,schedule:o.schedule,attendance:o.attendance,agenda:o.agenda,minutes:o.minutes,
+  cancelled:o.cancelled,schedule:o.schedule,attendance:o.attendance,agenda:o.agenda,minutes:o.minutes,archive:archiveView(o.archive),
   minutesApproved:row.status==='approved',generatedMinutes:generatedMinutes(row,body),actions:await actionTasks(db,row,body),
   quorumDefault:quorumDefault(env),
   memberEditions:editions.map(e=>{const b=JSON.parse(e.body_json);return {id:e.id,version:e.version,status:e.status,released:releasedVersion(e),sourceVersion:b.sourceVersion,text:b.text,updatedAt:e.updated_utc}})};
@@ -108,6 +113,17 @@ async function meetingAction(req,env,db,actor,row,body){
  const b=await payload(req,60000),expected=version(b.version);
  if(row.version!==expected)fail(409,'This meeting changed. Reload before saving.','conflict');
  const o=opsOf(body),fields={...body.fields};
+ if(b.action==='archive'){
+  if(o.cancelled)fail(409,'A cancelled meeting has no recording to archive.','meeting_cancelled');
+  const old=o.archive||{},next={...old};let changed=false;const history=[...(old.history||[])];
+  for(const part of ARCHIVE_PARTS){const link=httpsLink(b[part]);
+   if(!link){if(b[part]!==undefined&&old[part])fail(400,'Archived recordings are kept permanently and cannot be removed (rule 4B). Replace the link instead.','archive_permanent');continue}
+   if(link!==old[part]){if(old[part])history.push({part,link:old[part],replacedAt:now(),by:actor.office_label||actor.role});next[part]=link;changed=true}}
+  if(!changed)return json({ok:true,version:row.version,unchanged:true});
+  const archive={...next,history,updatedAt:now(),updatedBy:actor.office_label||actor.role};
+  const w=writeRecord(db,actor,row,{...body,meetingOps:{...o,archive}},'meeting_archived',{changes:Object.fromEntries(ARCHIVE_PARTS.filter(k=>next[k]!==old[k]).map(k=>[k,next[k]]))});
+  await commit(db,w);return json({ok:true,version:w.next,archive:archiveView(archive)});
+ }
  const locked=row.status==='approved';
  if(locked&&b.action!=='actions')fail(409,'Approved minutes are locked. Return them for changes through a formal decision first.','locked');
  if(o.cancelled&&!['actions'].includes(b.action))fail(409,'This meeting is cancelled. Create a new meeting record instead.','meeting_cancelled');
@@ -228,6 +244,17 @@ async function agmJobs(req,db,actor,row,body){
   for(const k of kinds){if(out[i].meta.changes)k==='c'?created++:moved++;i+=3}
  }
  return json({ok:true,created,rescheduled:moved,total:AGM_JOBS.length,status:AGM_JOBS_STATUS,notice:'AGM jobs are on the officer to-do lists. Confirm every deadline against the adopted rules.'});
+}
+// Rule 4B: every member can watch and listen to the meeting archive.
+export async function memberMeetingsEndpoint(req,env,actor){
+ requireRole(actor,['member',...OFFICES]);if(req.method!=='GET')fail(405,'The archive is read only.','method_not_allowed');
+ const db=dbFor(env);
+ const {results=[]}=await db.prepare("SELECT id,title,event_date,status,body_json FROM club_records WHERE kind='meeting' AND json_extract(body_json,'$.sandySuiteVersion')=1 ORDER BY COALESCE(event_date,created_utc) DESC LIMIT 200").all();
+ const out=[];
+ for(const r of results){const b=JSON.parse(r.body_json),o=opsOf(b),t=b.fields?.meetingType||'';
+  if(o.cancelled||['Informal discussion','Working group'].includes(t)||!o.archive)continue;
+  out.push({id:r.id,title:r.title,date:r.event_date,type:t,minutesApproved:r.status==='approved',archive:archiveView(o.archive)});}
+ return json({meetings:out});
 }
 export async function meetingsEndpoint(req,env,path,actor){
  const db=dbFor(env);
