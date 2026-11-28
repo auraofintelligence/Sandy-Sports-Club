@@ -173,7 +173,7 @@ installExitControl('member-exit-view');
  options();
  try{
   const session=await api('/api/session');
-  if(!session?.authenticated){banner('Please sign in before opening your personal member area.',true);return}
+  if(!session?.authenticated){banner('Please sign in to open your member area. Not a member yet? Joining is free: /member-join.html',true);return}
   if(session.readOnly&&['member','webmaster'].includes(session.identity.role)){
    workspace=await api('/api/member/preview');showDemo();
    $('member-exit-view').hidden=false;$('member-return-showcase').hidden=session.identity.role!=='webmaster';
