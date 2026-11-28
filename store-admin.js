@@ -99,8 +99,8 @@ async function runImport(apply){
  try{const r=await api('/api/committee/store/import','POST',{csv:$('sa-csv').value,apply});
   if(apply){out.innerHTML='<p><strong>Done.</strong> '+r.creates+' added, '+r.updates+' updated.</p>';$('sa-apply').disabled=true;return}
   out.innerHTML='<p><strong>Preview:</strong> '+r.creates+' to add, '+r.updates+' to update, '+r.errors.length+' with errors.</p>'+
-   (r.errors.length?'<table class="store-table"><thead><tr><th>Row</th><th>SKU</th><th>Problem</th></tr></thead><tbody>'+r.errors.map(x=>'<tr><td>'+x.row+'</td><td>'+safe(x.sku)+'</td><td>'+safe(x.message)+'</td></tr>').join('')+'</tbody></table>':'')+
-   '<table class="store-table"><thead><tr><th>Row</th><th>SKU</th><th>Product</th><th>Action</th></tr></thead><tbody>'+r.rows.map(x=>'<tr><td>'+x.row+'</td><td>'+safe(x.sku)+'</td><td>'+safe(x.name)+'</td><td>'+(x.action==='create'?'Add':'Update')+'</td></tr>').join('')+'</tbody></table>';
+   (r.errors.length?'<div class="table-scroll"><table class="store-table"><thead><tr><th>Row</th><th>SKU</th><th>Problem</th></tr></thead><tbody>'+r.errors.map(x=>'<tr><td>'+x.row+'</td><td>'+safe(x.sku)+'</td><td>'+safe(x.message)+'</td></tr>').join('')+'</tbody></table></div>':'')+
+   '<div class="table-scroll"><table class="store-table"><thead><tr><th>Row</th><th>SKU</th><th>Product</th><th>Action</th></tr></thead><tbody>'+r.rows.map(x=>'<tr><td>'+x.row+'</td><td>'+safe(x.sku)+'</td><td>'+safe(x.name)+'</td><td>'+(x.action==='create'?'Add':'Update')+'</td></tr>').join('')+'</tbody></table></div>';
   $('sa-apply').disabled=!!r.errors.length||!(r.creates+r.updates);
  }catch(error){out.textContent=error.message}
 }
@@ -109,7 +109,7 @@ $('sa-apply').addEventListener('click',()=>runImport(true));
 // ---------- Reports ----------
 async function loadReport(){
  const r=await api('/api/committee/store/report'),cards=[['Orders',r.orders.total],['New requests',r.orders.byStatus.requested],['Demo sales',money(r.sales.value)],['Margin',money(r.sales.margin)],['Donations pledged',money(r.donations.total)],['Stock on hand',r.stock.units+' items'],['Stock value (retail)',money(r.stock.retail)],['Low stock lines',r.lowStock.length]];
- const tbl=(head,rows)=>'<table class="store-table"><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(x=>'<tr>'+x.map(c=>'<td>'+safe(c)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody></table>';
+ const tbl=(head,rows)=>'<div class="table-scroll"><table class="store-table"><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(x=>'<tr>'+x.map(c=>'<td>'+safe(c)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody></table></div>';
  $('sa-report').innerHTML='<p class="club-note">'+safe(r.notice)+' Figures are demo requests, not money received.</p><div class="store-report">'+cards.map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+a+'</span></div>').join('')+'</div>'+
   '<h3>Top sellers</h3>'+tbl(['SKU','Product','Units','Value'],r.top.map(x=>[x.sku,x.name,x.units,money(x.value)]))+
   '<h3>Event tickets</h3>'+tbl(['Event','Date','By ticket type','Total'],r.tickets.map(x=>[x.event,x.date,Object.entries(x.byType).map(([k,v])=>k+': '+v).join(', '),x.total]))+

@@ -80,8 +80,8 @@ document.addEventListener('click',async e=>{
  try{
   if(e.target.matches('[data-archive]')){if(!confirm('Take this announcement down for everyone?'))return;await api('/api/committee/announcements','POST',{action:'archive',id:item.dataset.id});announcements=await loadAnnouncements();$('wm-rsvps').innerHTML=''}
   if(e.target.matches('[data-rsvps]')){const {rsvps}=await api('/api/committee/announcements?rsvps='+encodeURIComponent(item.dataset.id));
-   $('wm-rsvps').innerHTML='<h3>RSVPs: '+safe(announcements.find(a=>a.id===item.dataset.id)?.title)+'</h3><table class="club-table"><thead><tr><th>Name</th><th>Reply</th><th>Kids</th><th>Email</th><th>Mobile</th></tr></thead><tbody>'+
-    (rsvps.map(r=>'<tr><td>'+safe(r.fullName||r.username)+'</td><td>'+safe(r.response.replace('_',' '))+'</td><td>'+safe(r.children)+'</td><td>'+safe(r.email)+'</td><td>'+safe(r.mobile)+'</td></tr>').join('')||'<tr><td colspan="5">No replies yet.</td></tr>')+'</tbody></table>'}
+   $('wm-rsvps').innerHTML='<h3>RSVPs: '+safe(announcements.find(a=>a.id===item.dataset.id)?.title)+'</h3><div class="table-scroll"><table class="club-table"><thead><tr><th>Name</th><th>Reply</th><th>Kids</th><th>Email</th><th>Mobile</th></tr></thead><tbody>'+
+    (rsvps.map(r=>'<tr><td>'+safe(r.fullName||r.username)+'</td><td>'+safe(r.response.replace('_',' '))+'</td><td>'+safe(r.children)+'</td><td>'+safe(r.email)+'</td><td>'+safe(r.mobile)+'</td></tr>').join('')||'<tr><td colspan="5">No replies yet.</td></tr>')+'</tbody></table></div>'}
  }catch(error){$('wm-announce-status').textContent=error.message}
 });
 $('wm-verify').addEventListener('submit',async e=>{
