@@ -101,10 +101,10 @@ test('demo sports equipment already seeded is retired, leaving gear to local sto
  const shop=await f.call(null,'/api/store');
  assert.deepEqual(shop.products.map(p=>[p.sku,p.category]),[['GEAR-BOTTLE','Club gear']]);
 });
-test('demo hoodie already seeded is renamed to the Minjerribah Mozzie design',async t=>{
+test('demo hoodie already seeded is renamed to the I love Sandy Sports design',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});
  f.sql.exec(`CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);INSERT INTO store_settings VALUES('seeded','x'),('codes_seeded','x'),('demo_v2','x');`);
  f.sql.exec(`CREATE TABLE IF NOT EXISTS store_products(id TEXT PRIMARY KEY,sku TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,category TEXT NOT NULL DEFAULT '',kind TEXT NOT NULL DEFAULT 'merch',description TEXT NOT NULL DEFAULT '',price_cents INTEGER NOT NULL DEFAULT 0,member_price_cents INTEGER,cost_cents INTEGER,variants_json TEXT NOT NULL DEFAULT '[]',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',venue TEXT NOT NULL DEFAULT '',photo TEXT,status TEXT NOT NULL DEFAULT 'draft',sort INTEGER NOT NULL DEFAULT 100,demo INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL);
   INSERT INTO store_products(id,sku,name,category,variants_json,status,demo,created_utc,updated_utc) VALUES('h','APP-HOODIE','"One island, three towns" hoodie','Apparel','[{"label":"M","stock":3}]','active',1,'x','x');`);
- assert.equal((await f.call(null,'/api/store')).products[0].name,'"Minjerribah Mozzie" hoodie');
+ assert.equal((await f.call(null,'/api/store')).products[0].name,'"I ❤ Sandy Sports" hoodie');
 });

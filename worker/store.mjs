@@ -37,10 +37,10 @@ async function ensure(env,db){
    db.prepare("UPDATE store_products SET category='Club gear',version=version+1,updated_utc=? WHERE sku IN ('GEAR-BOTTLE','GEAR-TOWEL') AND demo=1 AND category='Beach gear'").bind(at),
    db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v2',?)").bind(at)]);
  }
- // Rename the demo hoodie to the Minjerribah Mozzie design (retired slogan).
+ // Rename the demo hoodie to the I ❤ Sandy Sports design (retired slogan).
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v3'").first()){
   const at=now();
-  await db.batch([db.prepare("UPDATE store_products SET name=?,description=?,version=version+1,updated_utc=? WHERE sku='APP-HOODIE' AND demo=1 AND name LIKE '%One island%'").bind('"Minjerribah Mozzie" hoodie','Mozzie the club mascot on a heavyweight hoodie for winter sunset sessions.',at),
+  await db.batch([db.prepare("UPDATE store_products SET name=?,description=?,version=version+1,updated_utc=? WHERE sku='APP-HOODIE' AND demo=1 AND name LIKE '%One island%'").bind('"I ❤ Sandy Sports" hoodie','Heavyweight hoodie for winter sunset sessions. Say it loud.',at),
    db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v3',?)").bind(at)]);
  }
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
