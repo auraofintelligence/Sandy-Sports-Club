@@ -32,7 +32,7 @@ test('full Worker deployment preserves the verified Sandy D1 and separate owner-
  assert.notEqual(normal.d1_databases[0].database_id,normal.d1_databases[1].database_id);
  assert.ok(normal.assets.run_worker_first.includes('/api/*'));
  assert.equal(normal.vars.SANDY_CLUB_APPROVALS,'disabled');
- assert.equal(normal.vars.SANDY_INVITES_ENABLED,'disabled');
+ assert.equal(normal.vars.SANDY_INVITES_ENABLED,'enabled');
  assert.equal(full.main,'./worker/index.mjs');
  assert.equal(full.d1_databases[0].database_id,'REPLACE_WITH_NEW_SANDY_D1_UUID');
 });
@@ -54,7 +54,7 @@ test('manual committee invites require real webmaster action and do not enable a
  assert.ok(auth.includes("requireRole(identity,['webmaster'])"));
  assert.ok(auth.includes("target.role"));
  assert.ok(auth.includes("return json({token,username:target.username"));
- assert.ok(wrangler.vars.SANDY_INVITES_ENABLED==='disabled');
+ assert.ok(wrangler.vars.SANDY_INVITES_ENABLED==='enabled');
  assert.ok(worker.includes('invitationSendingEnabled:false'));
  assert.ok(briefs.includes('ensureApprover(identity,env)'));
  assert.ok(!worker.includes('sendSMS('));

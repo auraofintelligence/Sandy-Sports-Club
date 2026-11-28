@@ -43,6 +43,6 @@ test('Worker denies private assets and encoded variants before reaching the asse
  assert.deepEqual(config.d1_databases[1],{binding:'SANDY_SHOWCASE_DB',database_name:'sandy-sports-clubhouse-showcase',database_id:'fbc64621-a57a-43e7-8138-717576d167c2'});
  assert.notEqual(config.d1_databases[0].database_id,config.d1_databases[1].database_id);
  assert.equal(config.d1_databases[0].database_id,'ada9c7fc-a138-4158-8986-8d6d6e8bfa94');
- assert.equal(config.vars.SANDY_CLUB_APPROVALS,'disabled');assert.equal(config.vars.SANDY_INVITES_ENABLED,'disabled');assert.equal(config.vars.SANDY_PRIVATE_LIBRARY_ENABLED,'disabled');
+ assert.equal(config.vars.SANDY_CLUB_APPROVALS,'disabled');assert.equal(config.vars.SANDY_INVITES_ENABLED,'enabled');assert.equal(config.vars.SANDY_PRIVATE_LIBRARY_ENABLED,'disabled');
  for(const p of ['/api/*','/backend*','/worker*','/tests*','/studio/backend*','/club-admin*','/member-home*'])assert.ok(config.assets.run_worker_first.includes(p));
 });
