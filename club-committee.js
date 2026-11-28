@@ -8,6 +8,7 @@ import {setupAgmDesk} from './club-agm.js?v=20261128';
 import {setupMembersDesks,MEMBER_DESKS} from './club-members-desks.js?v=20261128';
 import {setupEventsDesk} from './club-events.js?v=20261128';
 import {setupProgrammeDesks,PROGRAMME_DESKS} from './club-programme-desks.js?v=20261128';
+import {setupNewsDesk} from './club-news-desk.js';
 import {setupMoneyDesks,MONEY_DESKS} from './club-money-desks.js?v=20261128';
 import {setupRecordsDesks,RECORD_DESKS} from './club-records-desks.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
@@ -23,6 +24,7 @@ const DESKS=[
  {key:'automations',group:'Governance',label:'Membership automations',kind:'governance',description:'Plan reminders such as renewals and welcome messages.'},
  {key:'ready-setco',group:'Governance',label:'Ready SETCO decisions',kind:'partner',description:'Requests to the Ready SET Co-op, from idea to written agreement.'},
  {key:'access',group:'Governance',label:'Manage club access',tab:'accounts',webmaster:true,description:'Reserve officer accounts and send their one-time invitations.'},
+ {key:'island-news',group:'Sport and film',label:'Island news and live',kind:'film',description:'Check Film Club stories before they go public, and run live broadcasts.'},
  {key:'events',group:'Events and funding',label:'Events and run sheets',kind:'event',description:'Plan the event, roster helpers, publish to the calendar, debrief.'},
  {key:'fundraising',group:'Events and funding',label:'Fundraising register',kind:'fundraising',description:'Fundraising ideas, who is running them, money in and costs.'},
  {key:'equipment',group:'Events and funding',label:'Club assets and loans',kind:'equipment',description:'Every piece of club gear: where it is, condition, loans and repairs.'},
@@ -52,6 +54,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const membersDesk=setupMembersDesks({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
  const eventsDesk=setupEventsDesk({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
  const programmeDesk=setupProgrammeDesks({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
+ const newsDesk=setupNewsDesk({api,esc,status});
  const moneyDesk=setupMoneyDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const recordsDesk=setupRecordsDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
@@ -85,7 +88,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
  const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();moneyDesk.close();recordsDesk.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();newsDesk.close();moneyDesk.close();recordsDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -170,11 +173,12 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
-  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();moneyDesk.close();recordsDesk.close();
+  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();newsDesk.close();moneyDesk.close();recordsDesk.close();
   if(scroll)window.scrollTo({top:0,behavior:'auto'});
   if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingsDesk.open();return}
   if(key==='agm'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await agmDesk.open();return}
   if(key==='events'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await eventsDesk.open();return}
+  if(key==='island-news'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await newsDesk.open();return}
   if(RECORD_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await recordsDesk.open(key);return}
   if(MONEY_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await moneyDesk.open(key);return}
   if(PROGRAMME_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await programmeDesk.open(key);return}

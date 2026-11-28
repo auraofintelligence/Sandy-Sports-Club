@@ -527,3 +527,4 @@ h3 .fc-icon{margin-right:.25rem}
 .fc-filter button[aria-pressed="true"]{background:#103c4d;color:#fff}.fc-filter button[aria-pressed="true"] .fc-icon{color:#fff}
 .fc-add summary{cursor:pointer;font-weight:800}
 .fc-msg:empty{display:none}.fc-msg{font-weight:700;color:#0e5a3c}
+.fc-req em.nd-live{color:#c62828}

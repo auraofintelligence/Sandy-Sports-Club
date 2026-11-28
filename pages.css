@@ -192,3 +192,22 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .fc-note{display:flex;gap:.5rem;align-items:flex-start;max-width:52rem;color:#3f5a5f}
 .fc-links{font-weight:700}
 .link-row .button.light{color:#fff;border-color:rgba(255,255,255,.8)}
+/* Island news and live */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:1rem;margin-top:1rem}
+.news-item{display:flex;gap:.8rem;align-items:flex-start;background:#fff;border:1px solid #d8e8e4;border-radius:18px;padding:1rem 1.1rem}
+.news-item>div{display:grid;gap:.3rem;min-width:0}.news-item h3{margin:0;font-size:1.15rem}.news-item p{margin:0;color:#3f5a5f;line-height:1.5}
+.news-meta{font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#c2410c}
+.news-by{font-size:.85rem;color:#4b6468;font-weight:700}.news-item .button{justify-self:start;margin-top:.3rem}
+.news-list{display:grid;gap:.6rem;margin:1rem 0}
+.news-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;background:#fff;border:1px solid #d8e8e4;border-radius:16px;padding:.8rem 1rem}
+.news-row>div{display:grid;flex:1 1 14rem;gap:.1rem}.news-row span,.news-row small{color:#4b6468}
+.news-sub{display:flex;gap:.4rem;align-items:center;margin-top:1.6rem}
+.news-live{background:#2a0f12;color:#fff}.news-live .eyebrow{color:#ff8a80;display:flex;gap:.4rem;align-items:center}.news-live .fc-icon{color:#ff8a80}
+.news-live-card{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;margin-top:.6rem}.news-live-card h2{margin:0;color:#fff}.news-live-card p{margin:.2rem 0 0;color:#ffd7d2}.news-live-card>div{flex:1 1 16rem}
+.live-dot{width:.9rem;height:.9rem;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 0 rgba(255,59,48,.6);animation:livepulse 1.6s infinite}
+@keyframes livepulse{70%{box-shadow:0 0 0 12px rgba(255,59,48,0)}100%{box-shadow:0 0 0 0 rgba(255,59,48,0)}}
+@media (prefers-reduced-motion:reduce){.live-dot{animation:none}}
+.button small{font-weight:600;opacity:.85;margin-left:.3rem}
+.button .fc-icon{color:currentColor;margin-right:.3rem}
+.live-banner{display:flex;gap:.6rem;align-items:center;justify-content:center;flex-wrap:wrap;background:#c62828;color:#fff;padding:.45rem 1rem;font-weight:800;font-size:.92rem;text-align:center}
+.live-banner a{color:#fff;text-decoration:underline}.live-banner .live-dot{background:#fff;box-shadow:none;animation:none}

@@ -27,6 +27,7 @@ import {announcementsEndpoint} from './announcements.mjs';
 import {calendarEndpoint} from './calendar.mjs';
 import {notifyPrefsEndpoint,processNotifications} from './notify.mjs';
 import {filmEndpoint} from './film.mjs';
+import {publicNewsEndpoint,memberNewsEndpoint,committeeNewsEndpoint} from './news.mjs';
 import {requestsEndpoint} from './requests.mjs';
 import {storeEndpoint} from './store.mjs';
 import {sponsorsEndpoint} from './sponsors.mjs';
@@ -79,6 +80,7 @@ async function route(req,env,path,effectiveIdentity){
   return respond({service:'sandy-club',storageConfigured:Boolean(env.DB?.prepare),
    authConfigured:Boolean(env.SANDY_AUTH_PEPPER?.length>=32),operationalApprovals:env.SANDY_CLUB_APPROVALS==='enabled',
    livePublishing:false,smsEnabled:false,paymentsEnabled:false});
+ if(path==='/api/news')return publicNewsEndpoint(req,env);
  const identity=effectiveIdentity===undefined?await identityFor(req,env):effectiveIdentity;
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
@@ -90,6 +92,8 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
  if(path==='/api/member/notifications')return notifyPrefsEndpoint(req,env,identity);
  if(path==='/api/member/film')return filmEndpoint(req,env,identity);
+ if(path==='/api/member/news')return memberNewsEndpoint(req,env,identity);
+ if(path==='/api/committee/news')return committeeNewsEndpoint(req,env,identity);
  if(['/api/calendar','/api/calendar.ics','/api/member/calendar','/api/member/club-calendar.ics'].includes(path))return calendarEndpoint(req,env,path,identity);
  if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
  if(['/api/member/profile','/api/member/details','/api/member/picture','/api/member/directory','/api/member/connections','/api/committee/member-profiles','/api/committee/verify-id'].includes(path)||path.startsWith('/api/member/photo/'))return profilesEndpoint(req,env,path,identity);

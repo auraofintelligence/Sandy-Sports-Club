@@ -495,6 +495,9 @@ _swap('committee.html', 'Grants and investment', 'card-cfund-investment.webp', '
 OWNER_RETIRED = {'balanced-15-seniors-pickleball.webp', 'real-gorge-walk-point-lookout.webp'}
 for _p, _t, _img, _alt in OWNER_FIXES:
     _swap(_p, _t, _img, _alt)
+# Island news and live (29 Nov 2026): the original film night with a camera crew, unused until now.
+HERO['news.html'] = 'hero-film.webp'
+ALT['hero-film.webp'] = 'Concept image of an outdoor community film night with a camera crew filming beside the crowd'
 
 
 # Inline figures: (page, old src) -> new src, or None to remove the figure.

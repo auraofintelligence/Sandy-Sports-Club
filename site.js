@@ -2,7 +2,7 @@ const slug = (location.pathname.split('/').pop() || 'index.html');
 const here = slug.includes('.') ? slug : slug + '.html';
 const pages = [
   ['index.html','Vision'],['sport-mixed-beach-volleyball.html','Beach volleyball'],['sports.html','All sand sports'],['flag-football.html','Flag football'],
-  ['places.html','Three towns'],['programme.html','Events'],['film-club.html','Film club'],
+  ['places.html','Three towns'],['programme.html','Events'],['film-club.html','Film club'],['news.html','Island news and live'],
   ['facilities.html','Facilities & assets'],['space-planner.html','Space planner'],
   ['grants.html','Grants & investment'],['store.html','Store'],['sponsors.html','Sponsors'],['donate.html','Donate & screen'],['join.html','Join / nominate'],
   ['clubhouse.html','Clubhouse'],['member-home.html','My membership'],['club-admin.html','My Clubhouse'],
@@ -11,7 +11,7 @@ const pages = [
 // The full page directory stays in the footer; the top navigation remains compact.
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
-  ['facilities.html','Facilities'],['programme.html','Events'],['film-club.html','Film Club'],
+  ['facilities.html','Facilities'],['programme.html','Events'],['film-club.html','Film Club'],['news.html','News & live'],
   ['calendar.html','What’s on'],['grants.html','Funding'],['store.html','Store'],['image-gallery.html','Gallery'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
 ];
 // Sports menu: every sport page, with a direct link to its rules and equipment.
@@ -32,6 +32,7 @@ const mainSectionFor = page => {
   if(page==='image-gallery.html')return 'image-gallery.html';
   if(['facilities.html','space-planner.html','assets.html'].includes(page))return 'facilities.html';
   if(page==='film-club.html')return 'film-club.html';
+  if(page==='news.html')return 'news.html';
   if(page==='programme.html')return 'programme.html';
   if(['grants.html','donate.html'].includes(page))return 'grants.html';
   if(page==='join.html')return 'join.html';
@@ -96,10 +97,10 @@ const committeeGuide=[
 // Reading order follows a visitor's journey and includes each actual HTML page once.
 const pageGroups = [
   ['Vision and sports',[pages[0],pages[2],pages[1],pages[3],...sportGuide]],
-  ['Places and facilities',[pages[4],pages[7],pages[8],route('assets','Asset wish list')]],
-  ['Events, film and backing',[route('calendar','What’s on'),pages[5],pages[6],pages[9],pages[10],pages[11],route('interest','Express interest')]],
-  ['Member clubhouse',[pages[12],route('member-home','My membership (future)'),pages[13],...memberGuide]],
-  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17],route('image-gallery','Image gallery')]]
+  ['Places and facilities',[pages[4],pages[8],pages[9],route('assets','Asset wish list')]],
+  ['Events, film and backing',[route('calendar','What’s on'),pages[5],pages[6],pages[7],pages[10],pages[11],pages[12],route('interest','Express interest')]],
+  ['Member clubhouse',[pages[13],route('member-home','My membership (future)'),pages[14],...memberGuide]],
+  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[15],route('committee-governance','Governance'),pages[17],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[16],pages[18],route('image-gallery','Image gallery')]]
 ];
 const allPages = pageGroups.flatMap(([,items])=>items);
 const pageLink = ([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`;
@@ -165,3 +166,13 @@ if(['club-admin.html','club-login.html','member-home.html','social-studio.html',
  }};
  enhance();new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});
 })();
+
+// Live broadcast banner: one small cached check per page; shows only while the Film Club is streaming.
+if(!/^(club-admin|club-login)\.html$/.test(here))fetch('/api/news?live=1',{credentials:'omit'}).then(r=>r.ok?r.json():null).then(d=>{
+ const b=d?.live?.[0];if(!b||!b.streamUrl)return;
+ const bar=document.createElement('div');bar.className='live-banner';bar.setAttribute('role','status');
+ bar.style.cssText='display:flex;gap:.6rem;align-items:center;justify-content:center;flex-wrap:wrap;background:#c62828;color:#fff;padding:.45rem 1rem;font-weight:800;font-size:.92rem;text-align:center';
+ const txt=document.createElement('span');txt.textContent='● LIVE NOW: '+b.title+(b.place?' · '+b.place:'');
+ const a=document.createElement('a');a.href='/news.html#live';a.textContent='Watch';a.style.cssText='color:#fff;text-decoration:underline';
+ bar.append(txt,a);document.querySelector('[data-site-header]')?.prepend(bar);
+}).catch(()=>{});
