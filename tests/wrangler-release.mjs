@@ -82,7 +82,8 @@ try{
  const joined=await jsonCall('/api/join','POST',{fullName:'Fictional Wrangler Founder',email:'founder@example.test',town:'Amity Point',audienceRegion:'local',username:'fictional-founder',password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49'},'',201);
  const member=cookie(joined,'__Host-sandy_session');assert.ok(member,'join issues a session');
  assert.equal((await jsonCall('/api/member/workspace','GET',undefined,member)).data.active,true);
- await jsonCall('/api/member/profile','POST',{version:0,bio:'Fictional',sports:['Mixed beach volleyball'],skillLevel:'social',availability:[],filmMember:true,crewSkills:['Camera'],helping:[],directoryVisible:true,showTown:false,shareContact:false},member);
+ await jsonCall('/api/member/picture','POST',{avatarId:'sandy-15'},member);
+ await jsonCall('/api/member/profile','POST',{version:1,bio:'Fictional',sports:['Mixed beach volleyball'],skillLevel:'social',availability:[],filmMember:true,crewSkills:['Camera'],helping:[],directoryVisible:true,showTown:false,shareContact:false},member);
  await jsonCall('/api/member/family','POST',{action:'add',fullName:'Fictional Junior',ageBand:'under16',relationship:'parent',interests:[],photoPermission:false,guardianDeclaration:true,gender:'male',avatarId:'sandy-05'},member,201);
  const ann=(await jsonCall('/api/committee/announcements','POST',{action:'create',title:'Fictional come and try',eventDate:'2099-01-10',rsvp:true},owner,201)).data;
  await jsonCall('/api/member/announcements','POST',{id:ann.id,response:'going',children:1},member);
