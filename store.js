@@ -101,6 +101,13 @@ $('view-checkout').addEventListener('submit',async e=>{
  }catch(error){$('checkout-status').textContent=error.message}
  finally{$('checkout-place').disabled=false}
 });
+async function loadStockists(){
+ try{const {products}=await api('/api/sponsors/stockists');if(!products.length)return;
+  $('stockist-grid').innerHTML=products.map(p=>'<article class="stockist-card">'+(p.photoUrl?'<img src="'+safe(p.photoUrl)+'" alt="" loading="lazy">':'')+'<span class="tag">'+safe(p.stockist)+'</span><strong>'+safe(p.name)+'</strong>'+(p.price!=null?'<span>'+money(p.price)+'</span>':'')+
+   '<small>'+safe(p.description)+'</small>'+(p.url||p.stockistUrl?'<a class="button" href="'+safe(p.url||p.stockistUrl)+'" target="_blank" rel="noopener">Buy from '+safe(p.stockist)+'</a>':'<small>Available at '+safe(p.stockist)+'</small>')+'</article>').join('');
+  $('stockists').hidden=false;
+ }catch{}
+}
 async function loadOrders(){
  if(!shop.me?.signedIn)return;
  try{const {orders}=await api('/api/store/orders');
@@ -116,6 +123,7 @@ async function loadOrders(){
   $('store-state').innerHTML=shop.me.signedIn?(shop.me.member?'Member prices applied.'+(shop.me.birthdayMonth?' Happy birthday month: '+shop.birthdayPercent+'% off merch and tickets at checkout.':''):'Signed in.')
    :'Browse freely. To check out, <a href="/member-join.html">join free</a> or <a href="/club-login.html?next=/store.html%23checkout">sign in</a>.';
   drawGrid();drawCart();loadOrders();
+  loadStockists();
   if(location.hash==='#checkout'&&cart.length)openCheckout();
  }catch(error){$('store-state').textContent=error.message;$('store-state').className='club-status bad'}
 })();

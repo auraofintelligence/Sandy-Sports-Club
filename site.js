@@ -4,7 +4,7 @@ const pages = [
   ['index.html','Vision'],['sport-mixed-beach-volleyball.html','Beach volleyball'],['sports.html','All sand sports'],['flag-football.html','Flag football'],
   ['places.html','Three towns'],['programme.html','Events'],['film-club.html','Film club'],
   ['facilities.html','Facilities & assets'],['space-planner.html','Space planner'],
-  ['grants.html','Grants & investment'],['store.html','Store'],['donate.html','Donate & screen'],['join.html','Join / nominate'],
+  ['grants.html','Grants & investment'],['store.html','Store'],['sponsors.html','Sponsors'],['donate.html','Donate & screen'],['join.html','Join / nominate'],
   ['clubhouse.html','Clubhouse'],['member-home.html','My membership'],['club-admin.html','My Clubhouse'],
   ['webmaster-members.html','Members & onboarding'],['constitution.html','Constitution'],['sources.html','Sources']
 ];

@@ -13,14 +13,15 @@ async function refresh(){
  const session=await get('/api/session');
  if(!session?.authenticated||['member','webmaster_demo'].includes(session.identity?.role)||session.readOnly)return;
  const role=session.identity.role,week=new Date(Date.now()+10*3600000-7*86400000).toISOString().slice(0,10),month=today().slice(5,7);
- const [notices,todos,requests,verify,profiles,families,wishes,store]=await Promise.all([
+ const [notices,todos,requests,verify,profiles,families,wishes,store,sponsors]=await Promise.all([
   get('/api/committee/notices?summary=1'),get('/api/committee/todos'),role==='webmaster'?get('/api/webmaster/requests'):null,
-  get('/api/committee/verify-id'),get('/api/committee/member-profiles'),get('/api/committee/families'),get('/api/committee/requests?status=new'),get('/api/committee/store/orders?status=requested')]);
+  get('/api/committee/verify-id'),get('/api/committee/member-profiles'),get('/api/committee/families'),get('/api/committee/requests?status=new'),get('/api/committee/store/orders?status=requested'),get('/api/committee/sponsors')]);
  if(notices?.counts)badge('#committee/notices',notices.counts.unread+notices.counts.red,{urgent:notices.counts.red>0,label:notices.counts.unread+' unread, '+notices.counts.red+' overdue'});
  if(todos?.tasks){
   const mine=todos.tasks.filter(t=>!t.done&&!t.archived&&(!t.office||t.office===role||role==='webmaster'));
   badge('#committee/todos',mine.length,{urgent:mine.some(t=>t.dueDate&&t.dueDate<today()),label:mine.length+' open to-dos'});
  }
+ if(sponsors?.counts){const c=sponsors.counts;badge('/committee-sponsors.html',c.new+c.overdue+c.approvals,{urgent:c.overdue>0,label:c.new+' new, '+c.overdue+' overdue, '+c.approvals+' approvals'})}
  if(store?.counts&&store.canManage)badge('/store-admin.html',store.counts.requested,{label:store.counts.requested+' new store orders'});
  if(wishes?.counts)badge('/committee-requests.html',wishes.counts.new,{label:wishes.counts.new+' new wishes'});
  if(requests?.counters)badge('#requests',requests.counters.unread,{urgent:true,label:requests.counters.unread+' unread requests'});

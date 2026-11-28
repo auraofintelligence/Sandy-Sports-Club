@@ -1,0 +1,25 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#102d40">
+<title>Partner page | Sandy Sports Club</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/sponsors.css">
+<script defer src="/site.js"></script><script type="module" src="/sponsor.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="club-app-heading"><p class="eyebrow">SANDY SPORTS · PARTNER PAGE</p><h1 id="sp-title">Your partnership</h1>
+<p>This private page is just for you. Keep the link safe; the club can replace it any time.</p></div>
+<div id="sp-state" class="club-status" role="status">Loading…</div>
+<div id="sp-panel" hidden>
+ <section class="club-panel"><h2>Partnership</h2><p id="sp-summary"></p><h3>What the club has promised</h3><div id="sp-benefits"></div></section>
+ <section class="club-panel"><h2>Your listing on our sponsor wall</h2><p id="sp-listing-now"></p>
+  <form id="sp-listing"><div class="club-form-grid"><label>Name shown<input name="name" maxlength="120"></label><label>Website<input name="url" maxlength="300"></label></div>
+  <label>A line about you<textarea name="blurb" rows="2" maxlength="400"></textarea></label>
+  <label>Logo <small>(square works best)</small><input type="file" name="logo" accept="image/jpeg,image/png,image/webp"></label>
+  <button type="submit">Send for approval</button> <span id="sp-listing-status" role="status"></span></form></section>
+ <section class="club-panel" id="sp-products-section"><h2>Partner stockist products</h2>
+  <p>Products you would like club members to know about. Approved products appear under <strong>Partner stockists</strong> in the club store with a link to buy from you. The club never takes the sale.</p>
+  <div id="sp-products" class="stockist-grid"></div>
+  <form id="sp-product" class="member-workspace-form"><h3>Add a product</h3><div class="club-form-grid">
+   <label>Product<input name="name" required maxlength="120"></label><label>Price $ <small>(optional)</small><input name="price" inputmode="decimal"></label><label>Link to buy<input name="url" maxlength="300"></label></div>
+   <label>Description<textarea name="description" rows="2" maxlength="400"></textarea></label><label>Photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+   <button type="submit">Send for approval</button> <span id="sp-product-status" role="status"></span></form></section>
+</div>
+</main><div data-site-footer></div></body></html>

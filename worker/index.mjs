@@ -26,6 +26,7 @@ import {profilesEndpoint} from './profiles.mjs';
 import {announcementsEndpoint} from './announcements.mjs';
 import {requestsEndpoint} from './requests.mjs';
 import {storeEndpoint} from './store.mjs';
+import {sponsorsEndpoint} from './sponsors.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -80,6 +81,7 @@ async function route(req,env,path,effectiveIdentity){
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
  if(path==='/api/join')return joinEndpoint(req,env,path,identity);
+ if(path==='/api/sponsors'||path.startsWith('/api/sponsors/')||path==='/api/sponsor-portal'||path==='/api/committee/sponsors')return sponsorsEndpoint(req,env,path,identity);
  if(path==='/api/store'||path.startsWith('/api/store/')||path.startsWith('/api/committee/store/'))return storeEndpoint(req,env,path,identity);
  if(path==='/api/requests'||path==='/api/committee/requests')return requestsEndpoint(req,env,path,identity);
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);

@@ -1,7 +1,7 @@
 <!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102d40"><meta name="description" content="Sandy Sports club store: apparel, beach gear, Film Club merch, event tickets and donations. Working demo store.">
 <title>Store | Sandy Sports Club</title>
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/store.css">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/store.css"><link rel="stylesheet" href="/sponsors.css">
 <script defer src="/site.js"></script><script type="module" src="/store.js"></script>
 </head><body><div data-site-header></div><main class="club-app" id="main">
 <div class="store-demo-banner" role="note"><strong>Working demo store.</strong> <span id="store-notice">Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.</span></div>
@@ -12,6 +12,7 @@
  <section>
   <div class="store-filters"><label>Show<select id="store-category"><option value="">Everything</option></select></label><label>Search<input id="store-q" type="search" maxlength="60"></label></div>
   <div id="store-grid" class="store-grid"></div>
+  <section id="stockists" hidden><h2>Partner stockists</h2><p>Sports gear from our local partners. Buy direct from them: the club does not take the sale.</p><div id="stockist-grid" class="stockist-grid"></div></section>
  </section>
  <aside class="store-cart club-panel" aria-labelledby="cart-title">
   <div id="view-cart">

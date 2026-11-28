@@ -1,0 +1,19 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#102d40">
+<title>Sponsorship desk | Sandy Sports committee</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/sponsors.css">
+<script defer src="/site.js"></script><script type="module" src="/committee-sponsors.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="club-app-heading"><p class="eyebrow">COMMITTEE · SPONSORS AND SUPPORTERS</p><h1>Sponsorship desk</h1>
+<p><a href="/sponsors.html">Public sponsor page</a> · <a href="/club-admin.html">My Clubhouse</a></p></div>
+<div id="sd-state" class="club-status" role="status">Loading…</div>
+<div id="sd-panel" hidden>
+ <div class="club-form-grid"><label>Show<select id="sd-filter"><option value="open">Needs attention</option><option value="all">All</option><option value="new">New</option><option value="reviewing">In conversation</option><option value="agreed">Agreed</option><option value="active">Active partners</option><option value="declined">Declined</option><option value="ended">Ended</option></select></label>
+ <p data-manage><button type="button" id="sd-new" class="button coral">Add a sponsor</button></p></div>
+ <form id="sd-create" class="member-workspace-form" hidden data-manage><h2>Add a sponsor you have spoken to</h2><div class="club-form-grid">
+  <label>Business or person<input name="organisation" required maxlength="120"></label><label>Contact name<input name="contactName" maxlength="100"></label>
+  <label>Email<input name="email" maxlength="254"></label><label>Phone<input name="phone" maxlength="25"></label><label>Website<input name="website" maxlength="300"></label></div>
+  <label>What was discussed<textarea name="offer" rows="2" maxlength="2000"></textarea></label><button type="submit">Add</button> <button type="button" id="sd-create-cancel">Cancel</button> <span id="sd-create-status" role="status"></span></form>
+ <div class="sponsor-desk"><nav id="sd-list" class="sponsor-list" aria-label="Sponsors"></nav><div id="sd-detail" class="sponsor-detail club-panel"><p>Choose a sponsor.</p></div></div>
+</div>
+</main><div data-site-footer></div></body></html>
