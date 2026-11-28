@@ -5,7 +5,7 @@ import {isReadOnlyView} from './club-view-client.js';
 const OFFICES={webmaster:'Webmaster',president:'President',vice_president:'Vice President',secretary:'Secretary',assistant_secretary:'Assistant Secretary',treasurer:'Treasurer',committee:'Committee officer'};
 const TYPES=['Management committee','Founding meeting','Annual general meeting','General meeting','Special meeting','Working group','Informal discussion'];
 const OUTCOMES={carried:'Carried',lost:'Lost',deferred:'Deferred',withdrawn:'Withdrawn',noted:'Noted'};
-const STANDARD=['Welcome and apologies','Minutes of the last meeting','Correspondence','Treasurer’s report','General business','Next meeting'];
+const STANDARD=['Welcome and apologies','Recording of this meeting (rule 4B)','Minutes of the last meeting','Correspondence','Treasurer’s report','General business','Next meeting'];
 const STEPS=[['agenda','1 Agenda'],['day','2 On the day'],['minutes','3 Minutes'],['follow','4 Follow up']];
 const longDate=d=>d?new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'Australia/Brisbane'}).format(new Date(d+'T12:00:00+10:00')):'No date yet';
 const lines=s=>String(s||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean);
@@ -55,7 +55,9 @@ export function setupMeetingsDesk({api,esc:e,status,showDesk}){
  function dayStep(){
   const a=meeting.attendance;
   const quorum=a?(a.quorumRequired?a.present.length+' present of '+a.quorumRequired+' needed: '+(a.quorumMet?'quorum met':'quorum NOT met'):a.present.length+' present. Quorum not set yet.'):'';
-  return '<section class="mt-block"><h5>Who came</h5><form data-mt-attendance><fieldset'+dis()+'><div class="ops-form-grid">'+
+  const general=/general meeting|founding/i.test(meeting.type||'');
+  return '<p class="ops-boundary">'+(general?'Recording (rule 4B): this meeting is recorded and streamed to members. Point the camera at the chair and presenters, and show people the off-camera area.':'Recording (rule 4B): announce that the Secretary is recording to help write the minutes. Pause for confidential items and anything about a child.')+'</p>'+
+   '<section class="mt-block"><h5>Who came</h5><form data-mt-attendance><fieldset'+dis()+'><div class="ops-form-grid">'+
    '<label>Present (one per line)<textarea name="present" rows="4">'+e((a?.present||[]).join('\n'))+'</textarea></label>'+
    '<label>Apologies (one per line)<textarea name="apologies" rows="4">'+e((a?.apologies||[]).join('\n'))+'</textarea></label></div>'+
    '<label class="mt-narrow">Quorum (people needed, optional)<input type="number" name="quorumRequired" min="1" max="99" value="'+e(a?.quorumRequired??meeting.quorumDefault??'')+'"></label>'+
@@ -80,6 +82,7 @@ export function setupMeetingsDesk({api,esc:e,status,showDesk}){
    (text?'':'<p>No draft minutes yet.</p>')+
    '<form data-mt-minutes><fieldset'+dis()+'><label>Draft minutes<textarea name="text" rows="16" maxlength="20000">'+e(text||meeting.generatedMinutes)+'</textarea></label>'+
    '<div class="ops-actions"><button type="submit" class="mt-primary">Save draft minutes</button><button type="button" data-mt-rebuild>Rebuild from the agenda</button><button type="button" data-mt-download>Download minutes</button></div></fieldset></form>'+
+   '<p class="mt-help">Rule 4B: once these minutes are approved, delete the committee meeting recording and any transcript.</p>'+
    '<p class="ops-boundary">'+(meeting.minutesApproved?'These minutes are approved and locked.':'Approving minutes switches on once the club has an elected committee. Until then they stay as drafts.')+'</p>';
  }
  function followStep(){

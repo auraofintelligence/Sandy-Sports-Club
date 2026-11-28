@@ -7,7 +7,7 @@ export const AGM_JOBS=Object.freeze([
  {key:'venue',title:'Confirm AGM venue and accessibility',office:'secretary',offset:-42},
  {key:'accounts',title:'Prepare annual financial statements for review',office:'treasurer',offset:-35},
  {key:'review',title:'Arrange financial review or audit if the adopted rules require it',office:'treasurer',offset:-28},
- {key:'notice',title:'Issue notice of AGM and agenda to members (check constitution notice period)',office:'secretary',offset:-21},
+ {key:'notice',title:'Issue notice of AGM and agenda to members, saying it is recorded and streamed to members (rule 4B; check notice period)',office:'secretary',offset:-21},
  {key:'nominations-open',title:'Open nominations for committee positions',office:'secretary',offset:-21},
  {key:'nominations-close',title:'Close nominations and prepare ballot if needed',office:'secretary',offset:-7},
  {key:'president-report',title:'Prepare President annual report',office:'president',offset:-7},

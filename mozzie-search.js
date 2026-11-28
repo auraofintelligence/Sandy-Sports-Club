@@ -7,7 +7,7 @@ import {actor} from './how-it-works.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STOP=new Set('a an the to do i we how who what where can could is are of for in on my our it be does with at by and or me you your get'.split(' '));
 // Everyday words people use, mapped to the words the site uses.
-const SYN={approve:'publish',approves:'publish',approval:'publish',borrow:'kit loan ask dates',lend:'kit loan',gear:'kit',camera:'kit film',story:'news story',stories:'news story',stream:'live broadcast',streaming:'live broadcast',livestream:'live broadcast',
+const SYN={approve:'publish',approves:'publish',approval:'publish',borrow:'kit loan ask dates',lend:'kit loan',gear:'kit',camera:'kit film',story:'news story',stories:'news story',record:'recording minutes',recorded:'recording',recording:'recording meetings',transcript:'transcript recording',transcription:'transcript recording',transcribe:'transcript recording',zoom:'streamed recording',stream:'live broadcast streamed',streaming:'live broadcast',livestream:'live broadcast',
  kids:'child children safeguarding',kid:'child safeguarding',child:'children safeguarding',password:'access account sign',login:'sign access account',invite:'account access',minutes:'meetings',agm:'meetings agm',
  ad:'newsletter sponsor',ads:'newsletter sponsor',advertise:'newsletter sponsor',email:'newsletter notifications notice',emails:'newsletter notifications notice',buy:'store order',shop:'store',merch:'store',tickets:'store event',
  money:'store finance money',pay:'store finance',join:'joining join member',signup:'join joining',verified:'blue tick',verify:'blue tick',id:'blue tick',badge:'badges',rsvp:'event rsvp',calendar:'calendar event',

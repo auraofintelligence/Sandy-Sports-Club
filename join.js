@@ -4,7 +4,11 @@
 const form=document.querySelector('#join-form'), status=document.querySelector('#nomination-status');
 let online=false,widget=null;
 const OWNER='sbt4183@gmail.com';
-function nomination(){const d=new FormData(form);return ['Sandy Sports Club proposal: expression of interest','',`Name: ${d.get('name')}`,`Email: ${d.get('email')}`,`Town: ${d.get('town')}`,`Path: ${d.get('path')}`,`Sports and activities: ${d.get('interests')||'Not specified'}`,'',`What I can bring: ${d.get('offer')||'Not specified'}`,'','I understand this is an expression of interest, not paid membership or an appointment.'].join('\n')}
+function nomination(){const d=new FormData(form);return ['Sandy Sports Club proposal: expression of interest','',`Name: ${d.get('name')}`,`Email: ${d.get('email')}`,`Town: ${d.get('town')}`,`Path: ${d.get('path')}`,`Sports and activities: ${d.get('interests')||'Not specified'}`,'',`What I can bring: ${d.get('offer')||'Not specified'}`,'',...(d.get('path')==='Committee nomination'?['If elected, I agree to committee meetings being audio recorded by the Secretary to help write the minutes, and to general meetings I chair or speak at being recorded and streamed to members (draft constitution rule 4B).','']:[]),'I understand this is an expression of interest, not paid membership or an appointment.'].join('\n')}
+// Standing for office: agreeing to meeting recording (draft constitution rule 4B) is part of the nomination.
+const recBox=document.querySelector('#recording-consent'),recInput=recBox?.querySelector('input');
+function syncRecording(){const on=form?.elements.path?.value==='Committee nomination';if(recBox){recBox.hidden=!on;recInput.required=on;if(!on)recInput.checked=false}}
+form?.elements.path?.addEventListener('change',syncRecording);syncRecording();
 function uuid(){return crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16))}
 const submissionId=uuid();
 async function goOnline(siteKey){
@@ -21,7 +25,7 @@ async function sendOnline(){
  if(!token){status.textContent='Complete the verification check, then send.';return}
  const button=document.querySelector('#nomination-submit');button.disabled=true;status.textContent='Sending...';
  try{
-  const r=await fetch('/api/nominate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({submissionId,name:d.get('name'),email:d.get('email'),town:d.get('town'),pathway:d.get('path'),interests:d.get('interests'),offer:d.get('offer'),consent:d.get('consent')==='on',website:d.get('website')||'',turnstileToken:token})});
+  const r=await fetch('/api/nominate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({submissionId,name:d.get('name'),email:d.get('email'),town:d.get('town'),pathway:d.get('path'),interests:d.get('interests'),offer:d.get('offer'),consent:d.get('consent')==='on',recordingConsent:d.get('recording')==='on',website:d.get('website')||'',turnstileToken:token})});
   const body=await r.json().catch(()=>({}));
   if(r.ok){form.outerHTML='<div class="nomination-done" role="status" tabindex="-1" id="nomination-done"><h3>Thanks, we\'ve got it.</h3><p>Your expression of interest has reached the Sandy Sports organisers. It is not membership or an appointment; someone will be in touch if there is a next step.</p></div>';document.querySelector('#nomination-done')?.focus();return}
   status.textContent=body.error||'Your nomination could not be sent. Please try again.';

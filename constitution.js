@@ -64,6 +64,26 @@ Film club: ${val('film')}. Specify its mandate, reporting, budgets, editorial au
 
 (f) Until the first committee is elected, the founding organiser acts as Webmaster and applies Schedule 1 as drafted, subject to its adoption at the founding meeting.
 
+## 4B. Recording, streaming and transcribing meetings
+
+(a) The minutes are the club's record of every committee and general meeting. A recording or transcript only helps prepare them and never replaces them.
+
+(b) The Secretary, or the Assistant Secretary, records each committee meeting (audio) to help write the minutes. The recording is announced at the start of the meeting and noted in the minutes.
+
+(c) Recording is paused for any item the chair declares confidential and for any matter about a child. The minutes record only the decision on those items.
+
+(d) A committee meeting recording, and any transcript of it, is kept only by the Secretary in the club's records. It is not shared or published, and it is deleted when the minutes of that meeting are approved, unless the committee resolves to keep it for a reason recorded in the minutes.
+
+(e) General meetings, including the annual general meeting, are recorded and streamed live to members. The notice of the meeting says so. The camera faces the chair and presenters, an off-camera area is provided, and a member may speak off camera or put their point in writing. The recording is available to members until the next annual general meeting and is then deleted, unless a general meeting resolves otherwise.
+
+(f) Public forums and club events may be streamed and recorded publicly through the club's Island news and live channel, and shared with the Minjerribah Screen Media Network and the Straddie Noticeboard Network. Notice is given beforehand and at the venue. Nobody under 18 is shown without a parent's or carer's agreement.
+
+(g) Transcripts are made with tools the club controls, preferring software that runs on the officer's own device. Meeting audio is not uploaded to a service that keeps it or trains on it. Public recordings carry captions where practical.
+
+(h) Every person who stands for office agrees, in their nomination, to committee meetings being recorded under (b) to (d), and to general meetings they chair or speak at being recorded and streamed under (e). Members are told in each notice of meeting when (e) or (f) applies.
+
+(i) The Secretary is responsible for committee meeting recordings, transcripts and their deletion under this rule. The officers who hold Members and publishing access under Schedule 1 approve streams and replays, and the Film Club crew may operate the equipment under their direction.
+
 ## 5. Facilities, media and cultural authority
 
 ${val('assets')}

@@ -25,7 +25,7 @@ function switchOn(env){
   SANDY_MAIL_PROVIDER:'resend',SANDY_RESEND_API_KEY:'re_fictional_test_key',SANDY_MAIL_FROM:'alerts@sandy.test',SANDY_PUBLIC_ORIGIN:'https://sandy.test'});
 }
 const person=(n=1,extra={})=>({submissionId:randomUUID(),name:'Fictional Nominee '+n,email:'nominee'+n+'@example.test',town:'Dunwich (Goompi)',
- pathway:'Committee nomination',interests:'Beach volleyball',offer:'Fictional event skills',consent:true,website:'',turnstileToken:'pass-fictional',...extra});
+ pathway:'Committee nomination',interests:'Beach volleyball',offer:'Fictional event skills',consent:true,recordingConsent:true,website:'',turnstileToken:'pass-fictional',...extra});
 const ip=n=>({'cf-connecting-ip':'203.0.113.'+n,'user-agent':'FictionalBrowser/1.0'});
 
 test('switched off by default: no storage, no mail, form stays on email fallback',async t=>{
@@ -46,6 +46,7 @@ test('genuine nomination goes to the private register and alerts the owner witho
  assert.equal(res.status,202);assert.match((await res.json()).notice,/Thanks, we've got it/);
  assert.equal(f.count('club_people',"email='nominee1@example.test' AND status='interested' AND consent_contact=1"),1);
  assert.equal(f.count('club_nominations',"alert_state='sent' AND origin='form'"),1);
+ assert.equal(f.count('club_nominations',"recording_consent_utc IS NOT NULL"),1,'standing for office records agreement to meeting recording (rule 4B)');
  assert.equal(net.mail.length,1);
  const m=net.mail[0];
  assert.deepEqual(m.to,['sbt4183@gmail.com']);
@@ -156,4 +157,13 @@ test('alert mail headers cannot be injected and wrangler keeps nominations off w
  const cfg=JSON.parse(readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8'));
  assert.equal(cfg.vars.SANDY_NOMINATIONS_ENABLED,'disabled');assert.deepEqual(cfg.triggers.crons,['0 0 * * *','*/15 * * * *']);
  assert.ok(!('SANDY_RESEND_API_KEY' in cfg.vars)&&!cfg.send_email,'no mail secret or binding in config');
+});
+
+test('standing for office requires agreeing to meeting recording (draft constitution rule 4B)',async t=>{
+ const f=fixture(t,{nominations:true}),net=mockNetwork(t);switchOn(f.env);
+ const res=await f.request(null,'/api/nominate','POST',person(7,{recordingConsent:false}),'https://sandy.test',ip(7));
+ assert.equal(res.status,400);assert.match((await res.json()).error,/rule 4B/);
+ const ok=await f.request(null,'/api/nominate','POST',person(8,{pathway:'Film club / media crew',recordingConsent:false}),'https://sandy.test',ip(8));
+ assert.equal(ok.status,202,'other pathways do not need it');
+ assert.equal(f.count('club_nominations','recording_consent_utc IS NULL'),1);
 });

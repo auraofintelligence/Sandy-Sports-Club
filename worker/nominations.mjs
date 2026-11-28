@@ -33,7 +33,7 @@ export function summary(n){return 'New nomination: '+n.pathway+(n.town?', '+n.to
 function minimal(b){
  // Only the form's own fields, truncated, so an officer can release a false positive.
  if(!b||typeof b!=='object')return {};
- return {name:field(b.name,120),email:field(b.email,254),town:field(b.town,60),pathway:field(b.pathway,60),interests:field(b.interests,600),offer:field(b.offer,1500),consent:bool(b.consent)};
+ return {name:field(b.name,120),email:field(b.email,254),town:field(b.town,60),pathway:field(b.pathway,60),interests:field(b.interests,600),offer:field(b.offer,1500),consent:bool(b.consent),recordingConsent:bool(b.recordingConsent)};
 }
 export async function purge(db,ms=Date.now()){
  await db.batch([
@@ -53,6 +53,11 @@ export async function quarantine(db,{reason,detail='',ipHash='',userAgent='',dat
   .bind(qid,iso(ms),reason,field(detail,300),ipHash,field(userAgent,200),JSON.stringify(data),iso(ms+LIMITS.quarantineDays*864e5)).run();
  return {stored:true,id:qid};
 }
+// Standing for office includes agreeing to meeting recording (draft constitution rule 4B); the time is kept.
+async function ensureRecordingColumn(db){
+ const cols=new Set(((await db.prepare('PRAGMA table_info(club_nominations)').all()).results||[]).map(c=>c.name));
+ if(!cols.has('recording_consent_utc'))await db.prepare('ALTER TABLE club_nominations ADD COLUMN recording_consent_utc TEXT').run();
+}
 async function register(db,env,data,{nominationId,origin,ipHash}){
  const at=now(),email=data.email.toLowerCase();
  const known=await db.prepare('SELECT id FROM club_people WHERE lower(email)=? LIMIT 1').bind(email).first();
@@ -60,8 +65,9 @@ async function register(db,env,data,{nominationId,origin,ipHash}){
  const stmts=[];
  if(!known)stmts.push(db.prepare("INSERT INTO club_people(id,full_name,email,membership_class,status,town,consent_contact,consent_publication,source,notes,version,created_by,updated_by,created_utc,updated_utc) VALUES(?,?,?,'interested','interested',?,1,0,?,?,1,'public-nomination-form','public-nomination-form',?,?)")
   .bind(personId,data.name,data.email,data.town,'nomination:'+data.pathway,'Nominated via join.html: '+data.pathway,at,at));
- stmts.push(db.prepare("INSERT INTO club_nominations(id,person_id,created_utc,pathway,town,interests,offer,origin,ip_hash) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING")
-  .bind(nominationId,personId,at,data.pathway,data.town,data.interests,data.offer,origin,ipHash));
+ await ensureRecordingColumn(db);
+ stmts.push(db.prepare("INSERT INTO club_nominations(id,person_id,created_utc,pathway,town,interests,offer,origin,ip_hash,recording_consent_utc) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING")
+  .bind(nominationId,personId,at,data.pathway,data.town,data.interests,data.offer,origin,ipHash,data.recordingConsent?at:null));
  await db.batch(stmts);
  const n={id:nominationId,pathway:data.pathway,town:data.town};
  const sent=await sendAlert(env,{subject:summary(n),text:[summary(n),'','Open it in the admin area (sign in required):',adminLink(env,'nomination',nominationId),'','Personal details are kept in the admin area only.'].join('\n')});
@@ -73,6 +79,7 @@ function validate(data){
  if(!PATHWAYS.includes(data.pathway))return 'Choose how you want to contribute.';
  if(data.town&&!TOWNS.includes(data.town))return 'Choose a town from the list.';
  if(!data.consent)return 'Confirm that you understand this is an expression of interest.';
+ if(data.pathway==='Committee nomination'&&!data.recordingConsent)return 'Standing for office includes agreeing to meetings being recorded (draft constitution rule 4B). Tick that box to continue.';
  return '';
 }
 async function publicNominate(req,env){
@@ -115,7 +122,8 @@ export async function nominationsEndpoint(req,env,path,actor){
 }
 async function officer(req,env,path,actor,db){
  if(path==='/api/committee/nominations'&&req.method==='GET'){
-  const rows=await db.prepare('SELECT n.id,n.created_utc AS createdAt,n.pathway,n.town,n.interests,n.offer,n.origin,n.alert_state AS alertState,p.id AS personId,p.full_name AS name,p.email FROM club_nominations n JOIN club_people p ON p.id=n.person_id ORDER BY n.created_utc DESC LIMIT 200').all();
+  await ensureRecordingColumn(db);
+  const rows=await db.prepare('SELECT n.id,n.created_utc AS createdAt,n.recording_consent_utc AS recordingConsentAt,n.pathway,n.town,n.interests,n.offer,n.origin,n.alert_state AS alertState,p.id AS personId,p.full_name AS name,p.email FROM club_nominations n JOIN club_people p ON p.id=n.person_id ORDER BY n.created_utc DESC LIMIT 200').all();
   return json({nominations:rows.results||[],open:nominationsOpen(env),mailConfigured:mailConfigured(env)});
  }
  if(path==='/api/committee/spam'&&req.method==='GET'){
