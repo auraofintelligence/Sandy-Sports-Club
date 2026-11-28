@@ -1,5 +1,6 @@
 // My family: guardian-managed child profiles inside My Membership.
 import {picturePicker,pictureSrc} from './picture.js';
+import {choiceGroup,summary} from './choices.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const sports=['Mixed beach volleyball','Beach cricket','Flag football','Beach soccer','Beach rugby','AirBadminton','Beach tennis','Beach handball','Fitness and movement','Film club','Multi-sport'];
 const bands={'under16':'Under 16','16-17':'16 to 17'};
@@ -18,7 +19,7 @@ async function api(method='GET',data){
 }
 function render(){
  list.innerHTML=children.length?children.map(c=>'<article class="member-item with-pic" data-child="'+safe(c.id)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(c.picture,c.photoUrl&&c.photoUrl+'?v='+c.version))+'"><strong>'+safe(c.preferredName||c.fullName)+'</strong>'+
-  '<span>'+safe(c.fullName)+' · '+safe(c.age!=null?'Age '+c.age:bands[c.ageBand])+(c.interests.length?' · '+safe(c.interests.join(', ')):'')+'</span>'+
+  '<span>'+safe(c.fullName)+' · '+safe(c.age!=null?'Age '+c.age:bands[c.ageBand])+(c.interests.length?' · '+safe(summary(c.interests).join(', ')):'')+'</span>'+
   '<label class="club-consent"><input type="checkbox" data-photo '+(c.photoPermission?'checked':'')+'> Photos and video allowed</label>'+
   '<button type="button" data-remove>Remove</button></article>').join(''):'<p>No children added yet.</p>';
 }
@@ -27,15 +28,15 @@ async function load(){
  catch(error){list.innerHTML='<p>'+safe(error.status===401||error.status===403?'Family profiles are for adult member accounts.':error.message)+'</p>';form.hidden=true}
 }
 childPicker();
-$('family-sport-options').innerHTML=sports.map(v=>'<label><input name="interest" type="checkbox" value="'+safe(v)+'"> '+safe(v)+'</label>').join('');
+let kidSports;const drawKidSports=()=>{kidSports=choiceGroup($('family-sport-options'),{name:'sports',options:sports,presets:[{label:'Not sure yet',values:[]},{label:'Try everything',values:sports},{label:'Beach volleyball',values:['Mixed beach volleyball']},{label:'Film club',values:['Film club']}]})};drawKidSports();
 form.addEventListener('submit',async event=>{
  event.preventDefault();const d=new FormData(form);
  if(!childPicture){status.textContent='Pick an avatar or upload a photo for your child.';return}
  status.textContent='Saving…';
  try{
   ({children}=await api('POST',{action:'add',fullName:d.get('fullName'),preferredName:d.get('preferredName'),dob:d.get('dob'),relationship:d.get('relationship'),
-   gender:d.get('gender'),...childPicture,interests:d.getAll('interest'),photoPermission:form.elements.photoPermission.checked,guardianDeclaration:form.elements.guardianDeclaration.checked}));
-  form.reset();childPicker();render();status.textContent='Added.';
+   gender:d.get('gender'),...childPicture,interests:kidSports.value(),photoPermission:form.elements.photoPermission.checked,guardianDeclaration:form.elements.guardianDeclaration.checked}));
+  form.reset();childPicker();drawKidSports();render();status.textContent='Added.';
  }catch(error){status.textContent=error.message}
 });
 list.addEventListener('change',async event=>{

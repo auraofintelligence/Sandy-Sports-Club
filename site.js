@@ -5,8 +5,8 @@ const pages = [
   ['places.html','Three towns'],['programme.html','Events'],['film-club.html','Film club'],
   ['facilities.html','Facilities & assets'],['space-planner.html','Space planner'],
   ['grants.html','Grants & investment'],['donate.html','Donate & screen'],['join.html','Join / nominate'],
-  ['clubhouse.html','Clubhouse'],['members.html','Members'],['committee.html','Committee'],
-  ['webmaster.html','Webmaster'],['constitution.html','Constitution'],['sources.html','Sources']
+  ['clubhouse.html','Clubhouse'],['member-home.html','My membership'],['club-admin.html','My Clubhouse'],
+  ['webmaster-members.html','Members & onboarding'],['constitution.html','Constitution'],['sources.html','Sources']
 ];
 // The full page directory stays in the footer; the top navigation remains compact.
 const primaryPages = [
@@ -62,7 +62,7 @@ fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
 const footerSections = [
   ['Explore',[['sports.html','Sports catalogue'],['sports.html#survey','Sports survey'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club'],['image-gallery.html','Image gallery']]],
   ['Build & back',[['member-join.html','Join free'],['join.html','Get involved'],['interest.html','Express interest'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
-  ['Clubhouse & tools',[['clubhouse.html','Club proposal (illustrated)'],['member-home.html','My membership'],['members.html','Member demo'],['club-admin.html','My Clubhouse (working dashboard)'],['club-login.html','Secure sign-in'],['committee.html','Legacy planning demo'],['social-studio.html','Social Studio'],['social-studio-preview.html','Earlier browser drafts'],['webmaster.html','Webmaster demo']]]
+  ['Clubhouse & tools',[['clubhouse.html','Club proposal (illustrated)'],['member-home.html','My membership'],['club-admin.html','My Clubhouse (working dashboard)'],['club-login.html','Secure sign-in'],['social-studio.html','Social Studio']]]
 ];
 const footerNav = footerSections.map(([title,items])=>`<nav aria-label="${title}"><strong>${title}</strong>${items.map(([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`).join('');
 document.querySelector('[data-site-footer]')?.insertAdjacentHTML('afterbegin',`<footer><div class="footer-top"><div><a class="brand" href="/index.html"><img class="brand-mark" src="/assets/sandy-original-logo.png" alt=""><span>SANDY SPORTS<small>CLUB PROPOSAL</small></span></a><p>A proposal for island-wide sand sport, shared facilities, film and community life. No club or venue is yet established.</p></div>${footerNav}</div><div class="footer-bottom"><span>Proposal · No incorporated Sandy Sports Club or confirmed site is asserted.</span><span>Quandamooka Country · Minjerribah / North Stradbroke Island</span></div></footer><button class="guide-button" id="guide-button" aria-expanded="false" aria-controls="guide-panel"><img src="/assets/mozzie.webp" alt=""><span>Ask Mozzie</span></button><aside class="guide-panel" id="guide-panel" hidden><button class="guide-close" id="guide-close" aria-label="Close guide">×</button><img src="/assets/mozzie.webp" alt="Mozzie, Sandy Sports mascot"><h2>G'day, I'm Mozzie.</h2><p>Start with the sport ideas, explore three towns, or have your say on the proposal.</p><a href="/sports.html">Sports catalogue</a><a href="/places.html">Three towns</a><a href="/film-club.html">Film club</a><a href="/clubhouse.html">Clubhouse</a><a href="/join.html">Get involved</a></aside>`);
@@ -84,7 +84,7 @@ const committeeGuide=[
   route('committee-governance','Governance'),route('committee-sport','Sport operations'),
   route('committee-events','Events desk'),route('committee-film','Film governance'),
   route('committee-funding','Funding desk'),route('committee-assets','Asset desk'),
-  route('committee-members','Membership'),route('committee-publishing','Publishing'),route('social-studio','Social Studio'),route('social-studio-preview','Earlier browser drafts'),route('social-planner','Simple pattern calendar')
+  route('committee-members','Membership'),route('committee-publishing','Publishing'),route('social-studio','Social Studio')
 ];
 // Reading order follows a visitor's journey and includes each actual HTML page once.
 const pageGroups = [

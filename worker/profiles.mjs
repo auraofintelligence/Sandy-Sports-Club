@@ -26,7 +26,9 @@ export function photoResponse(dataUrl){
 }
 const pictureOf=r=>r&&r.picture_type?{type:r.picture_type,avatarId:r.avatar_id||''}:null;
 const photoUrl=id=>'/api/member/photo/'+id;
-const pick=(list,allowed)=>Array.isArray(list)?[...new Set(list.filter(x=>allowed.includes(x)))]:[];
+// Known options plus at most one free-text "Other: …" entry from the "add specifics" box.
+const pick=(list,allowed)=>{if(!Array.isArray(list))return [];const known=[...new Set(list.filter(x=>allowed.includes(x)))];
+ const other=list.find(x=>typeof x==='string'&&x.startsWith('Other: '));const text=other?other.slice(7).replace(/\s+/g,' ').trim().slice(0,80):'';return text?[...known,'Other: '+text]:known};
 const parse=s=>{try{return JSON.parse(s||'[]')}catch{return []}};
 const blank=()=>({picture:null,dob:'',verified:false,verifiedAt:null,bio:'',sports:[],skillLevel:'',availability:[],filmMember:false,crewSkills:[],helping:[],directoryVisible:false,showTown:false,shareContact:false,version:0});
 function shape(r){return r?{picture:pictureOf(r),dob:r.dob||'',verified:!!r.id_verified_utc,verifiedAt:r.id_verified_utc||null,bio:r.bio,sports:parse(r.sports_json),skillLevel:r.skill_level,availability:parse(r.availability_json),filmMember:!!r.film_member,

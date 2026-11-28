@@ -15,7 +15,6 @@
  <button type="button" data-member-tab="home" aria-current="page">My Clubhouse</button>
  <button type="button" data-member-tab="profile">My profile</button>
  <button type="button" data-member-tab="directory">Members</button>
- <button type="button" data-member-tab="sports">Sport &amp; training</button>
  <button type="button" data-member-tab="calendar">Calendar &amp; events</button>
  <button type="button" data-member-tab="volunteer">Helping out</button>
  <button type="button" data-member-tab="film">Film club</button>
@@ -58,7 +57,7 @@
  <p class="club-note">Only records expressly approved for members are shown. Draft committee messages are private.</p>
 </section>
 <section class="club-panel member-workspace-section" data-member-section="profile" hidden>
- <h2>My profile</h2><p>Tell other members what you play and how you can help. Nothing is shown to other members unless you turn on the directory.</p>
+ <h2>My profile</h2><p>Only shown to other members if you turn on the directory.</p>
  <div class="picture-current"><img id="profile-picture" alt="Your picture" src="/favicon.png"><p id="profile-verified"></p><details><summary>Change picture</summary><div id="profile-picture-picker"></div><p role="status" id="profile-picture-status"></p></details></div>
  <details class="member-workspace-form"><summary>My details</summary><form id="details-form"><div class="club-form-grid">
   <label>Name<input name="fullName" disabled></label><label>What we call you<input name="preferredName" maxlength="60"></label>
@@ -68,18 +67,19 @@
  <button type="submit">Save details</button> <span role="status" id="details-status"></span></form></details>
  <form id="profile-form" class="member-workspace-form">
   <label>About me <small>(optional, 400 characters)</small><textarea name="bio" rows="3" maxlength="400"></textarea></label>
-  <fieldset><legend>Sports I play or want to try</legend><div id="profile-sports"></div></fieldset>
+  <fieldset><legend>Sports</legend><div id="profile-sports" class="choice-group"></div></fieldset>
   <label>My level<select name="skillLevel"><option value="">Not saying</option><option value="new">New to it</option><option value="social">Social</option><option value="competitive">Competitive</option><option value="coach">I coach</option></select></label>
-  <fieldset><legend>When I'm usually free</legend><div id="profile-availability"></div></fieldset>
+  <fieldset><legend>When I'm free</legend><div id="profile-availability" class="choice-group"></div></fieldset>
   <label class="club-consent"><input type="checkbox" name="filmMember"> I'm in the Film Club</label>
-  <fieldset><legend>Film and media crew skills</legend><div id="profile-crew"></div></fieldset>
-  <fieldset><legend>I can help with</legend><div id="profile-helping"></div></fieldset>
+  <fieldset><legend>Film crew skills</legend><div id="profile-crew" class="choice-group"></div></fieldset>
+  <fieldset><legend>I can help with</legend><div id="profile-helping" class="choice-group"></div></fieldset>
   <fieldset><legend>Who can see me</legend>
    <label class="club-consent"><input type="checkbox" name="directoryVisible"> Show me in the member directory</label>
    <label class="club-consent"><input type="checkbox" name="showTown"> Show my town</label>
    <label class="club-consent"><input type="checkbox" name="shareContact"> Share my email and mobile with members I connect with</label>
   </fieldset>
-  <button type="submit">Save profile</button><p role="status" id="profile-status"></p>
+  <button type="submit">Save profile</button> <button type="button" id="profile-preview-button">See how others see me</button><p role="status" id="profile-status"></p>
+  <div id="profile-preview" hidden></div>
  </form>
 </section>
 <section class="club-panel member-workspace-section" data-member-section="directory" hidden>
@@ -99,7 +99,7 @@
   <label>Your relationship<select name="relationship"><option value="parent">Parent</option><option value="guardian">Legal guardian</option><option value="carer">Carer</option><option value="grandparent">Grandparent</option><option value="other">Other, with the parent's authority</option></select></label>
  </div>
  <fieldset><legend>Their picture</legend><div id="family-picture"></div></fieldset>
- <fieldset><legend>Sports they would like to try</legend><div id="family-sport-options"></div></fieldset>
+ <fieldset><legend>Sports to try</legend><div id="family-sport-options" class="choice-group"></div></fieldset>
  <label class="club-consent"><input type="checkbox" name="photoPermission"> The club may use photos or video of my child in club media. You can change this any time.</label>
  <label class="club-consent"><input type="checkbox" name="guardianDeclaration" required> I am this child's parent or legal guardian, or I have their authority to register them.</label>
  <button type="submit">Add child</button><p role="status" id="family-status"></p></form>

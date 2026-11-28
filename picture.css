@@ -14,3 +14,7 @@ body.needs-picture #member-panel{display:none!important}
 #picture-step{max-width:900px}
 .verified-tick{display:inline-flex;align-items:center;justify-content:center;width:1.15em;height:1.15em;margin-left:.3em;border-radius:50%;background:#1d9bf0;color:#fff;font-size:.8em;font-weight:700;line-height:1;vertical-align:.05em}
 #wm-verify{border:2px solid #1d9bf0;border-radius:12px;padding:1rem;margin:1rem 0}
+.choice-group{display:grid;gap:.5rem}
+.choice-group select,.choice-group input[data-other]{max-width:28rem}
+.choice-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:.25rem .8rem}
+#profile-preview{margin-top:1rem;padding:1rem;border:2px dashed #bfd8d0;border-radius:12px}

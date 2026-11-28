@@ -467,6 +467,8 @@ export const PUBLIC_FILES=Object.freeze([
  "committee-requests.html",
  "committee-requests.js",
  "wish-requests.js",
+ "grant-register.js",
+ "choices.js",
  "member-calendar.html",
  "member-crew.html",
  "member-equipment.html",
