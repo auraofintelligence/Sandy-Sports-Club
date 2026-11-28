@@ -344,6 +344,7 @@ export const PUBLIC_FILES=Object.freeze([
  "club-agm.js",
  "club-members-desks.js",
  "club-events.js",
+ "club-programme-desks.js",
  "calendar-ui.js",
  "member-calendar-tab.js",
  "calendar.css",

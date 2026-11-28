@@ -5,6 +5,7 @@ import {setupMeetingsDesk} from './club-meetings.js?v=20261128';
 import {setupAgmDesk} from './club-agm.js?v=20261128';
 import {setupMembersDesks,MEMBER_DESKS} from './club-members-desks.js?v=20261128';
 import {setupEventsDesk} from './club-events.js?v=20261128';
+import {setupProgrammeDesks,PROGRAMME_DESKS} from './club-programme-desks.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
  {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
@@ -45,6 +46,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const agmDesk=setupAgmDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const membersDesk=setupMembersDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const eventsDesk=setupEventsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
+ const programmeDesk=setupProgrammeDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
  const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
@@ -76,7 +78,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
  const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -161,11 +163,12 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
-  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();
+  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();eventsDesk.close();programmeDesk.close();
   if(scroll)window.scrollTo({top:0,behavior:'auto'});
   if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingsDesk.open();return}
   if(key==='agm'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await agmDesk.open();return}
   if(key==='events'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await eventsDesk.open();return}
+  if(PROGRAMME_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await programmeDesk.open(key);return}
   if(MEMBER_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await membersDesk.open(key);return}
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;

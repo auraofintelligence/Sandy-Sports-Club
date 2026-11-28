@@ -431,3 +431,19 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 #committee-events-desk form,#committee-events-desk fieldset{display:grid;gap:.6rem;border:0;padding:0;margin:0;min-width:0}
 #committee-events-desk form button[type=submit]{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
 @media(max-width:620px){.ev-jobs li{grid-template-columns:1fr}.ev-job-actions{justify-content:flex-start}}
+/* Sport, venues, film and results desks */
+#committee-programme-desk form,#committee-programme-desk fieldset{display:grid;gap:.6rem;border:0;padding:0;margin:0;min-width:0}
+#committee-programme-desk label{display:grid;gap:.3rem;font-weight:700;font-size:.85rem}
+#committee-programme-desk .ops-check{display:flex;align-items:center;gap:.5rem}
+#committee-programme-desk input:not([type=checkbox]),#committee-programme-desk select,#committee-programme-desk textarea{width:100%;min-width:0;padding:.55rem;border:1px solid #a9c6c0;border-radius:8px;font:inherit}
+#committee-programme-desk form button[type=submit],#committee-programme-desk .pd-publish>button{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
+#committee-programme-desk .ops-actions button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.5rem .8rem;font-weight:800;cursor:pointer}
+#committee-programme-desk .ops-actions .pd-cancel{border-color:#9b2520;color:#9b2520}
+.pd-publish{margin:1rem 0;padding:.8rem;border:1px solid #c8dfd9;border-radius:10px;background:#f6fbfa;display:grid;gap:.5rem}.pd-publish h5,.mt-detail h5{margin:.2rem 0;font-size:1rem;color:#164f59}
+.pd-insight .pd-bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem}
+.pd-bars h5{margin:.5rem 0}.pd-bars p{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) 2rem;gap:.5rem;align-items:center;margin:.25rem 0;font-size:.85rem}
+.pd-bars b{display:block;height:.7rem;border-radius:6px;background:linear-gradient(90deg,#0d7a88 var(--w),#e3efec var(--w))}.pd-bars em{font-style:normal;font-weight:800;color:#164f59}
+#pd-desk-title:focus{outline:none}
+.mt-list button span:empty{display:none}
+#committee-programme-desk label.ops-check,#committee-events-desk label.ops-check,#committee-members-desk label.ops-check,#committee-agm label.ops-check{display:flex!important;justify-content:flex-start;align-items:center;gap:.55rem;grid-template-columns:none}
+#committee-programme-desk .ops-check input,#committee-events-desk .ops-check input,#committee-members-desk .ops-check input,#committee-agm .ops-check input{flex:0 0 auto;width:1.2rem!important;height:1.2rem;margin:0}
