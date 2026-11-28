@@ -21,6 +21,7 @@ import {financeEndpoint} from './finance.mjs';
 import {nominationsEndpoint,dailyDigest} from './nominations.mjs';
 import {surveyEndpoint} from './survey.mjs';
 import {joinEndpoint,joinOpen} from './join.mjs';
+import {familyEndpoint} from './family.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -75,6 +76,7 @@ async function route(req,env,path,effectiveIdentity){
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
  if(path==='/api/join')return joinEndpoint(req,env,path,identity);
+ if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
  if(path==='/api/library'||path.startsWith('/api/library/'))return libraryEndpoint(req,env,path,identity);
  if(path==='/api/member/safeguards'||path==='/api/committee/safeguards')return safeguardsEndpoint(req,env,path,identity);
  if(['/api/member/preview','/api/member/workspace','/api/member/preferences','/api/member/interest','/api/member/data-export','/api/member/rsvp','/api/member/calendar.ics'].includes(path))
