@@ -48,3 +48,10 @@ test('three failed sign-ins lock that account on that connection for 15 minutes;
  for(let i=0;i<3;i++)await f.call(null,'/api/auth/login','POST',{username:'fictional.founder',password:'wrong-one'},401);
  await f.call(null,'/api/auth/login','POST',{username:'fictional.founder',password:'sandy77'},429);
 });
+test('joining checks Turnstile when it is configured',async t=>{
+ const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';f.env.SANDY_TURNSTILE_SECRET='x';f.env.SANDY_TURNSTILE_SITE_KEY='y';
+ const realFetch=globalThis.fetch;let verdict=false;globalThis.fetch=async()=>new Response(JSON.stringify({success:verdict}));t.after(()=>{globalThis.fetch=realFetch});
+ await f.call(null,'/api/join','POST',person({turnstileToken:'bad'}),403);
+ verdict=true;await f.call(null,'/api/join','POST',person({turnstileToken:'good'}),201);
+ assert.equal((await f.call(null,'/api/public-config')).turnstileSiteKey,'y');
+});
