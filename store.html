@@ -1,0 +1,27 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102d40"><meta name="description" content="Sandy Sports club store: apparel, beach gear, Film Club merch, event tickets and donations. Working demo store.">
+<title>Store | Sandy Sports Club</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/store.css">
+<script defer src="/site.js"></script><script type="module" src="/store.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="store-demo-banner" role="note"><strong>Working demo store.</strong> <span id="store-notice">Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.</span></div>
+<div class="club-app-heading"><p class="eyebrow">SANDY SPORTS · STORE</p><h1>Club store</h1>
+<p>Kit, beach gear, Film Club merch, event tickets and donations. Members get member prices, plus 10% off in their birthday month.</p></div>
+<div id="store-state" class="club-status" role="status">Loading…</div>
+<div class="store-layout">
+ <section>
+  <div class="store-filters"><label>Show<select id="store-category"><option value="">Everything</option></select></label><label>Search<input id="store-q" type="search" maxlength="60"></label></div>
+  <div id="store-grid" class="store-grid"></div>
+ </section>
+ <aside class="store-cart club-panel" aria-labelledby="cart-title">
+  <h2 id="cart-title">Your order</h2>
+  <div id="cart-lines"><p>Nothing added yet.</p></div>
+  <div id="cart-totals"></div>
+  <label>Note for the Treasurer <small>(optional)</small><textarea id="cart-note" rows="2" maxlength="500" placeholder="Collection town, sizing questions…"></textarea></label>
+  <button type="button" id="cart-send" class="button coral" disabled>Send order request</button>
+  <p id="cart-status" role="status" class="club-note"></p>
+  <p class="club-note">No payment is taken. The Treasurer will confirm stock and collection.</p>
+  <div id="my-orders"></div>
+ </aside>
+</div>
+</main><div data-site-footer></div></body></html>

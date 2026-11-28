@@ -62,6 +62,11 @@
 !/committee-requests.js
 !/wish-requests.js
 !/grant-register.js
+!/store.html
+!/store.js
+!/store.css
+!/store-admin.html
+!/store-admin.js
 !/choices.js
 !/member-calendar.html
 !/member-crew.html

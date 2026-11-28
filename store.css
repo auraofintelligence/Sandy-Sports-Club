@@ -1,0 +1,32 @@
+/* Sandy Sports demo store */
+.store-demo-banner{margin:0 0 1rem;padding:.8rem 1rem;border-radius:12px;background:#fff4d6;border:2px solid #e3a923;color:#4a3500;font-size:.95rem}
+.store-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:1.2rem;align-items:start}
+@media (max-width:900px){.store-layout{grid-template-columns:1fr}.store-cart{position:static!important}}
+.store-filters{display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:1rem}
+.store-filters label{display:flex;flex-direction:column;gap:.25rem;font-weight:700;font-size:.85rem}
+.store-filters select,.store-filters input{min-height:40px;padding:.4rem .6rem;border:1px solid #b8d3cc;border-radius:8px;font:inherit}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem}
+.store-card{display:flex;flex-direction:column;background:#fff;border:1px solid #d5e6e1;border-radius:14px;overflow:hidden}
+.store-card>img,.store-tile{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;object-fit:cover;color:#fff;font-size:2.4rem;font-weight:800;letter-spacing:.05em}
+.store-body{display:flex;flex-direction:column;gap:.35rem;padding:.8rem;flex:1}
+.store-body h3{margin:.1rem 0;font-size:1.05rem}
+.store-body p{margin:0;font-size:.9rem}
+.store-when{font-weight:700;color:#b8432f}
+.store-price{font-weight:800;font-size:1rem!important;margin-top:auto!important}
+.store-controls{display:flex;flex-wrap:wrap;gap:.45rem;align-items:flex-end}
+.store-controls label{display:flex;flex-direction:column;font-size:.75rem;font-weight:700}
+.store-controls select,.store-controls input{min-height:36px;padding:.3rem;border:1px solid #b8d3cc;border-radius:7px;font:inherit}
+.store-controls input[data-qty]{width:4.2rem}
+.store-amounts{display:flex;flex-wrap:wrap;gap:.4rem;align-items:flex-end}
+.store-amounts button{min-height:36px;padding:.3rem .7rem;border-radius:999px;border:2px solid #c69214;background:#fff;font-weight:800;cursor:pointer}
+.store-amounts input{width:5.5rem}
+.store-cart{position:sticky;top:1rem}
+.cart-line{display:flex;justify-content:space-between;gap:.5rem;padding:.3rem 0;border-bottom:1px solid #e4efec;font-size:.9rem}
+.cart-total{font-weight:800;border-bottom:0}
+.link-button{background:none;border:0;padding:0 .2rem;color:#0a7481;cursor:pointer;font:inherit;min-height:0}
+.store-admin-tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+.store-admin-tabs button[aria-current="page"]{background:#102d40;color:#fff}
+.store-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.store-table th,.store-table td{padding:.45rem;border-bottom:1px solid #e4efec;text-align:left;vertical-align:top}
+.store-table img{width:44px;height:44px;object-fit:cover;border-radius:8px}
+.store-report{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}

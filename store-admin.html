@@ -1,0 +1,52 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#102d40">
+<title>Store admin | Sandy Sports committee</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/store.css">
+<script defer src="/site.js"></script><script type="module" src="/store-admin.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="store-demo-banner" role="note"><strong>Working demo store.</strong> The club has no bank account. No payment is taken and orders are requests only until further notice.</div>
+<div class="club-app-heading"><p class="eyebrow">TREASURER · STORE</p><h1>Store admin</h1><p><a href="/store.html">View the store</a> · <a href="/club-admin.html">My Clubhouse</a></p></div>
+<div id="sa-state" class="club-status" role="status">Loading…</div>
+<div id="sa-panel" hidden>
+<nav class="store-admin-tabs" aria-label="Store admin sections">
+ <button type="button" data-tab="orders" aria-current="page">Orders</button><button type="button" data-tab="products">Products</button>
+ <button type="button" data-tab="import">Batch upload &amp; export</button><button type="button" data-tab="report">Reports</button>
+</nav>
+<section data-pane="orders" class="club-panel">
+ <div class="club-form-grid"><label>Show<select id="sa-order-filter"><option value="open">Open</option><option value="requested">New requests</option><option value="">All</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label></div>
+ <p class="club-note">Confirming an order takes its items out of stock. Cancelling a confirmed order puts them back.</p>
+ <div id="sa-orders"></div>
+</section>
+<section data-pane="products" class="club-panel" hidden>
+ <p><button type="button" id="sa-new" class="button coral" data-manage>New product</button></p>
+ <form id="sa-form" class="member-workspace-form" hidden>
+  <h2 id="sa-form-title">Product</h2>
+  <div class="club-form-grid">
+   <label>SKU<input name="sku" required maxlength="40" placeholder="APP-TEE-01"></label><label>Name<input name="name" required maxlength="120"></label>
+   <label>Type<select name="kind"><option value="merch">Merch</option><option value="ticket">Event ticket</option><option value="donation">Donation</option></select></label>
+   <label>Category<input name="category" maxlength="40" list="sa-categories"></label>
+   <label>Status<select name="status"><option value="draft">Draft (hidden)</option><option value="active">Live in store</option><option value="archived">Archived</option></select></label>
+   <label>Price $<input name="price" required inputmode="decimal" placeholder="35.00"></label><label>Member price $<input name="member_price" inputmode="decimal"></label><label>Cost $ <small>(for margin)</small><input name="cost" inputmode="decimal"></label>
+   <label>Sort order<input name="sort" inputmode="numeric" placeholder="100"></label>
+   <label>Event date<input type="date" name="event_date"></label><label>Event time<input name="event_time" maxlength="40"></label><label>Venue<input name="venue" maxlength="120"></label>
+  </div>
+  <label>Sizes, options and stock <small>Format: S:5|M:10|L:8. Own price: Adult@15:80. Blank stock means unlimited: One size:</small><input name="variants" required maxlength="1200"></label>
+  <label>Description<textarea name="description" rows="3" maxlength="600"></textarea></label>
+  <p><button type="submit">Save product</button> <button type="button" id="sa-cancel">Close</button> <span id="sa-form-status" role="status"></span></p>
+  <p id="sa-photo-row" hidden><label>Product photo <input type="file" id="sa-photo" accept="image/jpeg,image/png,image/webp"></label> <button type="button" id="sa-photo-remove">Remove photo</button></p>
+ </form>
+ <datalist id="sa-categories"></datalist>
+ <div class="table-scroll"><table class="store-table" id="sa-products"></table></div>
+</section>
+<section data-pane="import" class="club-panel" hidden>
+ <h2>Export</h2><p><button type="button" data-export="products">Download products CSV</button> <button type="button" data-export="orders">Download orders CSV</button></p>
+ <p class="club-note">The products CSV can be edited in Excel or Google Sheets and uploaded straight back. Rows are matched by SKU: existing SKUs update, new SKUs are added.</p>
+ <h2 data-manage>Batch upload</h2>
+ <div data-manage><label>CSV file <input type="file" id="sa-csv-file" accept=".csv,text/csv"></label>
+ <label>Or paste CSV<textarea id="sa-csv" rows="6" placeholder="sku,name,category,kind,status,price,member_price,cost,variants,event_date,event_time,venue,description,sort"></textarea></label>
+ <p><button type="button" id="sa-preview">Preview changes</button> <button type="button" id="sa-apply" class="button coral" disabled>Apply import</button></p>
+ <div id="sa-import-result"></div></div>
+</section>
+<section data-pane="report" class="club-panel" hidden><div id="sa-report"></div></section>
+</div>
+</main><div data-site-footer></div></body></html>
