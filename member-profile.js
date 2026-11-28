@@ -2,7 +2,7 @@
 import {picturePicker,pictureSrc,verifiedBadge} from './picture.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const levels={new:'New to it',social:'Social',competitive:'Competitive',coach:'Coach'};
-const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null;
+const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null,details=null;
 async function api(path,method='GET',data){
  const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
  const payload=await response.json().catch(()=>({}));
@@ -52,7 +52,8 @@ async function loadRoster(){
 }
 async function load(){
  try{
-  ({profile,options,gender,photoUrl}=await api('/api/member/profile'));
+  ({profile,options,gender,photoUrl,details}=await api('/api/member/profile'));
+  const df=$('details-form');for(const k of ['fullName','preferredName','email','mobile','town','audienceRegion'])df.elements[k].value=details[k]||'';df.elements.contactConsent.checked=details.contactConsent;
   const who={dob:profile.dob,gender};
   showPicture();
   picturePicker($('profile-picture-picker'),{who,current:profile.picture,name:'profile-avatar',onChange:c=>savePicture(c,$('profile-picture-status'))});
@@ -74,6 +75,11 @@ form.addEventListener('submit',async event=>{
    showTown:form.elements.showTown.checked,shareContact:form.elements.shareContact.checked}));
   fill();$('profile-status').textContent='Saved.';loadDirectory();loadRoster();
  }catch(error){$('profile-status').textContent=error.message}
+});
+$('details-form').addEventListener('submit',async e=>{
+ e.preventDefault();const f=e.target;$('details-status').textContent='Saving…';
+ try{await api('/api/member/details','POST',{preferredName:f.elements.preferredName.value,mobile:f.elements.mobile.value,town:f.elements.town.value,audienceRegion:f.elements.audienceRegion.value,contactConsent:f.elements.contactConsent.checked});$('details-status').textContent='Saved.'}
+ catch(error){$('details-status').textContent=error.message}
 });
 $('directory-list').addEventListener('click',async event=>{
  const act=event.target.dataset?.act;if(!act)return;

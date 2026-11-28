@@ -35,7 +35,7 @@ const pair=(a,b)=>a<b?[a,b]:[b,a];
 async function requireMember(env,db,identity){
  requireRole(identity,['member']);
  if(!membersOpen(env))fail(409,'Member self-service is not open yet.','club_not_established');
- const me=await db.prepare("SELECT p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.gender FROM club_people p JOIN club_accounts a ON a.id=p.account_id WHERE p.account_id=? AND p.status='active' AND a.state='active' LIMIT 1").bind(identity.id).first();
+ const me=await db.prepare("SELECT p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.gender,p.audience_region,p.consent_contact FROM club_people p JOIN club_accounts a ON a.id=p.account_id WHERE p.account_id=? AND p.status='active' AND a.state='active' LIMIT 1").bind(identity.id).first();
  if(!me)fail(409,'There is no active membership linked to this account.','membership_not_active');
  if((await memberSafeguardFlags(db,identity.id)).ageBand!=='adult')fail(403,'Member profiles are for adult members.','adult_required');
  await ensureProfileTables(env,db);
@@ -108,9 +108,17 @@ export async function profilesEndpoint(req,env,path,identity){
   await audit(db,identity,'member_picture_saved','profile',identity.id,at).run();
   return json({ok:true,profile:shape(await db.prepare('SELECT * FROM club_member_profiles WHERE account_id=?').bind(identity.id).first()),photoUrl:type==='photo'?photoUrl(identity.id):null});
  }
+ if(path==='/api/member/details'&&req.method==='POST'){
+  const b=await payload(req,2000),town=field(b.town,100),region=field(b.audienceRegion,20),mobile=field(b.mobile,25),preferred=field(b.preferredName,60),at=now();
+  if(!['local','regional','tourist','other'].includes(region))fail(400,'Choose your connection to Straddie.','invalid_details');
+  if(mobile&&!/^[+0-9 ()-]{7,25}$/.test(mobile))fail(400,'Check the mobile number or leave it blank.','invalid_details');
+  await db.prepare("UPDATE club_people SET preferred_name=?,town=?,audience_region=?,mobile=?,consent_contact=?,version=version+1,updated_by=?,updated_utc=? WHERE account_id=? AND status='active'").bind(preferred,town,region,mobile,b.contactConsent===true?1:0,identity.id,at,identity.id).run();
+  await audit(db,identity,'member_details_updated','person',identity.id,at).run();
+  return json({ok:true});
+ }
  if(path==='/api/member/profile'){
   const row=await db.prepare('SELECT * FROM club_member_profiles WHERE account_id=?').bind(identity.id).first();
-  if(req.method==='GET')return json({profile:shape(row),gender:me.gender||'',photoUrl:row?.picture_type==='photo'?photoUrl(identity.id):null,name:me.preferred_name||me.full_name,options:{sports:SPORTS,crew:CREW,helping:HELPING,availability:AVAILABILITY,skills:SKILLS.slice(1)}});
+  if(req.method==='GET')return json({profile:shape(row),gender:me.gender||'',details:{fullName:me.full_name,preferredName:me.preferred_name,town:me.town,audienceRegion:me.audience_region,mobile:me.mobile,email:me.email,contactConsent:!!me.consent_contact},photoUrl:row?.picture_type==='photo'?photoUrl(identity.id):null,name:me.preferred_name||me.full_name,options:{sports:SPORTS,crew:CREW,helping:HELPING,availability:AVAILABILITY,skills:SKILLS.slice(1)}});
   if(req.method!=='POST')fail(405,'Use the profile form.','method_not_allowed');
   const b=await payload(req,6000),expected=version(b.version);
   if(expected!==(row?.version||0))fail(409,'Your profile changed in another window. Reload before saving.','conflict');

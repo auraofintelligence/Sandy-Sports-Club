@@ -60,6 +60,12 @@
 <section class="club-panel member-workspace-section" data-member-section="profile" hidden>
  <h2>My profile</h2><p>Tell other members what you play and how you can help. Nothing is shown to other members unless you turn on the directory.</p>
  <div class="picture-current"><img id="profile-picture" alt="Your picture" src="/favicon.png"><p id="profile-verified"></p><details><summary>Change picture</summary><div id="profile-picture-picker"></div><p role="status" id="profile-picture-status"></p></details></div>
+ <details class="member-workspace-form"><summary>My details</summary><form id="details-form"><div class="club-form-grid">
+  <label>Name<input name="fullName" disabled></label><label>What we call you<input name="preferredName" maxlength="60"></label>
+  <label>Email<input name="email" disabled></label><label>Mobile<input type="tel" name="mobile" maxlength="25"></label>
+  <label>Town<input name="town" maxlength="100"></label><label>Connection to Straddie<select name="audienceRegion"><option value="local">Island local</option><option value="regional">Regional visitor</option><option value="tourist">Holiday visitor</option><option value="other">Other</option></select></label>
+ </div><label class="club-consent"><input type="checkbox" name="contactConsent"> Email me about come-and-try days and club news.</label>
+ <button type="submit">Save details</button> <span role="status" id="details-status"></span></form></details>
  <form id="profile-form" class="member-workspace-form">
   <label>About me <small>(optional, 400 characters)</small><textarea name="bio" rows="3" maxlength="400"></textarea></label>
   <fieldset><legend>Sports I play or want to try</legend><div id="profile-sports"></div></fieldset>
