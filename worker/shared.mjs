@@ -1,6 +1,8 @@
 // Sandy Sports server-only utilities. Not a public-browser module.
 export const STAFF=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
 export const APPROVERS=['webmaster','president','secretary'];
+// Officers who run membership: member list, announcements and RSVPs. Children stay with safeguarding officers (webmaster, president, secretary).
+export const MEMBER_ADMIN=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer'];
 const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 export class ApiError extends Error{
  constructor(status,message,code='request_failed'){super(message);this.status=status;this.code=code}

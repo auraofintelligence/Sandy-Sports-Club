@@ -11,7 +11,7 @@ async function join(f,username){
 const yearsAgo=n=>new Date(Date.now()+10*3600000-n*365.25*86400000).toISOString().slice(0,10);
 const kid=(extra={})=>({action:'add',fullName:'Fictional Junior',preferredName:'Juni',dob:yearsAgo(9.5),relationship:'parent',interests:['Mixed beach volleyball'],photoPermission:false,guardianDeclaration:true,gender:'male',avatarId:'angler-14',...extra});
 test('guardian adds, updates and removes a child; other members and officers without Webmaster cannot see it',async t=>{
- const f=fixture(t,{actors:[['web','webmaster'],['sec','secretary']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
+ const f=fixture(t,{actors:[['web','webmaster'],['sec','secretary'],['other','committee'],['treasurer','treasurer']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  const mum=await join(f,'fictional.mum'),other=await join(f,'fictional.other');
  await f.call(mum,'/api/member/family','POST',kid({guardianDeclaration:false}),400);
  await f.call(mum,'/api/member/family','POST',kid({dob:yearsAgo(19)}),400);
@@ -23,7 +23,9 @@ test('guardian adds, updates and removes a child; other members and officers wit
  assert.equal((await f.call(other,'/api/member/family')).children.length,0);
  const child=added.children[0];
  await f.call(other,'/api/member/family','POST',{action:'remove',id:child.id,version:child.version},404);
- await f.call('sec','/api/committee/families',undefined,undefined,403);
+ await f.call('other','/api/committee/families',undefined,undefined,403);
+ await f.call('treasurer','/api/committee/families',undefined,undefined,403);
+ assert.equal((await f.call('sec','/api/committee/families')).children.length,1);
  const all=await f.call('web','/api/committee/families');
  assert.equal(all.children.length,1);assert.equal(all.children[0].guardian.username,'fictional.mum');
  const updated=await f.call(mum,'/api/member/family','POST',{action:'update',id:child.id,version:child.version,photoPermission:true,dob:yearsAgo(16.5)});

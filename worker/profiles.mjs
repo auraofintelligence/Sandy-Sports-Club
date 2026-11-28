@@ -1,7 +1,7 @@
 // Sandy member profiles: sports, skill, availability, Film Club and crew skills, helping out.
 // Directory is opt-in and adult members only. Connections are mutual; either side can block.
 // Contact details are shown only to connected members, and only if the member chose to share them.
-import {fail,json,now,dbFor,payload,field,version,requireRole,audit,membersOpen,STAFF} from './shared.mjs';
+import {fail,json,now,dbFor,payload,field,version,requireRole,audit,membersOpen,STAFF,MEMBER_ADMIN} from './shared.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
 import {validAvatar,validDob,ageOn} from '../avatars.js';
 const DDL=[`CREATE TABLE IF NOT EXISTS club_member_profiles(account_id TEXT PRIMARY KEY REFERENCES club_accounts(id),bio TEXT NOT NULL DEFAULT '',sports_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(sports_json)),skill_level TEXT NOT NULL DEFAULT '' CHECK(skill_level IN ('','new','social','competitive','coach')),availability_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(availability_json)),film_member INTEGER NOT NULL DEFAULT 0 CHECK(film_member IN (0,1)),crew_skills_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(crew_skills_json)),helping_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(helping_json)),directory_visible INTEGER NOT NULL DEFAULT 0 CHECK(directory_visible IN (0,1)),show_town INTEGER NOT NULL DEFAULT 0 CHECK(show_town IN (0,1)),share_contact INTEGER NOT NULL DEFAULT 0 CHECK(share_contact IN (0,1)),dob TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),id_verified_utc TEXT,id_verified_by TEXT,id_verified_type TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,updated_utc TEXT NOT NULL)`,
@@ -49,7 +49,7 @@ const DIRECTORY=`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.em
 export async function profilesEndpoint(req,env,path,identity){
  const db=dbFor(env);
  if(path==='/api/committee/member-profiles'){
-  requireRole(identity,['webmaster']);await ensureProfileTables(env,db);
+  requireRole(identity,MEMBER_ADMIN);await ensureProfileTables(env,db);
   const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,p.consent_contact,m.*,v.username AS verifier FROM club_accounts a
    JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id LEFT JOIN club_accounts v ON v.id=m.id_verified_by WHERE a.role='member' ORDER BY p.joined_on DESC,a.username LIMIT 1000`).all();
   return json({members:results.map(r=>({accountId:r.id,username:r.username,name:r.full_name,preferredName:r.preferred_name,town:r.town,email:r.email,mobile:r.mobile,

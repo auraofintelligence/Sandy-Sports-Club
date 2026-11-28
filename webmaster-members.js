@@ -1,4 +1,5 @@
-// Webmaster members and onboarding overview. Every endpoint here is Webmaster-only on the server.
+// Members and onboarding overview for the Webmaster and membership officers. The server enforces each section's roles:
+// members and announcements for officers, children for safeguarding officers (Webmaster, President, Secretary).
 import {pictureSrc,verifiedBadge} from './picture.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const data={members:[],children:[],interest:[]};
@@ -38,8 +39,10 @@ async function loadAnnouncements(){
 }
 let announcements=[];
 async function load(){
- const [m,c,i]=await Promise.all([api('/api/committee/member-profiles'),api('/api/committee/families'),api('/api/interest')]);
- data.members=m.members;data.children=c.children;data.interest=i.interests;announcements=await loadAnnouncements();
+ const optional=p=>api(p).catch(()=>null);
+ const [m,c,i]=await Promise.all([api('/api/committee/member-profiles'),optional('/api/committee/families'),optional('/api/interest')]);
+ data.members=m.members;data.children=c?.children||[];data.interest=i?.interests||[];
+ $('wm-children').closest('section').hidden=!c;$('wm-interest').closest('section').hidden=!i;announcements=await loadAnnouncements();
  const count=f=>data.members.filter(f).length;
  $('wm-summary').innerHTML=[['Founding members',data.members.length],['Children',data.children.length],['Film Club',count(x=>x.profile.filmMember)],
   ['In directory',count(x=>x.profile.directoryVisible)],['Can volunteer',count(x=>x.profile.helping.length)],['Interest sign-ups',data.interest.length]]
@@ -87,7 +90,7 @@ $('wm-announce').addEventListener('submit',async e=>{
 (async()=>{
  try{
   const s=await api('/api/session');
-  if(!s.authenticated||s.identity?.role!=='webmaster'||s.readOnly){$('wm-state').textContent='This page is for the Webmaster account. Sign in first.';$('wm-state').className='club-status bad';return}
+  if(!s.authenticated||!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer'].includes(s.identity?.role)||s.readOnly){$('wm-state').textContent='This page is for the Webmaster and membership officers. Sign in first.';$('wm-state').className='club-status bad';return}
   await load();$('wm-panel').hidden=false;$('wm-state').textContent='Signed in as '+s.identity.username+'.';
  }catch(error){$('wm-state').textContent='Could not load: '+error.message;$('wm-state').className='club-status bad'}
 })();

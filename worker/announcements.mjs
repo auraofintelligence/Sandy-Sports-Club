@@ -1,6 +1,6 @@
 // Webmaster announcements to members, optionally an event with RSVPs (including how many children are coming).
 // Audience "film" reaches Film Club members only; "unverified" reaches members without a blue tick. Works in founding mode without formal committee approvals.
-import {fail,json,now,id,dbFor,payload,field,dateField,requireRole,audit,membersOpen} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,dateField,requireRole,audit,membersOpen,MEMBER_ADMIN} from './shared.mjs';
 import {ensureProfileTables} from './profiles.mjs';
 const DDL=[`CREATE TABLE IF NOT EXISTS club_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL DEFAULT '',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',location TEXT NOT NULL DEFAULT '',rsvp INTEGER NOT NULL DEFAULT 0 CHECK(rsvp IN (0,1)),audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film','unverified')),created_by TEXT NOT NULL REFERENCES club_accounts(id),created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,archived_utc TEXT)`,
  `CREATE TABLE IF NOT EXISTS club_announcement_rsvps(announcement_id TEXT NOT NULL REFERENCES club_announcements(id),account_id TEXT NOT NULL REFERENCES club_accounts(id),response TEXT NOT NULL CHECK(response IN ('going','maybe','not_going')),children INTEGER NOT NULL DEFAULT 0 CHECK(children BETWEEN 0 AND 8),updated_utc TEXT NOT NULL,PRIMARY KEY(announcement_id,account_id))`];
@@ -16,7 +16,7 @@ const COUNTS=`(SELECT COUNT(*) FROM club_announcement_rsvps x WHERE x.announceme
 export async function announcementsEndpoint(req,env,path,identity){
  const db=dbFor(env);
  if(path==='/api/committee/announcements'){
-  requireRole(identity,['webmaster']);await ensure(env,db);
+  requireRole(identity,MEMBER_ADMIN);await ensure(env,db);
   if(req.method==='GET'){
    const url=new URL(req.url),which=url.searchParams.get('rsvps');
    if(which){

@@ -1,8 +1,8 @@
 // Guardian gateway. A joined adult member registers their children as connected profiles.
 // Children have no login or contact details; the guardian is the contact. Date of birth sets the age group and birthday offers.
-// Only the guardian and the Webmaster can see a child's profile.
+// Only the guardian and safeguarding officers (Webmaster, President, Secretary) can see a child's profile.
 import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit,membersOpen} from './shared.mjs';
-import {memberSafeguardFlags} from './member-safeguards.mjs';
+import {memberSafeguardFlags,SAFEGUARD_ROLES} from './member-safeguards.mjs';
 import {cleanPhoto,photoResponse} from './profiles.mjs';
 import {validAvatar,GENDERS,validDob,ageOn} from '../avatars.js';
 const DDL=[`CREATE TABLE IF NOT EXISTS club_guardian_links(child_person_id TEXT PRIMARY KEY REFERENCES club_people(id),guardian_account_id TEXT NOT NULL REFERENCES club_accounts(id),relationship TEXT NOT NULL DEFAULT 'parent' CHECK(relationship IN ('parent','guardian','carer','grandparent','other')),age_band TEXT NOT NULL CHECK(age_band IN ('under16','16-17')),participation_permission INTEGER NOT NULL DEFAULT 1 CHECK(participation_permission IN (0,1)),photo_permission INTEGER NOT NULL DEFAULT 0 CHECK(photo_permission IN (0,1)),interests_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(interests_json)),dob TEXT NOT NULL DEFAULT '',gender TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,withdrawn_utc TEXT)`,
@@ -42,13 +42,14 @@ export async function familyEndpoint(req,env,path,identity){
  const db=dbFor(env);
  const photoMatch=path.match(/^\/api\/member\/family\/photo\/([a-f0-9-]{36})$/);
  if(photoMatch&&req.method==='GET'){
-  requireRole(identity,['member','webmaster']);await ensureTable(env,db);
-  const row=await db.prepare("SELECT photo FROM club_guardian_links WHERE child_person_id=? AND picture_type='photo' AND photo IS NOT NULL AND withdrawn_utc IS NULL"+(identity.role==='webmaster'?'':' AND guardian_account_id=?')).bind(...(identity.role==='webmaster'?[photoMatch[1]]:[photoMatch[1],identity.id])).first();
+  requireRole(identity,['member',...SAFEGUARD_ROLES]);await ensureTable(env,db);
+  const officer=SAFEGUARD_ROLES.includes(identity.role);
+  const row=await db.prepare("SELECT photo FROM club_guardian_links WHERE child_person_id=? AND picture_type='photo' AND photo IS NOT NULL AND withdrawn_utc IS NULL"+(officer?'':' AND guardian_account_id=?')).bind(...(officer?[photoMatch[1]]:[photoMatch[1],identity.id])).first();
   if(!row)fail(404,'Photo unavailable.','not_found');
   return photoResponse(row.photo);
  }
  if(path==='/api/committee/families'){
-  requireRole(identity,['webmaster']);
+  requireRole(identity,SAFEGUARD_ROLES);
   if(req.method!=='GET')fail(405,'Read only.','method_not_allowed');
   await ensureTable(env,db);
   const {results=[]}=await db.prepare(SELECT.replace('FROM club_guardian_links g',",a.username AS guardian_username,gp.full_name AS guardian_name,gp.email AS guardian_email,gp.mobile AS guardian_mobile FROM club_guardian_links g JOIN club_accounts a ON a.id=g.guardian_account_id LEFT JOIN club_people gp ON gp.account_id=a.id")+' ORDER BY a.username,p.full_name LIMIT 500').all();
