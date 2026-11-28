@@ -147,7 +147,7 @@ if(['club-admin.html','club-login.html','member-home.html','social-studio.html',
 (()=>{
  const eye='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
  const style=document.createElement('style');
- style.textContent='.password-wrap{position:relative;display:block;width:100%}.password-wrap input{padding-right:2.8rem!important}.password-eye{position:absolute;right:.35rem;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;min-height:0;padding:0;margin:0;border:0;border-radius:6px;background:transparent;color:#102d40;cursor:pointer}.password-eye[aria-pressed="true"]{color:#0a7481}.password-eye:focus-visible{outline:3px solid #0a7481}';
+ style.textContent='.password-wrap{position:relative;display:block;width:100%}.password-wrap input{padding-right:2.8rem!important}.password-eye{position:absolute;right:.35rem;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;min-height:0;padding:0;margin:0;border:0!important;border-radius:6px;background:transparent!important;color:#102d40!important;box-shadow:none!important;cursor:pointer}.password-eye[aria-pressed="true"]{color:#0a7481!important}.password-eye:focus-visible{outline:3px solid #0a7481}';
  document.head.append(style);
  const enhance=()=>{for(const input of document.querySelectorAll('input[type="password"]:not([data-eye])')){
   input.dataset.eye='1';const wrap=document.createElement('span');wrap.className='password-wrap';
