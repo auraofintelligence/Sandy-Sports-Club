@@ -44,11 +44,20 @@ async function ensure(env,db){
    db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v3',?)").bind(at)]);
  }
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
-  const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>db.prepare("INSERT OR IGNORE INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,demo,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,1,?,?)")
-   .bind(id(),p.sku,p.name,p.category,p.kind,p.description,cents(p.price),p.member==null?null:cents(p.member),p.cost==null?null:cents(p.cost),JSON.stringify(p.variants.map(x=>({label:x.label,stock:x.stock??null,...(x.price!=null?{price:cents(x.price)}:{})}))),p.eventDate||null,p.eventTime||'',p.venue||'',(i+1)*10,at,at));
+  const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>seedProduct(db,p,i,at));
   await db.batch([...stmts,db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('seeded',?)").bind(at)]);
  }
+ // Add demo items introduced after the store was first seeded (Mozzie mascot tee).
+ if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v4'").first()){
+  const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>[p,i]).filter(([p])=>ADDED_V4.includes(p.sku)).map(([p,i])=>seedProduct(db,p,i,at));
+  await db.batch([...stmts,db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v4',?)").bind(at)]);
+ }
  ready.add(env);
+}
+const ADDED_V4=['APP-TEE-MOZZIE'];
+function seedProduct(db,p,i,at){
+ return db.prepare("INSERT OR IGNORE INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,demo,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,1,?,?)")
+   .bind(id(),p.sku,p.name,p.category,p.kind,p.description,cents(p.price),p.member==null?null:cents(p.member),p.cost==null?null:cents(p.cost),JSON.stringify(p.variants.map(x=>({label:x.label,stock:x.stock??null,...(x.price!=null?{price:cents(x.price)}:{})}))),p.eventDate||null,p.eventTime||'',p.venue||'',(i+1)*10,at,at);
 }
 const variantsOf=r=>{try{return JSON.parse(r.variants_json||'[]')}catch{return []}};
 const unitPrice=(p,variant,member)=>variant?.price!=null?variant.price:(member&&p.member_price_cents!=null?p.member_price_cents:p.price_cents);

@@ -9,6 +9,7 @@ export const DEMO_PRODUCTS=[
  {sku:'APP-RASH-KIDS',name:'Kids rash vest (UPF 50+)',category:'Apparel',kind:'merch',price:40,member:35,cost:16,variants:v(kids,8),description:'Junior sizes for come-and-try days and holiday clinics.'},
  {sku:'APP-SINGLET',name:'Training singlet',category:'Apparel',kind:'merch',price:38,member:32,cost:13,variants:v(sizes,10),description:'Lightweight mesh singlet in club colours.'},
  {sku:'APP-HOODIE',name:'"I ❤ Sandy Sports" hoodie',category:'Apparel',kind:'merch',price:79,member:69,cost:33,variants:v(sizes,6),description:'Heavyweight hoodie for winter sunset sessions. Say it loud.'},
+ {sku:'APP-TEE-MOZZIE',name:'Minjerribah Mozzie tee',category:'Apparel',kind:'merch',price:30,member:25,cost:12,variants:v([...kids,...sizes],8),description:'Mozzie the club mascot, front and centre. Kids and adult sizes, so the whole family can match.'},
  {sku:'APP-BUCKET',name:'Bucket hat',category:'Headwear',kind:'merch',price:32,member:28,cost:11,variants:v(['S/M','L/XL'],15),description:'Wide brim, quick dry, packs flat.'},
  {sku:'APP-TRUCKER',name:'Trucker cap',category:'Headwear',kind:'merch',price:30,member:26,cost:10,variants:v(['One size'],20),description:'Embroidered Sandy Sports logo, mesh back.'},
  {sku:'APP-VISOR',name:'Court visor',category:'Headwear',kind:'merch',price:25,member:22,cost:8,variants:v(['One size'],18),description:'Keeps the sun out without trapping heat.'},
