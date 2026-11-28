@@ -365,7 +365,7 @@ def role_page(prefix,item):
     home='members.html' if prefix=='member' else 'committee.html'
     put(f'{prefix}-{key}.html',title,summary,
         hero(('MEMBER CLUBHOUSE' if prefix=='member' else 'COMMITTEE DESK'),heading,summary,img)+
-        section('THE WORK','What this desk covers','These are practical components of the proposed club. The linked workspace is an isolated, fictional browser demo, while nomination is sent by email.',cards([(a,b,c,'','') for a,b,c in tiles]))+
+        section('THE WORK','What this desk covers','The parts of the club this desk looks after. Officers and members work on it after signing in.',cards([(a,b,c,'','') for a,b,c in tiles]))+
         section('COORDINATE','Bring the right people together','Use the relevant workspace to develop this area, then nominate to help turn the proposal into a working club.',f'<div class="link-row"><a class="button coral" href="/{home}#{pane}">Open this desk</a><a class="button outline" href="/join.html">Nominate to help</a></div>','sunny'))
 for item in member_sections: role_page('member',item)
 for item in committee_sections: role_page('committee',item)

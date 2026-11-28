@@ -180,7 +180,7 @@ async function taskList(db,actor,today,filter){
  }
  const key=await monthlyKey(today);
  if((allocator(actor)||actor.role==='secretary')&&(!filter||filter==='all'||filter==='secretary')&&!await rowById(db,key)){
-  result.push({id:key,title:'Review the monthly Social Studio plan',details:'Check island event anchors, review dates and the proposed editorial programme. No external publication is authorised.',office:'secretary',dueDate:monthlyDue(today),version:0,source:'monthly',sourceId:null,done:false,archived:false,legacy:false,status:timing(monthlyDue(today),today),canAssign:false,canTake:false,canComplete:actor.role==='secretary',canPaper:allocator(actor)});
+  result.push({id:key,title:'Review the monthly Social Studio plan',details:'Check the island events coming up, review dates and next month’s posts.',office:'secretary',dueDate:monthlyDue(today),version:0,source:'monthly',sourceId:null,done:false,archived:false,legacy:false,status:timing(monthlyDue(today),today),canAssign:false,canTake:false,canComplete:actor.role==='secretary',canPaper:allocator(actor)});
  }
  result.sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')||a.title.localeCompare(b.title));
  return {today,viewerOffice:actor.role,canAssign:allocator(actor),offices:STAFF.filter(k=>allocator(actor)||k===actor.role).map(key=>({key,label:label(key),duties:duties[key]})),tasks:result,legacy:await legacy(db,todos,actor)};

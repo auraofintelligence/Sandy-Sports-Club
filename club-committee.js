@@ -12,27 +12,27 @@ import {setupMoneyDesks,MONEY_DESKS} from './club-money-desks.js?v=20261128';
 import {setupRecordsDesks,RECORD_DESKS} from './club-records-desks.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
- {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
- {key:'todos',group:'Communications',label:'To-do lists',kind:'task',description:'Record an accountable next step, owner and due date.'},
- {key:'news',group:'Communications',label:'Newsletter desk',kind:'newsletter',description:'Draft newsletter topics and production steps. No member email is sent.'},
- {key:'social',group:'Communications',label:'Social Studio',tab:'social',description:'Open the shared 12-month Social Media Hub and its production briefs.'},
- {key:'handover',group:'Governance',label:'Officer handover',kind:'governance',description:'Prepare handover notes, responsibilities and outstanding actions.'},
+ {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Updates for the committee, and jobs with a due date for an officer.'},
+ {key:'todos',group:'Communications',label:'To-do lists',kind:'task',description:'Every officer’s jobs in one place: take one, finish it, print your list.'},
+ {key:'news',group:'Communications',label:'Newsletter desk',kind:'newsletter',description:'Write an issue, preview it, share it or send it by email.'},
+ {key:'social',group:'Communications',label:'Social Studio',tab:'social',description:'The 12-month Social Media Hub and its post briefs.'},
+ {key:'handover',group:'Governance',label:'Officer handover',kind:'governance',description:'Hand an office over: duties, open jobs, documents and logins.'},
  {key:'meetings',group:'Governance',label:'Meetings and minutes',kind:'meeting',description:'Agenda, attendance, outcomes, draft minutes and follow-up jobs.'},
  {key:'agm',group:'Governance',label:'AGM jobs',kind:'governance',description:'Pick the AGM date; the jobs leading up to it go on officers’ to-do lists.'},
- {key:'documents',group:'Governance',label:'Documents',kind:'governance',description:'Record document titles, locations and review tasks; no private file-upload archive is connected.'},
- {key:'automations',group:'Governance',label:'Membership automations',kind:'governance',description:'Plan optional future reminders. No automated member messages are enabled.'},
- {key:'ready-setco',group:'Governance',label:'Ready SETCO decisions',kind:'partner',description:'Record proposed co-operative referrals and handovers. This does not create a partnership or an authorised transfer.'},
- {key:'access',group:'Governance',label:'Manage club access',tab:'accounts',webmaster:true,description:'Reserve accounts and manually prepare prospective committee password invitations.'},
+ {key:'documents',group:'Governance',label:'Documents',kind:'governance',description:'Where each club document lives, who looks after it, when it is reviewed.'},
+ {key:'automations',group:'Governance',label:'Membership automations',kind:'governance',description:'Plan reminders such as renewals and welcome messages.'},
+ {key:'ready-setco',group:'Governance',label:'Ready SETCO decisions',kind:'partner',description:'Requests to the Ready SET Co-op, from idea to written agreement.'},
+ {key:'access',group:'Governance',label:'Manage club access',tab:'accounts',webmaster:true,description:'Reserve officer accounts and send their one-time invitations.'},
  {key:'events',group:'Events and funding',label:'Events and run sheets',kind:'event',description:'Plan the event, roster helpers, publish to the calendar, debrief.'},
- {key:'fundraising',group:'Events and funding',label:'Fundraising register',kind:'fundraising',description:'Track fundraising proposals and their next steps. No payments or financial approvals occur here.'},
- {key:'equipment',group:'Events and funding',label:'Club assets and loans',kind:'equipment',description:'Document planned equipment, proposed loans and maintenance tasks. No binding loan contract is issued.'},
- {key:'sponsors',group:'Events and funding',label:'Sponsors and supporters',kind:'sponsor',description:'Track prospective sponsor conversations and suggested contributions.'},
- {key:'grants',group:'Events and funding',label:'Grant register',kind:'grant',description:'Track grant leads, proposal dates, assigned officers and evidence links.'},
- {key:'leaderboard',group:'Events and funding',label:'Results, prizes and sponsors',kind:'governance',description:'Plan results, prize arrangements and acknowledgement requirements. No results are fabricated.'},
- {key:'stock',group:'Events and funding',label:'Shop, stock and prices',kind:'asset',description:'Draft stock, equipment and price decisions. No active shop inventory, invoices or transactions are connected.'},
+ {key:'fundraising',group:'Events and funding',label:'Fundraising register',kind:'fundraising',description:'Fundraising ideas, who is running them, money in and costs.'},
+ {key:'equipment',group:'Events and funding',label:'Club assets and loans',kind:'equipment',description:'Every piece of club gear: where it is, condition, loans and repairs.'},
+ {key:'sponsors',group:'Events and funding',label:'Sponsors and supporters',kind:'sponsor',description:'Sponsor conversations, tiers, benefits and their private portal links.'},
+ {key:'grants',group:'Events and funding',label:'Grant register',kind:'grant',description:'Grants from idea to won: deadlines, documents and who is leading.'},
+ {key:'leaderboard',group:'Events and funding',label:'Results, prizes and sponsors',kind:'governance',description:'Results tables and prizes, shared once checked and names agreed.'},
+ {key:'stock',group:'Events and funding',label:'Shop, stock and prices',kind:'asset',description:'Stock counts, prices and price changes for the store.'},
  {key:'safety',group:'Members and safeguards',label:'Member age and permissions',kind:'safeguard',restricted:true,description:'Children registered by guardians, permissions and blue-tick ID checks.'},
  {key:'applications',group:'Members and safeguards',label:'Applications',kind:'volunteer',description:'Who has joined, interest sign-ups still to chase, and blue ticks.',related:[['people','People & memberships']]},
- {key:'returning',group:'Members and safeguards',label:'Invite returning members',kind:'volunteer',description:'Plan possible re-engagement; no live member invitations are issued.',related:[['people','People & memberships']]}
+ {key:'returning',group:'Members and safeguards',label:'Invite returning members',kind:'volunteer',description:'Plan how to welcome back past members and lapsed sign-ups.',related:[['people','People & memberships']]}
 ];
 for(const spec of SUITE_DESKS){
  if(DESKS.some(x=>x.key===spec.key))continue;

@@ -49,7 +49,7 @@ function fillProfile(profile){
  $('member-profile').innerHTML=profile?'<p><strong>Name:</strong> '+safe(profile.full_name||profile.name)+'</p>'+
   '<p><strong>Class:</strong> '+safe(profile.membership_class||profile.membershipClass||'Not specified')+'</p>'+
   '<p><strong>Town:</strong> '+safe(profile.town||'Not specified')+'</p>':
-  '<p>No actual member profile has been linked. Sandy Sports is a proposed club.</p>';
+  '<p>Your member details are not linked yet. Ask the Webmaster to check your account.</p>';
 }
 function showDemo(){
  preview=true;
