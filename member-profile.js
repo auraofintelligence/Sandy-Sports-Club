@@ -1,9 +1,10 @@
 // My profile, required picture, Members directory and Film Club crew roster inside My Membership.
 import {picturePicker,pictureSrc,verifiedBadge} from './picture.js';
+import {badgeRow,badgeBoard} from './badges.js';
 import {choiceGroup,summary} from './choices.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const levels={new:'New to it',social:'Social',competitive:'Competitive',coach:'Coach'};
-const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null,details=null;
+const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null,details=null,myBadges=[];
 async function api(path,method='GET',data){
  const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
  const payload=await response.json().catch(()=>({}));
@@ -38,6 +39,7 @@ function card(m){
  const action={none:'<button type="button" data-act="request">Connect</button>',requested:'<span>Request sent</span> <button type="button" data-act="remove">Cancel</button>',
   incoming:'<button type="button" data-act="accept">Accept</button> <button type="button" data-act="decline">Decline</button>',connected:'<span>Connected</span> <button type="button" data-act="remove">Remove</button>'}[m.connection]||'';
  return '<article class="member-item with-pic" data-member="'+safe(m.accountId)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(m.picture,m.photoUrl))+'" loading="lazy"><strong>'+safe(m.name)+verifiedBadge(m.verified)+(m.town?' · '+safe(m.town):'')+'</strong>'+
+  badgeRow((m.badges||[]).filter(b=>b!=='tick'),{small:true})+
   (m.bio?'<span>'+safe(m.bio)+'</span>':'')+(tags.length?'<span>'+safe(tags.join(' · '))+'</span>':'')+
   (m.availability?.length?'<span>Free: '+safe(summary(m.availability).join(', '))+'</span>':'')+(m.crewSkills.length?'<span>Crew: '+safe(summary(m.crewSkills).join(', '))+'</span>':'')+(m.helping.length?'<span>Can help with: '+safe(summary(m.helping).join(', '))+'</span>':'')+
   (m.contact?'<span>'+safe([m.contact.email,m.contact.mobile].filter(Boolean).join(' · '))+'</span>':'')+
@@ -59,7 +61,8 @@ async function loadRoster(){
 }
 async function load(){
  try{
-  ({profile,options,gender,photoUrl,details}=await api('/api/member/profile'));
+  let badges;({profile,options,gender,photoUrl,details,badges}=await api('/api/member/profile'));myBadges=badges||[];
+  const bb=$('member-badges');if(bb)bb.innerHTML=badgeBoard(myBadges);
   const df=$('details-form');for(const k of ['fullName','preferredName','email','mobile','town','audienceRegion'])df.elements[k].value=details[k]||'';df.elements.contactConsent.checked=details.contactConsent;
   const who={dob:profile.dob,gender};
   showPicture();
@@ -86,7 +89,7 @@ $('profile-preview-button').addEventListener('click',()=>{
  const box=$('profile-preview');if(!box.hidden){box.hidden=true;return}
  const f=new FormData(form),me={accountId:'me',verified:profile.verified,picture:profile.picture?{type:'avatar',avatarId:profile.picture.avatarId||''}:null,photoUrl:null,
   name:details.preferredName||details.fullName,town:form.elements.showTown.checked?details.town:'',bio:f.get('bio')||'',sports:groups.sports.value(),skillLevel:f.get('skillLevel'),
-  availability:groups.availability.value(),filmMember:form.elements.filmMember.checked,crewSkills:groups.crewSkills.value(),helping:groups.helping.value(),connection:'preview'};
+  availability:groups.availability.value(),filmMember:form.elements.filmMember.checked,crewSkills:groups.crewSkills.value(),helping:groups.helping.value(),badges:myBadges,connection:'preview'};
  box.innerHTML=(form.elements.directoryVisible.checked?'<p>This is what other members see in the directory:</p>':'<p><strong>You are hidden from the directory</strong>, so nobody sees this yet. Turn on "Show me in the member directory" to be found.</p>')+card(me)+
   '<p class="club-note">'+(profile.picture?.type==='photo'?'Members you connect with see your photo instead of an avatar':'Members you connect with see the same card')+(form.elements.shareContact.checked?', plus your email and mobile.':'. Your contact details stay private.')+'</p>';
  box.hidden=false;

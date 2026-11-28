@@ -20,7 +20,7 @@ const F=[
  choice('priority','Priority',['Normal','Important','Urgent'],'Action'),txt('linkedDesk','Related meeting, event or project','Follow-up'),notes('progress','Progress notes','Follow-up'),check('complete','Marked complete','Follow-up')]},
  {key:'news',title:'Newsletter desk',kind:'newsletter',group:'Communications',purpose:'Build a club newsletter issue, arrange articles and reviewer notes, export the draft; sending requires separate consent and authority.',fields:[
  month('editionMonth','Edition month','Edition'),txt('headline','Issue headline','Edition',true),
- choice('audience','Intended audience',['Prospective members','Officers','Supporters','All future members'],'Edition'),
+ choice('audience','Intended audience',['Prospective members','Officers','Supporters','All future members','Visitors and occasional members'],'Edition'),
  notes('lead','Opening editorial','Content'),list('articles','Article headlines and sections','Content'),notes('eventRoundup','Sport and event round-up','Content'),
  notes('acknowledgements','Contributor and sponsor acknowledgements','Content'),txt('editor','Editor / assembler','Review'),
  notes('reviewNotes','Review changes and sign-off requests','Review'),check('mediaRightsChecked','Media rights and consent reviewed','Review'),

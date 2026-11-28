@@ -25,6 +25,7 @@ import {familyEndpoint} from './family.mjs';
 import {profilesEndpoint} from './profiles.mjs';
 import {announcementsEndpoint} from './announcements.mjs';
 import {calendarEndpoint} from './calendar.mjs';
+import {notifyPrefsEndpoint,processNotifications} from './notify.mjs';
 import {requestsEndpoint} from './requests.mjs';
 import {storeEndpoint} from './store.mjs';
 import {sponsorsEndpoint} from './sponsors.mjs';
@@ -86,6 +87,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/store'||path.startsWith('/api/store/')||path.startsWith('/api/committee/store/'))return storeEndpoint(req,env,path,identity);
  if(path==='/api/requests'||path==='/api/committee/requests')return requestsEndpoint(req,env,path,identity);
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
+ if(path==='/api/member/notifications')return notifyPrefsEndpoint(req,env,identity);
  if(['/api/calendar','/api/calendar.ics','/api/member/calendar','/api/member/club-calendar.ics'].includes(path))return calendarEndpoint(req,env,path,identity);
  if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
  if(['/api/member/profile','/api/member/details','/api/member/picture','/api/member/directory','/api/member/connections','/api/committee/member-profiles','/api/committee/verify-id'].includes(path)||path.startsWith('/api/member/photo/'))return profilesEndpoint(req,env,path,identity);
@@ -122,8 +124,10 @@ async function route(req,env,path,effectiveIdentity){
 export default {
  // Daily 10:00 AM Australia/Brisbane alert digest (cron "0 0 * * *" UTC). It does
  // nothing unless nominations and a mail provider are switched on by the owner.
+ // Every 15 minutes ("*/15 * * * *"): batch member notification emails by each member's chosen frequency.
  async scheduled(event,env,ctx){
-  const run=dailyDigest(env,event?.scheduledTime||Date.now()).catch(()=>({state:'failed'}));
+  const ms=event?.scheduledTime||Date.now();
+  const run=event?.cron==='*/15 * * * *'?processNotifications(env,ms).catch(()=>({state:'failed'})):dailyDigest(env,ms).catch(()=>({state:'failed'}));
   if(ctx?.waitUntil)ctx.waitUntil(run);else await run;
  },
  async fetch(req,env,ctx){

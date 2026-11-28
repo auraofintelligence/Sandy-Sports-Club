@@ -49,6 +49,6 @@
     "SANDY_SURVEY_ENABLED": "disabled"
   },
   "triggers": {
-    "crons": ["0 0 * * *"]
+    "crons": ["0 0 * * *", "*/15 * * * *"]
   }
 }

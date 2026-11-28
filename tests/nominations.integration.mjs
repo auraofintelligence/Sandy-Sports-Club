@@ -154,6 +154,6 @@ test('alert mail headers cannot be injected and wrangler keeps nominations off w
  assert.ok(!/\r\nBcc:/i.test(raw));
  const {readFileSync}=await import('node:fs');
  const cfg=JSON.parse(readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8'));
- assert.equal(cfg.vars.SANDY_NOMINATIONS_ENABLED,'disabled');assert.deepEqual(cfg.triggers.crons,['0 0 * * *']);
+ assert.equal(cfg.vars.SANDY_NOMINATIONS_ENABLED,'disabled');assert.deepEqual(cfg.triggers.crons,['0 0 * * *','*/15 * * * *']);
  assert.ok(!('SANDY_RESEND_API_KEY' in cfg.vars)&&!cfg.send_email,'no mail secret or binding in config');
 });

@@ -6,6 +6,7 @@
 import {json,dbFor,requireRole,STAFF} from './shared.mjs';
 import {ensureStore} from './store.mjs';
 import {ensureAnnouncements} from './announcements.mjs';
+import {memberFacts,matches} from './notify.mjs';
 import {memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 
 const today=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
@@ -38,7 +39,10 @@ async function announcementEvents(env,db,where,args,identity){
   const sql=`SELECT a.*${identity?',r.response AS my_response,r.children AS my_children':''} FROM club_announcements a
    ${identity?'LEFT JOIN club_announcement_rsvps r ON r.announcement_id=a.id AND r.account_id=?':''}
    WHERE a.archived_utc IS NULL AND a.event_date BETWEEN ? AND ? AND ${where} ORDER BY a.event_date,a.created_utc`;
-  const {results=[]}=await db.prepare(sql).bind(...(identity?[identity.id]:[]),today(),until(),...args).all();
+  let {results=[]}=await db.prepare(sql).bind(...(identity?[identity.id]:[]),today(),until(),...args).all();
+  // Notices sent to a sport, town or helping group only show on those members' calendars.
+  if(!identity)results=results.filter(r=>!r.target_json);
+  else if(identity.role==='member'){const facts=await memberFacts(db,identity.id);results=results.filter(r=>{if(!r.target_json||!facts)return true;try{return matches(facts,'all',JSON.parse(r.target_json))}catch{return true}})}
   return results.map(r=>({id:'ann-'+r.id,announcementId:r.id,kind:'club',audience:r.public_calendar?'public':r.audience==='film'?'film':'members',title:r.title,date:r.event_date,time:r.event_time||'',...parseTimes(r.event_time),location:r.location||'',
    summary:short(r.body),...(identity?{rsvp:!!r.rsvp,myResponse:r.my_response||null,myChildren:r.my_children||0}:{})}));
  }catch{return []}

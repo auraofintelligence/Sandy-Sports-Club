@@ -50,6 +50,12 @@ fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
   document.querySelector('.header-cta')?.setAttribute('hidden','');
   if(session.identity?.role==='member'){
    entry.href='/member-home.html';entry.textContent='My Membership';
+   // A count of new notices on the header button, so members see there is something waiting.
+   fetch('/api/member/announcements?unread=1',{credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+    if(!d?.unread)return;const b=document.createElement('span');b.className='hdr-badge';b.textContent=d.unread>9?'9+':String(d.unread);b.setAttribute('aria-label',d.unread+' new');
+    b.style.cssText='display:inline-flex;align-items:center;justify-content:center;min-width:1.4em;height:1.4em;margin-left:.35em;padding:0 .35em;border-radius:999px;background:#c62828;color:#fff;font-size:.75em;font-weight:900';
+    entry.append(b);entry.setAttribute('aria-label','Open My Membership, '+d.unread+' new');
+   }).catch(()=>{});
   }else{
    entry.href='/club-admin.html';entry.textContent='My Clubhouse';
   }

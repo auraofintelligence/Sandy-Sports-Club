@@ -10,7 +10,7 @@ const todayBris=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const plusMonths=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCMonth(x.getUTCMonth()+n);return x.toISOString().slice(0,10)};
 const lines=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
 const STD_DOCS=['Draft constitution','Privacy policy','Child safe policy and code of conduct','Risk register','Insurance certificate of currency','Venue hire agreements','Grievance procedure'];
-const RECIPIENTS={all:'All members who agreed to be contacted',film:'Film Club members who agreed to be contacted',unverified:'Members without a blue tick (contact agreed)',interest:'People who registered interest but have not joined'};
+const RECIPIENTS={all:'All members who agreed to be contacted',film:'Film Club members who agreed to be contacted',unverified:'Members without a blue tick (contact agreed)',interest:'People who registered interest but have not joined',visitors:'Visitors and occasional members: holiday and regular visitors who agreed, plus interest sign-ups not joined'};
 
 const CONFIG={
  news:{title:'Newsletter',help:'Put together a newsletter issue, preview it, then share it as a notice or send it by email through Message delivery.',noun:'issue',newLabel:'Start an issue',
@@ -120,6 +120,7 @@ export function setupRecordsDesks({api,esc:e,status,showDesk}){
    (ro()?'<p class="ops-boundary">View-only preview. Nothing can be changed.</p>':'')+'<p data-rd-message role="status"></p><div class="mt-layout"><aside class="mt-aside">'+listView()+'</aside><section class="mt-detail">'+detailView()+'</section></div>';
  }
  async function recipientsFor(group){
+  if(group==='visitors'){const [a,b]=await Promise.all([recipientsFor('interest'),api('/api/committee/member-profiles').catch(()=>({members:[]}))]);return [...new Set([...(b.members||[]).filter(x=>x.email&&x.contactConsent&&['regional','tourist'].includes(x.audienceRegion)).map(x=>x.email),...a])]}
   if(group==='interest'){const [i,m]=await Promise.all([api('/api/interest').catch(()=>({interests:[]})),api('/api/committee/member-profiles').catch(()=>({members:[]}))]);const joined=new Set((m.members||[]).map(x=>(x.email||'').toLowerCase()));return [...new Set((i.interests||[]).filter(x=>x.email&&!joined.has(x.email.toLowerCase())&&x.contactConsent!==false).map(x=>x.email))]}
   const m=(await api('/api/committee/member-profiles').catch(()=>({members:[]}))).members||[];
   return [...new Set(m.filter(x=>x.email&&x.contactConsent&&(group==='film'?x.profile?.filmMember:group==='unverified'?!x.idCheck:true)).map(x=>x.email))];

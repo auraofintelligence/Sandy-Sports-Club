@@ -9,7 +9,7 @@ const today=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const ageOn=(dob,on)=>{if(!dob)return null;const [y,m,d]=dob.split('-').map(Number),[Y,M,D]=on.split('-').map(Number);return Y-y-((M<m||(M===m&&D<d))?1:0)};
 const DESK={
  applications:['Applications and joining','Joining is instant and free for adults. Watch who has joined, chase interest sign-ups and blue ticks.'],
- 'member-notice':['Member notices','Post a notice or event to members. Ask for RSVPs and see who is coming. Nothing is emailed.'],
+ 'member-notice':['Member notices','Post a notice or event to members’ profiles, or just to those who picked a sport, a town or a way to help. See how many have read it.'],
  'member-packs':['Member packs','What a new member gets when they join, and what still needs setting up.'],
  'member-types':['Membership types','The kinds of membership in use now, and how many members hold each.'],
  birthday:['Birthday offers','Members get 10% off the store in their birthday month, automatically. See whose birthday is coming up.'],
@@ -44,14 +44,20 @@ export function setupMembersDesks({api,esc:e,status,showDesk,getIdentity}){
   return '<details class="ops-compose"'+(list.length?'':' open')+'><summary>Post a notice to members</summary><form data-md-notice><fieldset'+(ro()?' disabled':'')+'>'+
    '<div class="ops-form-grid"><label>Title<input name="title" required maxlength="140" placeholder="e.g. Holiday come-and-try day"></label><label>Who is it for?<select name="audience">'+Object.entries(AUD).map(([k,l])=>'<option value="'+k+'">'+l+'</option>').join('')+'</select></label></div>'+
    '<label>Message<textarea name="body" rows="4" maxlength="4000"></textarea></label>'+
+   '<details class="md-target"><summary>Only send to some members (optional)</summary><p class="mt-help">Pick any. A member gets it if they match every group you tick in.</p><div data-md-target-options>Loading…</div></details>'+
    '<p class="mt-help">Is it an event? Add a date and it goes on the members’ calendar.</p>'+
    '<div class="ops-form-grid"><label>Event date (optional)<input type="date" name="eventDate"></label><label>Time (optional)<input name="eventTime" maxlength="40" placeholder="e.g. 4pm to 6pm"></label><label>Location (optional)<input name="location" maxlength="140" placeholder="e.g. Cylinder Beach"></label></div>'+
    '<label class="ops-check"><input type="checkbox" name="rsvp"> Ask members to RSVP (needs an event date)</label>'+
-   '<label class="ops-check"><input type="checkbox" name="publicCalendar"> Also show on the public What’s on calendar (no names shown)</label>'+
+   '<label class="ops-check"><input type="checkbox" name="publicCalendar"> Also show on the public What’s on calendar (no names shown, all-member notices only)</label>'+
+   '<label class="ops-check"><input type="checkbox" name="pinned"> Pin to the top of members’ notices</label>'+
+   '<label class="ops-check"><input type="checkbox" name="urgent"> Urgent: a change or cancellation to something already announced</label>'+
+   '<div class="md-reach" data-md-reach aria-live="polite"></div>'+
+   '<details class="md-guide"><summary>How often should we post?</summary><ul><li>About two notices a week to all members is plenty. Use the sport, town or helping filters for the rest.</li><li>Members choose how often they get an email: as they arrive (at most hourly, never 9pm to 7am), daily, weekly (the default), monthly or never. Lots of notices in one week still arrive as one email.</li><li>Tick Urgent only for changes and cancellations. Those reach people straight away.</li><li>No ads or sponsor offers here. Commercial news goes in the monthly newsletter only.</li></ul></details>'+
    '<button type="submit">Publish to members</button></fieldset></form></details>'+
-   '<h4>Live notices</h4>'+(list.length?'<ul class="md-notices">'+list.map(a=>'<li data-md-id="'+e(a.id)+'"><div><strong>'+e(a.title)+'</strong><span>'+e([AUD[a.audience],a.eventDate&&day(a.eventDate)+(a.eventTime?' '+a.eventTime:''),a.location,a.publicCalendar&&'On the public calendar'].filter(Boolean).join(' · '))+'</span>'+
+   '<h4>Live notices</h4>'+(list.length?'<ul class="md-notices">'+list.map(a=>'<li data-md-id="'+e(a.id)+'"><div><strong>'+(a.pinned?'<span class="notice-tag pinned">Pinned</span> ':'')+(a.urgent?'<span class="notice-tag urgent">Change</span> ':'')+e(a.title)+'</strong><span>'+e([AUD[a.audience],a.targetLabel,a.eventDate&&day(a.eventDate)+(a.eventTime?' '+a.eventTime:''),a.location,a.publicCalendar&&'On the public calendar'].filter(Boolean).join(' · '))+'</span>'+
+    '<span class="md-rsvp">Reached '+(a.reach||0)+' · read by '+(a.reads||0)+'</span>'+
     (a.rsvp&&a.counts?'<span class="md-rsvp">'+a.counts.going+' going'+(a.counts.children?' (+'+a.counts.children+' kids)':'')+' · '+a.counts.maybe+' maybe · '+a.counts.notGoing+' can’t</span>':'')+'</div>'+
-    '<div class="md-row-actions">'+(a.rsvp?'<button type="button" data-md-who>Who’s coming</button>':'')+'<button type="button" data-md-down'+(ro()?' disabled':'')+'>Take down</button></div><div data-md-who-panel hidden></div></li>').join('')+'</ul>':'<p class="ops-empty">No live notices.</p>');
+    '<div class="md-row-actions">'+(a.rsvp?'<button type="button" data-md-who>Who’s coming</button>':'')+'<button type="button" data-md-pin'+(ro()?' disabled':'')+'>'+(a.pinned?'Unpin':'Pin')+'</button><button type="button" data-md-down'+(ro()?' disabled':'')+'>Take down</button></div><div data-md-who-panel hidden></div></li>').join('')+'</ul>':'<p class="ops-empty">No live notices.</p>');
  }
  // ---------- Member packs ----------
  function packs(){
@@ -111,13 +117,33 @@ export function setupMembersDesks({api,esc:e,status,showDesk,getIdentity}){
   const [title,help]=DESK[key];
   root.innerHTML='<header class="ops-header"><div><h3 id="md-desk-title" tabindex="-1">'+e(title)+'</h3><p>'+e(help)+'</p></div><button type="button" data-md-refresh>Check now</button></header>'+
    (ro()?'<p class="ops-boundary">View-only preview. Nothing can be changed.</p>':'')+'<p data-md-message role="status"></p><div class="md-body">'+VIEWS[key]()+'</div>';
+  if(key==='member-notice')preview();
  }
+ // ---------- Reach preview: who a notice will reach and how they hear about it ----------
+ const FREQ={instant:'as they arrive',daily:'daily',weekly:'weekly',monthly:'monthly',never:'in-app only'};
+ const targetOf=f=>{const t={};f.querySelectorAll('[data-md-t]:checked').forEach(i=>(t[i.dataset.mdT]||=[]).push(i.value));return t};
+ let previewTimer=0,options=null;
+ async function preview(){
+  const f=root.querySelector('[data-md-notice]'),box=root.querySelector('[data-md-reach]');if(!f||!box)return;
+  try{
+   const p=await api('/api/committee/announcements',{method:'POST',data:{action:'preview',audience:f.elements.audience.value,target:targetOf(f)}});
+   if(!options&&p.options){options=p.options;const o=p.options,grp=(k,label,vals)=>'<fieldset class="md-tgroup"><legend>'+label+'</legend>'+vals.map(([v,l])=>'<label class="ops-check"><input type="checkbox" data-md-t="'+k+'" value="'+e(v)+'"> '+e(l)+'</label>').join('')+'</fieldset>';
+    root.querySelector('[data-md-target-options]').innerHTML=grp('sports','Sport',o.sports.map(s=>[s,s]))+grp('towns','Town',o.towns.map(s=>[s,s]))+grp('connection','Connection to the island',Object.entries(o.connection))+grp('helping','Helping out',o.helping.map(s=>[s,s]));}
+   const targeted=Object.keys(targetOf(f)).length||f.elements.audience.value!=='all',over=!targeted&&p.memberWideThisWeek>=p.weeklyGuide;
+   const by=Object.entries(p.byFrequency).filter(([,n])=>n).map(([k,n])=>n+' '+FREQ[k]).join(', ');
+   box.className='md-reach'+(over&&!f.elements.urgent.checked?' warn':'');
+   box.innerHTML='<strong>Reaches '+p.reach+' member'+(p.reach===1?'':'s')+'</strong>'+(by?'<span>Email: '+e(by)+(p.emailEnabled?'':' (club emails aren’t switched on yet, so this shows in-app only)')+'</span>':'')+
+    '<span>'+p.memberWideThisWeek+' all-member notice'+(p.memberWideThisWeek===1?'':'s')+' in the last 7 days (guide: '+p.weeklyGuide+').</span>'+
+    (over&&!f.elements.urgent.checked?'<span>That’s already the guide for this week. Could this go to a smaller group, or wait for next week or the newsletter?</span>':'');
+  }catch(err){box.textContent=''}
+ }
+ root.addEventListener('change',ev=>{if(ev.target.closest('[data-md-notice]')){clearTimeout(previewTimer);previewTimer=setTimeout(preview,250)}});
  root.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;if(!f.matches('[data-md-notice]')||busy||ro())return;
   const v=Object.fromEntries(new FormData(f));busy=true;f.querySelector('[type=submit]').disabled=true;
   try{
-   await api('/api/committee/announcements',{method:'POST',data:{action:'create',title:v.title.trim(),body:v.body.trim(),audience:v.audience,eventDate:v.eventDate||'',eventTime:v.eventTime.trim(),location:v.location.trim(),rsvp:f.elements.rsvp.checked,publicCalendar:f.elements.publicCalendar.checked}});
-   busy=false;await load();say('Published to '+AUD[v.audience].toLowerCase()+'.'+(v.eventDate?' It is on their calendar.':''));
+   const res=await api('/api/committee/announcements',{method:'POST',data:{action:'create',title:v.title.trim(),body:v.body.trim(),audience:v.audience,eventDate:v.eventDate||'',eventTime:v.eventTime.trim(),location:v.location.trim(),rsvp:f.elements.rsvp.checked,publicCalendar:f.elements.publicCalendar.checked,pinned:f.elements.pinned.checked,urgent:f.elements.urgent.checked,target:targetOf(f)}});
+   busy=false;await load();say('Published. It reached '+(res.reach??0)+' member'+(res.reach===1?'':'s')+'.'+(v.eventDate?' It is on their calendar.':''));
   }catch(err){busy=false;f.querySelector('[type=submit]').disabled=false;say(err.message,true)}
  });
  root.addEventListener('click',async ev=>{
@@ -126,7 +152,8 @@ export function setupMembersDesks({api,esc:e,status,showDesk,getIdentity}){
   if(b.dataset.mdGoto){await showDesk(b.dataset.mdGoto);return}
   if(b.dataset.mdCopy){const url=location.origin+b.dataset.mdCopy;try{await navigator.clipboard.writeText(url);say('Join link copied: '+url)}catch{say('Join link: '+url)}return}
   const li=b.closest('[data-md-id]');if(!li)return;const id=li.dataset.mdId;
-  if(b.hasAttribute('data-md-down')){if(!confirm('Take this notice down for everyone?'))return;b.disabled=true;try{await api('/api/committee/announcements',{method:'POST',data:{action:'archive',id}});await load();say('Notice taken down.')}catch(err){b.disabled=false;say(err.message,true)}return}
+  if(b.hasAttribute('data-md-pin')){b.disabled=true;const pin=b.textContent==='Pin';try{await api('/api/committee/announcements',{method:'POST',data:{action:pin?'pin':'unpin',id}});await load();say(pin?'Pinned to the top.':'Unpinned.')}catch(err){b.disabled=false;say(err.message,true)}return}
+  if(b.hasAttribute('data-md-down')){if(!confirm('Take this notice down for everyone? Anyone who said they were coming to an upcoming event is told it is cancelled.'))return;b.disabled=true;try{const r=await api('/api/committee/announcements',{method:'POST',data:{action:'archive',id}});await load();say('Notice taken down.'+(r.told?' '+r.told+' who said they were coming will be told.':''))}catch(err){b.disabled=false;say(err.message,true)}return}
   if(b.hasAttribute('data-md-who')){
    const panel=li.querySelector('[data-md-who-panel]');if(!panel.hidden){panel.hidden=true;return}
    panel.hidden=false;panel.textContent='Loading…';

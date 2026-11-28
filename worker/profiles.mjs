@@ -4,6 +4,7 @@
 import {fail,json,now,dbFor,payload,field,version,requireRole,audit,membersOpen,STAFF,MEMBER_ADMIN} from './shared.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
 import {validAvatar,validDob,ageOn} from '../avatars.js';
+import {earnedBadges} from '../badges.js';
 const DDL=[`CREATE TABLE IF NOT EXISTS club_member_profiles(account_id TEXT PRIMARY KEY REFERENCES club_accounts(id),bio TEXT NOT NULL DEFAULT '',sports_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(sports_json)),skill_level TEXT NOT NULL DEFAULT '' CHECK(skill_level IN ('','new','social','competitive','coach')),availability_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(availability_json)),film_member INTEGER NOT NULL DEFAULT 0 CHECK(film_member IN (0,1)),crew_skills_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(crew_skills_json)),helping_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(helping_json)),directory_visible INTEGER NOT NULL DEFAULT 0 CHECK(directory_visible IN (0,1)),show_town INTEGER NOT NULL DEFAULT 0 CHECK(show_town IN (0,1)),share_contact INTEGER NOT NULL DEFAULT 0 CHECK(share_contact IN (0,1)),dob TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),id_verified_utc TEXT,id_verified_by TEXT,id_verified_type TEXT NOT NULL DEFAULT '',version INTEGER NOT NULL DEFAULT 1,updated_utc TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS club_member_connections(low_id TEXT NOT NULL REFERENCES club_accounts(id),high_id TEXT NOT NULL REFERENCES club_accounts(id),requested_by TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('pending','connected','blocked')),blocked_by TEXT,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,PRIMARY KEY(low_id,high_id),CHECK(low_id<high_id))`];
 const ready=new WeakSet();
@@ -30,6 +31,18 @@ const photoUrl=id=>'/api/member/photo/'+id;
 const pick=(list,allowed)=>{if(!Array.isArray(list))return [];const known=[...new Set(list.filter(x=>allowed.includes(x)))];
  const other=list.find(x=>typeof x==='string'&&x.startsWith('Other: '));const text=other?other.slice(7).replace(/\s+/g,' ').trim().slice(0,80):'';return text?[...known,'Other: '+text]:known};
 const parse=s=>{try{return JSON.parse(s||'[]')}catch{return []}};
+// Badges for a set of members, worked out in three queries whatever the number of members.
+export async function badgesFor(env,db,ids){
+ const out=new Map();if(!ids.length)return out;
+ const q=ids.map(()=>'?').join(','),until=env.SANDY_FOUNDING_UNTIL||'2027-06-30';
+ const rows=(await db.prepare(`SELECT a.id,p.joined_on,m.* FROM club_accounts a JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id WHERE a.id IN (${q})`).bind(...ids).all()).results||[];
+ let goingRows=[];try{goingRows=(await db.prepare(`SELECT account_id,COUNT(*) AS n FROM club_announcement_rsvps WHERE response='going' AND account_id IN (${q}) GROUP BY account_id`).bind(...ids).all()).results||[]}catch{}// no events yet
+ const going=new Map(goingRows.map(r=>[r.account_id,r.n]));
+ const links=new Map();
+ for(const r of (await db.prepare(`SELECT low_id,high_id FROM club_member_connections WHERE state='connected' AND (low_id IN (${q}) OR high_id IN (${q}))`).bind(...ids,...ids).all()).results||[])for(const x of [r.low_id,r.high_id])links.set(x,(links.get(x)||0)+1);
+ for(const r of rows)out.set(r.id,earnedBadges({joinedOn:r.joined_on||'',foundingUntil:until,verified:!!r.id_verified_utc,picture:!!r.picture_type,bio:!!(r.bio||'').trim(),sports:parse(r.sports_json).length,availability:parse(r.availability_json).length,going:going.get(r.id)||0,film:!!r.film_member,crew:parse(r.crew_skills_json).length,helping:parse(r.helping_json).length,connections:links.get(r.id)||0}));
+ return out;
+}
 const blank=()=>({picture:null,dob:'',verified:false,verifiedAt:null,bio:'',sports:[],skillLevel:'',availability:[],filmMember:false,crewSkills:[],helping:[],directoryVisible:false,showTown:false,shareContact:false,version:0});
 function shape(r){return r?{picture:pictureOf(r),dob:r.dob||'',verified:!!r.id_verified_utc,verifiedAt:r.id_verified_utc||null,bio:r.bio,sports:parse(r.sports_json),skillLevel:r.skill_level,availability:parse(r.availability_json),filmMember:!!r.film_member,
  crewSkills:parse(r.crew_skills_json),helping:parse(r.helping_json),directoryVisible:!!r.directory_visible,showTown:!!r.show_town,shareContact:!!r.share_contact,version:r.version}:blank()}
@@ -52,10 +65,10 @@ export async function profilesEndpoint(req,env,path,identity){
  const db=dbFor(env);
  if(path==='/api/committee/member-profiles'){
   requireRole(identity,MEMBER_ADMIN);await ensureProfileTables(env,db);
-  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,p.consent_contact,m.*,v.username AS verifier FROM club_accounts a
+  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,p.consent_contact,p.audience_region,m.*,v.username AS verifier FROM club_accounts a
    JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id LEFT JOIN club_accounts v ON v.id=m.id_verified_by WHERE a.role='member' ORDER BY p.joined_on DESC,a.username LIMIT 1000`).all();
   return json({members:results.map(r=>({accountId:r.id,username:r.username,name:r.full_name,preferredName:r.preferred_name,town:r.town,email:r.email,mobile:r.mobile,
-   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,contactConsent:!!r.consent_contact,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
+   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,audienceRegion:r.audience_region||'',contactConsent:!!r.consent_contact,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
  }
  // Blue tick: a committee member or the Webmaster sighted photo ID in person and confirmed the date of birth.
  // Only the ID type is kept; ID numbers and copies of documents are never stored.
@@ -120,7 +133,7 @@ export async function profilesEndpoint(req,env,path,identity){
  }
  if(path==='/api/member/profile'){
   const row=await db.prepare('SELECT * FROM club_member_profiles WHERE account_id=?').bind(identity.id).first();
-  if(req.method==='GET')return json({profile:shape(row),gender:me.gender||'',details:{fullName:me.full_name,preferredName:me.preferred_name,town:me.town,audienceRegion:me.audience_region,mobile:me.mobile,email:me.email,contactConsent:!!me.consent_contact},photoUrl:row?.picture_type==='photo'?photoUrl(identity.id):null,name:me.preferred_name||me.full_name,options:{sports:SPORTS,crew:CREW,helping:HELPING,availability:AVAILABILITY,skills:SKILLS.slice(1)}});
+  if(req.method==='GET')return json({profile:shape(row),badges:(await badgesFor(env,db,[identity.id])).get(identity.id)||[],gender:me.gender||'',details:{fullName:me.full_name,preferredName:me.preferred_name,town:me.town,audienceRegion:me.audience_region,mobile:me.mobile,email:me.email,contactConsent:!!me.consent_contact},photoUrl:row?.picture_type==='photo'?photoUrl(identity.id):null,name:me.preferred_name||me.full_name,options:{sports:SPORTS,crew:CREW,helping:HELPING,availability:AVAILABILITY,skills:SKILLS.slice(1)}});
   if(req.method!=='POST')fail(405,'Use the profile form.','method_not_allowed');
   const b=await payload(req,6000),expected=version(b.version);
   if(expected!==(row?.version||0))fail(409,'Your profile changed in another window. Reload before saving.','conflict');
@@ -153,6 +166,8 @@ export async function profilesEndpoint(req,env,path,identity){
     connection:!l?'none':l.state==='connected'?'connected':l.requested_by===identity.id?'requested':'incoming',
     ...(connected&&p.shareContact?{contact:{email:r.email,mobile:r.mobile}}:{})};
   });
+  const badges=new Map();for(let i=0;i<members.length;i+=40)for(const [k,v] of await badgesFor(env,db,members.slice(i,i+40).map(m=>m.accountId)))badges.set(k,v);
+  for(const m of members)m.badges=badges.get(m.accountId)||[];
   const mine=await db.prepare('SELECT directory_visible FROM club_member_profiles WHERE account_id=?').bind(identity.id).first();
   return json({members,visible:!!mine?.directory_visible,incoming:members.filter(m=>m.connection==='incoming').length});
  }

@@ -480,3 +480,24 @@ body.desk-focus .committee-access{display:none}
 .rd-news{background:white;border:1px solid #dbe9e5;border-radius:10px;padding:1rem 1.2rem;color:#102d40}.rd-news h3{margin:.1rem 0 .5rem;font-size:1.4rem}.rd-news h4{margin:.9rem 0 .2rem}.rd-news-kicker{margin:0;color:#c14e32;font-weight:800;letter-spacing:.08em;font-size:.72rem}
 .rd-check{list-style:none;padding:0;margin:.3rem 0 .6rem;display:grid;gap:.25rem}.rd-check li{color:#805300}.rd-check li.ok{color:#1c6349;font-weight:700}
 #rd-desk-title:focus{outline:none}
+/* Member notices: new, pinned and change tags */
+.notice-tag{display:inline-block;font-size:.68rem;font-weight:900;letter-spacing:.03em;text-transform:uppercase;padding:.15rem .45rem;border-radius:10px;vertical-align:middle}
+.notice-tag.new{background:#c62828;color:#fff}.notice-tag.pinned{background:#103c4d;color:#fff}.notice-tag.urgent{background:#fff0cf;color:#805300}
+.member-item.is-new{border-left:4px solid #c62828}
+.notify-options{border:0;padding:0;margin:0 0 .6rem;display:grid;gap:.4rem}.notify-options legend{font-weight:800;margin-bottom:.4rem}
+.notify-option{display:flex!important;gap:.6rem;align-items:flex-start;background:white;border:1px solid #dbe9e5;border-radius:10px;padding:.55rem .7rem;cursor:pointer}
+.notify-option input{width:1.1rem!important;height:1.1rem;margin-top:.2rem;flex:0 0 auto}.notify-option span{display:grid}.notify-option small{color:#4b6468}
+.notify-option:has(input:checked){border-color:#0d7a88;background:#f1f9f7}
+.md-target{margin:.4rem 0 .8rem;border:1px solid #dbe9e5;border-radius:10px;padding:.5rem .7rem;background:#fbfdfc}.md-target summary{font-weight:800;cursor:pointer}
+.md-tgroup{border:0;padding:0;margin:.5rem 0;display:flex;flex-wrap:wrap;gap:.2rem .9rem}.md-tgroup legend{font-weight:800;font-size:.85rem;width:100%;margin-bottom:.2rem}
+.md-reach{display:grid;gap:.15rem;margin:.6rem 0;padding:.6rem .8rem;border-radius:10px;background:#eef7f4;font-size:.92rem}.md-reach:empty{display:none}
+.md-reach.warn{background:#fff4dd;border:1px solid #e6b85a}
+.md-guide{margin:.3rem 0 .8rem;font-size:.92rem}.md-guide summary{font-weight:800;cursor:pointer}.md-guide ul{margin:.4rem 0 0 1.1rem;padding:0}
+/* Participation badges */
+.badge-row{list-style:none;display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0;padding:0}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:999px;background:#fff6dc;border:1px solid #edd38e;color:#5a4300;font-size:.82rem;font-weight:800}
+.badge-row.small .badge{font-size:.72rem;padding:.12rem .45rem}
+.badge-founding{background:#ffe9dc;border-color:#f0b48e;color:#6b2e0b}.badge-tick{background:#e6f2ff;border-color:#9cc3ef;color:#0b3d73}
+.badge-film,.badge-crew{background:#efe9ff;border-color:#c3b3f0;color:#3b2479}.badge-helper,.badge-connector{background:#e5f6ef;border-color:#9fd6bf;color:#0e5a3c}
+.badge-board{margin:.4rem 0 1rem;padding:.7rem .9rem;border:1px solid #edd38e;border-radius:12px;background:#fffcf2}.badge-board h3{margin:0 0 .3rem;font-size:1rem}
+.badge-board summary{cursor:pointer;font-weight:800;font-size:.9rem}.badge-todo{list-style:none;padding:0;margin:.4rem 0 0;display:grid;gap:.3rem;font-size:.9rem}.badge-todo li{opacity:.8}
