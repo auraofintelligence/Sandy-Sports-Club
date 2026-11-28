@@ -102,7 +102,7 @@ export const CAMPAIGN_LAYERS = [
     "frequency": 2,
     "priority": 6,
     "topics": [
-      "One island three towns many arenas",
+      "Sandy Sports Straddie: come and get sandy",
       "Why a new club could complement existing clubs",
       "A proposal rather than an operating club",
       "What should happen before a founding meeting?",

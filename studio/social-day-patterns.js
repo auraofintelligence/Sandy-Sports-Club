@@ -29,7 +29,7 @@ export const BUILTIN_DAY_PATTERNS=Object.freeze({
    slot('s2','health','17:35','image','Wellbeing and community connection','Invite a conversation about enjoying physical activity together.')
   ]),
   template('weekend-three-towns','Three-town proposal',[
-   slot('s1','places','09:00','carousel','One island, three towns','Show proposed facilities and distinguish possibilities from approved sites.')
+   slot('s1','places','09:00','carousel','Sandy Sports Straddie','Show proposed facilities and distinguish possibilities from approved sites.')
   ])
  ],
  longWeekend:[

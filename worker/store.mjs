@@ -37,6 +37,12 @@ async function ensure(env,db){
    db.prepare("UPDATE store_products SET category='Club gear',version=version+1,updated_utc=? WHERE sku IN ('GEAR-BOTTLE','GEAR-TOWEL') AND demo=1 AND category='Beach gear'").bind(at),
    db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v2',?)").bind(at)]);
  }
+ // Rename the demo hoodie to the Minjerribah Mozzie design (retired slogan).
+ if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v3'").first()){
+  const at=now();
+  await db.batch([db.prepare("UPDATE store_products SET name=?,description=?,version=version+1,updated_utc=? WHERE sku='APP-HOODIE' AND demo=1 AND name LIKE '%One island%'").bind('"Minjerribah Mozzie" hoodie','Mozzie the club mascot on a heavyweight hoodie for winter sunset sessions.',at),
+   db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v3',?)").bind(at)]);
+ }
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
   const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>db.prepare("INSERT OR IGNORE INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,demo,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,1,?,?)")
    .bind(id(),p.sku,p.name,p.category,p.kind,p.description,cents(p.price),p.member==null?null:cents(p.member),p.cost==null?null:cents(p.cost),JSON.stringify(p.variants.map(x=>({label:x.label,stock:x.stock??null,...(x.price!=null?{price:cents(x.price)}:{})}))),p.eventDate||null,p.eventTime||'',p.venue||'',(i+1)*10,at,at));
