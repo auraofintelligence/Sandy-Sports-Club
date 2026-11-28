@@ -32,7 +32,7 @@ function csv(kind){
 }
 async function loadAnnouncements(){
  const {announcements}=await api('/api/committee/announcements');
- $('wm-announcements').innerHTML=announcements.length?announcements.map(a=>'<article class="member-item" data-id="'+safe(a.id)+'"><strong>'+safe(a.title)+(a.audience==='film'?' · Film Club':'')+'</strong>'+
+ $('wm-announcements').innerHTML=announcements.length?announcements.map(a=>'<article class="member-item" data-id="'+safe(a.id)+'"><strong>'+safe(a.title)+(a.audience==='film'?' · Film Club':'')+(a.publicCalendar?' · On public calendar':'')+'</strong>'+
   '<span>'+safe([a.eventDate,a.eventTime,a.location].filter(Boolean).join(' · ')||'Notice')+'</span>'+
   (a.rsvp?'<span>Going '+a.counts.going+' (+'+a.counts.children+' kids) · Maybe '+a.counts.maybe+' · Not going '+a.counts.notGoing+' <button type="button" data-rsvps>Who is coming</button></span>':'')+
   '<span><button type="button" data-archive>Take down</button></span></article>').join(''):'<p>No live announcements.</p>';
@@ -91,7 +91,7 @@ $('wm-verify').addEventListener('submit',async e=>{
 });
 $('wm-announce').addEventListener('submit',async e=>{
  e.preventDefault();const f=e.target,d=new FormData(f);$('wm-announce-status').textContent='Publishing…';
- try{await api('/api/committee/announcements','POST',{action:'create',title:d.get('title'),body:d.get('body'),audience:d.get('audience'),eventDate:d.get('eventDate')||'',eventTime:d.get('eventTime'),location:d.get('location'),rsvp:f.elements.rsvp.checked});
+ try{await api('/api/committee/announcements','POST',{action:'create',title:d.get('title'),body:d.get('body'),audience:d.get('audience'),eventDate:d.get('eventDate')||'',eventTime:d.get('eventTime'),location:d.get('location'),rsvp:f.elements.rsvp.checked,publicCalendar:f.elements.publicCalendar.checked});
   f.reset();announcements=await loadAnnouncements();$('wm-announce-status').textContent='Published. Members see it in Notices.'}catch(error){$('wm-announce-status').textContent=error.message}
 });
 (async()=>{

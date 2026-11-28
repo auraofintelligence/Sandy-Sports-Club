@@ -8,6 +8,11 @@
 !/club-committee.js
 !/club-committee-ops.js
 !/club-meetings.js
+!/calendar-ui.js
+!/member-calendar-tab.js
+!/calendar.css
+!/calendar.js
+!/calendar.html
 !/club-help.js
 !/club-library-ui.js
 !/club-login.html

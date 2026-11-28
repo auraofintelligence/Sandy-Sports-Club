@@ -5,9 +5,14 @@ import {ensureProfileTables} from './profiles.mjs';
 const DDL=[`CREATE TABLE IF NOT EXISTS club_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL DEFAULT '',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',location TEXT NOT NULL DEFAULT '',rsvp INTEGER NOT NULL DEFAULT 0 CHECK(rsvp IN (0,1)),audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film','unverified')),created_by TEXT NOT NULL REFERENCES club_accounts(id),created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,archived_utc TEXT)`,
  `CREATE TABLE IF NOT EXISTS club_announcement_rsvps(announcement_id TEXT NOT NULL REFERENCES club_announcements(id),account_id TEXT NOT NULL REFERENCES club_accounts(id),response TEXT NOT NULL CHECK(response IN ('going','maybe','not_going')),children INTEGER NOT NULL DEFAULT 0 CHECK(children BETWEEN 0 AND 8),updated_utc TEXT NOT NULL,PRIMARY KEY(announcement_id,account_id))`];
 const ready=new WeakSet();
-async function ensure(env,db){if(ready.has(env))return;await ensureProfileTables(env,db);for(const sql of DDL)await db.prepare(sql).run();ready.add(env)}
+export async function ensureAnnouncements(env,db){if(ready.has(env))return;await ensureProfileTables(env,db);for(const sql of DDL)await db.prepare(sql).run();
+ // Events the committee chooses to show on the public calendar (no RSVPs or names are public).
+ const cols=new Set(((await db.prepare('PRAGMA table_info(club_announcements)').all()).results||[]).map(c=>c.name));
+ if(!cols.has('public_calendar'))await db.prepare('ALTER TABLE club_announcements ADD COLUMN public_calendar INTEGER NOT NULL DEFAULT 0').run();
+ ready.add(env)}
+const ensure=ensureAnnouncements;
 const responses=['going','maybe','not_going'];
-const shape=r=>({id:r.id,title:r.title,body:r.body,eventDate:r.event_date,eventTime:r.event_time,location:r.location,rsvp:!!r.rsvp,audience:r.audience,createdAt:r.created_utc,
+const shape=r=>({id:r.id,title:r.title,body:r.body,eventDate:r.event_date,eventTime:r.event_time,location:r.location,rsvp:!!r.rsvp,audience:r.audience,publicCalendar:!!r.public_calendar,createdAt:r.created_utc,
  ...(r.going!==undefined?{counts:{going:r.going,maybe:r.maybe,notGoing:r.not_going,children:r.kids}}:{}),...(r.my_response!==undefined?{myResponse:r.my_response,myChildren:r.my_children||0}:{})});
 const COUNTS=`(SELECT COUNT(*) FROM club_announcement_rsvps x WHERE x.announcement_id=a.id AND x.response='going') AS going,
  (SELECT COUNT(*) FROM club_announcement_rsvps x WHERE x.announcement_id=a.id AND x.response='maybe') AS maybe,
@@ -39,8 +44,9 @@ export async function announcementsEndpoint(req,env,path,identity){
   if(title.length<3)fail(400,'Give the announcement a title.','invalid_announcement');
   if(!['all','film','unverified'].includes(audience))fail(400,'Choose who it is for.','invalid_announcement');
   const eventDate=dateField(b.eventDate),rsvp=b.rsvp===true&&!!eventDate?1:0,annId=id();
-  await db.prepare('INSERT INTO club_announcements(id,title,body,event_date,event_time,location,rsvp,audience,created_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
-   .bind(annId,title,body,eventDate,field(b.eventTime,40),field(b.location,140),rsvp,audience,identity.id,at,at).run();
+  const publicCalendar=b.publicCalendar===true&&!!eventDate&&audience==='all'?1:0;
+  await db.prepare('INSERT INTO club_announcements(id,title,body,event_date,event_time,location,rsvp,audience,public_calendar,created_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
+   .bind(annId,title,body,eventDate,field(b.eventTime,40),field(b.location,140),rsvp,audience,publicCalendar,identity.id,at,at).run();
   await audit(db,identity,'announcement_published','announcement',annId,at).run();
   return json({ok:true,id:annId},201);
  }

@@ -34,7 +34,7 @@ function renderEvents(){
  const list=workspace.events?.length?workspace.events.map(row=>'<article class="member-item"><strong>'+safe(row.title)+'</strong><span>'+safe(row.date)+'</span>'+
   '<span role="group" aria-label="Your reply to '+safe(row.title)+'">'+Object.entries(replyLabels).map(([value,text])=>'<button type="button" data-rsvp-event="'+safe(row.id)+'" data-rsvp-value="'+value+'" data-rsvp-version="'+safe(row.rsvpVersion||0)+'" aria-pressed="'+(row.myRsvp===value)+'"'+(workspace.active&&!preview?'':' disabled')+'>'+text+'</button>').join(' ')+'</span></article>').join('')+
   (workspace.active&&!preview?'<p><a href="/api/member/calendar.ics" download>Download released events as a calendar file</a>. It does not update automatically; download again after changes.</p>':''):
-  '<p>No released upcoming events. Planned club dates remain private proposals.</p>';
+  '';
  $('member-events').innerHTML=updates+list;
 }
 document.addEventListener('click',async event=>{

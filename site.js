@@ -12,7 +12,7 @@ const pages = [
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
   ['facilities.html','Facilities'],['programme.html','Events & film'],
-  ['grants.html','Funding'],['store.html','Store'],['image-gallery.html','Gallery'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
+  ['calendar.html','What’s on'],['grants.html','Funding'],['store.html','Store'],['image-gallery.html','Gallery'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
 ];
 // Sports menu: every sport page, with a direct link to its rules and equipment.
 const sportMenu=[
@@ -60,7 +60,7 @@ fetch('/api/session',{credentials:'same-origin',cache:'no-store'})
  .catch(()=>{});
 // Shared navigation is assembled once for every page.
 const footerSections = [
-  ['Explore',[['sports.html','Sports catalogue'],['sports.html#survey','Sports survey'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['programme.html','Events & programme'],['film-club.html','Film club'],['image-gallery.html','Image gallery']]],
+  ['Explore',[['sports.html','Sports catalogue'],['sports.html#survey','Sports survey'],['places.html','Three towns'],['facilities.html','Facilities & sites'],['calendar.html','What’s on'],['programme.html','Events & programme'],['film-club.html','Film club'],['image-gallery.html','Image gallery']]],
   ['Build & back',[['member-join.html','Join free'],['join.html','Get involved'],['interest.html','Express interest'],['grants.html','Grants & funding'],['assets.html','Equipment wish list'],['donate.html','Screen funding concept'],['constitution.html','Draft constitution']]],
   ['Clubhouse & tools',[['clubhouse.html','Club proposal (illustrated)'],['member-home.html','My membership'],['club-admin.html','My Clubhouse (working dashboard)'],['club-login.html','Secure sign-in'],['social-studio.html','Social Studio']]]
 ];
@@ -90,7 +90,7 @@ const committeeGuide=[
 const pageGroups = [
   ['Vision and sports',[pages[0],pages[2],pages[1],pages[3],...sportGuide]],
   ['Places and facilities',[pages[4],pages[7],pages[8],route('assets','Asset wish list')]],
-  ['Events, film and backing',[pages[5],pages[6],pages[9],pages[10],pages[11],route('interest','Express interest')]],
+  ['Events, film and backing',[route('calendar','What’s on'),pages[5],pages[6],pages[9],pages[10],pages[11],route('interest','Express interest')]],
   ['Member clubhouse',[pages[12],route('member-home','My membership (future)'),pages[13],...memberGuide]],
   ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[14],route('committee-governance','Governance'),pages[16],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[15],pages[17],route('image-gallery','Image gallery')]]
 ];

@@ -19,7 +19,7 @@ const DDL=[
  `CREATE TABLE IF NOT EXISTS store_discounts(code TEXT PRIMARY KEY COLLATE NOCASE,kind TEXT NOT NULL CHECK(kind IN ('percent','amount')),value INTEGER NOT NULL CHECK(value>0),applies TEXT NOT NULL DEFAULT 'all',min_spend_cents INTEGER NOT NULL DEFAULT 0,max_uses INTEGER,uses INTEGER NOT NULL DEFAULT 0,once_per_member INTEGER NOT NULL DEFAULT 0,members_only INTEGER NOT NULL DEFAULT 0,starts TEXT,ends TEXT,active INTEGER NOT NULL DEFAULT 1,note TEXT NOT NULL DEFAULT '',created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL)`];
 const ready=new WeakSet();
 const cents=d=>Math.round(Number(d)*100);
-async function ensure(env,db){
+export async function ensureStore(env,db){
  if(ready.has(env))return;
  for(const s of DDL)await db.prepare(s).run();
  // Orders created before checkout existed gain the checkout columns.
@@ -240,7 +240,7 @@ async function report(db){
   products:{active:products.filter(p=>p.status==='active').length,draft:products.filter(p=>p.status==='draft').length,archived:products.filter(p=>p.status==='archived').length}};
 }
 export async function storeEndpoint(req,env,path,identity){
- const db=dbFor(env);await ensure(env,db);
+ const db=dbFor(env);await ensureStore(env,db);
  const photo=path.match(/^\/api\/store\/photo\/([a-f0-9-]{36})$/);
  if(photo&&req.method==='GET'){
   const r=await db.prepare("SELECT photo FROM store_products WHERE id=? AND photo IS NOT NULL AND (status='active' OR ?=1)").bind(photo[1],identity&&STAFF.includes(identity.role)?1:0).first();

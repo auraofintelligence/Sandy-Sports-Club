@@ -1,0 +1,26 @@
+/* What's on list, shared by the public calendar page and the member Calendar tab. */
+.cal-list{max-width:900px}
+.cal-month h3{margin:1.4rem 0 .6rem;color:#164f59;font-size:1.15rem}
+.cal-event{display:grid;grid-template-columns:4.2rem minmax(0,1fr);gap:.9rem;background:white;border:1px solid #c8dfd9;border-radius:14px;padding:.85rem;margin:.55rem 0;color:#102d40}
+.cal-date{align-self:start;display:grid;justify-items:center;align-content:start;background:#0d7a88;color:white;border-radius:10px;padding:.45rem .2rem;line-height:1.1;text-transform:uppercase;font-size:.72rem;font-weight:800}
+.cal-date strong{font-size:1.6rem;line-height:1.05}
+.cal-body h4{margin:0 0 .2rem;font-size:1.05rem}
+.cal-when{margin:0;font-weight:700;font-size:.88rem;color:#2d5560}
+.cal-sum{margin:.35rem 0 0;font-size:.9rem}
+.cal-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin:.45rem 0 0}
+.cal-tag{font-size:.72rem;font-weight:800;padding:.2rem .5rem;border-radius:12px;background:#e1f1e7;color:#1c6349}
+.cal-members{background:#e6eefb;color:#23468a}.cal-film{background:#efe5fb;color:#5b2d8f}.cal-tickets{background:#fff0cf;color:#805300}.cal-mine{background:#103c4d;color:white}
+.cal-actions{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin-top:.6rem}
+.cal-actions button,.cal-actions a{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.45rem .7rem;font:inherit;font-size:.82rem;font-weight:800;cursor:pointer;text-decoration:none}
+.cal-actions button[data-cal-save]{background:#0d7a88;color:white}
+.cal-reply{display:flex;gap:.3rem;flex-wrap:wrap}.cal-reply button[aria-pressed=true]{background:#103c4d;color:white;border-color:#103c4d}
+.cal-empty{background:white;border:1px dashed #a9c6c0;border-radius:12px;padding:1rem}
+.cal-get{background:#eff7f5;border:1px solid #b5d1d0;border-radius:14px;padding:1rem;margin:1.4rem 0;color:#102d40}
+.cal-get h3{margin:0 0 .6rem;color:#164f59}
+.cal-get-buttons{display:flex;flex-wrap:wrap;gap:.5rem}
+.cal-btn{display:inline-block;border:1px solid #0d7a88;background:#0d7a88;color:white!important;border-radius:9px;padding:.6rem .9rem;font:inherit;font-weight:800;text-decoration:none;cursor:pointer}
+.cal-btn.ghost{background:white;color:#0b5970!important}
+.cal-small{font-size:.85rem;color:#3e5a5f}
+.cal-help{margin-top:.6rem}.cal-help summary{cursor:pointer;font-weight:800;color:#0b5970}
+.cal-help h4{margin:.8rem 0 .2rem;font-size:.92rem}.cal-help p{margin:0;font-size:.88rem}
+@media(max-width:520px){.cal-event{grid-template-columns:3.4rem minmax(0,1fr);gap:.6rem;padding:.7rem}.cal-date strong{font-size:1.3rem}}
