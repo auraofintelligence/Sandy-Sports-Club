@@ -90,7 +90,7 @@ try{
  assert.equal((await jsonCall('/api/committee/families','GET',undefined,owner)).data.children.length,1);
  assert.equal((await jsonCall('/api/committee/member-profiles','GET',undefined,owner)).data.members.length,1);
  // Demo store seeds itself on real D1 and takes an order request.
- const shop=(await jsonCall('/api/store')).data;assert.ok(shop.products.length>=25);assert.equal(shop.bankAccount,false);
+ const shop=(await jsonCall('/api/store')).data;assert.ok(shop.products.length>=20);assert.equal(shop.bankAccount,false);
  const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND');
  await jsonCall('/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,code:'FOUNDING10',items:[{productId:tee.id,variant:'M',qty:1}]},member,201);
  assert.equal((await jsonCall('/api/committee/store/orders','GET',undefined,owner)).data.counts.requested,1);

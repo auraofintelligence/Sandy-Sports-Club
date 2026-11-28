@@ -12,14 +12,9 @@ export const DEMO_PRODUCTS=[
  {sku:'APP-BUCKET',name:'Bucket hat',category:'Headwear',kind:'merch',price:32,member:28,cost:11,variants:v(['S/M','L/XL'],15),description:'Wide brim, quick dry, packs flat.'},
  {sku:'APP-TRUCKER',name:'Trucker cap',category:'Headwear',kind:'merch',price:30,member:26,cost:10,variants:v(['One size'],20),description:'Embroidered Sandy Sports logo, mesh back.'},
  {sku:'APP-VISOR',name:'Court visor',category:'Headwear',kind:'merch',price:25,member:22,cost:8,variants:v(['One size'],18),description:'Keeps the sun out without trapping heat.'},
- // Beach gear
- {sku:'GEAR-VB-BALL',name:'Beach volleyball (official size)',category:'Beach gear',kind:'merch',price:65,member:58,cost:34,variants:v(['Size 5'],10),description:'Soft-touch competition ball for sand.'},
- {sku:'GEAR-VB-NET',name:'Portable volleyball net kit',category:'Beach gear',kind:'merch',price:249,member:229,cost:150,variants:v(['Kit'],3),description:'Net, poles, boundary lines and carry bag.'},
- {sku:'GEAR-FLAG-SET',name:'Flag football belt set (10)',category:'Beach gear',kind:'merch',price:59,member:52,cost:28,variants:v(['Set of 10'],5),description:'Two colours, adjustable belts for juniors and adults.'},
- {sku:'GEAR-CRICKET',name:'Beach cricket set',category:'Beach gear',kind:'merch',price:49,member:44,cost:22,variants:v(['Set'],6),description:'Bat, balls and sand stumps.'},
- {sku:'GEAR-DISC',name:'Ultimate flying disc (175 g)',category:'Beach gear',kind:'merch',price:22,member:19,cost:8,variants:v(['Ocean blue','Sunset orange'],12),description:'Regulation weight disc in club colours.'},
- {sku:'GEAR-BOTTLE',name:'Insulated drink bottle',category:'Beach gear',kind:'merch',price:35,member:30,cost:13,variants:v(['750 ml'],20),description:'Stainless, keeps water cold all session. Refill, not single-use.'},
- {sku:'GEAR-TOWEL',name:'Sand-free beach towel',category:'Beach gear',kind:'merch',price:45,member:39,cost:17,variants:v(['Large'],10),description:'Sand shakes straight off.'},
+ // Club gear: branded lifestyle items only. Sports equipment is left to local stockists (Straddie Super Sports).
+ {sku:'GEAR-BOTTLE',name:'Insulated drink bottle',category:'Club gear',kind:'merch',price:35,member:30,cost:13,variants:v(['750 ml'],20),description:'Stainless, keeps water cold all session. Refill, not single-use.'},
+ {sku:'GEAR-TOWEL',name:'Sand-free beach towel',category:'Club gear',kind:'merch',price:45,member:39,cost:17,variants:v(['Large'],10),description:'Sand shakes straight off.'},
  // Film Club
  {sku:'FILM-TEE',name:'"Screen on the sand" Film Club tee',category:'Film Club',kind:'merch',price:35,member:30,cost:14,variants:v(sizes,8),description:'For the crew behind the outdoor cinema nights.'},
  {sku:'FILM-TOTE',name:'Film Club tote bag',category:'Film Club',kind:'merch',price:22,member:19,cost:7,variants:v(['Canvas'],15),description:'Carries a picnic rug, popcorn and a camera.'},
@@ -39,3 +34,5 @@ export const DEMO_PRODUCTS=[
  {sku:'DON-SCREEN',name:'Donate to the outdoor screen fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Outdoor screen',stock:null}],description:'Help buy modular LED panels for cinema nights and live sport.'},
  {sku:'DON-JUNIOR',name:'Donate to the junior kit fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Junior kit',stock:null}],description:'Help kit out kids who cannot afford it.'}
 ];
+// Sports equipment removed from the demo store on 28 Nov 2026 so the club does not compete with local stockists.
+export const RETIRED_DEMO_SKUS=['GEAR-VB-BALL','GEAR-VB-NET','GEAR-FLAG-SET','GEAR-CRICKET','GEAR-DISC'];

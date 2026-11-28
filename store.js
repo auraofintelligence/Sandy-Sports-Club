@@ -2,7 +2,7 @@
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const money=c=>c===0?'Free':'$'+(c/100).toFixed(c%100?2:0);
 const statusLabel={requested:'Requested',confirmed:'Confirmed',ready:'Ready to collect',collected:'Collected',cancelled:'Cancelled'};
-const tint={Apparel:'#0a7481',Headwear:'#1b6f9e','Beach gear':'#e8742c','Film Club':'#3a2d6b',Community:'#2e7d4f','Event tickets':'#b8432f',Donations:'#c69214'};
+const tint={Apparel:'#0a7481',Headwear:'#1b6f9e','Club gear':'#e8742c','Film Club':'#3a2d6b',Community:'#2e7d4f','Event tickets':'#b8432f',Donations:'#c69214'};
 const NOTES=[5,10,20,50,100];
 const CART_KEY='sandy-store-cart';
 let shop=null,cart=[],quote=null;

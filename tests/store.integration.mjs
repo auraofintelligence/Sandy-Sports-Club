@@ -13,7 +13,7 @@ test('demo store: catalogue, orders, stock, reports, CSV round trip and roles',a
  const f=fixture(t,{actors:[['web','webmaster'],['treasurer','treasurer'],['sec','secretary'],['other','committee']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  const shop=await f.call(null,'/api/store');
  assert.equal(shop.bankAccount,false);assert.match(shop.notice,/no bank account/);assert.equal(shop.me.signedIn,false);
- assert.ok(shop.products.length>=25);assert.ok(shop.products.every(p=>p.demo));
+ assert.ok(shop.products.length>=20);assert.ok(!shop.products.some(p=>['GEAR-VB-BALL','GEAR-VB-NET','GEAR-FLAG-SET','GEAR-CRICKET','GEAR-DISC'].includes(p.sku)));assert.ok(shop.products.every(p=>p.demo));
  for(const kind of ['merch','ticket','donation'])assert.ok(shop.products.some(p=>p.kind===kind),kind);
  assert.equal(shop.products[0].cost,undefined);
  const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND'),cinema=shop.products.find(p=>p.sku==='TIX-CINEMA-1'),don=shop.products.find(p=>p.sku==='DON-COURTS');
@@ -92,4 +92,12 @@ test('checkout: collection, acknowledgement, quotes and discount codes',async t=
  await f.call(ana,'/api/committee/store/discounts','POST',{code:'HACK',kind:'percent',value:100},403);
  const exp=await (await f.request('treasurer','/api/committee/store/export?type=orders')).text();assert.match(exp,/collection/);assert.match(exp,/XMAS20/);
  assert.ok((await f.call('treasurer','/api/committee/store/report')).codes.some(c=>c.code==='XMAS20'));
+});
+test('demo sports equipment already seeded is retired, leaving gear to local stockists',async t=>{
+ const f=fixture(t,{actors:[['web','webmaster']]});
+ f.sql.exec(`CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);INSERT INTO store_settings VALUES('seeded','x');INSERT INTO store_settings VALUES('codes_seeded','x');`);
+ f.sql.exec(`CREATE TABLE IF NOT EXISTS store_products(id TEXT PRIMARY KEY,sku TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,category TEXT NOT NULL DEFAULT '',kind TEXT NOT NULL DEFAULT 'merch',description TEXT NOT NULL DEFAULT '',price_cents INTEGER NOT NULL DEFAULT 0,member_price_cents INTEGER,cost_cents INTEGER,variants_json TEXT NOT NULL DEFAULT '[]',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',venue TEXT NOT NULL DEFAULT '',photo TEXT,status TEXT NOT NULL DEFAULT 'draft',sort INTEGER NOT NULL DEFAULT 100,demo INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL);
+  INSERT INTO store_products(id,sku,name,category,variants_json,status,demo,created_utc,updated_utc) VALUES('a','GEAR-VB-BALL','Ball','Beach gear','[{"label":"Size 5","stock":3}]','active',1,'x','x'),('b','GEAR-BOTTLE','Bottle','Beach gear','[{"label":"750 ml","stock":3}]','active',1,'x','x');`);
+ const shop=await f.call(null,'/api/store');
+ assert.deepEqual(shop.products.map(p=>[p.sku,p.category]),[['GEAR-BOTTLE','Club gear']]);
 });

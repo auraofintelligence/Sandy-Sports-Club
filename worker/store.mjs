@@ -1,7 +1,7 @@
 // Sandy Sports working demo store. The club has no bank account: no payment is taken, orders are requests only.
 // Treasurer and Webmaster manage products, stock, orders, CSV import and export; other officers can read reports.
 import {fail,json,now,id,dbFor,payload,field,requireRole,audit,STAFF,MEMBER_ADMIN} from './shared.mjs';
-import {DEMO_PRODUCTS} from './store-catalogue.mjs';
+import {DEMO_PRODUCTS,RETIRED_DEMO_SKUS} from './store-catalogue.mjs';
 import {cleanPhoto,photoResponse} from './profiles.mjs';
 export const STORE_MANAGERS=['webmaster','treasurer'];
 export const STORE_NOTICE='Working demo store. Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.';
@@ -29,6 +29,13 @@ async function ensure(env,db){
   const at=now();
   await db.batch([...DEMO_CODES.map(c=>db.prepare('INSERT OR IGNORE INTO store_discounts(code,kind,value,applies,min_spend_cents,max_uses,once_per_member,members_only,note,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(c.code,c.kind,c.value,c.applies,c.minSpend,c.maxUses,c.once,c.membersOnly,c.note,at,at)),
    db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('codes_seeded',?)").bind(at)]);
+ }
+ // Retire demo sports equipment already seeded (left to local stockists) and move branded lifestyle items to Club gear.
+ if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v2'").first()){
+  const at=now();
+  await db.batch([...RETIRED_DEMO_SKUS.map(sku=>db.prepare("UPDATE store_products SET status='archived',version=version+1,updated_utc=? WHERE sku=? AND demo=1").bind(at,sku)),
+   db.prepare("UPDATE store_products SET category='Club gear',version=version+1,updated_utc=? WHERE sku IN ('GEAR-BOTTLE','GEAR-TOWEL') AND demo=1 AND category='Beach gear'").bind(at),
+   db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v2',?)").bind(at)]);
  }
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
   const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>db.prepare("INSERT OR IGNORE INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,demo,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,1,?,?)")
