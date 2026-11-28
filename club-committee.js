@@ -1,6 +1,7 @@
 // PLFC-inspired Sandy committee room. Real draft data, server roles, revisions and audit; no fake approvals.
 import {SUITE_BY_KEY,SUITE_DESKS} from './studio/sandy-suite-spec.js';
-import {setupCommitteeOperations} from './club-committee-ops.js?v=20261125';
+import {setupCommitteeOperations} from './club-committee-ops.js?v=20261128';
+import {setupMeetingsDesk} from './club-meetings.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
  {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
@@ -8,7 +9,7 @@ const DESKS=[
  {key:'news',group:'Communications',label:'Newsletter desk',kind:'newsletter',description:'Draft newsletter topics and production steps. No member email is sent.'},
  {key:'social',group:'Communications',label:'Social Studio',tab:'social',description:'Open the shared 12-month Social Media Hub and its production briefs.'},
  {key:'handover',group:'Governance',label:'Officer handover',kind:'governance',description:'Prepare handover notes, responsibilities and outstanding actions.'},
- {key:'meetings',group:'Governance',label:'Meetings',kind:'meeting',description:'Schedule draft meetings and record agendas and minutes notes. Formal meeting approval is not enabled.'},
+ {key:'meetings',group:'Governance',label:'Meetings and minutes',kind:'meeting',description:'Agenda, attendance, outcomes, draft minutes and follow-up jobs.'},
  {key:'agm',group:'Governance',label:'AGM jobs',kind:'governance',description:'Plan AGM notices, roles, deadlines, reports and tasks, pending a lawful founding committee.'},
  {key:'documents',group:'Governance',label:'Documents',kind:'governance',description:'Record document titles, locations and review tasks; no private file-upload archive is connected.'},
  {key:'automations',group:'Governance',label:'Membership automations',kind:'governance',description:'Plan optional future reminders. No automated member messages are enabled.'},
@@ -37,6 +38,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const suite=setupSandySuite({api,status,getIdentity});
  const ops=setupCommitteeOperations({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
+ const meetingsDesk=setupMeetingsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
  const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
@@ -68,7 +70,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
  const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -153,8 +155,9 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
-  ops.close();
+  ops.close();meetingsDesk.close();
   if(scroll)window.scrollTo({top:0,behavior:'auto'});
+  if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingsDesk.open();return}
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;
   }

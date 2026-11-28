@@ -1,5 +1,5 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
-import {setupCommitteeRoom} from './club-committee.js?v=committee-ops-20261125';
+import {setupCommitteeRoom} from './club-committee.js?v=20261128';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 import {loadNominations,mayReviewNominations} from './club-nominations-ui.js';
 import {loadSurvey,mayReviewSurvey} from './club-survey-ui.js';
