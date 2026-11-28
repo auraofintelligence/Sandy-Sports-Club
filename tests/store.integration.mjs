@@ -17,15 +17,15 @@ test('demo store: catalogue, orders, stock, reports, CSV round trip and roles',a
  for(const kind of ['merch','ticket','donation'])assert.ok(shop.products.some(p=>p.kind===kind),kind);
  assert.equal(shop.products[0].cost,undefined);
  const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND'),cinema=shop.products.find(p=>p.sku==='TIX-CINEMA-1'),don=shop.products.find(p=>p.sku==='DON-COURTS');
- await f.call(null,'/api/store/orders','POST',{items:[{productId:tee.id,variant:'M',qty:1}]},401);
+ await f.call(null,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:tee.id,variant:'M',qty:1}]},401);
  const bday=await join(f,'birthday.member','1990-'+thisMonth+'-15'),plain=await join(f,'plain.member','1990-'+(thisMonth==='06'?'07':'06')+'-15');
  assert.equal((await f.call(bday,'/api/store')).me.birthdayMonth,true);
- const order=(await f.call(bday,'/api/store/orders','POST',{items:[{productId:tee.id,variant:'M',qty:2},{productId:cinema.id,variant:'Family (2 adults, 2 kids)',qty:1},{productId:don.id,variant:'Courts and lights',amount:50}]},201)).order;
+ const order=(await f.call(bday,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:tee.id,variant:'M',qty:2},{productId:cinema.id,variant:'Family (2 adults, 2 kids)',qty:1},{productId:don.id,variant:'Courts and lights',amount:50}]},201)).order;
  assert.equal(order.subtotal,2*3000+3500);assert.equal(order.discount,Math.round(9500*0.1));assert.equal(order.donation,5000);assert.equal(order.total,9500-950+5000);assert.equal(order.number,1001);
- const plainOrder=(await f.call(plain,'/api/store/orders','POST',{items:[{productId:tee.id,variant:'M',qty:1}]},201)).order;
+ const plainOrder=(await f.call(plain,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:tee.id,variant:'M',qty:1}]},201)).order;
  assert.equal(plainOrder.discount,0);assert.equal(plainOrder.total,3000);assert.equal(plainOrder.number,1002);
- await f.call(plain,'/api/store/orders','POST',{items:[{productId:tee.id,variant:'M',qty:99}]},400);
- await f.call(plain,'/api/store/orders','POST',{items:[{productId:don.id,variant:'Courts and lights',amount:0.5}]},400);
+ await f.call(plain,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:tee.id,variant:'M',qty:99}]},400);
+ await f.call(plain,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:don.id,variant:'Courts and lights',amount:0.5}]},400);
  assert.equal((await f.call(bday,'/api/store/orders')).orders.length,1);
  // Roles
  await f.call(plain,'/api/committee/store/orders',undefined,undefined,403);
@@ -61,4 +61,35 @@ test('demo store: catalogue, orders, stock, reports, CSV round trip and roles',a
  await f.call('treasurer','/api/committee/store/products','POST',{product:{sku:'TIX-NO-DATE',name:'Ticket without date',kind:'ticket',price:'5',variants:'Adult:10'}},400);
  await f.call('treasurer','/api/committee/store/products','POST',{action:'status',id:p.id,status:'archived'});
  assert.equal((await f.call(null,'/api/store')).products.some(x=>x.sku==='NEW-SUNSCREEN'),false);
+});
+
+test('checkout: collection, acknowledgement, quotes and discount codes',async t=>{
+ const f=fixture(t,{actors:[['web','webmaster'],['treasurer','treasurer']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
+ const shop=await f.call(null,'/api/store');assert.deepEqual(shop.collectionPoints,['Dunwich','Amity Point','Point Lookout','At the next club event']);
+ const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND'),pins=shop.products.find(p=>p.sku==='FILM-PINS'),bottle=shop.products.find(p=>p.sku==='GEAR-BOTTLE');
+ const other=new Date(Date.now()+10*3600000).toISOString().slice(5,7)==='03'?'04':'03';
+ const ana=await join(f,'code.member','1985-'+other+'-03');
+ const items=[{productId:tee.id,variant:'M',qty:1},{productId:pins.id,variant:'Set of 3',qty:1}];
+ await f.call(ana,'/api/store/orders','POST',{items,collection:'Dunwich'},400);
+ await f.call(ana,'/api/store/orders','POST',{items,acknowledge:true,collection:'Sydney'},400);
+ const q=await f.call(ana,'/api/store/quote','POST',{items,code:'founding10'});
+ assert.equal(q.subtotal,3000+1500);assert.equal(q.discount,450);assert.equal(q.code,'FOUNDING10');assert.match(q.codeMessage,/applied/);
+ const film=await f.call(ana,'/api/store/quote','POST',{items,code:'FILMCLUB15'});assert.equal(film.discount,Math.round(1500*0.15));
+ const bad=await f.call(ana,'/api/store/quote','POST',{items,code:'NOPE'});assert.equal(bad.discount,0);assert.match(bad.codeMessage,/not valid/);
+ const small=await f.call(ana,'/api/store/quote','POST',{items:[{productId:pins.id,variant:'Set of 3',qty:1}],code:'SUMMER5'});assert.match(small.codeMessage,/Spend \$40/);
+ await f.call(ana,'/api/store/orders','POST',{items,acknowledge:true,collection:'Amity Point',code:'NOPE'},400);
+ const order=(await f.call(ana,'/api/store/orders','POST',{items,acknowledge:true,collection:'Amity Point',phone:'0400 111 222',code:'FOUNDING10'},201)).order;
+ assert.equal(order.discount,450);assert.equal(order.code,'FOUNDING10');assert.equal(order.collection,'Amity Point');
+ const again=await f.call(ana,'/api/store/quote','POST',{items,code:'FOUNDING10'});assert.match(again.codeMessage,/already used/);
+ await f.call('treasurer','/api/committee/store/orders','POST',{id:order.id,status:'cancelled'});
+ assert.equal((await f.call('treasurer','/api/committee/store/discounts')).codes.find(c=>c.code==='FOUNDING10').uses,0);
+ assert.equal((await f.call(ana,'/api/store/quote','POST',{items,code:'FOUNDING10'})).code,'FOUNDING10');
+ await f.call('treasurer','/api/committee/store/discounts','POST',{code:'XMAS20',kind:'amount',value:'20',applies:'all',minSpend:'30',maxUses:'1',active:true});
+ const big=[{productId:bottle.id,variant:'750 ml',qty:2}];
+ assert.equal((await f.call(ana,'/api/store/quote','POST',{items:big,code:'xmas20'})).discount,2000);
+ await f.call(ana,'/api/store/orders','POST',{items:big,acknowledge:true,collection:'Point Lookout',code:'XMAS20'},201);
+ assert.match((await f.call(ana,'/api/store/quote','POST',{items:big,code:'XMAS20'})).codeMessage,/used up/);
+ await f.call(ana,'/api/committee/store/discounts','POST',{code:'HACK',kind:'percent',value:100},403);
+ const exp=await (await f.request('treasurer','/api/committee/store/export?type=orders')).text();assert.match(exp,/collection/);assert.match(exp,/XMAS20/);
+ assert.ok((await f.call('treasurer','/api/committee/store/report')).codes.some(c=>c.code==='XMAS20'));
 });

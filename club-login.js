@@ -32,7 +32,8 @@ async function submit(formId,path,redirect=false){
    message(path.endsWith('/bootstrap')?'First webmaster reserved and activated. Remove the bootstrap Cloudflare secret. Then sign in.':
      path.endsWith('/activate')?'Account activated. You may now sign in.':path.endsWith('/recover')||path.endsWith('/change-password')?'Password changed. All previous sessions have been signed out. Sign in with your new password.':'Signed in. Opening shared club administration.');
    if(path.endsWith('/recover')||path.endsWith('/change-password'))$('club-password-panel').hidden=true;
-   if(redirect){if(path==='/api/view/login'){location.href='/club-admin.html';return}const session=await request('/api/session');location.href=session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
+   if(redirect){if(path==='/api/view/login'){location.href='/club-admin.html';return}const session=await request('/api/session');const next=new URLSearchParams(location.search).get('next');
+    location.href=next&&/^\/[a-z0-9-]+\.html(#[a-z0-9-]*)?$/i.test(next)?next:session.identity?.role==='member'?'/member-home.html':'/club-admin.html'}
   }catch(error){message(error.message,true)}
   finally{button.disabled=false}
  });

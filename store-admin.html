@@ -10,7 +10,7 @@
 <div id="sa-panel" hidden>
 <nav class="store-admin-tabs" aria-label="Store admin sections">
  <button type="button" data-tab="orders" aria-current="page">Orders</button><button type="button" data-tab="products">Products</button>
- <button type="button" data-tab="import">Batch upload &amp; export</button><button type="button" data-tab="report">Reports</button>
+ <button type="button" data-tab="codes">Discount codes</button><button type="button" data-tab="import">Batch upload &amp; export</button><button type="button" data-tab="report">Reports</button>
 </nav>
 <section data-pane="orders" class="club-panel">
  <div class="club-form-grid"><label>Show<select id="sa-order-filter"><option value="open">Open</option><option value="requested">New requests</option><option value="">All</option><option value="collected">Collected</option><option value="cancelled">Cancelled</option></select></label></div>
@@ -46,6 +46,25 @@
  <label>Or paste CSV<textarea id="sa-csv" rows="6" placeholder="sku,name,category,kind,status,price,member_price,cost,variants,event_date,event_time,venue,description,sort"></textarea></label>
  <p><button type="button" id="sa-preview">Preview changes</button> <button type="button" id="sa-apply" class="button coral" disabled>Apply import</button></p>
  <div id="sa-import-result"></div></div>
+</section>
+<section data-pane="codes" class="club-panel" hidden>
+ <form id="sa-code-form" class="member-workspace-form" data-manage><h2>Create or update a code</h2><div class="club-form-grid">
+  <label>Code<input name="code" required maxlength="30" placeholder="SUMMER10" style="text-transform:uppercase"></label>
+  <label>Type<select name="kind"><option value="percent">Percent off</option><option value="amount">Dollars off</option></select></label>
+  <label>Value<input name="value" required inputmode="decimal" placeholder="10"></label>
+  <label>Applies to<select name="applies"><option value="all">Merch and tickets</option><option value="merch">Merch only</option><option value="tickets">Tickets only</option></select></label>
+  <label>Or one category <small>(optional)</small><input name="category" list="sa-categories" maxlength="40"></label>
+  <label>Minimum spend $<input name="minSpend" inputmode="decimal" placeholder="0"></label>
+  <label>Total uses allowed <small>(blank = unlimited)</small><input name="maxUses" inputmode="numeric"></label>
+  <label>Starts<input type="date" name="starts"></label><label>Ends<input type="date" name="ends"></label>
+ </div>
+ <label class="club-consent"><input type="checkbox" name="membersOnly"> Members only</label>
+ <label class="club-consent"><input type="checkbox" name="oncePerMember"> Once per member</label>
+ <label class="club-consent"><input type="checkbox" name="active" checked> Active</label>
+ <label>Note<input name="note" maxlength="200"></label>
+ <p><button type="submit">Save code</button> <span id="sa-code-status" role="status"></span></p></form>
+ <p class="club-note">Codes never stack with the birthday discount: the bigger one applies. Donations are never discounted.</p>
+ <div class="table-scroll"><table class="store-table" id="sa-codes"></table></div>
 </section>
 <section data-pane="report" class="club-panel" hidden><div id="sa-report"></div></section>
 </div>

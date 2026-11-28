@@ -92,7 +92,7 @@ try{
  // Demo store seeds itself on real D1 and takes an order request.
  const shop=(await jsonCall('/api/store')).data;assert.ok(shop.products.length>=25);assert.equal(shop.bankAccount,false);
  const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND');
- await jsonCall('/api/store/orders','POST',{items:[{productId:tee.id,variant:'M',qty:1}]},member,201);
+ await jsonCall('/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,code:'FOUNDING10',items:[{productId:tee.id,variant:'M',qty:1}]},member,201);
  assert.equal((await jsonCall('/api/committee/store/orders','GET',undefined,owner)).data.counts.requested,1);
  console.log('PASS: isolated actual Wrangler/workerd assets, D1 login/atomic task creation, separate showcase, encrypted binary download and founding member onboarding');
 }finally{

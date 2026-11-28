@@ -35,7 +35,7 @@ export const DEMO_PRODUCTS=[
  {sku:'TIX-COME-TRY',name:'Summer come-and-try day',category:'Event tickets',kind:'ticket',price:0,member:0,cost:null,eventDate:'2027-01-16',eventTime:'9am to 12pm',venue:'Dunwich (venue to be confirmed)',
   variants:[{label:'Adult',stock:60,price:0},{label:'Junior',stock:60,price:0}],description:'Free taster sessions across volleyball, flag football and beach cricket. Book so we bring enough gear.'},
  // Donations
- {sku:'DON-COURTS',name:'Donate to the courts and lights fund',category:'Donations',kind:'donation',price:25,member:null,cost:null,variants:[{label:'Courts and lights',stock:null}],description:'Help build lit sand courts across the three towns.'},
- {sku:'DON-SCREEN',name:'Donate to the outdoor screen fund',category:'Donations',kind:'donation',price:25,member:null,cost:null,variants:[{label:'Outdoor screen',stock:null}],description:'Help buy modular LED panels for cinema nights and live sport.'},
- {sku:'DON-JUNIOR',name:'Donate to the junior kit fund',category:'Donations',kind:'donation',price:25,member:null,cost:null,variants:[{label:'Junior kit',stock:null}],description:'Help kit out kids who cannot afford it.'}
+ {sku:'DON-COURTS',name:'Donate to the courts and lights fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Courts and lights',stock:null}],description:'Help build lit sand courts across the three towns.'},
+ {sku:'DON-SCREEN',name:'Donate to the outdoor screen fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Outdoor screen',stock:null}],description:'Help buy modular LED panels for cinema nights and live sport.'},
+ {sku:'DON-JUNIOR',name:'Donate to the junior kit fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Junior kit',stock:null}],description:'Help kit out kids who cannot afford it.'}
 ];

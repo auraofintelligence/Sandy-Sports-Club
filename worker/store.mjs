@@ -7,15 +7,29 @@ export const STORE_MANAGERS=['webmaster','treasurer'];
 export const STORE_NOTICE='Working demo store. Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.';
 const KINDS=['merch','ticket','donation'],STATUSES=['draft','active','archived'],ORDER_STATUSES=['requested','confirmed','ready','collected','cancelled'];
 const BIRTHDAY_PERCENT=10,LOW_STOCK=3;
+export const COLLECTION_POINTS=['Dunwich','Amity Point','Point Lookout','At the next club event'];
+const APPLIES=['all','merch','tickets'],DEMO_CODES=[
+ {code:'FOUNDING10',kind:'percent',value:10,applies:'merch',minSpend:0,maxUses:null,once:1,membersOnly:1,note:'Founding members: 10% off merch, once each.'},
+ {code:'SUMMER5',kind:'amount',value:500,applies:'all',minSpend:4000,maxUses:200,once:0,membersOnly:0,note:'$5 off orders of $40 or more over summer.'},
+ {code:'FILMCLUB15',kind:'percent',value:15,applies:'category:Film Club',minSpend:0,maxUses:null,once:0,membersOnly:1,note:'15% off Film Club merch for members.'}];
 const DDL=[
  `CREATE TABLE IF NOT EXISTS store_products(id TEXT PRIMARY KEY,sku TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,category TEXT NOT NULL DEFAULT '',kind TEXT NOT NULL DEFAULT 'merch' CHECK(kind IN ('merch','ticket','donation')),description TEXT NOT NULL DEFAULT '',price_cents INTEGER NOT NULL DEFAULT 0 CHECK(price_cents>=0),member_price_cents INTEGER CHECK(member_price_cents IS NULL OR member_price_cents>=0),cost_cents INTEGER CHECK(cost_cents IS NULL OR cost_cents>=0),variants_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(variants_json)),event_date TEXT,event_time TEXT NOT NULL DEFAULT '',venue TEXT NOT NULL DEFAULT '',photo TEXT,status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','active','archived')),sort INTEGER NOT NULL DEFAULT 100,demo INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL)`,
- `CREATE TABLE IF NOT EXISTS store_orders(id TEXT PRIMARY KEY,number INTEGER NOT NULL UNIQUE,account_id TEXT REFERENCES club_accounts(id),name TEXT NOT NULL DEFAULT '',email TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'requested' CHECK(status IN ('requested','confirmed','ready','collected','cancelled')),lines_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(lines_json)),subtotal_cents INTEGER NOT NULL DEFAULT 0,discount_cents INTEGER NOT NULL DEFAULT 0,discount_label TEXT NOT NULL DEFAULT '',donation_cents INTEGER NOT NULL DEFAULT 0,total_cents INTEGER NOT NULL DEFAULT 0,note TEXT NOT NULL DEFAULT '',stock_applied INTEGER NOT NULL DEFAULT 0,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL)`,
- 'CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)'];
+ `CREATE TABLE IF NOT EXISTS store_orders(id TEXT PRIMARY KEY,number INTEGER NOT NULL UNIQUE,collection TEXT NOT NULL DEFAULT '',phone TEXT NOT NULL DEFAULT '',discount_code TEXT NOT NULL DEFAULT '',account_id TEXT REFERENCES club_accounts(id),name TEXT NOT NULL DEFAULT '',email TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'requested' CHECK(status IN ('requested','confirmed','ready','collected','cancelled')),lines_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(lines_json)),subtotal_cents INTEGER NOT NULL DEFAULT 0,discount_cents INTEGER NOT NULL DEFAULT 0,discount_label TEXT NOT NULL DEFAULT '',donation_cents INTEGER NOT NULL DEFAULT 0,total_cents INTEGER NOT NULL DEFAULT 0,note TEXT NOT NULL DEFAULT '',stock_applied INTEGER NOT NULL DEFAULT 0,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL)`,
+ 'CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)',
+ `CREATE TABLE IF NOT EXISTS store_discounts(code TEXT PRIMARY KEY COLLATE NOCASE,kind TEXT NOT NULL CHECK(kind IN ('percent','amount')),value INTEGER NOT NULL CHECK(value>0),applies TEXT NOT NULL DEFAULT 'all',min_spend_cents INTEGER NOT NULL DEFAULT 0,max_uses INTEGER,uses INTEGER NOT NULL DEFAULT 0,once_per_member INTEGER NOT NULL DEFAULT 0,members_only INTEGER NOT NULL DEFAULT 0,starts TEXT,ends TEXT,active INTEGER NOT NULL DEFAULT 1,note TEXT NOT NULL DEFAULT '',created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL)`];
 const ready=new WeakSet();
 const cents=d=>Math.round(Number(d)*100);
 async function ensure(env,db){
  if(ready.has(env))return;
  for(const s of DDL)await db.prepare(s).run();
+ // Orders created before checkout existed gain the checkout columns.
+ const cols=new Set(((await db.prepare('PRAGMA table_info(store_orders)').all()).results||[]).map(c=>c.name));
+ for(const c of ['collection','phone','discount_code'])if(!cols.has(c))await db.prepare("ALTER TABLE store_orders ADD COLUMN "+c+" TEXT NOT NULL DEFAULT ''").run();
+ if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='codes_seeded'").first()){
+  const at=now();
+  await db.batch([...DEMO_CODES.map(c=>db.prepare('INSERT OR IGNORE INTO store_discounts(code,kind,value,applies,min_spend_cents,max_uses,once_per_member,members_only,note,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(c.code,c.kind,c.value,c.applies,c.minSpend,c.maxUses,c.once,c.membersOnly,c.note,at,at)),
+   db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('codes_seeded',?)").bind(at)]);
+ }
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
   const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>db.prepare("INSERT OR IGNORE INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,demo,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'active',?,1,?,?)")
    .bind(id(),p.sku,p.name,p.category,p.kind,p.description,cents(p.price),p.member==null?null:cents(p.member),p.cost==null?null:cents(p.cost),JSON.stringify(p.variants.map(x=>({label:x.label,stock:x.stock??null,...(x.price!=null?{price:cents(x.price)}:{})}))),p.eventDate||null,p.eventTime||'',p.venue||'',(i+1)*10,at,at));
@@ -98,7 +112,7 @@ async function upsert(db,p,at,existingId=null){
  await db.prepare('INSERT INTO store_products(id,sku,name,category,kind,description,price_cents,member_price_cents,cost_cents,variants_json,event_date,event_time,venue,status,sort,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(pid,p.sku,...vals,at,at).run();
  return {id:pid,created:true};
 }
-const orderShape=o=>({id:o.id,number:o.number,name:o.name,email:o.email,status:o.status,lines:JSON.parse(o.lines_json||'[]'),subtotal:o.subtotal_cents,discount:o.discount_cents,
+const orderShape=o=>({id:o.id,number:o.number,name:o.name,email:o.email,phone:o.phone||'',collection:o.collection||'',code:o.discount_code||'',status:o.status,lines:JSON.parse(o.lines_json||'[]'),subtotal:o.subtotal_cents,discount:o.discount_cents,
  discountLabel:o.discount_label,donation:o.donation_cents,total:o.total_cents,note:o.note,createdAt:o.created_utc,updatedAt:o.updated_utc,...(o.username!==undefined?{username:o.username}:{})});
 // Stock comes off when an order is confirmed, and goes back if a confirmed order is cancelled.
 async function moveStock(db,lines,direction){
@@ -119,30 +133,61 @@ async function moveStock(db,lines,direction){
  const results=await db.batch(writes);
  if(results.some(r=>!r.meta.changes))fail(409,'Stock changed at the same time. Try again.','stock_conflict');
 }
+const today=()=>new Date(Date.now()+10*3600000).toISOString().slice(0,10);
+const codeShape=c=>({code:c.code,kind:c.kind,value:c.value,applies:c.applies,minSpend:c.min_spend_cents,maxUses:c.max_uses,uses:c.uses,oncePerMember:!!c.once_per_member,membersOnly:!!c.members_only,starts:c.starts||'',ends:c.ends||'',active:!!c.active,note:c.note});
+const describe=c=>(c.kind==='percent'?c.value+'% off':'$'+(c.value/100).toFixed(c.value%100?2:0)+' off')+(c.applies==='all'?'':c.applies==='merch'?' merch':c.applies==='tickets'?' tickets':' '+c.applies.slice(9));
+// Prices a cart for a signed-in buyer: member prices, then the better of the birthday discount or a valid code.
+async function price(db,identity,me,items,rawCode){
+ const lines=[];let subtotal=0,donation=0;
+ for(const it of (Array.isArray(items)?items.slice(0,40):[])){
+  const p=await db.prepare("SELECT * FROM store_products WHERE id=? AND status='active'").bind(field(it.productId,40)).first();
+  if(!p)fail(409,'An item in your cart is no longer available. Remove it and try again.','product_unavailable');
+  const variant=variantsOf(p).find(x=>x.label===field(it.variant,40));if(!variant)fail(400,'Choose a size or option for '+p.name+'.','invalid_variant');
+  if(p.kind==='donation'){
+   const amount=Math.round(Number(it.amount)*100);if(!(amount>=100&&amount<=1000000))fail(400,'Donations can be $1 to $10,000.','invalid_donation');
+   donation+=amount;lines.push({productId:p.id,sku:p.sku,name:p.name,kind:p.kind,category:p.category,variant:variant.label,qty:1,unit:amount,line:amount});continue;
+  }
+  const qty=Math.floor(Number(it.qty));if(!(qty>=1&&qty<=20))fail(400,'Quantities can be 1 to 20.','invalid_qty');
+  if(variant.stock!=null&&variant.stock<qty)fail(409,'Only '+Math.max(0,variant.stock)+' left of '+p.name+' ('+variant.label+').','insufficient_stock');
+  const unit=unitPrice(p,variant,me?.member),line=unit*qty;subtotal+=line;
+  lines.push({productId:p.id,sku:p.sku,name:p.name,kind:p.kind,category:p.category,variant:variant.label,qty,unit,line,...(p.kind==='ticket'?{eventDate:p.event_date}:{})});
+ }
+ if(!lines.length)fail(400,'Your cart is empty.','empty_cart');
+ const birthday=me?.birthday?Math.round(subtotal*BIRTHDAY_PERCENT/100):0;
+ let codeDiscount=0,codeMessage='',applied=null;
+ const code=field(rawCode,30).toUpperCase();
+ if(code){
+  const c=await db.prepare('SELECT * FROM store_discounts WHERE code=?').bind(code).first(),d=today();
+  const eligible=c?lines.filter(l=>l.kind!=='donation'&&(c.applies==='all'||(c.applies==='merch'&&l.kind==='merch')||(c.applies==='tickets'&&l.kind==='ticket')||(c.applies.startsWith('category:')&&l.category===c.applies.slice(9)))).reduce((a,l)=>a+l.line,0):0;
+  if(!c||!c.active)codeMessage='That code is not valid.';
+  else if((c.starts&&d<c.starts)||(c.ends&&d>c.ends))codeMessage='That code is not running right now.';
+  else if(c.members_only&&!me?.member)codeMessage='That code is for members.';
+  else if(c.max_uses!=null&&c.uses>=c.max_uses)codeMessage='That code has been used up.';
+  else if(c.once_per_member&&identity&&await db.prepare("SELECT 1 AS x FROM store_orders WHERE account_id=? AND discount_code=? AND status<>'cancelled'").bind(identity.id,c.code).first())codeMessage='You have already used that code.';
+  else if(!eligible)codeMessage='That code does not apply to anything in your cart ('+describe(c)+').';
+  else if(eligible<c.min_spend_cents)codeMessage='Spend $'+(c.min_spend_cents/100).toFixed(0)+' or more on eligible items to use that code.';
+  else{codeDiscount=c.kind==='percent'?Math.round(eligible*c.value/100):Math.min(c.value,eligible);applied=c}
+ }
+ let discount=0,label='',usedCode='';
+ if(applied&&codeDiscount>=birthday){discount=codeDiscount;label=applied.code+': '+describe(applied);usedCode=applied.code;codeMessage='Code applied: '+describe(applied)+'.'}
+ else if(birthday){discount=birthday;label='Birthday month '+BIRTHDAY_PERCENT+'% off';if(applied)codeMessage='Your birthday discount is bigger, so it applies instead.'}
+ return {lines,subtotal,donation,discount,label,code:usedCode,codeMessage,total:subtotal-discount+donation};
+}
 async function createOrder(req,db,identity){
  const b=await payload(req,20000),me=await buyer(db,identity);
  const open=await db.prepare("SELECT COUNT(*) AS n FROM store_orders WHERE account_id=? AND status='requested'").bind(identity.id).first();
  if(Number(open?.n||0)>=10)fail(429,'You have 10 order requests waiting. Please wait for the Treasurer to catch up.','too_many_orders');
- const items=Array.isArray(b.items)?b.items.slice(0,40):[];if(!items.length)fail(400,'Your cart is empty.','empty_cart');
- const lines=[];let subtotal=0,donation=0,discountable=0;
- for(const it of items){
-  const p=await db.prepare("SELECT * FROM store_products WHERE id=? AND status='active'").bind(field(it.productId,40)).first();
-  if(!p)fail(409,'An item in your cart is no longer available.','product_unavailable');
-  const variant=variantsOf(p).find(x=>x.label===field(it.variant,40));if(!variant)fail(400,'Choose a size or option for '+p.name+'.','invalid_variant');
-  if(p.kind==='donation'){
-   const amount=Math.round(Number(it.amount)*100);if(!(amount>=100&&amount<=1000000))fail(400,'Donations can be $1 to $10,000.','invalid_donation');
-   donation+=amount;lines.push({productId:p.id,sku:p.sku,name:p.name,kind:p.kind,variant:variant.label,qty:1,unit:amount,line:amount});continue;
-  }
-  const qty=Math.floor(Number(it.qty));if(!(qty>=1&&qty<=20))fail(400,'Quantities can be 1 to 20.','invalid_qty');
-  if(variant.stock!=null&&variant.stock<qty)fail(409,'Only '+Math.max(0,variant.stock)+' left of '+p.name+' ('+variant.label+').','insufficient_stock');
-  const unit=unitPrice(p,variant,me?.member),line=unit*qty;subtotal+=line;discountable+=line;
-  lines.push({productId:p.id,sku:p.sku,name:p.name,kind:p.kind,variant:variant.label,qty,unit,line,...(p.kind==='ticket'?{eventDate:p.event_date}:{})});
- }
- const discount=me?.birthday?Math.round(discountable*BIRTHDAY_PERCENT/100):0,at=now(),oid=id();
+ const collection=field(b.collection,40);if(!COLLECTION_POINTS.includes(collection))fail(400,'Choose where you will collect your order.','invalid_collection');
+ const phone=field(b.phone,25);if(phone&&!/^[+0-9 ()-]{7,25}$/.test(phone))fail(400,'Check the phone number or leave it blank.','invalid_phone');
+ if(b.acknowledge!==true)fail(400,'Tick to confirm you understand no payment is taken yet.','acknowledge_required');
+ const q=await price(db,identity,me,b.items,b.code);
+ if(field(b.code,30)&&!q.code&&!q.codeMessage.startsWith('Your birthday discount'))fail(400,q.codeMessage||'That code is not valid.','invalid_code');
+ if(q.code){const r=await db.prepare('UPDATE store_discounts SET uses=uses+1,updated_utc=? WHERE code=? AND (max_uses IS NULL OR uses<max_uses)').bind(now(),q.code).run();if(!r.meta.changes)fail(409,'That code has just been used up.','code_used_up')}
+ const at=now(),oid=id();
  for(let attempt=0;attempt<3;attempt++){
   try{
-   await db.prepare("INSERT INTO store_orders(id,number,account_id,name,email,status,lines_json,subtotal_cents,discount_cents,discount_label,donation_cents,total_cents,note,created_utc,updated_utc) SELECT ?,COALESCE(MAX(number),1000)+1,?,?,?,'requested',?,?,?,?,?,?,?,?,? FROM store_orders")
-    .bind(oid,identity.id,me?.name||identity.name,me?.email||'',JSON.stringify(lines),subtotal,discount,discount?'Birthday month '+BIRTHDAY_PERCENT+'% off':'',donation,subtotal-discount+donation,field(b.note,500),at,at).run();
+   await db.prepare("INSERT INTO store_orders(id,number,account_id,name,email,phone,collection,discount_code,status,lines_json,subtotal_cents,discount_cents,discount_label,donation_cents,total_cents,note,created_utc,updated_utc) SELECT ?,COALESCE(MAX(number),1000)+1,?,?,?,?,?,?,'requested',?,?,?,?,?,?,?,?,? FROM store_orders")
+    .bind(oid,identity.id,me?.name||identity.name,me?.email||'',phone,collection,q.code,JSON.stringify(q.lines),q.subtotal,q.discount,q.label,q.donation,q.total,field(b.note,500),at,at).run();
    break;
   }catch(e){if(!String(e?.message).includes('UNIQUE')||attempt===2)throw e}
  }
@@ -165,10 +210,11 @@ async function report(db){
   stock.units+=v.stock;stock.retail+=v.stock*(v.price??p.price_cents);stock.cost+=v.stock*(p.cost_cents||0);
   if(v.stock<=LOW_STOCK)low.push({sku:p.sku,name:p.name,variant:v.label,stock:v.stock});
  }
- const sales=live.reduce((s,o)=>s+o.subtotal_cents-o.discount_cents,0);
+ const sales=live.reduce((s,o)=>s+o.subtotal_cents-o.discount_cents,0),codes=new Map();
+ for(const o of live)if(o.discount_code){const c=codes.get(o.discount_code)||{code:o.discount_code,orders:0,discount:0};c.orders++;c.discount+=o.discount_cents;codes.set(o.discount_code,c)}
  return {notice:STORE_NOTICE,orders:{total:orders.length,byStatus},sales:{value:sales,discounts:live.reduce((s,o)=>s+o.discount_cents,0),cost,margin:sales-cost},
   donations:{total:live.reduce((s,o)=>s+o.donation_cents,0),byFund:[...funds].map(([fund,value])=>({fund,value}))},
-  top:[...units.values()].sort((a,b)=>b.units-a.units).slice(0,10),tickets:[...tickets.values()],lowStock:low,stock,
+  codes:[...codes.values()],top:[...units.values()].sort((a,b)=>b.units-a.units).slice(0,10),tickets:[...tickets.values()],lowStock:low,stock,
   products:{active:products.filter(p=>p.status==='active').length,draft:products.filter(p=>p.status==='draft').length,archived:products.filter(p=>p.status==='archived').length}};
 }
 export async function storeEndpoint(req,env,path,identity){
@@ -182,8 +228,13 @@ export async function storeEndpoint(req,env,path,identity){
  if(path==='/api/store'&&req.method==='GET'){
   const {results=[]}=await db.prepare("SELECT * FROM store_products WHERE status='active' AND (kind<>'ticket' OR event_date IS NULL OR event_date>=date('now','+10 hours')) ORDER BY sort,name").all();
   const me=await buyer(db,identity);
-  return json({notice:STORE_NOTICE,bankAccount:false,paymentsEnabled:false,birthdayPercent:BIRTHDAY_PERCENT,products:results.map(publicShape),
+  return json({notice:STORE_NOTICE,bankAccount:false,paymentsEnabled:false,birthdayPercent:BIRTHDAY_PERCENT,collectionPoints:COLLECTION_POINTS,products:results.map(publicShape),
    me:me?{signedIn:true,member:me.member,birthdayMonth:me.birthday}:{signedIn:false}});
+ }
+ if(path==='/api/store/quote'&&req.method==='POST'){
+  requireRole(identity,['member',...STAFF]);const b=await payload(req,20000);
+  const q=await price(db,identity,await buyer(db,identity),b.items,b.code);
+  return json({...q,collectionPoints:COLLECTION_POINTS,notice:STORE_NOTICE});
  }
  if(path==='/api/store/orders'){
   requireRole(identity,['member',...STAFF]);
@@ -253,8 +304,8 @@ export async function storeEndpoint(req,env,path,identity){
   }
   if(type==='orders'){
    const {results=[]}=await db.prepare('SELECT o.*,a.username FROM store_orders o LEFT JOIN club_accounts a ON a.id=o.account_id ORDER BY number').all();
-   return new Response(csv([['order','date','name','username','email','status','items','subtotal','discount','donation','total'],...results.map(o=>[o.number,o.created_utc.slice(0,10),o.name,o.username||'',o.email,o.status,
-    JSON.parse(o.lines_json).map(l=>l.qty+' x '+l.name+' ('+l.variant+')').join('; '),dollars(o.subtotal_cents),dollars(o.discount_cents),dollars(o.donation_cents),dollars(o.total_cents)])]),{headers});
+   return new Response(csv([['order','date','name','username','email','phone','collection','status','items','subtotal','discount_code','discount','donation','total'],...results.map(o=>[o.number,o.created_utc.slice(0,10),o.name,o.username||'',o.email,o.phone||'',o.collection||'',o.status,
+    JSON.parse(o.lines_json).map(l=>l.qty+' x '+l.name+' ('+l.variant+')').join('; '),dollars(o.subtotal_cents),o.discount_code||'',dollars(o.discount_cents),dollars(o.donation_cents),dollars(o.total_cents)])]),{headers});
   }
   fail(400,'Export products or orders.','invalid_export');
  }
@@ -274,10 +325,30 @@ export async function storeEndpoint(req,env,path,identity){
   const lines=JSON.parse(o.lines_json);let applied=o.stock_applied;
   if(['confirmed','ready','collected'].includes(status)&&!applied){await moveStock(db,lines,-1);applied=1}
   if(status==='cancelled'&&applied){await moveStock(db,lines,1);applied=0}
+  if(status==='cancelled'&&o.discount_code)await db.prepare('UPDATE store_discounts SET uses=MAX(0,uses-1) WHERE code=?').bind(o.discount_code).run();
   const r=await db.prepare('UPDATE store_orders SET status=?,stock_applied=?,updated_utc=? WHERE id=? AND status=?').bind(status,applied,at,o.id,o.status).run();
   if(!r.meta.changes)fail(409,'This order changed. Reload.','conflict');
   await audit(db,identity,'store_order_'+status,'store_order',o.id,at).run();
   return json({ok:true});
+ }
+ if(sub==='discounts'&&req.method==='GET'){
+  const {results=[]}=await db.prepare('SELECT * FROM store_discounts ORDER BY active DESC,code').all();
+  return json({codes:results.map(codeShape),canManage:STORE_MANAGERS.includes(identity.role)});
+ }
+ if(sub==='discounts'&&req.method==='POST'){
+  manager();const b=await payload(req,4000),at=now(),code=field(b.code,30).toUpperCase(),kind=field(b.kind,10),applies=field(b.applies,60)||'all';
+  if(!/^[A-Z0-9][A-Z0-9-]{2,29}$/.test(code))fail(400,'Codes are 3 to 30 letters, numbers or dashes.','invalid_code');
+  if(!['percent','amount'].includes(kind))fail(400,'Choose percent or dollar amount.','invalid_code');
+  const value=kind==='percent'?Math.floor(Number(b.value)):Math.round(Number(b.value)*100);
+  if(!(value>0)||(kind==='percent'&&value>100))fail(400,kind==='percent'?'Percent must be 1 to 100.':'Enter a dollar amount.','invalid_code');
+  if(!APPLIES.includes(applies)&&!/^category:.{1,40}$/.test(applies))fail(400,'Choose what the code applies to.','invalid_code');
+  const date=v=>{const s=field(v,10);if(s&&!/^20\d\d-\d\d-\d\d$/.test(s))fail(400,'Dates must be YYYY-MM-DD.','invalid_code');return s||null};
+  const minSpend=Math.max(0,Math.round(Number(b.minSpend||0)*100)),maxUses=b.maxUses===''||b.maxUses==null?null:Math.max(1,Math.floor(Number(b.maxUses)));
+  const vals=[kind,value,applies,minSpend,maxUses,b.oncePerMember===true?1:0,b.membersOnly===true?1:0,date(b.starts),date(b.ends),b.active===false?0:1,field(b.note,200)];
+  await db.prepare('INSERT INTO store_discounts(code,kind,value,applies,min_spend_cents,max_uses,once_per_member,members_only,starts,ends,active,note,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(code) DO UPDATE SET kind=excluded.kind,value=excluded.value,applies=excluded.applies,min_spend_cents=excluded.min_spend_cents,max_uses=excluded.max_uses,once_per_member=excluded.once_per_member,members_only=excluded.members_only,starts=excluded.starts,ends=excluded.ends,active=excluded.active,note=excluded.note,updated_utc=excluded.updated_utc')
+   .bind(code,...vals,at,at).run();
+  await audit(db,identity,'store_code_saved','store_discount',code,at).run();
+  return json({ok:true,code});
  }
  if(sub==='report'&&req.method==='GET')return json(await report(db));
  fail(404,'That store service does not exist.','not_found');

@@ -11,7 +11,7 @@ async function api(path,method='GET',body){
 function tab(name){
  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===name?'page':'false'));
  document.querySelectorAll('[data-pane]').forEach(s=>s.hidden=s.dataset.pane!==name);
- ({orders:loadOrders,products:loadProducts,report:loadReport}[name]||(()=>{}))();
+ ({orders:loadOrders,products:loadProducts,report:loadReport,codes:loadCodes}[name]||(()=>{}))();
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 // ---------- Orders ----------
@@ -19,7 +19,7 @@ async function loadOrders(){
  const f=$('sa-order-filter').value,{orders,counts}=await api('/api/committee/store/orders'+(f?'?status='+f:''));
  $('sa-state').textContent=counts.requested+' new request(s) · '+counts.open+' open';
  $('sa-orders').innerHTML=orders.length?orders.map(o=>'<article class="member-item" data-order="'+safe(o.id)+'"><strong>#'+o.number+' · '+safe(o.name)+' <small>('+safe(o.username||'')+')</small> · '+money(o.total)+'</strong>'+
-  '<span>'+safe(o.createdAt.slice(0,10))+' · '+safe(o.email)+'</span>'+
+  '<span>'+safe([o.createdAt.slice(0,10),o.email,o.phone,o.collection?'Collect: '+o.collection:''].filter(Boolean).join(' · '))+'</span>'+
   '<span>'+o.lines.map(l=>safe((l.kind==='donation'?'Donation: ':l.qty+' × ')+l.name+(l.variant?' ('+l.variant+')':'')+' '+money(l.line))).join('<br>')+'</span>'+
   (o.discount?'<span>'+safe(o.discountLabel)+': −'+money(o.discount)+'</span>':'')+(o.note?'<span>Note: '+safe(o.note)+'</span>':'')+
   '<span>'+(canManage&&!['collected','cancelled'].includes(o.status)?'<select data-status>'+ORDER.map(([v,l])=>'<option value="'+v+'"'+(v===o.status?' selected':'')+'>'+l+'</option>').join('')+'</select> <button type="button" data-save-order>Update</button> <small data-msg></small>':'<strong>'+safe(ORDER.find(x=>x[0]===o.status)[1])+'</strong>')+'</span></article>').join(''):'<p>No orders here.</p>';
@@ -60,6 +60,32 @@ $('sa-photo').addEventListener('change',async e=>{
  catch(error){$('sa-form-status').textContent=error.message}e.target.value='';
 });
 $('sa-photo-remove').addEventListener('click',async()=>{try{await api('/api/committee/store/products','POST',{action:'photo',id:editing.id,photo:null});await loadProducts();$('sa-form-status').textContent='Photo removed.'}catch(error){$('sa-form-status').textContent=error.message}});
+// ---------- Discount codes ----------
+let codes=[];
+async function loadCodes(){
+ if(!products.length)try{({products}=await api('/api/committee/store/products'));$('sa-categories').innerHTML=[...new Set(products.map(p=>p.category))].map(c=>'<option value="'+safe(c)+'">').join('')}catch{}
+ ({codes}=await api('/api/committee/store/discounts'));
+ const what=c=>(c.kind==='percent'?c.value+'%':money(c.value))+' off '+(c.applies==='all'?'merch and tickets':c.applies==='merch'?'merch':c.applies==='tickets'?'tickets':c.applies.slice(9));
+ $('sa-codes').innerHTML='<thead><tr><th>Code</th><th>Discount</th><th>Rules</th><th>Used</th><th>Status</th><th></th></tr></thead><tbody>'+(codes.map(c=>'<tr data-code="'+safe(c.code)+'"><td><strong>'+safe(c.code)+'</strong><br><small>'+safe(c.note)+'</small></td><td>'+safe(what(c))+'</td>'+
+  '<td>'+safe([c.minSpend?'Min '+money(c.minSpend):'',c.membersOnly?'Members only':'',c.oncePerMember?'Once each':'',c.starts||c.ends?(c.starts||'…')+' to '+(c.ends||'…'):''].filter(Boolean).join(' · ')||'None')+'</td>'+
+  '<td>'+c.uses+(c.maxUses?' / '+c.maxUses:'')+'</td><td>'+(c.active?'Active':'Off')+'</td><td>'+(canManage?'<button type="button" data-edit-code>Edit</button>':'')+'</td></tr>').join('')||'<tr><td colspan="6">No codes yet.</td></tr>')+'</tbody>';
+}
+$('sa-codes').addEventListener('click',e=>{
+ if(!e.target.matches('[data-edit-code]'))return;const c=codes.find(x=>x.code===e.target.closest('[data-code]').dataset.code),f=$('sa-code-form');
+ const cat=c.applies.startsWith('category:')?c.applies.slice(9):'';
+ Object.assign(f.elements.code,{value:c.code});f.elements.kind.value=c.kind;f.elements.value.value=c.kind==='percent'?c.value:(c.value/100).toFixed(2);
+ f.elements.applies.value=cat?'all':c.applies;f.elements.category.value=cat;f.elements.minSpend.value=c.minSpend?(c.minSpend/100).toFixed(2):'';f.elements.maxUses.value=c.maxUses??'';
+ f.elements.starts.value=c.starts;f.elements.ends.value=c.ends;f.elements.membersOnly.checked=c.membersOnly;f.elements.oncePerMember.checked=c.oncePerMember;f.elements.active.checked=c.active;f.elements.note.value=c.note;
+ f.scrollIntoView({block:'start'});
+});
+$('sa-code-form').addEventListener('submit',async e=>{
+ e.preventDefault();const f=e.target,cat=f.elements.category.value.trim();$('sa-code-status').textContent='Saving…';
+ try{await api('/api/committee/store/discounts','POST',{code:f.elements.code.value,kind:f.elements.kind.value,value:f.elements.value.value,applies:cat?'category:'+cat:f.elements.applies.value,
+   minSpend:f.elements.minSpend.value,maxUses:f.elements.maxUses.value,starts:f.elements.starts.value,ends:f.elements.ends.value,membersOnly:f.elements.membersOnly.checked,
+   oncePerMember:f.elements.oncePerMember.checked,active:f.elements.active.checked,note:f.elements.note.value});
+  $('sa-code-status').textContent='Saved.';f.reset();f.elements.active.checked=true;loadCodes();}
+ catch(error){$('sa-code-status').textContent=error.message}
+});
 // ---------- Import and export ----------
 document.querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',async()=>{
  const r=await fetch('/api/committee/store/export?type='+b.dataset.export,{credentials:'same-origin',cache:'no-store'});
@@ -87,6 +113,7 @@ async function loadReport(){
  $('sa-report').innerHTML='<p class="club-note">'+safe(r.notice)+' Figures are demo requests, not money received.</p><div class="store-report">'+cards.map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+a+'</span></div>').join('')+'</div>'+
   '<h3>Top sellers</h3>'+tbl(['SKU','Product','Units','Value'],r.top.map(x=>[x.sku,x.name,x.units,money(x.value)]))+
   '<h3>Event tickets</h3>'+tbl(['Event','Date','By ticket type','Total'],r.tickets.map(x=>[x.event,x.date,Object.entries(x.byType).map(([k,v])=>k+': '+v).join(', '),x.total]))+
+  '<h3>Discount codes used</h3>'+tbl(['Code','Orders','Discount given'],(r.codes||[]).map(x=>[x.code,x.orders,money(x.discount)]))+
   '<h3>Donations by fund</h3>'+tbl(['Fund','Pledged'],r.donations.byFund.map(x=>[x.fund,money(x.value)]))+
   '<h3>Low stock</h3>'+tbl(['SKU','Product','Size','Left'],r.lowStock.map(x=>[x.sku,x.name,x.variant,x.stock]))+
   '<h3>Orders by status</h3>'+tbl(['Status','Orders'],ORDER.map(([v,l])=>[l,r.orders.byStatus[v]]))+

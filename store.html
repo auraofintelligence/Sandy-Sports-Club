@@ -14,13 +14,31 @@
   <div id="store-grid" class="store-grid"></div>
  </section>
  <aside class="store-cart club-panel" aria-labelledby="cart-title">
-  <h2 id="cart-title">Your order</h2>
-  <div id="cart-lines"><p>Nothing added yet.</p></div>
-  <div id="cart-totals"></div>
-  <label>Note for the Treasurer <small>(optional)</small><textarea id="cart-note" rows="2" maxlength="500" placeholder="Collection town, sizing questions…"></textarea></label>
-  <button type="button" id="cart-send" class="button coral" disabled>Send order request</button>
-  <p id="cart-status" role="status" class="club-note"></p>
-  <p class="club-note">No payment is taken. The Treasurer will confirm stock and collection.</p>
+  <div id="view-cart">
+   <h2 id="cart-title">Your cart</h2>
+   <div id="cart-lines"><p>Nothing added yet.</p></div>
+   <div id="cart-totals"></div>
+   <button type="button" id="cart-checkout" class="button coral" disabled>Checkout</button>
+   <p id="cart-status" role="status" class="club-note"></p>
+  </div>
+  <form id="view-checkout" hidden>
+   <h2>Checkout</h2>
+   <div id="checkout-signin" hidden><p>Sign in to check out. Your cart is kept.</p><p><a class="button coral" href="/club-login.html?next=/store.html%23checkout">Sign in</a> <a href="/member-join.html">Join free</a></p></div>
+   <div id="checkout-body">
+    <div id="checkout-lines"></div>
+    <div class="checkout-code"><label>Discount code<input id="checkout-code" maxlength="30" autocomplete="off" autocapitalize="characters"></label><button type="button" id="checkout-apply">Apply</button></div>
+    <p id="checkout-code-msg" role="status" class="club-note"></p>
+    <div id="checkout-totals"></div>
+    <label>Collect from<select id="checkout-collection" required></select></label>
+    <label>Phone <small>(optional, for collection)</small><input type="tel" id="checkout-phone" maxlength="25" autocomplete="tel"></label>
+    <label>Note for the Treasurer <small>(optional)</small><textarea id="checkout-note" rows="2" maxlength="500"></textarea></label>
+    <label class="club-consent"><input type="checkbox" id="checkout-ack" required> I understand this is a demo store: no payment is taken and this is an order request.</label>
+    <button type="submit" class="button coral" id="checkout-place">Place order request</button>
+   </div>
+   <p><button type="button" class="link-button" id="checkout-back">Back to cart</button></p>
+   <p id="checkout-status" role="status" class="club-note"></p>
+  </form>
+  <div id="view-done" hidden></div>
   <div id="my-orders"></div>
  </aside>
 </div>
