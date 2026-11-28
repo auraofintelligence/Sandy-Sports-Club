@@ -211,3 +211,18 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 .button .fc-icon{color:currentColor;margin-right:.3rem}
 .live-banner{display:flex;gap:.6rem;align-items:center;justify-content:center;flex-wrap:wrap;background:#c62828;color:#fff;padding:.45rem 1rem;font-weight:800;font-size:.92rem;text-align:center}
 .live-banner a{color:#fff;text-decoration:underline}.live-banner .live-dot{background:#fff;box-shadow:none;animation:none}
+/* How the club works */
+.hw-doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:1rem;margin-top:1rem}
+.hw-door{background:#fff;border:1px solid #d8e8e4;border-radius:18px;padding:1rem 1.1rem;border-top:6px solid #4f8fd6}
+.hw-door.hw-officer-kind{border-top-color:#7b5cc4}.hw-door h3{margin:0}.hw-door>p{margin:.1rem 0 .6rem;color:#4b6468;font-size:.92rem}
+.hw-door ul{margin:0;padding-left:1.1rem;display:grid;gap:.3rem}.hw-door li span{color:#4b6468;font-size:.9rem}
+.hw-legend{display:flex;flex-wrap:wrap;gap:.4rem;margin:.8rem 0 1.2rem}
+.hw-key{font-size:.82rem;font-weight:800;padding:.25rem .7rem;border-radius:999px}
+.hw-flows{display:grid;gap:1rem}
+.hw-flow{background:#fff;border:1px solid #d8e8e4;border-radius:18px;padding:1rem 1.1rem}.hw-flow h3{margin:0 0 .6rem}
+.hw-flow ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10.5rem),1fr));gap:.5rem;counter-reset:step}
+.hw-step{position:relative;display:grid;gap:.15rem;align-content:start;border-radius:12px;padding:.6rem .7rem .6rem 2.1rem;counter-increment:step;font-size:.92rem}
+.hw-step::before{content:counter(step);position:absolute;left:.6rem;top:.6rem;width:1.15rem;height:1.15rem;border-radius:50%;background:rgba(0,0,0,.12);font-size:.72rem;font-weight:900;display:grid;place-items:center}
+.hw-step span{font-weight:800;font-size:.8rem}.hw-step small{color:#3f5a5f;font-size:.76rem;line-height:1.35}
+.hw-member,.hw-key.hw-member{background:#e3effc}.hw-officer,.hw-key.hw-officer{background:#ede6fb}.hw-group,.hw-key.hw-group{background:#e2f4ea}
+.hw-auto,.hw-key.hw-auto{background:#fff3c8}.hw-outside,.hw-key.hw-outside{background:#fff;border:1px dashed #7a8c8f}

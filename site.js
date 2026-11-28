@@ -100,9 +100,11 @@ const pageGroups = [
   ['Places and facilities',[pages[4],pages[8],pages[9],route('assets','Asset wish list')]],
   ['Events, film and backing',[route('calendar','What’s on'),pages[5],pages[6],pages[7],pages[10],pages[11],pages[12],route('interest','Express interest')]],
   ['Member clubhouse',[pages[13],route('member-home','My membership (future)'),pages[14],...memberGuide]],
-  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[15],route('committee-governance','Governance'),pages[17],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[16],pages[18],route('image-gallery','Image gallery')]]
+  ['Committee and governance',[route('club-login','Secure sign-in'),route('club-admin','Shared administration'),pages[15],route('committee-governance','Governance'),route('how-it-works','How the club works'),pages[17],...committeeGuide.filter(([url])=>url!=='committee-governance.html'),pages[16],pages[18],route('image-gallery','Image gallery')]]
 ];
 const allPages = pageGroups.flatMap(([,items])=>items);
+// Read by the How the club works page, so its site map is drawn from the same menus.
+window.SANDY_SITE_MAP = {primary:primaryPages,groups:pageGroups};
 const pageLink = ([url,label])=>`<a href="/${url}" ${here===url?'aria-current="page"':''}>${label}</a>`;
 const pageGroupFor = url => pageGroups.find(([,items])=>items.some(([candidate])=>candidate===url))?.[0]||'Other pages';
 const currentIndex = allPages.findIndex(([url])=>url===here);

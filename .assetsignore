@@ -18,6 +18,9 @@
 !/calendar-ui.js
 !/member-calendar-tab.js
 !/member-notify.js
+!/committee-desks.js
+!/how-it-works.js
+!/how-it-works.html
 !/club-news-desk.js
 !/member-news.js
 !/news.js
@@ -481,9 +484,10 @@
 !/studio/sandy-studio.css
 !/studio/sandy-suite-spec.js
 !/studio/sandy-access.js
+!/studio/sandy-workflows.js
+!/studio/sandy-processes.js
 !/studio/sandy-agm-jobs.js
 !/studio/sandy-topic-icons.svg
-!/studio/sandy-workflows.js
 !/studio/social-campaign-engine.js
 !/studio/social-campaigns.css
 !/studio/social-campaigns.js

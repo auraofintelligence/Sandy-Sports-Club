@@ -497,6 +497,8 @@ for _p, _t, _img, _alt in OWNER_FIXES:
     _swap(_p, _t, _img, _alt)
 # Island news and live (29 Nov 2026): the original film night with a camera crew, unused until now.
 HERO['news.html'] = 'hero-film.webp'
+# How the club works (29 Nov 2026): the yarning-circle image that came off the home page's clubhouse card.
+HERO['how-it-works.html'] = 'hero-trust.webp'
 ALT['hero-film.webp'] = 'Concept image of an outdoor community film night with a camera crew filming beside the crowd'
 
 
