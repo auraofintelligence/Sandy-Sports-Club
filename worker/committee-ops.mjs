@@ -72,7 +72,7 @@ async function replayCreate(db,key,desk,actor,signature){
 }
 async function postNotice(db,actor,b,at,today){
  const key=assertId(b.id),title=string(b.title,180),details=string(b.details,9000);
- if(!title||!details)fail(400,'Enter a title and notice text.','missing_notice');
+ if(!title)fail(400,'Give your notice a title.','missing_notice');
  if(!['info','action'].includes(b.kind)||typeof b.important!=='boolean')fail(400,'Choose an update or action and its importance.','invalid_notice');
  const recipients=noticeRecipients(b.scope||'all',actor),isTask=b.kind==='action';
  const office=isTask?scopeOffice(b.office,actor):'',due=isTask?dateField(b.dueDate,false):'',review=isTask?'':dateOrEmpty(b.reviewDate)||plus(today,30);

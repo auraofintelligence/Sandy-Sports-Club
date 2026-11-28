@@ -7,7 +7,7 @@ const date=s=>s?new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',yea
 const timing=s=>['overdue','stale'].includes(s)?'red':['dueSoon','dueToday','reviewSoon'].includes(s)?'amber':['done','archived','undated'].includes(s)?'muted':'green';
 export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  const root=document.getElementById('committee-ops'),summary=document.getElementById('committee-ops-summary');
- let current='',view=null,archive=false,filter='',epoch=0,request=null,busy=false;
+ let current='',view=null,archive=false,filter='',listMode='active',epoch=0,request=null,busy=false;
  const e=esc,ro=()=>isReadOnlyView(),block=()=>ro()?' disabled title="Synthetic view only"':'',office=k=>labels[k]||'Unallocated';
  const officeOptions=(items,selected='')=>items.map(({key,label})=>'<option value="'+e(key)+'"'+(key===selected?' selected':'')+'>'+e(label)+'</option>').join('');
  const badge=s=>'<span class="ops-pill ops-'+timing(s)+'">'+e(states[s]||s)+'</span>';
@@ -23,26 +23,38 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  summary.addEventListener('click',ev=>{const b=ev.target.closest('[data-ops-open]');if(b)void showDesk(b.dataset.opsOpen)});
  function say(msg,error=false){const n=root.querySelector('[data-ops-message]');if(n){n.textContent=msg;n.classList.toggle('bad',error)}}
  function legacy(v){return v.legacy?.length?'<details class="ops-legacy"><summary>Older shared working records ('+v.legacy.length+')</summary><p>These original register notes remain intact. Open the advanced register for their existing editing and history.</p>'+v.legacy.map(x=>'<article><strong>'+e(x.title)+'</strong><p>'+e(x.details)+'</p><small>'+e(x.status)+' · '+date(x.updatedAt)+'</small></article>').join('')+'<a href="#records">Open advanced register</a></details>':''}
- function title(text,description){return '<header class="ops-header"><div><p class="eyebrow">SANDY SPORTS · COMMITTEE WORKSPACE</p><h3 id="ops-desk-title">'+text+'</h3><p>'+description+'</p></div><button type="button" data-ops-refresh>Refresh</button></header>'}
+ function title(text,description){return '<header class="ops-header"><div><h3 id="ops-desk-title" tabindex="-1">'+text+'</h3><p>'+description+'</p></div><button type="button" data-ops-refresh>Check now</button></header>'}
  function noticeCard(n){
-  const target=n.recipients.length===Object.keys(labels).length?'All proposed officers':n.recipients.map(office).join(', ');
+  const target=n.recipients.length===Object.keys(labels).length?'the whole committee':n.recipients.map(office).join(', ');
   return '<article class="ops-notice" data-ops-id="'+e(n.id)+'"><div class="ops-card-head"><h4>'+e(n.title)+'</h4><div class="ops-badges">'+(n.important?'<span class="ops-pill ops-important">Important</span>':'')+(n.unread?'<span class="ops-pill ops-new">New to you</span>':'')+badge(n.status)+'</div></div>'+
-   '<p class="ops-meta">'+e(n.author)+' · '+date(n.createdAt)+' · Version '+n.version+' · '+e(target)+(n.legacy?' · Existing working draft':'')+'</p>'+
-   '<p class="ops-text">'+e(n.details)+'</p><div class="ops-notice-timing">'+(n.noticeType==='action'?'<strong>'+e(office(n.office))+'</strong> · Due '+date(n.dueDate):'Review by '+date(n.reviewDate))+'</div>'+
+   '<p class="ops-meta">Posted by '+e(n.author)+' · '+date(n.createdAt)+' · For '+e(target)+(n.legacy?' · Earlier draft':'')+'</p>'+
+   (n.details?'<p class="ops-text">'+e(n.details)+'</p>':'')+'<div class="ops-notice-timing">'+(n.noticeType==='action'?'<strong>'+e(office(n.office))+'</strong> · Due '+date(n.dueDate):'Review by '+date(n.reviewDate))+'</div>'+
    '<div class="ops-actions">'+(n.unread?'<button type="button" data-notice-action="seen"'+block()+'>Mark as read</button>':'')+
-   (n.taskId?'<button type="button" data-ops-open="todos">Open linked officer work list</button>':'')+
+   (n.taskId&&!n.archived?'<button type="button" data-ops-open="todos">Officer to-do lists</button>':'')+
    (n.canReview?'<button type="button" data-notice-action="review"'+block()+'>Confirm current for 30 days</button>':'')+
    (n.canArchive?'<button type="button" data-notice-action="archive"'+block()+'>Archive notice</button>':'')+
-   '<button type="button" data-ops-history>Officer history</button></div><div data-ops-history-panel hidden></div></article>';
+   '<button type="button" data-ops-history>History</button></div><div data-ops-history-panel hidden></div></article>';
  }
+ const attention=n=>['overdue','stale','dueToday','dueSoon','reviewSoon'].includes(n.status);
+ const shown=v=>v.notices.filter(n=>listMode==='new'?n.unread:listMode==='attention'?attention(n):true);
+ const emptyText={active:'No notices yet. Choose Post a notice to share the first update.',new:'You’re up to date.',attention:'Nothing needs attention today.',archive:'No notices have been archived.'};
  function board(v){
-  const choices=v.canAssign?v.offices:v.offices.filter(o=>o.key===v.viewerOffice);
-  return title('Committee notices','Your private noticeboard. Post updates or create accountable jobs for proposed offices; no member email or formal club approval.')+
-   (ro()?'<p class="ops-boundary">Read-only synthetic showcase. No notice, read receipt or task can be changed.</p>':'')+counts(v)+
-   '<div class="ops-toolbar"><button type="button" data-board-mode="active" aria-pressed="'+!archive+'">Current notices</button><button type="button" data-board-mode="archive" aria-pressed="'+archive+'">Archive</button><button type="button" data-ops-open="todos">Officer to-do lists</button></div>'+
+  const choices=v.canAssign?v.offices:v.offices.filter(o=>o.key===v.viewerOffice),rows=shown(v);
+  return title('Committee notices','Post an update for the committee or give an officer a job with a due date.')+
+   (ro()?'<p class="ops-boundary">View-only preview. Nothing can be changed.</p>':'')+counts(v)+
+   (!archive?'<details class="ops-compose"><summary>Post a notice</summary><form id="ops-notice-form"><fieldset'+(ro()?' disabled':'')+'>'+
+    '<label>What are you posting?<select name="kind"><option value="info">An update for officers</option><option value="action">A job for an officer</option></select></label>'+
+    '<label>Title<input name="title" required maxlength="180" placeholder="e.g. Confirm the Amity court booking"></label>'+
+    '<label>Details (optional)<textarea name="details" rows="3" maxlength="9000"></textarea></label>'+
+    '<div class="ops-form-grid"><label>Who should see it?<select name="scope"><option value="all">The whole committee</option><option value="leadership">Executive and secretaries</option>'+officeOptions(v.offices)+'</select></label>'+
+    '<label class="ops-check"><input type="checkbox" name="important"> Mark as important</label></div>'+
+    '<div data-info-fields><label>Review date (optional)<input type="date" name="reviewDate"></label><small>Leave blank to check this update again in 30 days.</small></div>'+
+    '<div data-action-fields hidden class="ops-form-grid"><label>Who will do it?<select name="office">'+officeOptions(choices,v.viewerOffice)+'</select></label><label>Due date<input type="date" name="dueDate"></label><small>The job also goes on that officer’s to-do list.</small></div>'+
+    '<button type="submit">Post notice</button></fieldset></form></details>':'')+
+   '<div class="ops-toolbar"><label>Show<select data-ops-filter><option value="active">On the board</option><option value="new">New to me</option><option value="attention">Needs attention</option><option value="archive">Archived</option></select></label><button type="button" data-ops-open="todos">Officer to-do lists</button></div>'+
    '<p data-ops-message role="status"></p>'+
-   (!archive?'<details class="ops-compose"><summary>Post an update or allocate a job</summary><form id="ops-notice-form"><fieldset'+(ro()?' disabled':'')+'><label>Notice type<select name="kind"><option value="info">Information / update</option><option value="action">Action for an officer</option></select></label><label>Title<input name="title" required maxlength="180"></label><label>Notice text<textarea name="details" required rows="4" maxlength="9000"></textarea></label><div class="ops-form-grid"><label>Audience<select name="scope"><option value="all">All proposed officers</option><option value="leadership">Leadership and secretariat</option>'+officeOptions(v.offices)+'</select></label><label class="ops-check"><input type="checkbox" name="important"> Important</label></div><div data-info-fields><label>Review date (optional, defaults to 30 days)<input type="date" name="reviewDate"></label></div><div data-action-fields hidden class="ops-form-grid"><label>Responsible office<select name="office">'+officeOptions(choices,v.viewerOffice)+'</select></label><label>Due date<input type="date" name="dueDate"></label></div><button type="submit">Post internal notice</button></fieldset></form></details>':'')+
-   '<div class="ops-notice-grid">'+(v.notices.length?v.notices.map(noticeCard).join(''):'<p class="ops-empty">No '+(archive?'archived':'current')+' notices.</p>')+'</div>'+legacy(v);
+   '<div class="ops-notice-grid">'+(rows.length?rows.map(noticeCard).join(''):'<p class="ops-empty">'+emptyText[archive?'archive':listMode]+'</p>')+'</div>'+
+   '<details class="ops-key"><summary>What do the colours mean?</summary><p>Green is current. Amber means a job is due within 7 days or an update needs checking. Red means overdue. Grey means done or archived. “New to you” stays until you mark it as read. The board checks for changes every minute while it’s open.</p></details>'+legacy(v);
  }
  function taskCard(t,v){
   return '<article class="ops-task" data-ops-id="'+e(t.id)+'"><div class="ops-card-head"><h4>'+e(t.title)+'</h4>'+badge(t.status)+'</div>'+
@@ -70,8 +82,12 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
    '<details class="ops-completed"><summary>Completed and filed work ('+finished.length+')</summary>'+finished.map(t=>taskCard(t,v)).join('')+'</details>'+legacy(v);
  }
  function render(){
+  const box=root.querySelector('.ops-compose[open] form'),draft=box?{...Object.fromEntries(new FormData(box)),important:box.elements.important?.checked}:null;
   root.innerHTML=current==='notices'?board(view):worklist(view);
   if(current==='todos')root.querySelector('#ops-office-filter').value=filter||'all';
+  if(current==='notices')root.querySelector('[data-ops-filter]').value=archive?'archive':listMode;
+  const f=draft&&root.querySelector('.ops-compose form');
+  if(f){f.closest('details').open=true;for(const[k,val]of Object.entries(draft)){const el=f.elements[k];if(!el)continue;if(el.type==='checkbox')el.checked=Boolean(val);else el.value=val}f.elements.kind?.dispatchEvent(new Event('change',{bubbles:true}))}
  }
  async function reload(){
   const generation=++epoch,route=current;if(!route)return;
@@ -87,7 +103,8 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
    if(route!==current||generation!==epoch)return;
    request=null;
    if(route==='notices'&&archive||route==='todos'&&filter&&filter!=='all')await reload();else{view=v;render()}
-   say('Saved. Shared records and officer attribution have been updated.');
+   if(data.action==='post'){const d=root.querySelector('.ops-compose');if(d){d.open=false;d.querySelector('form').reset()}}
+   say({post:data.kind==='action'?'Posted, and added to the officer’s to-do list.':'Posted to the committee.',seen:'Marked as read.',review:'Confirmed as current for another 30 days.',archive:'Moved to the archive.',add:'Added to the to-do list.',take:'You’ve taken this job.',complete:'Marked complete.',assign:'Job allocated.'}[data.action]||'Saved.');
   }catch(err){if(route===current&&generation===epoch)say('Not saved: '+err.message,true)}
   finally{busy=false;if(btn&&btn.isConnected)btn.disabled=ro()}
  }
@@ -100,6 +117,7 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
  root.addEventListener('change',ev=>{
   const el=ev.target;
   if(el.id==='ops-office-filter'){filter=el.value;request=null;void reload()}
+  if(el.matches('[data-ops-filter]')){const was=archive;archive=el.value==='archive';listMode=archive?'active':el.value;if(was!==archive)void reload();else render()}
   if(el.name==='kind'&&el.form?.id==='ops-notice-form'){const action=el.value==='action';el.form.querySelector('[data-info-fields]').hidden=action;el.form.querySelector('[data-action-fields]').hidden=!action;el.form.elements.dueDate.required=action}
  });
  root.addEventListener('submit',ev=>{
@@ -115,7 +133,6 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
   const b=ev.target.closest('button');if(!b)return;
   if(b.hasAttribute('data-ops-refresh')){await reload();return}
   if(b.dataset.opsOpen){await showDesk(b.dataset.opsOpen);return}
-  if(b.dataset.boardMode){archive=b.dataset.boardMode==='archive';request=null;await reload();return}
   if(b.hasAttribute('data-ops-print')){printList();return}
   const card=b.closest('[data-ops-id]');if(!card)return;
   const row=(current==='notices'?view.notices:view.tasks).find(x=>x.id===card.dataset.opsId);if(!row)return;
@@ -128,5 +145,11 @@ export function setupCommitteeOperations({api,esc,status,getIdentity,showDesk}){
   if(b.dataset.noticeAction){const action=b.dataset.noticeAction;if(action==='archive'&&!window.confirm('Archive this notice? Its history will be retained.'))return;await mutate({action,id:row.id,version:row.version});return}
   if(b.dataset.taskAction){const action=b.dataset.taskAction;if(action==='paper'&&!window.confirm('Record this task as completed from the responsible office’s returned paper sheet?'))return;await mutate({action:action==='paper'?'complete':action,id:row.id,version:row.version,...(action==='take'?{}:{paper:action==='paper'})})}
  });
- return {summary:loadSummary,close(){epoch++;current='';root.hidden=true;summary.hidden=true},async open(key){current=key;archive=false;filter='';request=null;summary.hidden=true;await reload()}};
+ async function quiet(){
+  const route=current,generation=epoch,typing=root.contains(document.activeElement)&&document.activeElement.matches('input,textarea,select');if(!route||busy||document.hidden||typing)return;
+  const suffix=route==='notices'?(archive?'?archive=1':''):(filter&&filter!=='all'?'?office='+encodeURIComponent(filter):'');
+  try{const v=await api('/api/committee/'+route+suffix);if(route===current&&generation===epoch&&!busy){view=v;render()}}catch{}
+ }
+ setInterval(()=>void quiet(),60000);window.addEventListener('focus',()=>void quiet());
+ return {summary:loadSummary,close(){epoch++;current='';root.hidden=true;summary.hidden=true},async open(key){current=key;archive=false;filter='';listMode='active';request=null;summary.hidden=true;await reload();root.querySelector('#ops-desk-title')?.focus({preventScroll:true})}};
 }

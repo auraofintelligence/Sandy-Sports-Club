@@ -113,3 +113,9 @@ test('independent showcase and role preview can read dedicated desks but cannot 
  }
  assert.equal(demo.sql.prepare('SELECT count(*) AS n FROM club_records').get().n,before);
 });
+test('a notice needs only a title; details are optional like PLFC',async t=>{
+ const {call}=setup(t);
+ await call('secretary',notices,'POST',{action:'post',id:randomUUID(),kind:'info',title:'',details:'No title',scope:'all',important:false},400);
+ const board=(await call('secretary',notices,'POST',{action:'post',id:randomUUID(),kind:'info',title:'Fictional title-only update',details:'',scope:'all',important:false})).data;
+ assert.equal(board.notices.find(n=>n.title==='Fictional title-only update').details,'');
+});

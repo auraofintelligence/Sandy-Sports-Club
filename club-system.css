@@ -327,3 +327,12 @@
 .club-panel .avatar-tile input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0}
 .nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.5em;height:1.5em;padding:0 .4em;margin-left:.35em;border-radius:999px;background:#0a7481;color:#fff;font-size:.75em;font-weight:800;line-height:1;vertical-align:.1em}
 .nav-badge.urgent{background:#c62828}
+
+/* Desk focus: an open committee desk takes over the page, like PLFC. */
+body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-focus .committee-room-heading,body.desk-focus #committee-directory,body.desk-focus .club-app-heading>p{display:none!important}
+.club-app a.club-member-preview-link,.club-member-preview-link{color:#fff!important;display:inline-flex;align-items:center}
+.ops-toolbar label{display:flex;align-items:center;gap:.5rem;font-weight:700}
+.ops-toolbar select{width:auto!important;min-width:12rem}
+.ops-compose small{display:block;color:#4b6468;font-size:.82rem;margin-top:.25rem}
+.ops-key{margin-top:1rem;font-size:.88rem;color:#3e5a5f}.ops-key summary{cursor:pointer;font-weight:700}
+#ops-desk-title:focus{outline:none}

@@ -65,8 +65,10 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   picker.value=selected&&canUse(byKey.get(selected))?selected:'';
  };
  function restoreNavigation(){navigation.hidden=false;directory.hidden=false;}
+ // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
+ const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -84,8 +86,8 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   if(d&&canUse(d)){
    selected=d.key;refreshAllowed();directory.hidden=true;back.hidden=false;
    navigation.hidden=false;
-  }else if(tab==='committee'){restoreNavigation();}
-  else {navigation.hidden=true;}
+  }else if(tab==='committee'){restoreNavigation();if(!selected)focusDesk(false);}
+  else {navigation.hidden=true;focusDesk(false);}
  });
  function closeEditor(){
   $('committee-desk-editor').hidden=true;
@@ -143,7 +145,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   if(!desk||!canUse(desk)){status('This role cannot open that committee desk.',true);return;}
   if(desk.tab){selected=key;openTab(desk.tab);if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});return}
   if($('club-committee').hidden){selected=key;writeCurrentUrl();openTab('committee');if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});return}
-  restoreNavigation();selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
+  restoreNavigation();focusDesk(true);selected=key;closeEditor();refreshAllowed();setDeskIntro(desk);
   back.hidden=false;directory.open=false;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   for(const button of nav.querySelectorAll('[data-committee-desk]')){
@@ -152,7 +154,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   }
   if(updateUrl)writeCurrentUrl();
   ops.close();
-  if(scroll)navigation.scrollIntoView({block:'start',behavior:'auto'});
+  if(scroll)window.scrollTo({top:0,behavior:'auto'});
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;
   }
