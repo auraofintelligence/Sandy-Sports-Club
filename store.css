@@ -30,3 +30,5 @@
 .store-table th,.store-table td{padding:.45rem;border-bottom:1px solid #e4efec;text-align:left;vertical-align:top}
 .store-table img{width:44px;height:44px;object-fit:cover;border-radius:8px}
 .store-report{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}
+.store-cart .link-button{background:none!important;color:#0a7481!important;border:0!important;min-height:0!important;padding:0 .2rem!important;box-shadow:none!important}
+#cart-send:disabled{opacity:.45;cursor:not-allowed}
