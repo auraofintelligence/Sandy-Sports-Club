@@ -41,7 +41,8 @@ test('register: reschedule, cancel, calendar and reminders follow the one meetin
  await call('sec',M+id,'POST',{action:'schedule',version:4,date:day(6)},409);
  assert.equal((await call('sec','/api/committee/meetings')).meetings[0].status,'cancelled');
  // Office boundaries.
- for(const who of ['treasurer','other','vp','member'])await call(who,M+id,'GET',undefined,403);
+ for(const who of ['treasurer','other','member'])await call(who,M+id,'GET',undefined,403);
+ await call('vp',M+id,'GET');// the Vice President holds the President's access
  await call(null,'/api/committee/meetings','GET',undefined,401);
 });
 

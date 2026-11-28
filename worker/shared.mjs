@@ -1,8 +1,11 @@
 // Sandy Sports server-only utilities. Not a public-browser module.
+// Role lists come from the one access table (studio/sandy-access.js), which the draft constitution also prints.
+import {ACCESS_GROUPS,withDeputies} from '../studio/sandy-access.js';
+export {ACCESS_GROUPS,withDeputies};
 export const STAFF=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer','committee'];
-export const APPROVERS=['webmaster','president','secretary'];
+export const APPROVERS=ACCESS_GROUPS.secretariat;
 // Officers who run membership: member list, announcements and RSVPs. Children stay with safeguarding officers (webmaster, president, secretary).
-export const MEMBER_ADMIN=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer'];
+export const MEMBER_ADMIN=ACCESS_GROUPS.memberRecords;
 const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'};
 export class ApiError extends Error{
  constructor(status,message,code='request_failed'){super(message);this.status=status;this.code=code}
@@ -26,7 +29,7 @@ export function requireRole(identity,roles=STAFF){
  return identity;
 }
 export function ensureMemberData(identity){
- requireRole(identity,['webmaster','president','secretary','assistant_secretary','treasurer']);
+ requireRole(identity,ACCESS_GROUPS.memberRecords);
 }
 export function ensureWriter(identity){
  requireRole(identity,STAFF);

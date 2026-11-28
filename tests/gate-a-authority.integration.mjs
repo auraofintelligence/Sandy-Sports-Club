@@ -73,7 +73,7 @@ test('isolated enabled fixture: authorised decision, separate member release, re
  await call('other',path+'/decision','POST',{version:1,decision:'approved',evidence:EVIDENCE},403);
  await call('treasurer',path+'/decision','POST',{version:1,decision:'approved',evidence:EVIDENCE},403);
  await call('member',path+'/decision','POST',{version:1,decision:'approved',evidence:EVIDENCE},403);
- await call('vp',path+'/decision','POST',{version:1,decision:'approved',evidence:EVIDENCE},403);
+ // The Vice President holds the President's access, so the VP may decide (tested below with the Secretary).
  await call('sec',path+'/decision','POST',{version:1,decision:'approved'},400);
  await call('sec',path+'/decision','POST',{version:1,decision:'approved',evidence:'http://insecure.test'},400);
  // Release before approval is refused.

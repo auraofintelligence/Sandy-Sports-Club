@@ -1,3 +1,4 @@
+import {ACCESS_GROUPS as G} from './sandy-access.js';
 // Shared Sandy Sports workflow schema. Browser renders forms; Worker validates all saves independently.
 // Sandy-specific adaptation of PLFC committee operations. No fishing operations, paid services or assumed appointments.
 const txt=(key,label,step='Plan',required=false)=>({key,label,type:'text',step,required});
@@ -170,19 +171,11 @@ const F=[
  notes('data','Data shared and privacy conditions','Safeguards'),url('source','Provider terms / guidance link','Safeguards'),
  check('humanControl','Human review and withdrawal process identified','Safeguards'),notes('approval','Committee consideration and next steps','Review')]}
 ];
+// Desk access follows the access table in sandy-access.js (also printed in the draft constitution).
 const restrictedRoles={
- meetings:['webmaster','president','secretary','assistant_secretary'],
- news:['webmaster','president','secretary','assistant_secretary'],
- 'member-notice':['webmaster','president','secretary','assistant_secretary'],
- 'member-packs':['webmaster','president','secretary','assistant_secretary','treasurer'],
- 'member-types':['webmaster','president','secretary','treasurer'],
- 'email-queue':['webmaster','president','secretary','assistant_secretary'],
- birthday:['webmaster','president','secretary','treasurer'],
- stock:['webmaster','treasurer'],
- agm:['webmaster','president','secretary','assistant_secretary'],
- documents:['webmaster','president','secretary','assistant_secretary'],
- automations:['webmaster','president','secretary','assistant_secretary'],
- safety:['webmaster','president','secretary']
+ meetings:G.secretariat,news:G.secretariat,'email-queue':G.secretariat,agm:G.secretariat,documents:G.secretariat,automations:G.secretariat,
+ 'member-notice':G.memberRecords,'member-packs':G.memberRecords,'member-types':G.memberRecords,birthday:G.memberRecords,
+ stock:G.money,safety:G.safeguarding
 };
 export const SUITE_DESKS=Object.freeze(F.map(entry=>Object.freeze({...entry,
  fields:Object.freeze(entry.fields.map(f=>Object.freeze(f))),

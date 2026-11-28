@@ -3,7 +3,7 @@
 // catches is kept apart in a quarantine with its reason, never silently dropped.
 // Owner alerts carry no personal contact details: a short summary and an admin link.
 // Spam never triggers an instant alert; it appears in the daily 10:00 AM digest.
-import {fail,json,now,id,dbFor,field,bool,requireRole,audit} from './shared.mjs';
+import {fail,json,now,id,dbFor,field,bool,requireRole,audit,withDeputies} from './shared.mjs';
 import {stableId} from './meetings.mjs';
 import {verifyTurnstile} from './people.mjs';
 import {sendAlert,mailConfigured} from './mailer.mjs';
@@ -12,7 +12,7 @@ export const PATHWAYS=['Founding member interest','Committee nomination','Sport 
 export const TOWNS=['Dunwich (Goompi)','Amity Point (Pulan)','Point Lookout (Mulumba)','Elsewhere'];
 export const REASONS={turnstile_failed:'Failed the Turnstile check',honeypot:'Hidden bot field was filled',rate_limited:'Too many submissions in an hour',malformed:'Malformed or oversized request',cross_origin:'Sent from another website'};
 export const LIMITS={perSourcePerHour:5,genuinePerHour:60,quarantinePerHour:200,quarantineDays:90,ipHashDays:30,maxBytes:12000};
-const OFFICERS=['webmaster','secretary'];
+const OFFICERS=withDeputies(['webmaster','secretary']);
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const THANKS="Thanks, we've got it. This is an expression of interest in a proposed club, not membership or an appointment.";
 const DEFAULT_ORIGIN='https://sandy-sports-club.auraofintelligence.workers.dev';

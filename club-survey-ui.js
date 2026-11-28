@@ -1,6 +1,7 @@
+import {withDeputies} from './studio/sandy-access.js';
 // Officer-only (Webmaster, Secretary) view of the anonymous sports interest survey:
 // tallies by sport and goal, plus a CSV export. The survey stores no names or emails.
-export const mayReviewSurvey=role=>['webmaster','secretary'].includes(role);
+export const mayReviewSurvey=role=>withDeputies(['webmaster','secretary']).includes(role);
 const $=id=>document.getElementById(id);
 export async function loadSurvey({api,esc}){
  const t=await api('/api/committee/survey');

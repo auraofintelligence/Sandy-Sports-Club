@@ -1,4 +1,5 @@
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 import {isReadOnlyView,protectView} from './club-view-client.js';
 import {setupSafeguardsDesk} from './club-safeguards-ui.js';
 import {setupPrivateLibrary} from './club-library-ui.js';
@@ -7,7 +8,7 @@ import {setupWorkflowAssist} from './club-workflow-assist.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const safeFilename=s=>String(s||'record').toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,60);
 const statusValues=['proposal','draft','review','scheduled','completed','archived','rejected'];
-const deciders=['webmaster','president','secretary'],releaseDesks=['events','news','member-notice'];
+const deciders=ACCESS_GROUPS.secretariat,releaseDesks=['events','news','member-notice'];
 const statusNames=['Proposal','Draft','For review','Scheduled (not approved)','Completed record','Archived','Not proceeding'];
 function download(name,text,type='text/plain;charset=utf-8'){
  const href=URL.createObjectURL(new Blob([text],{type}));

@@ -12,6 +12,7 @@
 !/club-members-desks.js
 !/club-events.js
 !/club-programme-desks.js
+!/access-schedule.js
 !/calendar-ui.js
 !/member-calendar-tab.js
 !/calendar.css
@@ -469,6 +470,7 @@
 !/studio/sandy-studio-preview.js
 !/studio/sandy-studio.css
 !/studio/sandy-suite-spec.js
+!/studio/sandy-access.js
 !/studio/sandy-agm-jobs.js
 !/studio/sandy-topic-icons.svg
 !/studio/sandy-workflows.js

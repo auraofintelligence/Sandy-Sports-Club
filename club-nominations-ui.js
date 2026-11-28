@@ -1,5 +1,6 @@
 // Officer-only (Webmaster, Secretary) view of join form nominations and the spam quarantine.
-export const mayReviewNominations=role=>['webmaster','secretary'].includes(role);
+import {withDeputies} from './studio/sandy-access.js';
+export const mayReviewNominations=role=>withDeputies(['webmaster','secretary']).includes(role);
 const $=id=>document.getElementById(id);
 const when=s=>s?new Date(s).toLocaleString('en-AU',{timeZone:'Australia/Brisbane',dateStyle:'medium',timeStyle:'short'})+' AEST':'';
 const ALERT={sent:'Alert sent',failed:'Alert failed',not_configured:'Mail not set up',pending:'Pending'};

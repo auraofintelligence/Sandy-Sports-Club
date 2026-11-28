@@ -1,6 +1,6 @@
 // Shared purpose policy for the existing club_records store. No migration or data copy.
 // The generic register never acts as a second editor for dedicated workflows.
-import {fail,requireRole,STAFF} from './shared.mjs';
+import {fail,requireRole,STAFF,ACCESS_GROUPS} from './shared.mjs';
 import {SUITE_BY_KEY,SUITE_DESKS} from '../studio/sandy-suite-spec.js';
 const owns=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
 const reserved=['sandySuiteVersion','sandyWebmasterRequest','sandyMemberWorkspace','sandyMemberSafeguard','sandyCommitteeReceipt','sandyMinutesEdition'];
@@ -9,7 +9,7 @@ const restrictedGeneric=kind=>{
  const desks=SUITE_DESKS.filter(d=>d.kind===kind);
  // Unclassified legacy drafts retain access only for roles permitted in every possible desk.
  // No unrestricted kind fallback for safeguarding or internal notices.
- if(kind==='safeguard')return ['webmaster','president','secretary'];
+ if(kind==='safeguard')return [...ACCESS_GROUPS.safeguarding];
  return STAFF.filter(role=>desks.every(d=>d.roles.includes(role)));
 };
 export function recordPurpose(kind,body){
@@ -25,7 +25,7 @@ export function recordPurpose(kind,body){
   if(marks[0]==='sandyWebmasterRequest')
    return kind==='notice'&&body.sandyWebmasterRequest===1?{type:'help',key:'help',roles:['webmaster']}:null;
   if(marks[0]==='sandyMemberSafeguard')
-   return kind==='safeguard'&&body.sandyMemberSafeguard===1&&typeof body.ownerId==='string'&&safeObject(body.fields)?{type:'member-safeguard',key:'participation-check',roles:['webmaster','president','secretary']}:null;
+   return kind==='safeguard'&&body.sandyMemberSafeguard===1&&typeof body.ownerId==='string'&&safeObject(body.fields)?{type:'member-safeguard',key:'participation-check',roles:[...ACCESS_GROUPS.safeguarding]}:null;
   if(marks[0]==='sandyMemberWorkspace')
    return kind==='safeguard'&&body.sandyMemberWorkspace===1&&(['preferences','wish'].includes(body.type)||body.type==='rsvp'&&typeof body.eventId==='string')&&typeof body.ownerId==='string'?{type:'member',key:body.type,roles:[]}:null;
   const desk=SUITE_BY_KEY[body.domain];
@@ -73,7 +73,7 @@ export function legacyNoticeRecipients(body){
  if(audience==='Project leads')return ['webmaster'];
  return [...STAFF];
 }
-export const taskAllocators=['webmaster','secretary','assistant_secretary'];
+export const taskAllocators=ACCESS_GROUPS.allocators;
 // Preserve previously shared working drafts; new operational notices and tasks
 // have server-owned recipient/office boundaries on every alternate read.
 export function suiteAllowed(row,desk,identity){

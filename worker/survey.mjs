@@ -4,7 +4,7 @@
 // and how often they would play are optional. No names, emails or contact details.
 // Spam protection is the nominations one: Turnstile, a hidden honeypot field, hourly rate
 // limits, and the same quarantine so nothing caught is silently dropped. No emails are sent.
-import {fail,json,id,dbFor,field,requireRole} from './shared.mjs';
+import {fail,json,id,dbFor,field,requireRole,withDeputies} from './shared.mjs';
 import {stableId} from './meetings.mjs';
 import {verifyTurnstile} from './people.mjs';
 import {quarantine,sourceHash} from './nominations.mjs';
@@ -15,7 +15,7 @@ export const AGE_GROUPS=['Under 12','12 to 17','18 to 29','30 to 49','50 to 64',
 export const TOWNS=['Dunwich','Amity','Point Lookout','Visitor','Other'];
 export const FREQUENCIES=['Weekly or more','A few times a month','About once a month','A few times a year','Not sure yet'];
 export const SURVEY_LIMITS={perSourcePerHour:5,totalPerHour:120,ipHashDays:30,maxBytes:6000};
-const OFFICERS=['webmaster','secretary'];
+const OFFICERS=withDeputies(['webmaster','secretary']);
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const THANKS='Thanks, your answers are in. They help the organisers plan; they are not a booking or a membership.';
 const iso=ms=>new Date(ms).toISOString();

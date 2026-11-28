@@ -4,7 +4,7 @@
 // carries only a reference and workflow state. Public applications are switched off
 // unless SANDY_APPLICATIONS_ENABLED=enabled. Acceptance needs the formal authority gate
 // and leaves the person "pending": no account, invitation, activation or payment here.
-import {fail,json,now,dbFor,payload,field,bool,version,requireRole,ensureMemberData,ensureApprover,https,revision,audit} from './shared.mjs';
+import {fail,json,now,dbFor,payload,field,bool,version,requireRole,ensureMemberData,ensureApprover,https,revision,audit,ACCESS_GROUPS} from './shared.mjs';
 import {SUITE_BY_KEY} from '../studio/sandy-suite-spec.js';
 import {suiteBody,suiteAllowed,visibleRecords} from './record-policy.mjs';
 import {stableId,writeRecord,commit} from './meetings.mjs';
@@ -20,7 +20,7 @@ const PERSON_STATUS={accepted_pending:'pending',declined:'inactive',withdrawn:'w
 export const applicationsOpen=env=>env.SANDY_APPLICATIONS_ENABLED==='enabled';
 const brisbaneToday=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const reference=id=>'APP-'+id.slice(0,6).toUpperCase();
-const memberData=actor=>['webmaster','president','secretary','assistant_secretary','treasurer'].includes(actor.role);
+const memberData=actor=>ACCESS_GROUPS.memberRecords.includes(actor.role);
 function inserts(db,actor,{appId,personId,person,pathway,source,interestId=null}){
  const at=now(),ref=reference(appId),actorId=actor.id;
  const body={sandySuiteVersion:1,domain:'applications',fields:{applicationKind:pathway,reference:ref,received:brisbaneToday(),reviewer:'',checks:'',decisionNotes:''},

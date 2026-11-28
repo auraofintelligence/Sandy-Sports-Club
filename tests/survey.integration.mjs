@@ -89,7 +89,8 @@ test('Webmaster and Secretary see tallies by sport and goal and can export CSV; 
  const f=fixture(t,opts);mockNetwork(t);switchOn(f.env);
  await f.request(null,'/api/survey','POST',answer(),'https://sandy.test',ip(1));
  await f.request(null,'/api/survey','POST',answer({choices:[{sport:'Flag football',goal:'compete'},{sport:'Mixed beach volleyball',goal:'compete'}],town:'Visitor'}),'https://sandy.test',ip(2));
- for(const who of ['pres','vp','asst','treasurer','other','member','demo']){
+ assert.equal(await f.statusOf('asst','/api/committee/survey'),200,'the Assistant Secretary holds the Secretary’s access');
+ for(const who of ['pres','vp','treasurer','other','member','demo']){
   assert.equal(await f.statusOf(who,'/api/committee/survey'),403,who);assert.equal(await f.statusOf(who,'/api/committee/survey.csv'),403,who);
  }
  assert.equal(await f.statusOf(null,'/api/committee/survey'),401);

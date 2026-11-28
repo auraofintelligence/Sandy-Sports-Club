@@ -3,6 +3,7 @@
 // right, live member data where it helps, and a calendar step that never publishes by itself.
 import {isReadOnlyView} from './club-view-client.js';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 const longDate=d=>d?new Intl.DateTimeFormat('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'Australia/Brisbane'}).format(new Date(d+'T12:00:00+10:00')):'No date yet';
 const todayBris=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const plusDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
@@ -32,7 +33,8 @@ const CONFIG={
 };
 export const PROGRAMME_DESKS=Object.keys(CONFIG);
 
-export function setupProgrammeDesks({api,esc:e,status,showDesk}){
+export function setupProgrammeDesks({api,esc:e,status,showDesk,getIdentity}){
+ const canPublish=()=>ACCESS_GROUPS.memberRecords.includes(getIdentity?.()?.role);
  const root=document.getElementById('committee-programme-desk');
  if(!root)return {open(){},close(){}};
  let key='',cfg=null,spec=null,records=[],current=null,listings=[],members=[],busy=false,epoch=0;
@@ -94,6 +96,7 @@ export function setupProgrammeDesks({api,esc:e,status,showDesk}){
  }
  function publishBox(){
   if(!cfg.publish&&key!=='leaderboard')return '';
+  if(!canPublish())return '<section class="pd-publish">'+'<p class="ops-boundary">Publishing to members is done by the Webmaster, President or Vice President, Secretary or Assistant Secretary, or Treasurer. Plan it here and ask one of them to publish.</p>'+'</section>';
   const f=current.fields,live=mine();
   if(key==='leaderboard'){
    const ok=f.resultsVerified&&f.consentForNames;

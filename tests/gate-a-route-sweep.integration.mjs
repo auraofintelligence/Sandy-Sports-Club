@@ -73,7 +73,7 @@ test('every desk record is visible only to its permitted offices on every altern
    assert.ok(!(await call(who,'/api/suite/notices')).records.some(r=>r.id===help.id));
   }
   // Audit index and CSV export apply the same policy before paging.
-  if(['web','pres','sec'].includes(who)){
+  if(['web','pres','vp','sec','asst'].includes(who)){
    const audit=(await call(who,'/api/audit')).audit;
    for(const {desk,id} of records)assert.equal(audit.some(a=>a.resourceId===id),desk.roles.includes(role),who+' audit '+desk.key);
    assert.equal(audit.some(a=>a.resourceId===help.id),who==='web');

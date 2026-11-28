@@ -1,4 +1,5 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 import {setupCommitteeRoom} from './club-committee.js?v=20261128';
 import {SUITE_BY_KEY} from './studio/sandy-suite-spec.js';
 import {loadNominations,mayReviewNominations} from './club-nominations-ui.js';
@@ -18,7 +19,7 @@ async function api(path,{method='GET',data}={}){
  return json;
 }
 const formData=form=>Object.fromEntries(new FormData(form));
-const maySeePeople=()=>identity&&['webmaster','president','secretary','assistant_secretary','treasurer'].includes(identity.role);
+const maySeePeople=()=>identity&&ACCESS_GROUPS.memberRecords.includes(identity.role);
 
 function filterQuickDesks(role){
  document.querySelectorAll('.clubhouse-quick-grid a').forEach(link=>{
@@ -51,7 +52,7 @@ function applyRole(session){
  if(mayReviewNominations(role))visible.add('nominations');
  if(mayReviewSurvey(role))visible.add('survey');
  if(role==='webmaster')visible.add('accounts');
- if(['webmaster','president','secretary'].includes(role))visible.add('audit');
+ if(ACCESS_GROUPS.secretariat.includes(role))visible.add('audit');
  for(const tab of allTabs){const b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.hidden=!visible.has(tab)}
  filterQuickDesks(role);
  $('club-view-role-wrap').hidden=!session.canSwitchView;
@@ -192,7 +193,7 @@ function auditQuery(format){
  return '/api/audit?'+q.toString();
 }
 async function loadAudit(reset=true){
- if(!['webmaster','president','secretary'].includes(identity.role)){status('Audit access is restricted.',true);return}
+ if(!ACCESS_GROUPS.secretariat.includes(identity.role)){status('Audit access is restricted.',true);return}
  if(reset){auditCursor=null;auditNext=null;auditPage=1}
  $('audit-next').disabled=true;$('audit-export').disabled=true;$('audit-page-status').textContent='Loading authorised audit history…';
  const data=await api(auditQuery());auditNext=data.nextCursor;

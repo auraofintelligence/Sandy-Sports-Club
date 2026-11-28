@@ -1,10 +1,10 @@
 // Private, versioned, bounded binary store. No public URLs, provider calls or
 // automatic release. Distinct encryption key, per-part authenticated encryption.
-import {fail,json,now,epoch,id,dbFor,payload,field,dateField,version,requireRole,STAFF,revision,audit} from './shared.mjs';
+import {fail,json,now,epoch,id,dbFor,payload,field,dateField,version,requireRole,STAFF,revision,audit,ACCESS_GROUPS} from './shared.mjs';
 import {memberSafeguardFlags,participationGuard,participationArgs} from './member-safeguards.mjs';
 export const FIXTURE_LIBRARY_KEY='fixture-library-key-not-for-any-production-data';
 export const LIBRARY_LIMIT=1048576;
-const PART=49152,enc=new TextEncoder(),scopes={owner:[],governance:['webmaster','president','secretary','assistant_secretary'],finance:['webmaster','treasurer'],safety:['webmaster','president','secretary']};
+const PART=49152,enc=new TextEncoder(),scopes={owner:[],governance:ACCESS_GROUPS.secretariat,finance:ACCESS_GROUPS.money,safety:ACCESS_GROUPS.safeguarding};
 const types={'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg'};
 const uuid=x=>typeof x==='string'&&/^[a-f0-9-]{36}$/.test(x);
 const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');

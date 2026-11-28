@@ -1,8 +1,8 @@
-import {fail,json,dbFor,requireRole,membersOpen} from './shared.mjs';
+import {fail,json,dbFor,requireRole,membersOpen,ACCESS_GROUPS} from './shared.mjs';
 import {memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
 export async function memberEndpoint(req,env,path,identity){
- requireRole(identity,['member','webmaster','president','secretary']);
+ requireRole(identity,['member',...ACCESS_GROUPS.secretariat]);
  if(req.method!=='GET')fail(405,'Member details are read-only until the club is established.','method_not_allowed');
  const db=dbFor(env);
  if(path==='/api/member/me'){

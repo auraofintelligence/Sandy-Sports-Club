@@ -61,7 +61,7 @@ test('owner previews use actual role permissions on all desks and private routes
     assert.equal((await call('/api/suite/'+desk.key+'/'+row.id+'/history',cookies,'GET',undefined,context)).data.history.length,1);
    }
   }
-  const staff=STAFF.includes(effective),people=['webmaster','president','secretary','assistant_secretary','treasurer'].includes(effective),audit=['webmaster','president','secretary'].includes(effective);
+  const staff=STAFF.includes(effective),people=['webmaster','president','vice_president','secretary','assistant_secretary','treasurer'].includes(effective),audit=['webmaster','president','vice_president','secretary','assistant_secretary'].includes(effective);
   for(const path of readPaths){
    const allowed=path==='/api/accounts'?effective==='webmaster':path==='/api/people'||path==='/api/interest'?people:path==='/api/audit'?audit:path==='/api/webmaster/requests'?true:staff;
    await call(path,actors[effective].cookie,'GET',undefined,undefined,allowed?200:403);

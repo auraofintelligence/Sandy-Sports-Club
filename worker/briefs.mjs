@@ -1,4 +1,4 @@
-import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,STAFF,ensureApprover,revision,audit,https,ACCESS_GROUPS} from './shared.mjs';
 import {recordAuditAllowed} from './record-policy.mjs';
 import {libraryAuditAllowed} from './library.mjs';
 const states=['draft','proposed','prepared','revision','evidence','closed','assigned','delivered','approved','rejected','published'];
@@ -144,7 +144,7 @@ function auditCursor(value){
  }catch{fail(400,'The audit page reference is invalid. Refresh the audit trail.','invalid_cursor')}
 }
 export async function auditEndpoint(req,env,identity){
- requireRole(identity,['webmaster','president','secretary']);
+ requireRole(identity,ACCESS_GROUPS.secretariat);
  if(req.method!=='GET')fail(405,'Audit history is read-only.','method_not_allowed');
  const url=new URL(req.url),db=dbFor(env),visible=[];
  const kind=url.searchParams.get('kind'),format=url.searchParams.get('format'),limitParam=url.searchParams.get('limit');

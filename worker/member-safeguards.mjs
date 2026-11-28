@@ -2,7 +2,8 @@
 // guardian names, health details or incident narratives are collected.
 import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit,membersOpen} from './shared.mjs';
 import {purposeOf} from './record-policy.mjs';
-export const SAFEGUARD_ROLES=['webmaster','president','secretary'];
+import {ACCESS_GROUPS} from '../studio/sandy-access.js';
+export const SAFEGUARD_ROLES=ACCESS_GROUPS.safeguarding;
 export const TERMS_VERSION='sandy-participation-v1';
 export const TERMS='Optional participation: an adult may choose to be asked about contact, volunteering or publication. This is not event-specific permission, an assignment or approval of membership. Consent may be withdrawn at any time. Minor accounts require privately verified guardian permission for private self-service and cannot enable optional adult participation under this provisional policy.';
 const bands=['unconfirmed','under16','16-17','adult'];

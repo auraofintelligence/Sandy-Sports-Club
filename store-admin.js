@@ -1,5 +1,6 @@
 // Treasurer store admin: orders, products (with photos), CSV batch upload and export, reports.
 import {preparePhoto} from './picture.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const money=c=>c==null?'':'$'+(c/100).toFixed(2),dollars=c=>c==null?'':(c/100).toFixed(2);
 const ORDER=[['requested','Requested'],['confirmed','Confirmed'],['ready','Ready to collect'],['collected','Collected'],['cancelled','Cancelled']];
@@ -121,8 +122,8 @@ async function loadReport(){
 }
 (async()=>{
  try{const s=await api('/api/session');
-  if(!s.authenticated||!['webmaster','president','vice_president','secretary','assistant_secretary','treasurer'].includes(s.identity?.role)||s.readOnly){$('sa-state').textContent='For the Treasurer, Webmaster and membership officers. Sign in first.';$('sa-state').className='club-status bad';return}
-  canManage=['webmaster','treasurer'].includes(s.identity.role);
+  if(!s.authenticated||!ACCESS_GROUPS.memberRecords.includes(s.identity?.role)||s.readOnly){$('sa-state').textContent='For the Treasurer, Webmaster and membership officers. Sign in first.';$('sa-state').className='club-status bad';return}
+  canManage=ACCESS_GROUPS.money.includes(s.identity.role);
   document.querySelectorAll('[data-manage]').forEach(el=>el.hidden=!canManage);
   $('sa-panel').hidden=false;await loadOrders();
   if(!canManage)$('sa-state').textContent+=' · View only: the Treasurer or Webmaster manages the store.';

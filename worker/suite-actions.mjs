@@ -1,6 +1,6 @@
 // Cross-desk operational actions, all explicitly triggered by a real signed-in officer.
 // Creates meeting follow-up tasks and maintains an audited stock movement balance.
-import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,revision,audit} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,dateField,version,requireRole,revision,audit,ACCESS_GROUPS} from './shared.mjs';
 import {suiteBody} from './record-policy.mjs';
 import {SUITE_BY_KEY} from '../studio/sandy-suite-spec.js';
 const isUuid=s=>/^[a-f0-9-]{36}$/.test(s);
@@ -17,7 +17,7 @@ export async function suiteActionEndpoint(req,env,path,identity){
  const [_,domain,recordId,action]=parsed;
  if((domain==='meetings'&&action!=='followups')||(domain==='stock'&&action!=='movement'))
   fail(404,'This operation does not belong to that work area.','not_found');
- requireRole(identity,domain==='stock'?['webmaster','treasurer']:['webmaster','president','secretary','assistant_secretary']);
+ requireRole(identity,domain==='stock'?ACCESS_GROUPS.money:ACCESS_GROUPS.secretariat);
  const db=dbFor(env),row=await db.prepare('SELECT * FROM club_records WHERE id=? AND kind=?').bind(recordId,domain==='stock'?'asset':'meeting').first();
  const body=readRecord(row,domain),request=await payload(req,5000),at=now();
  if(domain==='meetings'){

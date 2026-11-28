@@ -95,7 +95,8 @@ test('officer-only Spam caught view: Mark as genuine moves to the register and a
  const f=fixture(t,{nominations:true}),net=mockNetwork(t);switchOn(f.env);
  await f.request(null,'/api/nominate','POST',person(7,{turnstileToken:'bot'}),'https://sandy.test',ip(7));
  await f.request(null,'/api/nominate','POST',person(8,{website:'bot'}),'https://sandy.test',ip(8));
- for(const who of ['pres','vp','asst','treasurer','other','member','demo'])assert.equal(await f.statusOf(who,'/api/committee/spam'),403,who);
+ for(const who of ['pres','vp','treasurer','other','member','demo'])assert.equal(await f.statusOf(who,'/api/committee/spam'),403,who);
+ assert.equal(await f.statusOf('asst','/api/committee/spam'),200,'the Assistant Secretary holds the Secretary’s access');
  assert.equal(await f.statusOf(null,'/api/committee/spam'),401);
  const list=await f.call('sec','/api/committee/spam');
  assert.equal(list.items.length,2);assert.equal(list.retentionDays,90);

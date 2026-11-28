@@ -2,6 +2,7 @@
 // types, Birthday offers and Safeguarding. Each desk shows live numbers first and does its job in
 // place; the full lists stay in Members & onboarding and Who to verify so there is one source of truth.
 import {isReadOnlyView} from './club-view-client.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 const AUD={all:'All members',film:'Film Club members',unverified:'Members without a blue tick'};
 const day=d=>d?new Intl.DateTimeFormat('en-AU',{day:'numeric',month:'short',year:'numeric',timeZone:'Australia/Brisbane'}).format(new Date(String(d).slice(0,10)+'T12:00:00+10:00')):'';
 const today=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
@@ -16,7 +17,7 @@ const DESK={
 };
 export const MEMBER_DESKS=Object.keys(DESK);
 
-export function setupMembersDesks({api,esc:e,status,showDesk}){
+export function setupMembersDesks({api,esc:e,status,showDesk,getIdentity}){
  const root=document.getElementById('committee-members-desk');
  if(!root)return {open(){},close(){}};
  let key='',epoch=0,busy=false,data={};
@@ -98,6 +99,7 @@ export function setupMembersDesks({api,esc:e,status,showDesk}){
  const VIEWS={applications,'member-notice':notices,'member-packs':packs,'member-types':types,birthday:birthdays,safety};
  async function load(){
   const my=++epoch;root.hidden=false;root.textContent='Loading…';
+  if(!ACCESS_GROUPS.memberRecords.includes(getIdentity?.()?.role)){root.innerHTML='<header class="ops-header"><div><h3 id="md-desk-title" tabindex="-1">'+e(DESK[key][0])+'</h3></div></header><p class="ops-boundary">Member details are kept to the Webmaster, President or Vice President, Secretary or Assistant Secretary, and Treasurer, as set out in the club’s Schedule of officer access.</p>';return}
   try{
    const need={applications:['members','interest'],'member-notice':['announcements'],'member-packs':['members'],'member-types':['members','children'],birthday:['members'],safety:['members','children']}[key];
    const src={members:()=>api('/api/committee/member-profiles').then(r=>r.members),interest:()=>optional('/api/interest').then(r=>r?.interests||[]),announcements:()=>api('/api/committee/announcements').then(r=>r.announcements),children:()=>optional('/api/committee/families').then(r=>r?r.children:null)};

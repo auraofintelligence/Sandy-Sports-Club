@@ -1,9 +1,9 @@
 // Sandy Sports working demo store. The club has no bank account: no payment is taken, orders are requests only.
 // Treasurer and Webmaster manage products, stock, orders, CSV import and export; other officers can read reports.
-import {fail,json,now,id,dbFor,payload,field,requireRole,audit,STAFF,MEMBER_ADMIN} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,requireRole,audit,STAFF,MEMBER_ADMIN,ACCESS_GROUPS} from './shared.mjs';
 import {DEMO_PRODUCTS,RETIRED_DEMO_SKUS,RETIRED_DEMO_TICKETS} from './store-catalogue.mjs';
 import {cleanPhoto,photoResponse} from './profiles.mjs';
-export const STORE_MANAGERS=['webmaster','treasurer'];
+export const STORE_MANAGERS=ACCESS_GROUPS.money;
 export const STORE_NOTICE='Working demo store. Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.';
 const KINDS=['merch','ticket','donation'],STATUSES=['draft','active','archived'],ORDER_STATUSES=['requested','confirmed','ready','collected','cancelled'];
 const BIRTHDAY_PERCENT=10,LOW_STOCK=3;

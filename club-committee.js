@@ -1,5 +1,7 @@
 // PLFC-inspired Sandy committee room. Real draft data, server roles, revisions and audit; no fake approvals.
 import {SUITE_BY_KEY,SUITE_DESKS} from './studio/sandy-suite-spec.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
+import {renderAccessSchedule} from './access-schedule.js';
 import {setupCommitteeOperations} from './club-committee-ops.js?v=20261128';
 import {setupMeetingsDesk} from './club-meetings.js?v=20261128';
 import {setupAgmDesk} from './club-agm.js?v=20261128';
@@ -40,13 +42,14 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const nav=$('committee-tools'),form=$('committee-desk-form'),list=$('committee-desk-list');
  if(!nav||!form||!list)return {open(){},showDesk(){}};
  const suite=setupSandySuite({api,status,getIdentity});
+ renderAccessSchedule(document.getElementById('committee-access-schedule'));
  const ops=setupCommitteeOperations({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const meetingsDesk=setupMeetingsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const agmDesk=setupAgmDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
- const membersDesk=setupMembersDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
- const eventsDesk=setupEventsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
- const programmeDesk=setupProgrammeDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
+ const membersDesk=setupMembersDesks({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
+ const eventsDesk=setupEventsDesk({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
+ const programmeDesk=setupProgrammeDesks({api,esc,status,getIdentity,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
  const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
@@ -54,7 +57,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
   const role=getIdentity()?.role;
   if(SUITE_BY_KEY[desk.key]&&!SUITE_BY_KEY[desk.key].roles.includes(role))return false;
   if(desk.webmaster&&role!=='webmaster')return false;
-  if(desk.restricted&&!['webmaster','president','secretary'].includes(role))return false;
+  if(desk.restricted&&!ACCESS_GROUPS.safeguarding.includes(role))return false;
   return true;
  };
  const groups=[...new Set(DESKS.map(d=>d.group))];

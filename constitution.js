@@ -1,4 +1,6 @@
 import {viewFetch,isReadOnlyView,protectView,installExitControl} from './club-view-client.js';
+import {accessMarkdown,renderAccessSchedule} from './access-schedule.js';
+renderAccessSchedule(document.querySelector('#officer-access'));
 const form=document.querySelector('#constitution-form'),preview=document.querySelector('#constitution-preview'),output=document.querySelector('#constitution-text'),status=document.querySelector('#constitution-status');
 const topics=['Interpretation','Name','Objects','Powers','Classes of members','Transition from an unincorporated group','New membership','Membership fees','Admission and rejection','Membership suspension','Membership ends','Appeals and general meeting','Register of members','Use of register information','Secretary appointment','Secretary removal','Secretary functions','Management committee composition','Committee election','Resignation and removal','Vacancies','Committee functions','Committee meetings','Quorum and adjournment','Special committee meeting','Committee minutes','Subcommittees','Validity of acts','Decisions without a meeting','First AGM','Subsequent AGMs','AGM business and financial reporting','Notice of general meeting','General meeting quorum','Meeting procedure','Voting','Special general meeting','Proxies','General meeting minutes','By-laws','Rule alterations','Funds and accounts','Financial matters','Documents','Financial year','Surplus assets','Grievance procedure','Conflicts, safeguarding and digital stewardship'];
 // Disabled view-only fields still contain the fictional draft and must render in previews.
@@ -48,6 +50,20 @@ Working quorum: ${val('quorum')}
 
 Film club: ${val('film')}. Specify its mandate, reporting, budgets, editorial authority and appointment process in the final text.
 
+## 4A. Officer access to club systems
+
+(a) The committee decides which office holders may use which club systems and records. Those decisions are set out in Schedule 1 (Officer access), which forms part of these rules.
+
+(b) A deputy holds the same access as the office they deputise for: the Vice President as the President, and the Assistant Secretary as the Secretary.
+
+(c) The Webmaster maintains the club's systems and gives effect to Schedule 1 as directed by the committee. The Webmaster does not decide access alone.
+
+(d) Schedule 1 may be changed only by a resolution of the committee recorded in the minutes. The change takes effect when the club's systems are updated to match, and the update is kept in the club's change history.
+
+(e) An office holder may use their access only for their duties, must keep members' personal information private, and loses that access when they leave office. Outgoing officers hand over through the officer handover process.
+
+(f) Until the first committee is elected, the founding organiser acts as Webmaster and applies Schedule 1 as drafted, subject to its adoption at the founding meeting.
+
 ## 5. Facilities, media and cultural authority
 
 ${val('assets')}
@@ -63,6 +79,10 @@ Financial year end proposal: ${val('year')}.
 ## 7. Other changes for the founding group
 
 ${val('additional')||'No additional notes entered.'}
+
+## Schedule 1: Officer access
+
+${accessMarkdown()}
 
 ## PLFC v1.2 topic map for clause-by-clause review
 

@@ -447,3 +447,9 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 .mt-list button span:empty{display:none}
 #committee-programme-desk label.ops-check,#committee-events-desk label.ops-check,#committee-members-desk label.ops-check,#committee-agm label.ops-check{display:flex!important;justify-content:flex-start;align-items:center;gap:.55rem;grid-template-columns:none}
 #committee-programme-desk .ops-check input,#committee-events-desk .ops-check input,#committee-members-desk .ops-check input,#committee-agm .ops-check input{flex:0 0 auto;width:1.2rem!important;height:1.2rem;margin:0}
+/* Schedule 1: officer access table */
+.access-table td{font-size:.85rem}.access-table td span{color:#3e5a5f;font-size:.8rem}
+.access-table .access-cell{text-align:center;font-size:1.1rem;font-weight:900;color:#1c6349}.access-table .access-no{color:#b8c6c3}
+.access-note{font-size:.85rem;color:#3e5a5f}
+.committee-access{margin:.6rem 0;background:white;border:1px solid #c8dfd9;border-radius:10px;padding:.6rem .8rem}.committee-access summary{cursor:pointer;font-weight:800;color:#0b5970}
+body.desk-focus .committee-access{display:none}

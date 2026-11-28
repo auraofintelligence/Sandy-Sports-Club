@@ -2,6 +2,7 @@
 // put it on the members' and public calendars when it is confirmed, then debrief.
 // Uses the events records (/api/suite/events), the run-sheet API and announcements for publishing.
 import {isReadOnlyView} from './club-view-client.js';
+import {ACCESS_GROUPS} from './studio/sandy-access.js';
 const ACTIVITIES=['Mixed beach volleyball','Sand cricket','Flag football','Beach rugby','Beach football','Sand games','Wellbeing session','Film screening','Market and festival','Multi-sport','Other'];
 const TOWNS=['Dunwich / Goompi','Amity Point / Pulan','Point Lookout / Mulumba','Multi-town / TBD'];
 const OFFICES={webmaster:'Webmaster',president:'President',vice_president:'Vice President',secretary:'Secretary',assistant_secretary:'Assistant Secretary',treasurer:'Treasurer',committee:'Committee officer'};
@@ -12,7 +13,8 @@ const todayBris=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const ampm=t=>{if(!t)return '';let [h,m]=t.split(':').map(Number);const p=h>=12?'pm':'am';h=h%12||12;return h+(m?':'+String(m).padStart(2,'0'):'')+p};
 const timeText=f=>f.startTime?ampm(f.startTime)+(f.endTime?' to '+ampm(f.endTime):''):'';
 
-export function setupEventsDesk({api,esc:e,status,showDesk}){
+export function setupEventsDesk({api,esc:e,status,showDesk,getIdentity}){
+ const canPublish=()=>ACCESS_GROUPS.memberRecords.includes(getIdentity?.()?.role);
  const root=document.getElementById('committee-events-desk');
  if(!root)return {open(){},close(){}};
  let events=[],current=null,sheet=null,listings=[],step='plan',busy=false,epoch=0,requestId=null;
@@ -70,6 +72,7 @@ export function setupEventsDesk({api,esc:e,status,showDesk}){
  function publishStep(){
   const f=current.fields,live=mine();
   if(!f.eventDate)return '<p class="ops-boundary">Add a date in step 1 before putting the event on a calendar.</p>';
+  if(!canPublish())return '<p class="ops-boundary">Publishing to members is done by the Webmaster, President or Vice President, Secretary or Assistant Secretary, or Treasurer. Plan it here and ask one of them to publish.</p>';
   const stale=live.filter(a=>a.eventDate!==f.eventDate||(a.eventTime||'')!==timeText(f));
   return '<p class="mt-help">When the event is confirmed, put it on the calendar. Members see it in My Clubhouse and can RSVP. Tick the public box to show it on What’s on for everyone too.</p>'+
    (live.length?'<h4>On the calendar now</h4><ul class="md-notices">'+live.map(a=>'<li data-md-id="'+e(a.id)+'"><div><strong>'+e(a.title)+'</strong><span>'+e([AUD[a.audience]||a.audience,longDate(a.eventDate)+(a.eventTime?' '+a.eventTime:''),a.publicCalendar?'Public What’s on':'Members only'].join(' · '))+'</span>'+
