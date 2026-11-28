@@ -140,9 +140,9 @@ subMenu?.addEventListener('click',e=>{if(e.target.closest('a'))sportsMenu(false)
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(subMenu&&!subMenu.hidden){sportsMenu(false,true);return}if(navEl?.classList.contains('open')){navEl.classList.remove('open');menu.setAttribute('aria-expanded','false');menu.focus()}});
 document.addEventListener('click',e=>{if(subMenu&&!subMenu.hidden&&!e.target.closest('.nav-group'))sportsMenu(false)});
 const guide=document.querySelector('#guide-panel'),guideButton=document.querySelector('#guide-button');
-function guideOpen(open){guide.hidden=!open;guideButton.setAttribute('aria-expanded',String(open));if(open)document.querySelector('#guide-close').focus();else guideButton.focus()}
+function guideOpen(open){guide.hidden=!open;guideButton.setAttribute('aria-expanded',String(open));if(open){document.querySelector('#guide-close').focus();import('/mozzie-search.js').catch(()=>{})}else guideButton.focus()}
 guideButton?.addEventListener('click',()=>guideOpen(guide.hidden));document.querySelector('#guide-close')?.addEventListener('click',()=>guideOpen(false));
-guide?.addEventListener('click',e=>{if(e.target.closest('a'))guideOpen(false)});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guide&&!guide.hidden)guideOpen(false)});
+guide?.addEventListener('click',e=>{if(e.target.closest('a')&&!e.target.closest('.mozzie-hit[href^="#"]'))guideOpen(false)});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&guide&&!guide.hidden)guideOpen(false)});
 document.querySelector('.footer-bottom')?.insertAdjacentHTML('beforeend','<span><a href="/index.html#page-directory">All pages</a> · <a href="/image-gallery.html">Image gallery</a> · <a href="/sources.html">Sources & credits</a> · <a href="/LICENCE.md">Interim licence</a> · <a href="https://auraofintelligence.github.io/strange-but-true/">Strange But True</a></span>');
 document.body.insertAdjacentHTML('beforeend','<button class="back-to-top" type="button" aria-label="Back to top" title="Back to top" hidden>↑<span>Top</span></button>');
 const backToTop=document.querySelector('.back-to-top');
