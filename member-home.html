@@ -88,7 +88,7 @@
  <form id="family-form" class="member-workspace-form"><h3>Add a child</h3><div class="club-form-grid">
   <label>Child's full name<input name="fullName" required maxlength="100"></label>
   <label>What they like to be called <small>(optional)</small><input name="preferredName" maxlength="60"></label>
-  <label>Age group<select name="ageBand" required><option value="under16">Under 16</option><option value="16-17">16 to 17</option></select></label>
+  <label>Date of birth<input type="date" name="dob" required min="2000-01-01"></label>
   <fieldset class="club-inline-choice"><legend>Gender</legend><label><input type="radio" name="gender" value="female" required> Female</label> <label><input type="radio" name="gender" value="male"> Male</label> <label><input type="radio" name="gender" value="non-binary"> Non-binary</label></fieldset>
   <label>Your relationship<select name="relationship"><option value="parent">Parent</option><option value="guardian">Legal guardian</option><option value="carer">Carer</option><option value="grandparent">Grandparent</option><option value="other">Other, with the parent's authority</option></select></label>
  </div>

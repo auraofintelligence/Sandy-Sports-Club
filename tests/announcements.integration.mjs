@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {fixture} from './d1-fixture.mjs';
 async function join(f,username){
  const res=await f.request(null,'/api/join','POST',{fullName:'Fictional '+username,email:username+'@example.test',town:'Dunwich',audienceRegion:'local',
-  username,password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49'});
+  username,password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',dob:'1990-06-15'});
  assert.equal(res.status,201);return (res.headers.get('set-cookie')||'').match(/__Host-sandy_session=([a-f0-9]{64})/)[1];
 }
 test('webmaster posts, members see and RSVP, film-only notices reach Film Club members only',async t=>{

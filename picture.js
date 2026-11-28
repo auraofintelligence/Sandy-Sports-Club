@@ -15,7 +15,7 @@ const safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':
 // Renders into `mount`; calls onChange({avatarId}|{photo}) when the choice changes.
 export function picturePicker(mount,{who={},current=null,name='picture',onChange=()=>{}}={}){
  const {suggested,others}=orderAvatars(who);
- const tile=a=>'<label class="avatar-tile"><input type="radio" name="'+name+'" value="'+a.id+'"'+(current?.avatarId===a.id?' checked':'')+'><img src="'+avatarUrl(a.id)+'" alt="Cartoon avatar '+a.id.slice(6)+'" width="96" height="96" loading="lazy"></label>';
+ const tile=a=>'<label class="avatar-tile"><input type="radio" name="'+name+'" value="'+a.id+'"'+(current?.avatarId===a.id?' checked':'')+'><img src="'+avatarUrl(a.id)+'" alt="Cartoon avatar '+a.id.slice(7)+'" width="96" height="96" loading="lazy"></label>';
  mount.innerHTML='<div class="avatar-picker"><p><strong>Suggested for you</strong></p><div class="avatar-grid">'+(suggested.map(tile).join('')||'<p>Pick any avatar below.</p>')+'</div>'+
   '<details><summary>Show all avatars</summary><div class="avatar-grid">'+others.map(tile).join('')+'</div></details>'+
   '<p><strong>Or use a photo</strong></p><label>Upload a photo <input type="file" accept="image/jpeg,image/png,image/webp" data-photo></label><p class="club-note" data-photo-note>'+safe(current?.type==='photo'?'You are using a photo. Pick an avatar above to switch back.':'Photos are only shown to members you connect with. Everyone else sees an avatar.')+'</p></div>';

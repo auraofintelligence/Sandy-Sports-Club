@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {fixture} from './d1-fixture.mjs';
 async function join(f,username){
  const res=await f.request(null,'/api/join','POST',{fullName:'Fictional '+username,preferredName:username,email:username+'@example.test',mobile:'0400 000 000',town:'Amity Point',audienceRegion:'local',
-  username,password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49'});
+  username,password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',dob:'1990-06-15'});
  assert.equal(res.status,201);return (res.headers.get('set-cookie')||'').match(/__Host-sandy_session=([a-f0-9]{64})/)[1];
 }
 const profile=(extra={})=>({version:1,bio:'Keen on sunset volleyball',sports:['Mixed beach volleyball','Not a sport'],skillLevel:'social',availability:['Weekend morning'],
@@ -12,8 +12,8 @@ const profile=(extra={})=>({version:1,bio:'Keen on sunset volleyball',sports:['M
 test('profiles, directory, film filter, connections, contact sharing and blocking',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  const ana=await join(f,'ana'),ben=await join(f,'ben'),cat=await join(f,'cat');
- for(const who of [ana,ben,cat])await f.call(who,'/api/member/picture','POST',{avatarId:'sandy-15'});
- const blank=await f.call(ana,'/api/member/profile');assert.equal(blank.profile.picture.avatarId,'sandy-15');assert.equal(blank.profile.ageGroup,'30-49');assert.equal(blank.gender,'female');assert.ok(blank.options.crew.includes('Camera'));
+ for(const who of [ana,ben,cat])await f.call(who,'/api/member/picture','POST',{avatarId:'angler-03'});
+ const blank=await f.call(ana,'/api/member/profile');assert.equal(blank.profile.picture.avatarId,'angler-03');assert.equal(blank.profile.dob,'1990-06-15');assert.equal(blank.gender,'female');assert.ok(blank.options.crew.includes('Camera'));
  const saved=await f.call(ana,'/api/member/profile','POST',profile());
  assert.deepEqual(saved.profile.sports,['Mixed beach volleyball']);
  await f.call(ana,'/api/member/profile','POST',profile(),409);
@@ -52,7 +52,7 @@ test('picture is required for the directory; photos only reach connections and t
  await f.call(ana,'/api/member/picture','POST',{photo:'data:image/png;base64,AAAA'},400);
  const jpeg='data:image/jpeg;base64,'+Buffer.from([0xff,0xd8,0xff,0xe0,0,16,74,70,73,70,0,1]).toString('base64');
  const saved=await f.call(ana,'/api/member/picture','POST',{photo:jpeg});assert.equal(saved.profile.picture.type,'photo');
- await f.call(ben,'/api/member/picture','POST',{avatarId:'sandy-20'});
+ await f.call(ben,'/api/member/picture','POST',{avatarId:'angler-08'});
  const anaProfile=await f.call(ana,'/api/member/profile');
  await f.call(ana,'/api/member/profile','POST',{version:anaProfile.profile.version,directoryVisible:true,sports:[],availability:[],crewSkills:[],helping:[],skillLevel:''});
  const benView=(await f.call(ben,'/api/member/directory')).members[0];

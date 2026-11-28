@@ -6,10 +6,10 @@ const bands={'under16':'Under 16','16-17':'16 to 17'};
 const form=$('family-form'),list=$('family-list'),status=$('family-status');
 let children=[],childPicture=null;
 function childPicker(){
- const g=form.querySelector('input[name=gender]:checked')?.value||'',ageBand=form.elements.ageBand.value;childPicture=null;
- picturePicker($('family-picture'),{who:{ageBand,gender:g},name:'child-avatar',onChange:c=>{childPicture=c}});
+ const g=form.querySelector('input[name=gender]:checked')?.value||'',dob=form.elements.dob.value;childPicture=null;
+ picturePicker($('family-picture'),{who:{dob,gender:g},name:'child-avatar',onChange:c=>{childPicture=c}});
 }
-form.addEventListener('change',e=>{if(e.target.name==='gender'||e.target.name==='ageBand')childPicker()});
+form.addEventListener('change',e=>{if(e.target.name==='gender'||e.target.name==='dob')childPicker()});
 async function api(method='GET',data){
  const response=await fetch('/api/member/family',{method,credentials:'same-origin',cache:'no-store',...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
  const payload=await response.json().catch(()=>({}));
@@ -18,7 +18,7 @@ async function api(method='GET',data){
 }
 function render(){
  list.innerHTML=children.length?children.map(c=>'<article class="member-item with-pic" data-child="'+safe(c.id)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(c.picture,c.photoUrl&&c.photoUrl+'?v='+c.version))+'"><strong>'+safe(c.preferredName||c.fullName)+'</strong>'+
-  '<span>'+safe(c.fullName)+' · '+safe(bands[c.ageBand]||c.ageBand)+(c.interests.length?' · '+safe(c.interests.join(', ')):'')+'</span>'+
+  '<span>'+safe(c.fullName)+' · '+safe(c.age!=null?'Age '+c.age:bands[c.ageBand])+(c.interests.length?' · '+safe(c.interests.join(', ')):'')+'</span>'+
   '<label class="club-consent"><input type="checkbox" data-photo '+(c.photoPermission?'checked':'')+'> Photos and video allowed</label>'+
   '<button type="button" data-remove>Remove</button></article>').join(''):'<p>No children added yet.</p>';
 }
@@ -33,7 +33,7 @@ form.addEventListener('submit',async event=>{
  if(!childPicture){status.textContent='Pick an avatar or upload a photo for your child.';return}
  status.textContent='Saving…';
  try{
-  ({children}=await api('POST',{action:'add',fullName:d.get('fullName'),preferredName:d.get('preferredName'),ageBand:d.get('ageBand'),relationship:d.get('relationship'),
+  ({children}=await api('POST',{action:'add',fullName:d.get('fullName'),preferredName:d.get('preferredName'),dob:d.get('dob'),relationship:d.get('relationship'),
    gender:d.get('gender'),...childPicture,interests:d.getAll('interest'),photoPermission:form.elements.photoPermission.checked,guardianDeclaration:form.elements.guardianDeclaration.checked}));
   form.reset();childPicker();render();status.textContent='Added.';
  }catch(error){status.textContent=error.message}

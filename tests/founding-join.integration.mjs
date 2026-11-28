@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture} from './d1-fixture.mjs';
 const person=(extra={})=>({fullName:'Fictional Founder',preferredName:'Fin',email:'founder@example.test',mobile:'',town:'Point Lookout',audienceRegion:'local',
- username:'fictional.founder',password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49',...extra});
+ username:'fictional.founder',password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',dob:'1990-06-15',...extra});
 const tokenOf=res=>(res.headers.get('set-cookie')||'').match(/__Host-sandy_session=([a-f0-9]{64})/)?.[1];
 test('joining is closed unless founding membership is enabled',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});
@@ -29,9 +29,9 @@ test('an adult joins instantly, is signed in and the members area is open',async
 test('join validation: duplicates, minors, short passwords, terms, honeypot',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  await f.call(null,'/api/join','POST',person({password:'sandy6'}),400);
- await f.call(null,'/api/join','POST',person({adult:false}),400);
  await f.call(null,'/api/join','POST',person({gender:'prefer-not'}),400);
- await f.call(null,'/api/join','POST',person({ageGroup:'12'}),400);
+ await f.call(null,'/api/join','POST',person({dob:'1990-02-30'}),400);
+ await f.call(null,'/api/join','POST',person({dob:new Date(Date.now()+10*3600000-17*365.25*86400000).toISOString().slice(0,10)}),400);
  await f.call(null,'/api/join','POST',person({gender:'non-binary',username:'nb.member',email:'nb@example.test'}),201);
  assert.equal(f.count('club_people',"gender='non-binary'"),1);
  await f.call(null,'/api/join','POST',person({termsAccepted:false}),400);

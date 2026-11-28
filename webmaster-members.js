@@ -11,12 +11,14 @@ async function api(path,method='GET',body){
 const pic=src=>({__html:'<img class="member-pic" alt="" loading="lazy" src="'+safe(src)+'">'});
 const table=(el,head,rows)=>{$(el).innerHTML='<thead><tr>'+head.map(h=>'<th scope="col">'+safe(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c&&c.__html?c.__html:safe(c))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody>'};
 const yes=v=>v?'Yes':'';
+const today=()=>new Date(Date.now()+10*3600000).toISOString().slice(0,10);
+const age=dob=>{if(!dob)return '';const [y,m,d]=dob.split('-').map(Number),[ty,tm,td]=today().split('-').map(Number);return ty-y-((tm<m||(tm===m&&td<d))?1:0)};
 const rows={
- members:()=>data.members.map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),m.name,m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.ageGroup]),
- children:()=>data.children.map(c=>[pic(pictureSrc(c.picture,c.photoUrl)),c.fullName,c.preferredName,c.ageBand==='under16'?'Under 16':'16 to 17',c.gender,c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
+ members:()=>data.members.map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),m.name,m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.dob,age(m.profile.dob)]),
+ children:()=>data.children.map(c=>[pic(pictureSrc(c.picture,c.photoUrl)),c.fullName,c.preferredName,c.dob,c.age,c.gender,c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
  interest:()=>data.interest.map(i=>[i.firstName,i.email,i.town,i.audienceRegion,(i.interests||[]).join('; '),i.comments,(i.createdAt||'').slice(0,10)])};
-const heads={members:['Picture','Name','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory','Gender','Age group'],
- children:['Picture','Child','Called','Age group','Gender','Wants to try','Photos OK','Guardian','Guardian username','Guardian email','Guardian mobile','Added'],
+const heads={members:['Picture','Name','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory','Gender','Date of birth','Age'],
+ children:['Picture','Child','Called','Date of birth','Age','Gender','Wants to try','Photos OK','Guardian','Guardian username','Guardian email','Guardian mobile','Added'],
  interest:['First name','Email','Town','Connection','Interests','Comments','Date']};
 function csv(kind){
  const cell=v=>{if(v&&v.__html)return '';let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
@@ -41,6 +43,9 @@ async function load(){
   ['In directory',count(x=>x.profile.directoryVisible)],['Can volunteer',count(x=>x.profile.helping.length)],['Interest sign-ups',data.interest.length]]
   .map(([a,b])=>'<div class="club-summary-card"><strong>'+safe(b)+'</strong><span>'+safe(a)+'</span></div>').join('');
  for(const k of ['members','children','interest'])table('wm-'+k,heads[k],rows[k]());
+ const month=today().slice(5,7),bdays=[...data.members.map(m=>({name:m.name,dob:m.profile.dob,who:'Member'})),...data.children.map(c=>({name:c.fullName,dob:c.dob,who:'Child of '+(c.guardian?.name||c.guardian?.username||'')}))]
+  .filter(p=>p.dob&&p.dob.slice(5,7)===month).sort((a,b)=>a.dob.slice(8).localeCompare(b.dob.slice(8)));
+ table('wm-birthdays',['Day','Name','Turning','Who'],bdays.map(p=>[p.dob.slice(8),p.name,age(p.dob)+(p.dob.slice(5)>today().slice(5)?1:0),p.who]));
 }
 document.addEventListener('click',async e=>{
  const kind=e.target.dataset?.csv;if(kind)return csv(kind);

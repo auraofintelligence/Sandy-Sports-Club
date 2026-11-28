@@ -52,7 +52,7 @@ async function loadRoster(){
 async function load(){
  try{
   ({profile,options,gender,photoUrl}=await api('/api/member/profile'));
-  const who={ageGroup:profile.ageGroup,gender};
+  const who={dob:profile.dob,gender};
   showPicture();
   picturePicker($('profile-picture-picker'),{who,current:profile.picture,name:'profile-avatar',onChange:c=>savePicture(c,$('profile-picture-status'))});
   if(!profile.picture){

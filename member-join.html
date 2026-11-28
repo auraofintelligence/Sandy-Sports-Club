@@ -17,13 +17,12 @@
 <label>Mobile <small>(optional)</small><input type="tel" name="mobile" maxlength="25" autocomplete="tel"></label>
 <label>Town or where you are visiting from<input name="town" maxlength="100" autocomplete="address-level2"></label>
 <fieldset class="club-inline-choice"><legend>Gender</legend><label><input type="radio" name="gender" value="female" required> Female</label> <label><input type="radio" name="gender" value="male"> Male</label> <label><input type="radio" name="gender" value="non-binary"> Non-binary</label></fieldset>
-<label>Age group<select name="ageGroup" required><option value="">Choose…</option><option value="18-29">18 to 29</option><option value="30-49">30 to 49</option><option value="50-64">50 to 64</option><option value="65+">65 and over</option></select></label>
+<label>Date of birth <small>(you need to be 18 or over; we use it for birthday offers)</small><input type="date" name="dob" required min="1910-01-01" autocomplete="bday"></label>
 <label>Connection to Straddie<select name="audienceRegion" required><option value="local">Island local</option><option value="regional">Regional visitor</option><option value="tourist">Holiday visitor</option><option value="other">Other</option></select></label>
 <label>Username<input name="username" required minlength="3" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9._+\-]{2,79}" autocomplete="username"></label>
 <label>Password <small>(7 or more characters)</small><input type="password" name="password" required minlength="7" maxlength="256" autocomplete="new-password"></label>
 </div>
 <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
-<label class="club-consent"><input type="checkbox" name="adult" required> I am 18 or over.</label>
 <label class="club-consent"><input type="checkbox" name="contactConsent"> Sandy Sports may email or message me about come-and-try days, events and club news. You can change this later.</label>
 <details class="club-note"><summary>Participation terms</summary><p id="join-terms"></p></details>
 <label class="club-consent"><input type="checkbox" name="termsAccepted" required> I have read and accept the participation terms.</label>
