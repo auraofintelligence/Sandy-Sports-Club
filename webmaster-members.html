@@ -5,14 +5,14 @@
 <script defer src="/site.js"></script><script type="module" src="/webmaster-members.js"></script>
 </head><body><div data-site-header></div><main class="club-app" id="main">
 <div class="club-app-heading"><p class="eyebrow">WEBMASTER · MEMBERS &amp; ONBOARDING</p><h1>Members &amp; onboarding</h1>
-<p>Founding members, families, interest sign-ups, announcements and RSVPs in one place. <a href="/club-admin.html">Back to My Clubhouse</a></p></div>
+<p>Founding members, families, interest sign-ups, announcements and RSVPs in one place. <a href="/verify-members.html">Who to verify (blue ticks)</a> · <a href="/club-admin.html">Back to My Clubhouse</a></p></div>
 <div id="wm-state" class="club-status" role="status">Checking your Webmaster session…</div>
 <div id="wm-panel" hidden>
 <div class="club-summary" id="wm-summary"></div>
 <section class="club-panel"><h2>Post an announcement or event</h2>
 <form id="wm-announce" class="member-workspace-form"><div class="club-form-grid">
  <label>Title<input name="title" required maxlength="140"></label>
- <label>Who it is for<select name="audience"><option value="all">All members</option><option value="film">Film Club members</option></select></label>
+ <label>Who it is for<select name="audience"><option value="all">All members</option><option value="film">Film Club members</option><option value="unverified">Members without a blue tick</option></select></label>
  <label>Event date <small>(optional)</small><input type="date" name="eventDate"></label>
  <label>Time <small>(optional)</small><input name="eventTime" maxlength="40" placeholder="4pm to 6pm"></label>
  <label>Location <small>(optional)</small><input name="location" maxlength="140" placeholder="Cylinder Beach"></label>
@@ -24,7 +24,8 @@
 <section class="club-panel"><h2>Birthdays this month</h2><p>Members and children with a birthday this month, ready for birthday offers.</p><div class="table-scroll"><table class="club-table" id="wm-birthdays"></table></div></section>
 <section class="club-panel"><h2>Founding members</h2>
 <form id="wm-verify" hidden><h3>Verify ID: <span id="wm-verify-name"></span></h3><div class="club-form-grid"><label>ID sighted<select name="idType" required><option>Driver licence</option><option>Passport</option><option>Proof of age card</option><option>Photo ID card</option><option>Other government photo ID</option></select></label><label>Date of birth on the ID<input type="date" name="dob" required></label></div><label class="club-consent"><input type="checkbox" name="sighted" required> I saw this person's photo ID in person and it matches them. (Do not record ID numbers.)</label><button type="submit">Give blue tick</button> <button type="button" id="wm-verify-cancel">Cancel</button><p role="status" id="wm-verify-status"></p></form>
-<p><button type="button" data-csv="members">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-members"></table></div></section>
+<div class="club-form-grid"><label>Show<select id="wm-filter"><option value="all">Everyone</option><option value="unverified">No blue tick yet</option><option value="verified">Blue tick</option></select></label></div>
+<p><button type="button" data-csv="members">Download CSV</button> <button type="button" id="wm-remind">Email reminder to those shown</button> <small id="wm-remind-note"></small></p><div class="table-scroll"><table class="club-table" id="wm-members"></table></div></section>
 <section class="club-panel"><h2>Children registered by guardians</h2><p><button type="button" data-csv="children">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-children"></table></div></section>
 <section class="club-panel"><h2>Interest sign-ups</h2><p>People who registered interest but have not joined. Most recent 30. <button type="button" data-csv="interest">Download CSV</button></p><div class="table-scroll"><table class="club-table" id="wm-interest"></table></div></section>
 </div>

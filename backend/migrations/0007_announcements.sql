@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS club_announcements(
  event_time TEXT NOT NULL DEFAULT '',
  location TEXT NOT NULL DEFAULT '',
  rsvp INTEGER NOT NULL DEFAULT 0 CHECK(rsvp IN (0,1)),
- audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film')),
+ audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film','unverified')),
  created_by TEXT NOT NULL REFERENCES club_accounts(id),
  created_utc TEXT NOT NULL,
  updated_utc TEXT NOT NULL,

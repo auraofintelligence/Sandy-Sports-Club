@@ -50,15 +50,24 @@ export async function profilesEndpoint(req,env,path,identity){
  const db=dbFor(env);
  if(path==='/api/committee/member-profiles'){
   requireRole(identity,['webmaster']);await ensureProfileTables(env,db);
-  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,m.*,v.username AS verifier FROM club_accounts a
+  const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.joined_on,p.membership_class,p.gender,p.consent_contact,m.*,v.username AS verifier FROM club_accounts a
    JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id LEFT JOIN club_accounts v ON v.id=m.id_verified_by WHERE a.role='member' ORDER BY p.joined_on DESC,a.username LIMIT 1000`).all();
   return json({members:results.map(r=>({accountId:r.id,username:r.username,name:r.full_name,preferredName:r.preferred_name,town:r.town,email:r.email,mobile:r.mobile,
-   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
+   joinedOn:r.joined_on,membershipClass:r.membership_class,gender:r.gender,contactConsent:!!r.consent_contact,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null,profile:shape(r.account_id?r:null),photoUrl:r.picture_type==='photo'?photoUrl(r.id):null}))});
  }
  // Blue tick: a committee member or the Webmaster sighted photo ID in person and confirmed the date of birth.
  // Only the ID type is kept; ID numbers and copies of documents are never stored.
  if(path==='/api/committee/verify-id'){
-  requireRole(identity,STAFF);if(req.method!=='POST')fail(405,'Use the verify form.','method_not_allowed');await ensureProfileTables(env,db);
+  requireRole(identity,STAFF);await ensureProfileTables(env,db);
+  if(req.method==='GET'){
+   const {results=[]}=await db.prepare(`SELECT a.id,a.username,p.full_name,p.preferred_name,p.town,p.joined_on,m.avatar_id,m.picture_type,m.id_verified_utc,m.id_verified_type,v.username AS verifier
+    FROM club_accounts a JOIN club_people p ON p.account_id=a.id AND p.status='active' LEFT JOIN club_member_profiles m ON m.account_id=a.id LEFT JOIN club_accounts v ON v.id=m.id_verified_by
+    WHERE a.role='member' AND a.state='active' ORDER BY m.id_verified_utc IS NOT NULL,COALESCE(NULLIF(p.preferred_name,''),p.full_name) LIMIT 2000`).all();
+   return json({members:results.map(r=>({accountId:r.id,username:r.username,name:r.preferred_name||r.full_name,fullName:r.full_name,town:r.town,joinedOn:r.joined_on,
+    picture:r.picture_type?{type:r.picture_type,avatarId:r.avatar_id}:null,photoUrl:r.picture_type==='photo'?photoUrl(r.id):null,
+    verified:!!r.id_verified_utc,idCheck:r.id_verified_utc?{type:r.id_verified_type,at:r.id_verified_utc,by:r.verifier||''}:null}))});
+  }
+  if(req.method!=='POST')fail(405,'Use the verify form.','method_not_allowed');
   const b=await payload(req,1000),target=field(b.accountId,40),at=now();
   const member=await db.prepare("SELECT a.id,m.dob,m.id_verified_utc FROM club_accounts a JOIN club_member_profiles m ON m.account_id=a.id WHERE a.id=? AND a.role='member' AND a.state='active'").bind(target).first();
   if(!member)fail(404,'That member has no profile yet. Ask them to finish joining first.','member_not_found');
@@ -76,9 +85,10 @@ export async function profilesEndpoint(req,env,path,identity){
  }
  const photoMatch=path.match(/^\/api\/member\/photo\/([a-f0-9-]{36})$/);
  if(photoMatch&&req.method==='GET'){
-  requireRole(identity,['member','webmaster']);await ensureProfileTables(env,db);
+  requireRole(identity,['member',...STAFF]);await ensureProfileTables(env,db);
   const target=photoMatch[1];
-  if(identity.role!=='webmaster'&&target!==identity.id){
+  // Committee can see member photos to recognise people when verifying ID in person.
+  if(!STAFF.includes(identity.role)&&target!==identity.id){
    const [low,high]=pair(identity.id,target);
    if(!await db.prepare("SELECT 1 AS x FROM club_member_connections WHERE low_id=? AND high_id=? AND state='connected'").bind(low,high).first())fail(404,'Photo unavailable.','not_found');
   }

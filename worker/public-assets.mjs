@@ -461,6 +461,8 @@ export const PUBLIC_FILES=Object.freeze([
  "assets/avatars/still/angler-36.webp",
  "picture.js",
  "picture.css",
+ "verify-members.html",
+ "verify-members.js",
  "member-calendar.html",
  "member-crew.html",
  "member-equipment.html",

@@ -78,7 +78,14 @@ test('blue tick: only committee or Webmaster can verify ID in person; members se
  assert.equal((await f.call(ana,'/api/member/directory')).members[0].verified,true);
  const listed=(await f.call('web','/api/committee/member-profiles')).members.find(m=>m.username==='ben');
  assert.equal(listed.idCheck.type,'Driver licence');assert.equal(listed.idCheck.by,'sec');
+ const list=(await f.call('sec','/api/committee/verify-id')).members;
+ assert.deepEqual(list.map(m=>[m.username,m.verified]),[['ana',false],['ben',true]]);
+ await f.call(ana,'/api/committee/verify-id',undefined,undefined,403);
+ await f.call('web','/api/committee/announcements','POST',{action:'create',title:'Get your blue tick',audience:'unverified'},201);
+ assert.equal((await f.call(ana,'/api/member/announcements')).announcements.length,1);
+ assert.equal((await f.call(ben,'/api/member/announcements')).announcements.length,0);
  await f.call('web','/api/committee/verify-id','POST',{action:'revoke',accountId:benId});
+ assert.equal((await f.call(ben,'/api/member/announcements')).announcements.length,1);
  assert.equal((await f.call(ana,'/api/member/directory')).members[0].verified,false);
  assert.equal(f.count('club_audit',"action IN ('id_verified_in_person','id_verification_revoked')"),2);
 });

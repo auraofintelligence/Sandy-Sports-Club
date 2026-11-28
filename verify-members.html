@@ -1,0 +1,19 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="theme-color" content="#102d40">
+<title>Who to verify | Sandy Sports committee</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/picture.css">
+<script defer src="/site.js"></script><script type="module" src="/verify-members.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="club-app-heading"><p class="eyebrow">COMMITTEE · BLUE TICKS</p><h1>Who to verify</h1>
+<p>Members without a blue tick are listed first. When you see one of them at a session, ask to see their photo ID, check it matches them and their date of birth, then give the tick here. Never write down or photograph ID numbers.</p></div>
+<div id="vm-state" class="club-status" role="status">Checking your committee session…</div>
+<div id="vm-panel" hidden>
+<div class="club-summary" id="vm-summary"></div>
+<div class="club-form-grid"><label>Find a member<input id="vm-q" type="search" placeholder="Name, username or town"></label>
+<label>Show<select id="vm-show"><option value="unverified">Not verified yet</option><option value="verified">Verified</option><option value="all">Everyone</option></select></label></div>
+<form id="vm-form" hidden><h2>Verify <span id="vm-name"></span></h2><div class="club-form-grid"><label>ID sighted<select name="idType" required><option>Driver licence</option><option>Passport</option><option>Proof of age card</option><option>Photo ID card</option><option>Other government photo ID</option></select></label><label>Date of birth on the ID<input type="date" name="dob" required></label></div>
+<label class="club-consent"><input type="checkbox" name="sighted" required> I saw this person's photo ID in person and it matches them.</label>
+<button type="submit">Give blue tick</button> <button type="button" id="vm-cancel">Cancel</button><p role="status" id="vm-status"></p></form>
+<div id="vm-list"></div>
+</div>
+</main><div data-site-footer></div></body></html>

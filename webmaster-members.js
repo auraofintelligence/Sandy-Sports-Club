@@ -12,10 +12,11 @@ const idCell=m=>({__html:m.idCheck?'Verified '+safe(m.idCheck.at.slice(0,10))+' 
 const pic=src=>({__html:'<img class="member-pic" alt="" loading="lazy" src="'+safe(src)+'">'});
 const table=(el,head,rows)=>{$(el).innerHTML='<thead><tr>'+head.map(h=>'<th scope="col">'+safe(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c&&c.__html?c.__html:safe(c))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody>'};
 const yes=v=>v?'Yes':'';
+const shownMembers=()=>{const f=$('wm-filter')?.value||'all';return data.members.filter(m=>f==='all'||(f==='verified')===!!m.idCheck)};
 const today=()=>new Date(Date.now()+10*3600000).toISOString().slice(0,10);
 const age=dob=>{if(!dob)return '';const [y,m,d]=dob.split('-').map(Number),[ty,tm,td]=today().split('-').map(Number);return ty-y-((tm<m||(tm===m&&td<d))?1:0)};
 const rows={
- members:()=>data.members.map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),{__html:safe(m.name)+verifiedBadge(!!m.idCheck),text:m.name},idCell(m),m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.dob,age(m.profile.dob)]),
+ members:()=>shownMembers().map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),{__html:safe(m.name)+verifiedBadge(!!m.idCheck),text:m.name},idCell(m),m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.dob,age(m.profile.dob)]),
  children:()=>data.children.map(c=>[pic(pictureSrc(c.picture,c.photoUrl)),c.fullName,c.preferredName,c.dob,c.age,c.gender,c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
  interest:()=>data.interest.map(i=>[i.firstName,i.email,i.town,i.audienceRegion,(i.interests||[]).join('; '),i.comments,(i.createdAt||'').slice(0,10)])};
 const heads={members:['Picture','Name','ID check','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory','Gender','Date of birth','Age'],
@@ -48,6 +49,15 @@ async function load(){
   .filter(p=>p.dob&&p.dob.slice(5,7)===month).sort((a,b)=>a.dob.slice(8).localeCompare(b.dob.slice(8)));
  table('wm-birthdays',['Day','Name','Turning','Who'],bdays.map(p=>[p.dob.slice(8),p.name,age(p.dob)+(p.dob.slice(5)>today().slice(5)?1:0),p.who]));
 }
+$('wm-filter').addEventListener('change',()=>{table('wm-members',heads.members,rows.members());$('wm-remind-note').textContent=''});
+$('wm-remind').addEventListener('click',()=>{
+ const list=shownMembers().filter(m=>m.contactConsent&&m.email),skipped=shownMembers().length-list.length;
+ if(!list.length){$('wm-remind-note').textContent='Nobody shown has agreed to be contacted by email.';return}
+ const subject=$('wm-filter').value==='unverified'?'Get your Sandy Sports blue tick':'Sandy Sports';
+ const body=$('wm-filter').value==='unverified'?'Hi! Next time you are at a Sandy Sports session, bring your photo ID and show it to a committee member to get your blue tick. It only takes a minute.':'';
+ location.href='mailto:?bcc='+encodeURIComponent(list.map(m=>m.email).join(','))+'&subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+ $('wm-remind-note').textContent='Opened your email app with '+list.length+' address(es) in BCC.'+(skipped?' '+skipped+' skipped (no email consent).':'');
+});
 let verifying=null;
 document.addEventListener('click',async e=>{
  const kind=e.target.dataset?.csv;if(kind)return csv(kind);

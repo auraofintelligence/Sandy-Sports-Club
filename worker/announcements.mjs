@@ -1,8 +1,8 @@
 // Webmaster announcements to members, optionally an event with RSVPs (including how many children are coming).
-// Audience "film" reaches Film Club members only. Works in founding mode without formal committee approvals.
+// Audience "film" reaches Film Club members only; "unverified" reaches members without a blue tick. Works in founding mode without formal committee approvals.
 import {fail,json,now,id,dbFor,payload,field,dateField,requireRole,audit,membersOpen} from './shared.mjs';
 import {ensureProfileTables} from './profiles.mjs';
-const DDL=[`CREATE TABLE IF NOT EXISTS club_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL DEFAULT '',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',location TEXT NOT NULL DEFAULT '',rsvp INTEGER NOT NULL DEFAULT 0 CHECK(rsvp IN (0,1)),audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film')),created_by TEXT NOT NULL REFERENCES club_accounts(id),created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,archived_utc TEXT)`,
+const DDL=[`CREATE TABLE IF NOT EXISTS club_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL DEFAULT '',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',location TEXT NOT NULL DEFAULT '',rsvp INTEGER NOT NULL DEFAULT 0 CHECK(rsvp IN (0,1)),audience TEXT NOT NULL DEFAULT 'all' CHECK(audience IN ('all','film','unverified')),created_by TEXT NOT NULL REFERENCES club_accounts(id),created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,archived_utc TEXT)`,
  `CREATE TABLE IF NOT EXISTS club_announcement_rsvps(announcement_id TEXT NOT NULL REFERENCES club_announcements(id),account_id TEXT NOT NULL REFERENCES club_accounts(id),response TEXT NOT NULL CHECK(response IN ('going','maybe','not_going')),children INTEGER NOT NULL DEFAULT 0 CHECK(children BETWEEN 0 AND 8),updated_utc TEXT NOT NULL,PRIMARY KEY(announcement_id,account_id))`];
 const ready=new WeakSet();
 async function ensure(env,db){if(ready.has(env))return;await ensureProfileTables(env,db);for(const sql of DDL)await db.prepare(sql).run();ready.add(env)}
@@ -37,7 +37,7 @@ export async function announcementsEndpoint(req,env,path,identity){
   if(b.action!=='create')fail(400,'Choose create or archive.','invalid_action');
   const title=field(b.title,140),body=field(b.body,4000),audience=field(b.audience,10)||'all';
   if(title.length<3)fail(400,'Give the announcement a title.','invalid_announcement');
-  if(!['all','film'].includes(audience))fail(400,'Choose who it is for.','invalid_announcement');
+  if(!['all','film','unverified'].includes(audience))fail(400,'Choose who it is for.','invalid_announcement');
   const eventDate=dateField(b.eventDate),rsvp=b.rsvp===true&&!!eventDate?1:0,annId=id();
   await db.prepare('INSERT INTO club_announcements(id,title,body,event_date,event_time,location,rsvp,audience,created_by,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?)')
    .bind(annId,title,body,eventDate,field(b.eventTime,40),field(b.location,140),rsvp,audience,identity.id,at,at).run();
@@ -50,18 +50,18 @@ export async function announcementsEndpoint(req,env,path,identity){
   const me=await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(identity.id).first();
   if(!me)fail(409,'There is no active membership linked to this account.','membership_not_active');
   await ensure(env,db);
-  const film=!!(await db.prepare('SELECT film_member FROM club_member_profiles WHERE account_id=?').bind(identity.id).first())?.film_member;
-  const audienceOk="(a.audience='all' OR (a.audience='film' AND ?=1))";
+  const mine=await db.prepare('SELECT film_member,id_verified_utc FROM club_member_profiles WHERE account_id=?').bind(identity.id).first(),film=!!mine?.film_member,unverified=!mine?.id_verified_utc;
+  const audienceOk="(a.audience='all' OR (a.audience='film' AND ?=1) OR (a.audience='unverified' AND ?=1))";
   if(req.method==='GET'){
    const {results=[]}=await db.prepare(`SELECT a.*,r.response AS my_response,r.children AS my_children FROM club_announcements a
     LEFT JOIN club_announcement_rsvps r ON r.announcement_id=a.id AND r.account_id=? WHERE a.archived_utc IS NULL AND `+audienceOk+` AND (a.event_date IS NULL OR a.event_date>=date('now','+10 hours','-1 day'))
-    ORDER BY COALESCE(a.event_date,'9999') ASC,a.created_utc DESC LIMIT 60`).bind(identity.id,film?1:0).all();
+    ORDER BY COALESCE(a.event_date,'9999') ASC,a.created_utc DESC LIMIT 60`).bind(identity.id,film?1:0,unverified?1:0).all();
    return json({announcements:results.map(r=>({...shape(r),myResponse:r.my_response||null,myChildren:r.my_children||0}))});
   }
   if(req.method!=='POST')fail(405,'Use the RSVP buttons.','method_not_allowed');
   const b=await payload(req,1000),annId=field(b.id,40),response=field(b.response,20),children=Number(b.children||0);
   if(!responses.includes(response)||!Number.isInteger(children)||children<0||children>8)fail(400,'Choose going, maybe or not going.','invalid_rsvp');
-  const ann=await db.prepare('SELECT a.id FROM club_announcements a WHERE a.id=? AND a.rsvp=1 AND a.archived_utc IS NULL AND '+audienceOk).bind(annId,film?1:0).first();
+  const ann=await db.prepare('SELECT a.id FROM club_announcements a WHERE a.id=? AND a.rsvp=1 AND a.archived_utc IS NULL AND '+audienceOk).bind(annId,film?1:0,unverified?1:0).first();
   if(!ann)fail(404,'That event is not open for RSVPs.','not_found');
   await db.prepare('INSERT INTO club_announcement_rsvps(announcement_id,account_id,response,children,updated_utc) VALUES(?,?,?,?,?) ON CONFLICT(announcement_id,account_id) DO UPDATE SET response=excluded.response,children=excluded.children,updated_utc=excluded.updated_utc')
    .bind(annId,identity.id,response,response==='going'?children:0,now()).run();
