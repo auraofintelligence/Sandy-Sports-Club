@@ -176,3 +176,19 @@ body:after{content:"";display:block;height:155px;background:#102d40}.back-to-top
 /* A card photo credit that sits in one muted line under the image, leaving the photo clear. */
 .card img[data-credit="below"]+.image-kind{position:static;display:block;margin:0;padding:.45rem 1.4rem 0;background:none;color:#5b6f78;border-radius:0;font-size:.62rem;font-weight:600;line-height:1.3;letter-spacing:0;white-space:normal;text-wrap:balance}
 @media(max-width:420px){.card img[data-credit="below"]+.image-kind{font-size:.56rem}}
+/* Film Club: icon sprite tiles and the summer season */
+.fc-icon{width:1.15em;height:1.15em;vertical-align:-.2em;flex:0 0 auto;color:#0d7a88}
+.fc-icon-lg{width:2rem;height:2rem}.fc-icon-xl{width:2.75rem;height:2.75rem}
+.fc-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:1rem;margin:1.2rem 0}
+.fc-tile{background:#fff;border:1px solid #d8e8e4;border-radius:18px;padding:1.1rem 1.1rem 1rem;box-shadow:0 6px 18px rgba(16,45,64,.06)}
+.fc-tile h3{margin:.55rem 0 .3rem;font-size:1.12rem}.fc-tile p{margin:0;color:#3f5a5f;line-height:1.5}
+.fc-tile .fc-icon-xl{background:#e8f5f2;border-radius:14px;padding:.45rem;width:3rem;height:3rem;box-sizing:border-box}
+.fc-tile a{color:inherit}
+.fc-weeks{list-style:none;padding:0;margin:1.2rem 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr));gap:.8rem}
+.fc-weeks li{display:flex;gap:.8rem;align-items:flex-start;background:#fff;border:1px solid #d8e8e4;border-radius:16px;padding:.85rem 1rem}
+.fc-weeks li div{display:grid;gap:.15rem}.fc-weeks p{margin:0;color:#3f5a5f;line-height:1.45}
+.fc-week{font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#c2410c}
+.fc-weeks li:last-child{border-color:#f0b48e;background:#fff7f0}
+.fc-note{display:flex;gap:.5rem;align-items:flex-start;max-width:52rem;color:#3f5a5f}
+.fc-links{font-weight:700}
+.link-row .button.light{color:#fff;border-color:rgba(255,255,255,.8)}

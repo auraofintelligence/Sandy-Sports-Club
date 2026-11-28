@@ -59,6 +59,7 @@ async function loadRoster(){
   $('film-roster').innerHTML=data.members.length?data.members.map(m=>'<article class="member-item"><strong>'+safe(m.name)+'</strong><span>'+safe(m.crewSkills.join(', ')||'Crew skills not listed yet')+'</span></article>').join(''):'<p>No Film Club members listed yet. Be the first.</p>';
  }catch(error){$('film-roster').textContent=error.message}
 }
+document.addEventListener('film-club-changed',()=>loadRoster());
 async function load(){
  try{
   let badges;({profile,options,gender,photoUrl,details,badges}=await api('/api/member/profile'));myBadges=badges||[];

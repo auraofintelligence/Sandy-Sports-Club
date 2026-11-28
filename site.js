@@ -11,7 +11,7 @@ const pages = [
 // The full page directory stays in the footer; the top navigation remains compact.
 const primaryPages = [
   ['index.html','Vision'],['sports.html','Sports'],['places.html','Three towns'],
-  ['facilities.html','Facilities'],['programme.html','Events & film'],
+  ['facilities.html','Facilities'],['programme.html','Events'],['film-club.html','Film Club'],
   ['calendar.html','What’s on'],['grants.html','Funding'],['store.html','Store'],['image-gallery.html','Gallery'],['clubhouse.html','Club proposal'],['club-admin.html','My Clubhouse'],['club-login.html','Sign in']
 ];
 // Sports menu: every sport page, with a direct link to its rules and equipment.
@@ -31,7 +31,8 @@ const mainSectionFor = page => {
   if(page==='places.html')return 'places.html';
   if(page==='image-gallery.html')return 'image-gallery.html';
   if(['facilities.html','space-planner.html','assets.html'].includes(page))return 'facilities.html';
-  if(['programme.html','film-club.html'].includes(page))return 'programme.html';
+  if(page==='film-club.html')return 'film-club.html';
+  if(page==='programme.html')return 'programme.html';
   if(['grants.html','donate.html'].includes(page))return 'grants.html';
   if(page==='join.html')return 'join.html';
   if(['club-admin.html','club-login.html','member-home.html','social-studio.html'].includes(page))return 'club-admin.html';

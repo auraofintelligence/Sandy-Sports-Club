@@ -26,6 +26,7 @@ import {profilesEndpoint} from './profiles.mjs';
 import {announcementsEndpoint} from './announcements.mjs';
 import {calendarEndpoint} from './calendar.mjs';
 import {notifyPrefsEndpoint,processNotifications} from './notify.mjs';
+import {filmEndpoint} from './film.mjs';
 import {requestsEndpoint} from './requests.mjs';
 import {storeEndpoint} from './store.mjs';
 import {sponsorsEndpoint} from './sponsors.mjs';
@@ -88,6 +89,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/requests'||path==='/api/committee/requests')return requestsEndpoint(req,env,path,identity);
  if(path==='/api/member/announcements'||path==='/api/committee/announcements')return announcementsEndpoint(req,env,path,identity);
  if(path==='/api/member/notifications')return notifyPrefsEndpoint(req,env,identity);
+ if(path==='/api/member/film')return filmEndpoint(req,env,identity);
  if(['/api/calendar','/api/calendar.ics','/api/member/calendar','/api/member/club-calendar.ics'].includes(path))return calendarEndpoint(req,env,path,identity);
  if(path==='/api/member/family'||path==='/api/committee/families')return familyEndpoint(req,env,path,identity);
  if(['/api/member/profile','/api/member/details','/api/member/picture','/api/member/directory','/api/member/connections','/api/committee/member-profiles','/api/committee/verify-id'].includes(path)||path.startsWith('/api/member/photo/'))return profilesEndpoint(req,env,path,identity);

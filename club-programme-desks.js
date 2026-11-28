@@ -103,16 +103,32 @@ export function setupProgrammeDesks({api,esc:e,status,showDesk,getIdentity}){
    return '<section class="pd-publish"><h5>Share with members</h5>'+(ok?'<p class="mt-help">Posts the table to members as a notice. Nothing is public.</p><button type="button" data-pd-results'+(ro()?' disabled':'')+'>Share the results with members</button>':'<p class="mt-help">Tick “Results checked” and “Players agreed to be named” first.</p>')+'</section>';
   }
   if(!dateOf(current))return '<section class="pd-publish"><h5>Calendar</h5><p class="mt-help">Add a date before putting this on the calendar.</p></section>';
-  const blocked=key==='film'&&!f.rightsReviewed;
+  // Only showing someone else's film needs the rights tick; shoots and workshops do not.
+  const blocked=key==='film'&&/screening|festival|screen content/i.test(f.type||'')&&!f.rightsReviewed;
   return '<section class="pd-publish"><h5>Calendar</h5>'+(live.length?'<ul class="md-notices">'+live.map(a=>'<li data-md-id="'+e(a.id)+'"><div><strong>'+e(a.title)+'</strong><span>'+e(longDate(a.eventDate)+(a.eventTime?' '+a.eventTime:'')+(a.publicCalendar?' · Public What’s on':' · Members'))+'</span>'+(a.counts?'<span class="md-rsvp">'+a.counts.going+' going · '+a.counts.maybe+' maybe</span>':'')+'</div><div class="md-row-actions"><button type="button" data-pd-takedown'+(ro()?' disabled':'')+'>Take down</button></div></li>').join('')+'</ul>':'')+
    (off()?'':blocked?'<p class="ops-boundary">Tick “Rights and permissions checked” before putting a screening on the calendar.</p>':
-   '<form data-pd-publish class="pd-pubform"><label class="ops-check"><input type="checkbox" name="rsvp" checked> Ask for RSVPs</label>'+(cfg.publish==='all'?'<label class="ops-check"><input type="checkbox" name="publicCalendar"> Also on the public What’s on calendar</label>':'<p class="mt-help">Goes to Film Club members.</p>')+'<button type="submit"'+(ro()?' disabled':'')+'>'+(live.length?'Publish again':'Put it on the calendar')+'</button></form>')+'</section>';
+   '<form data-pd-publish class="pd-pubform"><label class="ops-check"><input type="checkbox" name="rsvp" checked> Ask for RSVPs</label>'+(cfg.publish==='all'?'<label class="ops-check"><input type="checkbox" name="publicCalendar"> Also on the public What’s on calendar</label>':'<label>Who is it for?<select name="audience"><option value="film">Film Club members</option><option value="all">All members</option><option value="public">All members and the public What’s on calendar</option></select></label>')+'<button type="submit"'+(ro()?' disabled':'')+'>'+(live.length?'Publish again':'Put it on the calendar')+'</button></form>')+'</section>';
+ }
+ // Straddie Noticeboard Network: one record in its notice-feed.v1 format for the noticeboard
+ // steward to review. It shows from a week before until the night ends.
+ function noticeboardRecord(){
+  const f=current.fields,date=dateOf(current),loc=f.location||'';
+  const place=['Dunwich','Amity Point','Point Lookout'].find(t=>loc.toLowerCase().includes(t.toLowerCase())||(t==='Dunwich'&&/goompi/i.test(loc))||(t==='Amity Point'&&/pulan/i.test(loc))||(t==='Point Lookout'&&/mulumba/i.test(loc)))||'Island-wide';
+  const slug=(current.title||'film').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+  const start=new Date(Date.parse(date+'T08:00:00+10:00')-7*864e5).toISOString().slice(0,10);
+  return {id:'sandy-film-'+slug+'-'+date,status:'approved',title:current.title.slice(0,90),publisher:'Sandy Sports Film Club',place,category:'Arts & culture',
+   summary:[f.type,f.filmTitle&&f.filmTitle!==current.title?f.filmTitle:'',loc].filter(Boolean).join(' · ').slice(0,200),
+   sourceUrl:location.origin+'/calendar.html',reviewedBy:'',reviewedAt:'',startsAt:start+'T08:00:00+10:00',expiresAt:date+'T23:00:00+10:00',outlets:['web','tv','kiosk']};
+ }
+ function noticeboardBox(){
+  if(key!=='film'||!current||!dateOf(current)||off())return '';
+  return '<section class="pd-publish"><h5>Island screens</h5><p class="mt-help">Copy this night for the Straddie Noticeboard Network. Its steward reviews it, adds their name and time, and it shows on island screens and kiosks from a week before.</p><button type="button" data-pd-noticeboard>Copy for the noticeboard</button><textarea data-pd-noticeboard-out rows="6" readonly hidden aria-label="Noticeboard record"></textarea></section>';
  }
  function detailView(){
   if(!current)return '<p class="ops-empty">'+(records.length?'Choose one from the list.':'Your '+cfg.noun+'s will show here.')+'</p>';
   return '<header class="mt-head"><div><h4 tabindex="-1">'+e(current.title)+'</h4><p>'+e([longDate(dateOf(current)),cfg.line(current.fields)].filter(Boolean).join(' · '))+'</p></div>'+(off()?'<span class="ops-pill ops-muted">Cancelled</span>':'')+'</header>'+
    extras()+'<form data-pd-edit><fieldset'+(ro()||off()?' disabled':'')+'><label>Name<input name="__title" value="'+e(current.title)+'" maxlength="160" required></label>'+formFields(spec.fields.map(f=>f.key),current.fields,false)+'<button type="submit">Save</button></fieldset></form>'+
-   publishBox()+
+   publishBox()+noticeboardBox()+
    '<div class="ops-actions">'+(cfg.repeat&&!off()?'<button type="button" data-pd-repeat'+(ro()?' disabled':'')+'>Copy to next week</button>':'')+(off()?'':'<button type="button" class="pd-cancel" data-pd-cancel'+(ro()?' disabled':'')+'>Cancel this '+e(cfg.noun)+'</button>')+'</div>';
  }
  function render(){
@@ -142,14 +158,15 @@ export function setupProgrammeDesks({api,esc:e,status,showDesk,getIdentity}){
   });
   if(form.matches('[data-pd-edit]'))return guarded(async()=>{await save({title:form.elements.__title.value.trim(),fields:values(form,spec.fields.map(f=>f.key))});return 'Saved.'});
   if(form.matches('[data-pd-publish]'))return guarded(async()=>{
-   const f=current.fields,pub=form.elements.publicCalendar?.checked===true;
-   await api('/api/committee/announcements',{method:'POST',data:{action:'create',title:current.title,body:[f.coach&&'With '+f.coach,f.needs,f.programme].filter(Boolean).join('\n').slice(0,3900),audience:cfg.publish==='film'?'film':'all',eventDate:dateOf(current),eventTime:timeText(f),location:f.location||f.site||'',rsvp:form.elements.rsvp.checked,publicCalendar:pub,sourceId:current.id}});
-   return 'On the calendar'+(pub?', including the public What’s on page.':cfg.publish==='film'?' for Film Club members.':' for members.');
+   const f=current.fields,aud=form.elements.audience?.value||'',pub=form.elements.publicCalendar?.checked===true||aud==='public';
+   await api('/api/committee/announcements',{method:'POST',data:{action:'create',title:current.title,body:[f.coach&&'With '+f.coach,f.needs,f.programme].filter(Boolean).join('\n').slice(0,3900),audience:cfg.publish==='film'&&aud==='film'?'film':'all',eventDate:dateOf(current),eventTime:timeText(f),location:f.location||f.site||'',rsvp:form.elements.rsvp.checked,publicCalendar:pub,sourceId:current.id}});
+   return 'On the calendar'+(pub?', including the public What’s on page.':cfg.publish==='film'&&aud==='film'?' for Film Club members.':' for members.');
   });
  });
  root.addEventListener('click',async ev=>{
   const b=ev.target.closest('button');if(!b||b.disabled)return;
   if(b.hasAttribute('data-pd-refresh')){await refresh();say('Up to date.');return}
+  if(b.hasAttribute('data-pd-noticeboard')){const out=root.querySelector('[data-pd-noticeboard-out]'),text=JSON.stringify(noticeboardRecord(),null,1);out.value=text;out.hidden=false;try{await navigator.clipboard.writeText(text);say('Copied. Send it to the noticeboard steward.')}catch{out.select();say('Select the text and copy it for the noticeboard steward.')}return}
   if(b.dataset.pdOpen){await refresh(b.dataset.pdOpen);root.querySelector('.mt-head h4')?.focus();if(matchMedia('(max-width:820px)').matches)root.querySelector('.mt-detail')?.scrollIntoView({block:'start'});return}
   if(b.hasAttribute('data-pd-cancel')){if(!confirm('Cancel “'+current.title+'”? It stays on record as cancelled.'))return;return guarded(async()=>{for(const a of mine())await api('/api/committee/announcements',{method:'POST',data:{action:'archive',id:a.id}});await save({},'archived');return 'Cancelled.'})}
   if(b.hasAttribute('data-pd-repeat'))return guarded(async()=>{const f=current.fields,d=f.date?plusDays(f.date,7):'';const r=await api('/api/suite/'+key,{method:'POST',data:{title:current.title,status:'draft',fields:{...f,date:d,safeguards:false}}});current={id:r.id};return 'Copied to '+longDate(d)+'. Check the details and save.'});

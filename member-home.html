@@ -3,7 +3,7 @@
 <link rel="icon" href="/favicon.png" type="image/png" sizes="any">
 <title>Member space | Sandy Sports Club proposal</title>
 <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css"><link rel="stylesheet" href="/calendar.css"><link rel="stylesheet" href="/picture.css">
-<script defer src="/site.js"></script><script type="module" src="/member-home.js"></script><script type="module" src="/member-calendar-tab.js"></script><script type="module" src="/member-notify.js"></script><script type="module" src="/member-family.js"></script><script type="module" src="/member-profile.js"></script><script type="module" src="/member-announcements.js"></script></head>
+<script defer src="/site.js"></script><script type="module" src="/member-home.js"></script><script type="module" src="/member-calendar-tab.js"></script><script type="module" src="/member-notify.js"></script><script type="module" src="/member-film.js"></script><script type="module" src="/member-family.js"></script><script type="module" src="/member-profile.js"></script><script type="module" src="/member-announcements.js"></script></head>
 <body><div data-site-header></div><main class="club-app" id="main">
 <div class="club-app-heading"><p class="eyebrow">SANDY SPORTS · MY CLUBHOUSE</p>
 <h1>Your club space</h1><p>Your profile, the members directory, what’s on, Film Club and your family, all in one place. Founding membership is free while the club gets going.</p></div>
@@ -47,9 +47,10 @@
  </form>
 </section>
 <section class="club-panel member-workspace-section" data-member-section="film" hidden>
- <h2>Film and community media</h2><p>Choose whether you are interested in film nights or helping with their production. Actual screenings, licensing and participation still require agreed arrangements.</p>
- <div id="member-film-interests"></div>
- <h3>Film Club crew</h3><p>Film Club is a club within the club. Tick "I'm in the Film Club" on <a href="#profile" data-goto="profile">My profile</a> and add your crew skills to appear here.</p>
+ <h2>Film Club</h2><p>A club within the club: film nights, make days at club sessions, sport highlights and editing basics. <a href="/film-club.html">How it works and the summer season</a>.</p>
+ <div id="film-club"></div>
+ <p class="club-note" id="member-film-interests" hidden></p>
+ <h3>Film Club crew</h3><p>Members who show in the directory. Add your crew skills (camera, sound, editing and more) on <a href="#profile" data-goto="profile">My profile</a>.</p>
  <div id="film-roster"></div>
 </section>
 <section class="club-panel member-workspace-section" data-member-section="notices" hidden>

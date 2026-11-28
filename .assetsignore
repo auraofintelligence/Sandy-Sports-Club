@@ -18,6 +18,7 @@
 !/calendar-ui.js
 !/member-calendar-tab.js
 !/member-notify.js
+!/member-film.js
 !/badges.js
 !/calendar.css
 !/calendar.js
@@ -425,6 +426,7 @@
 !/assets/led-cinema-screen-campaign.webp
 !/assets/modular-led-concept.webp
 !/assets/mozzie.webp
+!/assets/film-icons.svg
 !/assets/place-amity-point-reserve-council-map-640w.webp
 !/assets/place-amity-point-reserve-council-map.webp
 !/assets/place-amity-point-reserve-master-plan-640w.webp

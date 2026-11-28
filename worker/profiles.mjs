@@ -47,7 +47,7 @@ const blank=()=>({picture:null,dob:'',verified:false,verifiedAt:null,bio:'',spor
 function shape(r){return r?{picture:pictureOf(r),dob:r.dob||'',verified:!!r.id_verified_utc,verifiedAt:r.id_verified_utc||null,bio:r.bio,sports:parse(r.sports_json),skillLevel:r.skill_level,availability:parse(r.availability_json),filmMember:!!r.film_member,
  crewSkills:parse(r.crew_skills_json),helping:parse(r.helping_json),directoryVisible:!!r.directory_visible,showTown:!!r.show_town,shareContact:!!r.share_contact,version:r.version}:blank()}
 const pair=(a,b)=>a<b?[a,b]:[b,a];
-async function requireMember(env,db,identity){
+export async function requireMember(env,db,identity){
  requireRole(identity,['member']);
  if(!membersOpen(env))fail(409,'Member self-service is not open yet.','club_not_established');
  const me=await db.prepare("SELECT p.full_name,p.preferred_name,p.town,p.email,p.mobile,p.gender,p.audience_region,p.consent_contact FROM club_people p JOIN club_accounts a ON a.id=p.account_id WHERE p.account_id=? AND p.status='active' AND a.state='active' LIMIT 1").bind(identity.id).first();
