@@ -1,6 +1,6 @@
 // Sandy member portal: privacy-scoped real member preferences, activity choices and club data exports.
 // Nothing here enrolls a member, charges fees, sends email or claims an event is approved.
-import {fail,json,now,id,dbFor,payload,field,version,revision,audit,requireRole} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,version,revision,audit,requireRole,membersOpen} from './shared.mjs';
 import {memberOwns,memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 import {memberSafeguardFlags,requireParticipation,participationGuard,participationArgs} from './member-safeguards.mjs';
 import {ownLibraryMetadata} from './library.mjs';
@@ -144,7 +144,7 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
  if(path==='/api/member/workspace'&&req.method==='GET'){
   const profile=await db.prepare("SELECT id,full_name,membership_class,status,town,joined_on,renewal_on,consent_contact,consent_publication FROM club_people WHERE account_id=? LIMIT 1").bind(identity.id).first();
   const safeguards=await memberSafeguardFlags(db,identity.id);
-  const enrolled=Boolean(profile&&profile.status==='active'&&env.SANDY_CLUB_APPROVALS==='enabled');
+  const enrolled=Boolean(profile&&profile.status==='active'&&membersOpen(env));
   const active=enrolled&&safeguards.privateAccess;
   const prefs=(await ownRecords(db,identity,'preferences'))[0]||null;
   if(prefs&&(!enrolled||!safeguards.optionalParticipation||prefs.fields.sharingRevision!==safeguards.version))prefs.fields={...prefs.fields,volunteer:false,contactPreference:'no_contact',publicationConsent:false};
@@ -171,7 +171,7 @@ export async function memberWorkspaceEndpoint(req,env,path,identity){
    profile:profile||null,preferences:(await ownRecords(db,identity,'preferences'))[0]||null,wishes:await ownRecords(db,identity,'wish'),eventReplies:await ownRecords(db,identity,'rsvp'),safeguards:await memberSafeguardFlags(db,identity.id),privateFiles:await ownLibraryMetadata(db,identity),
    notice:'This is your own data. Other members and committee records are not included.'});
  }
- if(!env.SANDY_CLUB_APPROVALS||env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Member self-service is not active before the club is established.','club_not_established');
+ if(!membersOpen(env))fail(409,'Member self-service is not active before the club is established.','club_not_established');
  await linkedActiveMember(db,identity);
  const flags=await requireParticipation(db,identity);
  if(path==='/api/member/preferences'&&req.method==='POST'){

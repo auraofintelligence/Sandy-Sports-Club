@@ -14,6 +14,8 @@ export const dbFor=env=>{
  if(!env.DB?.prepare)fail(503,'Shared Sandy database is not configured. No committee data was saved.','database_unavailable');
  return env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
 };
+// Member self-service opens with lawful club approvals, or with free founding membership during formation.
+export const membersOpen=env=>env.SANDY_CLUB_APPROVALS==='enabled'||env.SANDY_FOUNDING_MEMBERS==='enabled';
 export const staff=identity=>Boolean(identity&&STAFF.includes(identity.role));
 export function requireRole(identity,roles=STAFF){
  if(!identity)fail(401,'Sign in to access shared club records.','login_required');

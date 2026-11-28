@@ -1,6 +1,6 @@
 // Restricted age-band and guardian checks; no identity documents, birthdates,
 // guardian names, health details or incident narratives are collected.
-import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit,membersOpen} from './shared.mjs';
 import {purposeOf} from './record-policy.mjs';
 export const SAFEGUARD_ROLES=['webmaster','president','secretary'];
 export const TERMS_VERSION='sandy-participation-v1';
@@ -18,7 +18,10 @@ async function rowFor(db,accountId){
  const row=await db.prepare("SELECT * FROM club_records WHERE kind='safeguard' AND json_extract(body_json,'$.sandyMemberSafeguard')=1 AND json_extract(body_json,'$.ownerId')=? ORDER BY updated_utc DESC,id DESC LIMIT 1").bind(accountId).first();
  if(purposeOf(row)?.type!=='member-safeguard')return null;
  const origin=await db.prepare("SELECT actor_role,operation FROM club_revisions WHERE resource_kind='record' AND resource_id=? AND resource_version=1").bind(row.id).first();
- return origin?.operation==='safeguard_verified'&&SAFEGUARD_ROLES.includes(origin.actor_role)?row:null;
+ if(origin?.operation==='safeguard_verified'&&SAFEGUARD_ROLES.includes(origin.actor_role))return row;
+ // Founding join: an adult's own 18+ declaration, recorded at sign-up by the member themself.
+ if(origin?.operation==='safeguard_self_declared'&&origin.actor_role==='member'&&from(row).ageBand==='adult')return row;
+ return null;
 }
 export async function memberSafeguardFlags(db,accountId){
  const row=await rowFor(db,accountId),data=row?from(row):{...initial(),recordId:null,version:0};
@@ -63,7 +66,7 @@ export async function safeguardsEndpoint(req,env,path,identity){
    return json({members:a?[shape(a,await memberSafeguardFlags(db,a.id))]:[],termsVersion:TERMS_VERSION});
   }
   if(req.method!=='POST')fail(405,'Use the restricted safeguarding review.','method_not_allowed');
-  if(env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Actual member safeguarding verification is disabled during club formation.','club_not_established');
+  if(!membersOpen(env))fail(409,'Actual member safeguarding verification is disabled during club formation.','club_not_established');
   const b=await payload(req,2048);
   strict(b,['action','accountId','version','ageBand','guardianPermission','ageCheckedOffline','guardianCheckedOffline']);
   if(b.action!=='verify'||!validId(b.accountId)||!bands.includes(b.ageBand)||typeof b.guardianPermission!=='boolean'||(b.guardianPermission&&!['under16','16-17'].includes(b.ageBand)))fail(400,'Select an age group and applicable guardian permission.','invalid_safeguard');
@@ -86,7 +89,7 @@ export async function safeguardsEndpoint(req,env,path,identity){
  const row=await rowFor(db,identity.id);
  if((row?.version||0)!==flags.version)fail(409,'The participation check changed. Reload before saving.','conflict');
  if(b.action==='accept'){
-  if(env.SANDY_CLUB_APPROVALS!=='enabled')fail(409,'Member participation is not active during club formation.','club_not_established');
+  if(!membersOpen(env))fail(409,'Member participation is not active during club formation.','club_not_established');
   if(!await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(identity.id).first())fail(409,'A linked active membership is required.','membership_not_active');
   if(flags.ageBand!=='adult'||!flags.privateAccess)fail(403,'Optional contact, publication and volunteering choices are unavailable under the provisional minor-safety policy.','safeguards_required');
  }

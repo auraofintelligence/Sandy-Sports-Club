@@ -1,4 +1,4 @@
-import {fail,json,now,id,dbFor,payload,field,dateField,bool,version,ensureMemberData,requireRole,revision,audit} from './shared.mjs';
+import {fail,json,now,id,dbFor,payload,field,dateField,bool,version,ensureMemberData,requireRole,revision,audit,membersOpen} from './shared.mjs';
 const classes=['interested','founding','adult','youth','family','social','volunteer','supporter','organisation','honorary','other'];
 const states=['interested','founder_prospect','applicant','pending','active','lapsed','inactive','withdrawn'];
 const regions=['','local','regional','tourist','other'];
@@ -22,7 +22,7 @@ function clean(b,env){
   fail(400,'Provide a name and valid membership, status and audience categories.','invalid_member');
  if(email&&(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)||email.length>254))
   fail(400,'Enter a valid email or leave it blank.','invalid_email');
- if(status==='active'&&env.SANDY_CLUB_APPROVALS!=='enabled')
+ if(status==='active'&&!membersOpen(env))
   fail(409,'Memberships cannot be activated before the club is established. Record an interested or pending person instead.','club_not_established');
  return {
   name:fullName,preferredName:field(b.preferredName,100),email,mobile,membershipClass,status,
@@ -80,7 +80,7 @@ export async function peopleEndpoint(req,env,path,identity){
   if(!row)fail(404,'No person has that record identifier.','person_not_found');
   if(match[2]==='link-account'&&req.method==='POST'){
    requireRole(identity,['webmaster']);
-   if(env.SANDY_CLUB_APPROVALS!=='enabled')
+   if(!membersOpen(env))
     fail(409,'Do not activate membership accounts until Sandy Sports has lawful governing authority.','club_not_established');
    const b=await payload(req,5000),accountId=field(b.accountId,60),expected=version(b.version),at=now();
    if(expected!==row.version)fail(409,'This person record changed. Reload it.','conflict');

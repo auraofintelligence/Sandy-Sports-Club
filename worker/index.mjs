@@ -20,6 +20,7 @@ import {applicationsEndpoint} from './applications.mjs';
 import {financeEndpoint} from './finance.mjs';
 import {nominationsEndpoint,dailyDigest} from './nominations.mjs';
 import {surveyEndpoint} from './survey.mjs';
+import {joinEndpoint,joinOpen} from './join.mjs';
 import {publicPath,privateShell} from './public-assets.mjs';
 
 const defaults={
@@ -60,7 +61,7 @@ async function handle(req,env){
 async function route(req,env,path,effectiveIdentity){
  if(path==='/api/public-config'&&req.method==='GET')
   return respond({clubEstablished:env.SANDY_CLUB_APPROVALS==='enabled',
-   publicInterestReady:Boolean(env.DB?.prepare),
+   publicInterestReady:Boolean(env.DB?.prepare),joinReady:joinOpen(env),foundingMembers:env.SANDY_FOUNDING_MEMBERS==='enabled',
    publicNominationsReady:Boolean(env.DB?.prepare&&env.SANDY_NOMINATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicSurveyReady:Boolean(env.DB?.prepare&&env.SANDY_SURVEY_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
    publicApplicationsReady:Boolean(env.DB?.prepare&&env.SANDY_APPLICATIONS_ENABLED==='enabled'&&env.SANDY_TURNSTILE_SECRET&&env.SANDY_TURNSTILE_SITE_KEY),
@@ -73,6 +74,7 @@ async function route(req,env,path,effectiveIdentity){
  if(path==='/api/session'||path.startsWith('/api/auth/')||path==='/api/accounts'||
   path.startsWith('/api/accounts/')||path==='/api/demo')
   return authEndpoint(req,env,path,identity);
+ if(path==='/api/join')return joinEndpoint(req,env,path,identity);
  if(path==='/api/library'||path.startsWith('/api/library/'))return libraryEndpoint(req,env,path,identity);
  if(path==='/api/member/safeguards'||path==='/api/committee/safeguards')return safeguardsEndpoint(req,env,path,identity);
  if(['/api/member/preview','/api/member/workspace','/api/member/preferences','/api/member/interest','/api/member/data-export','/api/member/rsvp','/api/member/calendar.ics'].includes(path))

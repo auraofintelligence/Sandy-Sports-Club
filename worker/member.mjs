@@ -1,4 +1,4 @@
-import {fail,json,dbFor,requireRole} from './shared.mjs';
+import {fail,json,dbFor,requireRole,membersOpen} from './shared.mjs';
 import {memberPublicationAllowed,visibleRecords} from './record-policy.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
 export async function memberEndpoint(req,env,path,identity){
@@ -9,7 +9,7 @@ export async function memberEndpoint(req,env,path,identity){
   let profile=null;
   if(identity.role==='member'){
    const p=await db.prepare('SELECT id,full_name,preferred_name,membership_class,status,joined_on,renewal_on,town,consent_contact,consent_publication FROM club_people WHERE account_id=? LIMIT 1').bind(identity.id).first();
-   const flags=await memberSafeguardFlags(db,identity.id),allowed=env.SANDY_CLUB_APPROVALS==='enabled'&&p?.status==='active'&&flags.optionalParticipation;
+   const flags=await memberSafeguardFlags(db,identity.id),allowed=membersOpen(env)&&p?.status==='active'&&flags.optionalParticipation;
    if(p)profile={id:p.id,name:p.full_name,preferredName:p.preferred_name,membershipClass:p.membership_class,status:p.status,
     joinedOn:p.joined_on,renewalOn:p.renewal_on,town:p.town,contactConsent:!!(allowed&&p.consent_contact),publicationConsent:!!(allowed&&p.consent_publication)};
   }
@@ -19,7 +19,7 @@ export async function memberEndpoint(req,env,path,identity){
    'No current membership profile is linked to this account. The club is still a proposal.'});
  }
  if(path==='/api/member/events'){
-  const active=env.SANDY_CLUB_APPROVALS==='enabled'&&(identity.role!=='member'||(Boolean(await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(identity.id).first())&&(await memberSafeguardFlags(db,identity.id)).privateAccess));
+  const active=membersOpen(env)&&(identity.role!=='member'||(Boolean(await db.prepare("SELECT id FROM club_people WHERE account_id=? AND status='active' LIMIT 1").bind(identity.id).first())&&(await memberSafeguardFlags(db,identity.id)).privateAccess));
   const rows=active?await visibleRecords(db,"WHERE kind='event' AND status='approved' AND event_date>=date('now','+10 hours')",[],'event_date,id',35,memberPublicationAllowed):[];
   return json({events:rows.map(r=>({id:r.id,title:r.title,date:r.event_date,status:r.status})),
    notice:'Only explicitly approved events are visible here. No proposals or tentative dates are promoted.'});

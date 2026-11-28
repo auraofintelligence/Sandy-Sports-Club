@@ -1,0 +1,31 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102d40"><meta name="description" content="Join Sandy Sports free as a founding member. Beach sports, film club and community on Minjerribah.">
+<title>Join free | Sandy Sports Club</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/pages.css"><link rel="stylesheet" href="/club-system.css">
+<script defer src="/site.js"></script><script defer src="/member-join.js"></script>
+</head><body><div data-site-header></div><main class="club-app" id="main">
+<div class="club-app-heading"><p class="eyebrow">SANDY SPORTS CLUB · FOUNDING MEMBERS</p>
+<h1>Join free as a founding member</h1>
+<p>Sandy Sports is a proposed beach sports, film and community club on Minjerribah. Founding membership is free. Every founding member helps us reach the point where we can incorporate, elect a committee and pitch for courts, lights and a screen.</p>
+<p>Joining takes a minute and you are straight in. Parents and guardians: join yourself first, then add your children from your member area.</p></div>
+<div id="join-state" class="club-status" role="status">Checking whether joining is open…</div>
+<section class="club-panel" style="max-width:780px"><form id="join-form" hidden autocomplete="on">
+<div class="club-form-grid">
+<label>Full name<input name="fullName" required maxlength="100" autocomplete="name"></label>
+<label>What should we call you? <small>(optional)</small><input name="preferredName" maxlength="60" autocomplete="nickname"></label>
+<label>Email address<input type="email" name="email" required maxlength="254" autocomplete="email"></label>
+<label>Mobile <small>(optional)</small><input type="tel" name="mobile" maxlength="25" autocomplete="tel"></label>
+<label>Town or where you are visiting from<input name="town" maxlength="100" autocomplete="address-level2"></label>
+<label>Connection to Straddie<select name="audienceRegion" required><option value="local">Island local</option><option value="regional">Regional visitor</option><option value="tourist">Holiday visitor</option><option value="other">Other</option></select></label>
+<label>Username<input name="username" required minlength="3" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9._+\-]{2,79}" autocomplete="username"></label>
+<label>Password <small>(7 or more characters)</small><input type="password" name="password" required minlength="7" maxlength="256" autocomplete="new-password"></label>
+</div>
+<div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<label class="club-consent"><input type="checkbox" name="adult" required> I am 18 or over.</label>
+<label class="club-consent"><input type="checkbox" name="contactConsent"> Sandy Sports may email or message me about come-and-try days, events and club news. You can change this later.</label>
+<details class="club-note"><summary>Participation terms</summary><p id="join-terms"></p></details>
+<label class="club-consent"><input type="checkbox" name="termsAccepted" required> I have read and accept the participation terms.</label>
+<button type="submit" id="join-submit">Join free</button></form>
+<p class="club-note">Already a member? <a href="/club-login.html">Sign in</a>. Not ready to join? <a href="/interest.html">Just register your interest</a>.</p>
+</section>
+</main><div data-site-footer></div></body></html>

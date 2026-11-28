@@ -13,7 +13,12 @@ const cookie=(value,age)=>COOKIE+'='+value+'; Path=/; Secure; HttpOnly; SameSite
 const name=x=>field(x,80).toLowerCase();
 const validName=x=>/^[a-z0-9][a-z0-9._+-]{2,79}$/.test(x);
 const ROLES=['webmaster','webmaster_demo','president','vice_president','secretary','assistant_secretary','treasurer','committee','member'];
-const strong=x=>typeof x==='string'&&x.length>=12&&x.length<=256;
+const strong=x=>typeof x==='string'&&x.length>=7&&x.length<=256;
+// Failed sign-ins: at most 3 per account per connection in each 15-minute window. Successful sign-ins do not count.
+const FAILED_LOGIN_LIMIT=3;
+async function failedLoginKey(req,username){return hash('sandy-login-fail-v1/'+Math.floor(nowSec()/900)+'/'+(req.headers.get('cf-connecting-ip')||'local')+'/'+username)}
+async function failedLogins(db,key){const row=await db.prepare('SELECT count FROM club_login_attempts WHERE key=? AND expires_epoch>?').bind(key,nowSec()).first();return Number(row?.count||0)}
+async function recordFailedLogin(db,key){const expiry=(Math.floor(nowSec()/900)+1)*900;await db.prepare('INSERT INTO club_login_attempts(key,count,expires_epoch) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1').bind(key,expiry).run()}
 function constantEqual(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;
  let v=0;for(let i=0;i<a.length;i++)v|=a.charCodeAt(i)^b.charCodeAt(i);return v===0;}
 export async function verifier(password,salt,secret){
@@ -71,7 +76,7 @@ export async function authEndpoint(req,env,path,identity){
   requireCrypto(env);
   if(!env.SANDY_BOOTSTRAP_KEY||env.SANDY_BOOTSTRAP_KEY.length<32)fail(503,'Webmaster bootstrap has not been enabled in Cloudflare secrets.','bootstrap_not_configured');
   const b=await payload(req,8192),username=name(b.username),key=field(b.bootstrapKey,500);
-  if(!validName(username)||!strong(b.password))fail(400,'Enter a valid webmaster username and password of at least 12 characters.','invalid_setup');
+  if(!validName(username)||!strong(b.password))fail(400,'Enter a valid webmaster username and password of at least 7 characters.','invalid_setup');
   await rateLimit(req,db,'bootstrap');
   const count=await db.prepare('SELECT COUNT(*) AS n FROM club_accounts').first();
   if(count?.n>0)fail(409,'The first webmaster has already been created. Use the normal sign-in flow.','already_configured');
@@ -111,11 +116,14 @@ export async function authEndpoint(req,env,path,identity){
   const b=await payload(req,8192),username=name(b.username);
   if(!validName(username)||typeof b.password!=='string'||b.password.length>256)fail(400,'Enter a username and password.','invalid_credentials');
   await rateLimit(req,db,'login/'+username);
+  const failKey=await failedLoginKey(req,username);
+  if(await failedLogins(db,failKey)>=FAILED_LOGIN_LIMIT)fail(429,'Too many failed sign-in attempts. Try again in 15 minutes.','rate_limited');
   const user=await db.prepare('SELECT id,username,role,state,password_salt,password_verifier FROM club_accounts WHERE username=?').bind(username).first();
   const salted=user?.password_salt||'invalid-sandy-account';
   const expected=await verifier(b.password,salted,env.SANDY_AUTH_PEPPER);
-  if(!user||user.state!=='active'||!constantEqual(expected,user.password_verifier||'0'.repeat(64)))
-   fail(401,'The username or password is incorrect.','invalid_credentials');
+  if(!user||user.state!=='active'||!constantEqual(expected,user.password_verifier||'0'.repeat(64))){
+   await recordFailedLogin(db,failKey);
+   fail(401,'The username or password is incorrect.','invalid_credentials');}
   const token=random(32),at=now(),until=nowSec()+SESSION_HOURS*3600;
   // Do not create a session with a verifier that was reset or disabled during password hashing.
   const [issued]=await db.batch([

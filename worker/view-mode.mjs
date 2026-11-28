@@ -52,7 +52,7 @@ async function syntheticEnv(env){
  }catch{fail(503,'The synthetic showcase schema is unavailable. No live data will be opened.','showcase_unavailable')}
  if(marker?.version!==1||marker.classification!=='SANDY_SYNTHETIC_ONLY'||unsafe?.n!==0||unsafe.people!==1||unsafe.officers!==STAFF.length)
   fail(503,'The showcase data boundary did not validate. No live data will be opened.','showcase_unavailable');
- return {DB:readOnlyDB(db),SANDY_CLUB_APPROVALS:'disabled',SANDY_INVITES_ENABLED:'disabled',SANDY_SYNTHETIC_VIEW:true};
+ return {DB:readOnlyDB(db),SANDY_CLUB_APPROVALS:'disabled',SANDY_FOUNDING_MEMBERS:'disabled',SANDY_INVITES_ENABLED:'disabled',SANDY_SYNTHETIC_VIEW:true};
 }
 async function issue(req,env,mode,role){
  const expiry=epoch()+DURATION,nonce=random(),value=[mode,role,expiry,nonce].join('.');
