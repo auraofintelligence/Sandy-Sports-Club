@@ -64,7 +64,7 @@ export function setupRecordsDesks({api,esc:e,status,showDesk}){
  }
  function listView(){
   const groups=key==='documents'?[...new Set(records.filter(r=>r.status!=='archived').map(r=>r.fields.visibility||'Not set'))].sort():null;
-  const row=r=>'<li><button type="button" data-rd-open="'+e(r.id)+'" aria-current="'+(current?.id===r.id)+'"><strong>'+e(r.title)+'</strong><span>'+e([cfg.line(r.fields),longDate(cfg.date(r.fields))].filter(Boolean).join(' · '))+'</span><span class="ops-badges">'+badge(r)+'</span></button></li>';
+  const row=r=>'<li><button type="button" data-rd-open="'+e(r.id)+'" aria-current="'+(current?.id===r.id)+'"><strong>'+e(r.title)+'</strong><span>'+e([cfg.line(r.fields),key==='news'?'':longDate(cfg.date(r.fields))].filter(Boolean).join(' · '))+'</span><span class="ops-badges">'+badge(r)+'</span></button></li>';
   const live=records.filter(r=>r.status!=='archived').sort((a,b)=>(cfg.date(b.fields)||'').localeCompare(cfg.date(a.fields)||'')),gone=records.filter(r=>r.status==='archived');
   const missing=key==='documents'?STD_DOCS.filter(d=>!records.some(r=>r.title.toLowerCase()===d.toLowerCase())):[];
   return '<details class="ops-compose"'+(records.length?'':' open')+'><summary>'+e(cfg.newLabel)+'</summary><form data-rd-new><fieldset'+(ro()?' disabled':'')+'>'+(cfg.name?'':'<label>Name<input name="__title" required maxlength="160" placeholder="'+(key==='handover'?'e.g. Secretary handover':'e.g. Child safe policy')+'"></label>')+formFields(cfg.create,{},false)+'<button type="submit">Create</button></fieldset></form></details>'+
@@ -110,7 +110,7 @@ export function setupRecordsDesks({api,esc:e,status,showDesk}){
  function detailView(){
   if(!current)return '<p class="ops-empty">'+(records.length?'Choose one from the list.':'Your '+cfg.noun+'s will show here.')+'</p>';
   const f=current.fields;
-  return '<header class="mt-head"><div><h4 tabindex="-1">'+e(current.title)+'</h4><p>'+e([cfg.line(f),longDate(cfg.date(f))].filter(Boolean).join(' · '))+'</p></div>'+badge(current)+'</header>'+
+  return '<header class="mt-head"><div><h4 tabindex="-1">'+e(current.title)+'</h4><p>'+e([cfg.line(f),key==='news'?'':longDate(cfg.date(f))].filter(Boolean).join(' · '))+'</p></div>'+badge(current)+'</header>'+
    (cfg.stages&&!off()?'<nav class="mt-steps" aria-label="Stage">'+cfg.stages.map(([k,l])=>'<button type="button" data-rd-stage="'+k+'" aria-pressed="'+(current.status===k)+'"'+(ro()?' disabled':'')+'>'+l+'</button>').join('')+'</nav>':'')+
    panel()+'<form data-rd-edit><fieldset'+(ro()||off()?' disabled':'')+'><label>Name<input name="__title" value="'+e(current.title)+'" maxlength="160" required></label>'+formFields(spec.fields.map(x=>x.key),f,false)+'<button type="submit">Save</button></fieldset></form>'+
    '<div class="ops-actions">'+(off()?'<button type="button" data-rd-restore'+(ro()?' disabled':'')+'>Restore</button>':'<button type="button" class="pd-cancel" data-rd-archive'+(ro()?' disabled':'')+'>Archive</button>')+'</div>';
