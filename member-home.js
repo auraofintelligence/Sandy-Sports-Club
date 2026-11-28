@@ -178,7 +178,7 @@ installExitControl('member-exit-view');
    workspace=await api('/api/member/preview');showDemo();
    $('member-exit-view').hidden=false;$('member-return-showcase').hidden=session.identity.role!=='webmaster';
    if(session.identity.role==='member')await privateLibrary.open('owner');
-   const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','family','privacy'].includes(wanted)?wanted:'home');return;
+   const wanted=location.hash.slice(1);selectTab(['home','profile','directory','sports','calendar','volunteer','film','notices','family','privacy'].includes(wanted)?wanted:'home');return;
   }
   if(new URLSearchParams(location.search).get('demo')==='1'&&session.identity.role==='webmaster'){
    workspace=await api('/api/member/preview');showDemo();selectTab('home');return;
@@ -191,6 +191,6 @@ installExitControl('member-exit-view');
    return;
   }
   workspace=await api('/api/member/workspace');showReal();await privateLibrary.open('owner');
-  const wanted=location.hash.slice(1);selectTab(['home','sports','calendar','volunteer','film','notices','family','privacy'].includes(wanted)?wanted:'home');
+  const wanted=location.hash.slice(1);selectTab(['home','profile','directory','sports','calendar','volunteer','film','notices','family','privacy'].includes(wanted)?wanted:'home');
  }catch(error){$('member-exit-view').hidden=false;banner('Could not load your member area: '+error.message,true)}
 })();
