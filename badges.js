@@ -14,7 +14,8 @@ export const BADGES={
 export const BADGE_ORDER=Object.keys(BADGES);
 export function earnedBadges(f){
  const out=[];
- if(f.joinedOn&&f.joinedOn<=f.foundingUntil)out.push('founding');
+// No cutoff yet: every member counts as founding until the early contributors agree a date.
+ if(f.joinedOn&&(!f.foundingUntil||f.joinedOn<=f.foundingUntil))out.push('founding');
  if(f.verified)out.push('tick');
  if(f.picture&&f.bio&&f.sports>0&&f.availability>0)out.push('profile');
  if(f.going>=1)out.push('first');

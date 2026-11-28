@@ -34,7 +34,7 @@ const parse=s=>{try{return JSON.parse(s||'[]')}catch{return []}};
 // Badges for a set of members, worked out in three queries whatever the number of members.
 export async function badgesFor(env,db,ids){
  const out=new Map();if(!ids.length)return out;
- const q=ids.map(()=>'?').join(','),until=env.SANDY_FOUNDING_UNTIL||'2027-06-30';
+ const q=ids.map(()=>'?').join(','),until=env.SANDY_FOUNDING_UNTIL||'';// no cutoff until the founders agree one
  const rows=(await db.prepare(`SELECT a.id,p.joined_on,m.* FROM club_accounts a JOIN club_people p ON p.account_id=a.id LEFT JOIN club_member_profiles m ON m.account_id=a.id WHERE a.id IN (${q})`).bind(...ids).all()).results||[];
  let goingRows=[];try{goingRows=(await db.prepare(`SELECT account_id,COUNT(*) AS n FROM club_announcement_rsvps WHERE response='going' AND account_id IN (${q}) GROUP BY account_id`).bind(...ids).all()).results||[]}catch{}// no events yet
  const going=new Map(goingRows.map(r=>[r.account_id,r.n]));

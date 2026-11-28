@@ -34,7 +34,8 @@ test('email due windows respect frequency and quiet hours',()=>{
 test('badges come from participation',()=>{
  const base={joinedOn:'2026-12-01',foundingUntil:'2027-06-30',verified:false,picture:true,bio:true,sports:1,availability:1,going:5,film:true,crew:0,helping:1,connections:0};
  assert.deepEqual(earnedBadges(base),['founding','profile','first','regular','film','helper']);
- assert.deepEqual(earnedBadges({...base,joinedOn:'2027-08-01',bio:false,going:1,film:false,helping:0}),['first']);
+ assert.deepEqual(earnedBadges({...base,joinedOn:'2027-08-01',bio:false,going:1,film:false,helping:0}),['first'],'a cutoff, once agreed, is respected');
+ assert.ok(earnedBadges({...base,foundingUntil:'',joinedOn:'2031-01-01'}).includes('founding'),'no cutoff set: every member is founding');
 });
 test('targeted notices reach only matching members; reads, pins, unread counts and preview work',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';

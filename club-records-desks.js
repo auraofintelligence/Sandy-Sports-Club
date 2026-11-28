@@ -10,7 +10,7 @@ const todayBris=()=>new Date(Date.now()+36e6).toISOString().slice(0,10);
 const plusMonths=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCMonth(x.getUTCMonth()+n);return x.toISOString().slice(0,10)};
 const lines=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
 const STD_DOCS=['Draft constitution','Privacy policy','Child safe policy and code of conduct','Risk register','Insurance certificate of currency','Venue hire agreements','Grievance procedure'];
-const RECIPIENTS={all:'All members who agreed to be contacted',film:'Film Club members who agreed to be contacted',unverified:'Members without a blue tick (contact agreed)',interest:'People who registered interest but have not joined',visitors:'Visitors and occasional members: holiday and regular visitors who agreed, plus interest sign-ups not joined'};
+const RECIPIENTS={all:'All members who agreed to be contacted',film:'Film Club members who agreed to be contacted',unverified:'Members without a blue tick (contact agreed)',interest:'People who registered interest but have not joined',visitors:'Only visitors and occasional members: holiday and regular visitors who agreed, plus interest sign-ups not joined'};
 
 const CONFIG={
  news:{title:'Newsletter',help:'Put together a newsletter issue, preview it, then share it as a notice or send it by email through Message delivery.',noun:'issue',newLabel:'Start an issue',
