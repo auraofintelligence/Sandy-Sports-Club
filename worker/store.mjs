@@ -1,7 +1,7 @@
 // Sandy Sports working demo store. The club has no bank account: no payment is taken, orders are requests only.
 // Treasurer and Webmaster manage products, stock, orders, CSV import and export; other officers can read reports.
 import {fail,json,now,id,dbFor,payload,field,requireRole,audit,STAFF,MEMBER_ADMIN} from './shared.mjs';
-import {DEMO_PRODUCTS,RETIRED_DEMO_SKUS} from './store-catalogue.mjs';
+import {DEMO_PRODUCTS,RETIRED_DEMO_SKUS,RETIRED_DEMO_TICKETS} from './store-catalogue.mjs';
 import {cleanPhoto,photoResponse} from './profiles.mjs';
 export const STORE_MANAGERS=['webmaster','treasurer'];
 export const STORE_NOTICE='Working demo store. Sandy Sports has no bank account yet, so no payment is taken and orders are requests only until further notice.';
@@ -46,6 +46,15 @@ export async function ensureStore(env,db){
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='seeded'").first()){
   const at=now(),stmts=DEMO_PRODUCTS.map((p,i)=>seedProduct(db,p,i,at));
   await db.batch([...stmts,db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('seeded',?)").bind(at)]);
+ }
+ // Remove the made-up demo events (tickets). Deleted outright unless an order already names one, then archived.
+ if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v5'").first()){
+  const at=now(),stmts=[];
+  for(const sku of RETIRED_DEMO_TICKETS){
+   stmts.push(db.prepare("DELETE FROM store_products WHERE sku=? AND demo=1 AND NOT EXISTS(SELECT 1 FROM store_orders o WHERE instr(o.lines_json,store_products.id)>0)").bind(sku),
+    db.prepare("UPDATE store_products SET status='archived',version=version+1,updated_utc=? WHERE sku=? AND demo=1").bind(at,sku));
+  }
+  await db.batch([...stmts,db.prepare("INSERT OR IGNORE INTO store_settings(key,value) VALUES('demo_v5',?)").bind(at)]);
  }
  // Add demo items introduced after the store was first seeded (Mozzie mascot tee).
  if(!await db.prepare("SELECT 1 AS x FROM store_settings WHERE key='demo_v4'").first()){

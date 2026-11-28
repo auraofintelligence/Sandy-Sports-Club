@@ -13,10 +13,13 @@ test('demo store: catalogue, orders, stock, reports, CSV round trip and roles',a
  const f=fixture(t,{actors:[['web','webmaster'],['treasurer','treasurer'],['sec','secretary'],['other','committee']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  const shop=await f.call(null,'/api/store');
  assert.equal(shop.bankAccount,false);assert.match(shop.notice,/no bank account/);assert.equal(shop.me.signedIn,false);
- assert.ok(shop.products.length>=20);assert.ok(!shop.products.some(p=>['GEAR-VB-BALL','GEAR-VB-NET','GEAR-FLAG-SET','GEAR-CRICKET','GEAR-DISC'].includes(p.sku)));assert.ok(shop.products.every(p=>p.demo));
- for(const kind of ['merch','ticket','donation'])assert.ok(shop.products.some(p=>p.kind===kind),kind);
+ assert.ok(shop.products.length>=15);assert.ok(!shop.products.some(p=>['GEAR-VB-BALL','GEAR-VB-NET','GEAR-FLAG-SET','GEAR-CRICKET','GEAR-DISC'].includes(p.sku)));assert.ok(shop.products.every(p=>p.demo));
+ for(const kind of ['merch','donation'])assert.ok(shop.products.some(p=>p.kind===kind),kind);
+ assert.ok(!shop.products.some(p=>p.kind==='ticket'),'no made-up demo events');
+ const soon=new Date(Date.now()+36e6+30*864e5).toISOString().slice(0,10);
+ await f.call('treasurer','/api/committee/store/products','POST',{product:{sku:'TIX-FICTIONAL',name:'Fictional cinema test',kind:'ticket',status:'active',price:'15',event_date:soon,variants:'Family (2 adults, 2 kids)@35:20'}},201);
  assert.equal(shop.products[0].cost,undefined);
- const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND'),cinema=shop.products.find(p=>p.sku==='TIX-CINEMA-1'),don=shop.products.find(p=>p.sku==='DON-COURTS');
+ const tee=shop.products.find(p=>p.sku==='APP-TEE-FOUND'),cinema=(await f.call(null,'/api/store')).products.find(p=>p.sku==='TIX-FICTIONAL'),don=shop.products.find(p=>p.sku==='DON-COURTS');
  await f.call(null,'/api/store/orders','POST',{collection:'Dunwich',acknowledge:true,items:[{productId:tee.id,variant:'M',qty:1}]},401);
  const bday=await join(f,'birthday.member','1990-'+thisMonth+'-15'),plain=await join(f,'plain.member','1990-'+(thisMonth==='06'?'07':'06')+'-15');
  assert.equal((await f.call(bday,'/api/store')).me.birthdayMonth,true);
@@ -114,4 +117,13 @@ test('Mozzie mascot tee is added to a store that was seeded before it existed',a
  f.sql.exec(`CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);INSERT INTO store_settings VALUES('seeded','x'),('codes_seeded','x'),('demo_v2','x'),('demo_v3','x');`);
  const tee=(await f.call(null,'/api/store')).products.find(p=>p.sku==='APP-TEE-MOZZIE');
  assert.ok(tee);assert.equal(tee.name,'Minjerribah Mozzie tee');assert.ok(tee.variants.some(v=>v.label==='Kids 6'));assert.ok(tee.variants.some(v=>v.label==='XL'));
+});
+test('made-up demo events already in a store are removed',async t=>{
+ const f=fixture(t,{actors:[['web','webmaster']]});
+ f.sql.exec(`CREATE TABLE IF NOT EXISTS store_settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);INSERT INTO store_settings VALUES('seeded','x'),('codes_seeded','x'),('demo_v2','x'),('demo_v3','x'),('demo_v4','x');`);
+ f.sql.exec(`CREATE TABLE IF NOT EXISTS store_products(id TEXT PRIMARY KEY,sku TEXT NOT NULL UNIQUE COLLATE NOCASE,name TEXT NOT NULL,category TEXT NOT NULL DEFAULT '',kind TEXT NOT NULL DEFAULT 'merch',description TEXT NOT NULL DEFAULT '',price_cents INTEGER NOT NULL DEFAULT 0,member_price_cents INTEGER,cost_cents INTEGER,variants_json TEXT NOT NULL DEFAULT '[]',event_date TEXT,event_time TEXT NOT NULL DEFAULT '',venue TEXT NOT NULL DEFAULT '',photo TEXT,status TEXT NOT NULL DEFAULT 'draft',sort INTEGER NOT NULL DEFAULT 100,demo INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL);
+  INSERT INTO store_products(id,sku,name,category,kind,variants_json,status,demo,event_date,created_utc,updated_utc) VALUES('t1','TIX-CINEMA-1','Outdoor cinema night','Event tickets','ticket','[]','active',1,'2099-01-09','x','x'),('t2','TIX-COME-TRY','Summer come-and-try day','Event tickets','ticket','[]','active',1,'2099-01-16','x','x');`);
+ assert.ok(!(await f.call(null,'/api/store')).products.some(p=>p.kind==='ticket'));
+ assert.equal(f.sql.prepare("SELECT count(*) AS n FROM store_products WHERE kind='ticket'").get().n,0);
+ assert.ok(!(await f.call(null,'/api/calendar')).events.length);
 });

@@ -23,17 +23,12 @@ export const DEMO_PRODUCTS=[
  // Community
  {sku:'COMM-STICKERS',name:'Sticker pack',category:'Community',kind:'merch',price:8,member:6,cost:2,variants:v(['Pack of 6'],50),description:'Weatherproof stickers for boards, bottles and eskies.'},
  {sku:'COMM-POSTCARDS',name:'Three towns postcard set',category:'Community',kind:'merch',price:12,member:10,cost:3,variants:v(['Set of 3'],30),description:'Dunwich, Amity Point and Point Lookout.'},
- // Event tickets
- {sku:'TIX-CINEMA-1',name:'Outdoor cinema night',category:'Event tickets',kind:'ticket',price:15,member:12,cost:null,eventDate:'2027-01-09',eventTime:'7:30pm',venue:'Point Lookout (venue to be confirmed)',
-  variants:[{label:'Adult',stock:80,price:15},{label:'Child',stock:60,price:5},{label:'Family (2 adults, 2 kids)',stock:20,price:35}],description:'A family film on the big outdoor screen. Bring a rug.'},
- {sku:'TIX-SUNSET-VB',name:'Sunset volleyball social',category:'Event tickets',kind:'ticket',price:10,member:0,cost:null,eventDate:'2026-12-20',eventTime:'5pm to 7pm',venue:'Amity Point (venue to be confirmed)',
-  variants:[{label:'Player',stock:32,price:10},{label:'Spectator',stock:100,price:0}],description:'Mixed teams drawn on the night. Free for members.'},
- {sku:'TIX-COME-TRY',name:'Summer come-and-try day',category:'Event tickets',kind:'ticket',price:0,member:0,cost:null,eventDate:'2027-01-16',eventTime:'9am to 12pm',venue:'Dunwich (venue to be confirmed)',
-  variants:[{label:'Adult',stock:60,price:0},{label:'Junior',stock:60,price:0}],description:'Free taster sessions across volleyball, flag football and beach cricket. Book so we bring enough gear.'},
+ // Event tickets: none. Real events are added by the committee when they are confirmed.
  // Donations
  {sku:'DON-COURTS',name:'Donate to the courts and lights fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Courts and lights',stock:null}],description:'Help build lit sand courts across the three towns.'},
  {sku:'DON-SCREEN',name:'Donate to the outdoor screen fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Outdoor screen',stock:null}],description:'Help buy modular LED panels for cinema nights and live sport.'},
  {sku:'DON-JUNIOR',name:'Donate to the junior kit fund',category:'Donations',kind:'donation',price:20,member:null,cost:null,variants:[{label:'Junior kit',stock:null}],description:'Help kit out kids who cannot afford it.'}
 ];
 // Sports equipment removed from the demo store on 28 Nov 2026 so the club does not compete with local stockists.
+export const RETIRED_DEMO_TICKETS=['TIX-CINEMA-1','TIX-SUNSET-VB','TIX-COME-TRY'];
 export const RETIRED_DEMO_SKUS=['GEAR-VB-BALL','GEAR-VB-NET','GEAR-FLAG-SET','GEAR-CRICKET','GEAR-DISC'];
