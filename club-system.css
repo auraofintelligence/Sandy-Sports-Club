@@ -394,3 +394,25 @@ body.desk-focus #clubhouse-menu,body.desk-focus .club-island-links,body.desk-foc
 .agm-state{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .agm-state button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.35rem .6rem;font-weight:800;cursor:pointer;font-size:.8rem}
 @media(max-width:620px){.agm-job{grid-template-columns:1fr}.agm-state{justify-content:flex-start}}
+/* Members desks: live numbers first, then the job. */
+.md-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.55rem;margin:.6rem 0 1rem}
+.md-stat{background:white;border:1px solid #c8dfd9;border-radius:12px;padding:.7rem .8rem;display:grid;gap:.15rem}
+.md-stat strong{font-size:1.6rem;color:#164f59;line-height:1}.md-stat span{font-size:.8rem;color:#3e5a5f}
+.md-stat.good{border-color:#9fd0b4;background:#f1faf4}.md-stat.warn{border-color:#ecc76a;background:#fff9e8}
+.md-body h4{margin:1.1rem 0 .45rem;color:#164f59}
+.md-list,.md-notices,.md-checklist{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}
+.md-list li,.md-notices li,.md-checklist li{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;justify-content:space-between;background:white;border:1px solid #dbe9e5;border-radius:10px;padding:.55rem .75rem}
+.md-list li span,.md-notices li span,.md-checklist li span:not(.ops-pill){font-size:.84rem;color:#3e5a5f}
+.md-list li strong{flex:1 1 10rem}.md-notices li>div:first-child,.md-checklist li>div{display:grid;gap:.15rem;flex:1 1 16rem}
+.md-rsvp{font-weight:800;color:#1c6349!important}
+.md-row-actions{display:flex;gap:.35rem}.md-row-actions button{border:1px solid #117486;background:white;color:#0b5970;border-radius:8px;padding:.4rem .65rem;font-weight:800;cursor:pointer;font-size:.8rem}
+[data-md-who-panel]{flex-basis:100%}
+.md-plain{margin:.3rem 0 .8rem;padding-left:1.2rem;font-size:.9rem}.md-plain li{margin:.2rem 0}
+.md-btn{display:inline-block;border:1px solid #0d7a88;background:#0d7a88;color:white!important;border-radius:8px;padding:.55rem .85rem;font:inherit;font-weight:800;text-decoration:none;cursor:pointer;font-size:.88rem}
+.md-btn.ghost{background:white;color:#0b5970!important}
+.md-types{margin:.6rem 0}
+[data-md-message].bad{color:#9b2520}
+#committee-members-desk .ops-compose label{display:grid;gap:.3rem;font-weight:700;font-size:.85rem}
+#committee-members-desk .ops-compose input:not([type=checkbox]),#committee-members-desk .ops-compose select,#committee-members-desk .ops-compose textarea{width:100%;min-width:0;padding:.55rem;border:1px solid #a9c6c0;border-radius:8px;font:inherit}
+#committee-members-desk .ops-compose button[type=submit]{justify-self:start;background:#0d7a88;color:white;border:0;border-radius:8px;padding:.6rem .9rem;font-weight:800;cursor:pointer}
+#md-desk-title:focus,#agm-desk-title:focus{outline:none}

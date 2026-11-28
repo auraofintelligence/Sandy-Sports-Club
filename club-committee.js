@@ -3,6 +3,7 @@ import {SUITE_BY_KEY,SUITE_DESKS} from './studio/sandy-suite-spec.js';
 import {setupCommitteeOperations} from './club-committee-ops.js?v=20261128';
 import {setupMeetingsDesk} from './club-meetings.js?v=20261128';
 import {setupAgmDesk} from './club-agm.js?v=20261128';
+import {setupMembersDesks,MEMBER_DESKS} from './club-members-desks.js?v=20261128';
 import {setupSandySuite} from './club-suite-ui.js';
 const DESKS=[
  {key:'notices',group:'Communications',label:'Committee notices',kind:'notice',description:'Prepare internal notices, questions and replies for the future committee.'},
@@ -23,8 +24,8 @@ const DESKS=[
  {key:'grants',group:'Events and funding',label:'Grant register',kind:'grant',description:'Track grant leads, proposal dates, assigned officers and evidence links.'},
  {key:'leaderboard',group:'Events and funding',label:'Results, prizes and sponsors',kind:'governance',description:'Plan results, prize arrangements and acknowledgement requirements. No results are fabricated.'},
  {key:'stock',group:'Events and funding',label:'Shop, stock and prices',kind:'asset',description:'Draft stock, equipment and price decisions. No active shop inventory, invoices or transactions are connected.'},
- {key:'safety',group:'Members and safeguards',label:'Member age and permissions',kind:'safeguard',restricted:true,description:'Restricted safeguards planning. Do not enter minors’ identifying details into a general planning note.'},
- {key:'applications',group:'Members and safeguards',label:'Applications',kind:'volunteer',description:'Record application-process tasks. Actual people records belong in People & memberships.',related:[['people','People & memberships']]},
+ {key:'safety',group:'Members and safeguards',label:'Member age and permissions',kind:'safeguard',restricted:true,description:'Children registered by guardians, permissions and blue-tick ID checks.'},
+ {key:'applications',group:'Members and safeguards',label:'Applications',kind:'volunteer',description:'Who has joined, interest sign-ups still to chase, and blue ticks.',related:[['people','People & memberships']]},
  {key:'returning',group:'Members and safeguards',label:'Invite returning members',kind:'volunteer',description:'Plan possible re-engagement; no live member invitations are issued.',related:[['people','People & memberships']]}
 ];
 for(const spec of SUITE_DESKS){
@@ -41,6 +42,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  const suiteRoot=$('committee-suite'),oldWorkbench=$('committee-workbench');
  const meetingsDesk=setupMeetingsDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const agmDesk=setupAgmDesk({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
+ const membersDesk=setupMembersDesks({api,esc,status,showDesk:key=>showDesk(key,{scroll:true})});
  const byKey=new Map(DESKS.map(d=>[d.key,d]));
  let selected='',currentRecords=[];
  const navigation=$('committee-navigation'),directory=$('committee-directory'),picker=$('committee-desk-switch'),back=$('committee-back');
@@ -72,7 +74,7 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
  // A desk takes over the page, like PLFC: menus and the committee room intro step aside until you go back.
  const focusDesk=on=>document.body.classList.toggle('desk-focus',on);
  function showDirectory({scroll=false}={}){
-  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();void ops.summary();
+  restoreNavigation();focusDesk(false);selected='';closeEditor();suiteRoot.hidden=true;oldWorkbench.hidden=true;ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();void ops.summary();
   refreshAllowed();back.hidden=true;directory.open=true;
   for(const group of nav.querySelectorAll('details'))group.open=false;
   const url=new URL(location.href);url.hash='committee';history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -157,10 +159,11 @@ export function setupCommitteeRoom({api,esc,status,openTab,getIdentity}){
    else button.removeAttribute('aria-current');
   }
   if(updateUrl)writeCurrentUrl();
-  ops.close();meetingsDesk.close();agmDesk.close();
+  ops.close();meetingsDesk.close();agmDesk.close();membersDesk.close();
   if(scroll)window.scrollTo({top:0,behavior:'auto'});
   if(key==='meetings'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await meetingsDesk.open();return}
   if(key==='agm'){oldWorkbench.hidden=true;suiteRoot.hidden=true;await agmDesk.open();return}
+  if(MEMBER_DESKS.includes(key)){oldWorkbench.hidden=true;suiteRoot.hidden=true;await membersDesk.open(key);return}
   if(key==='notices'||key==='todos'){
    oldWorkbench.hidden=true;suiteRoot.hidden=true;await ops.open(key);return;
   }
