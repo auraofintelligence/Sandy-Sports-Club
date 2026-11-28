@@ -3,17 +3,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture} from './d1-fixture.mjs';
 const adult=(username,extra={})=>({fullName:'Fictional '+username,email:username+'@example.test',town:'Dunwich',audienceRegion:'local',
- username,password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1',...extra});
+ username,password:'sandy77',adult:true,contactConsent:false,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49',...extra});
 async function join(f,username){
  const res=await f.request(null,'/api/join','POST',adult(username));assert.equal(res.status,201);
  return (res.headers.get('set-cookie')||'').match(/__Host-sandy_session=([a-f0-9]{64})/)[1];
 }
-const kid=(extra={})=>({action:'add',fullName:'Fictional Junior',preferredName:'Juni',ageBand:'under16',relationship:'parent',interests:['Mixed beach volleyball'],photoPermission:false,guardianDeclaration:true,...extra});
+const kid=(extra={})=>({action:'add',fullName:'Fictional Junior',preferredName:'Juni',ageBand:'under16',relationship:'parent',interests:['Mixed beach volleyball'],photoPermission:false,guardianDeclaration:true,gender:'male',avatarId:'sandy-05',...extra});
 test('guardian adds, updates and removes a child; other members and officers without Webmaster cannot see it',async t=>{
  const f=fixture(t,{actors:[['web','webmaster'],['sec','secretary']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  const mum=await join(f,'fictional.mum'),other=await join(f,'fictional.other');
  await f.call(mum,'/api/member/family','POST',kid({guardianDeclaration:false}),400);
  await f.call(mum,'/api/member/family','POST',kid({ageBand:'adult'}),400);
+ await f.call(mum,'/api/member/family','POST',kid({avatarId:''}),400);
+ await f.call(mum,'/api/member/family','POST',kid({gender:'other'}),400);
  const added=await f.call(mum,'/api/member/family','POST',kid(),201);
  assert.equal(added.children.length,1);assert.equal(added.children[0].ageBand,'under16');assert.equal(added.children[0].photoPermission,false);
  assert.equal(f.count('club_people',"membership_class='youth' AND account_id IS NULL"),1);

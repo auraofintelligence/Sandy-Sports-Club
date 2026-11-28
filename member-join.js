@@ -16,14 +16,14 @@ form.addEventListener('submit',async event=>{
  event.preventDefault();
  const d=new FormData(form);
  const body={fullName:d.get('fullName'),preferredName:d.get('preferredName'),email:d.get('email'),mobile:d.get('mobile'),town:d.get('town'),
-  audienceRegion:d.get('audienceRegion'),username:d.get('username'),password:d.get('password'),website:d.get('website')||'',
+  audienceRegion:d.get('audienceRegion'),gender:d.get('gender'),ageGroup:d.get('ageGroup'),username:d.get('username'),password:d.get('password'),website:d.get('website')||'',
   adult:form.elements.adult.checked,contactConsent:form.elements.contactConsent.checked,termsAccepted:form.elements.termsAccepted.checked,termsVersion};
  button.disabled=true;message('Creating your membership…');
  try{
   const response=await fetch('/api/join',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const result=await response.json().catch(()=>({}));
   if(!response.ok)throw Error(result.error||'Joining could not be completed.');
-  message('Welcome to Sandy Sports! Taking you to your member area…');
+  message('Welcome to Sandy Sports! Next, pick your avatar or add a photo…');
   location.assign(result.next||'/member-home.html');
  }catch(error){message(error.message,true);button.disabled=false}
 });

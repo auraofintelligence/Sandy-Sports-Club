@@ -3,25 +3,31 @@
 // Only the guardian and the Webmaster can see a child's profile.
 import {fail,json,now,id,dbFor,payload,field,version,requireRole,revision,audit,membersOpen} from './shared.mjs';
 import {memberSafeguardFlags} from './member-safeguards.mjs';
-const DDL=[`CREATE TABLE IF NOT EXISTS club_guardian_links(child_person_id TEXT PRIMARY KEY REFERENCES club_people(id),guardian_account_id TEXT NOT NULL REFERENCES club_accounts(id),relationship TEXT NOT NULL DEFAULT 'parent' CHECK(relationship IN ('parent','guardian','carer','grandparent','other')),age_band TEXT NOT NULL CHECK(age_band IN ('under16','16-17')),participation_permission INTEGER NOT NULL DEFAULT 1 CHECK(participation_permission IN (0,1)),photo_permission INTEGER NOT NULL DEFAULT 0 CHECK(photo_permission IN (0,1)),interests_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(interests_json)),version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,withdrawn_utc TEXT)`,
+import {cleanPhoto,photoResponse} from './profiles.mjs';
+import {validAvatar,GENDERS} from '../avatars.js';
+const DDL=[`CREATE TABLE IF NOT EXISTS club_guardian_links(child_person_id TEXT PRIMARY KEY REFERENCES club_people(id),guardian_account_id TEXT NOT NULL REFERENCES club_accounts(id),relationship TEXT NOT NULL DEFAULT 'parent' CHECK(relationship IN ('parent','guardian','carer','grandparent','other')),age_band TEXT NOT NULL CHECK(age_band IN ('under16','16-17')),participation_permission INTEGER NOT NULL DEFAULT 1 CHECK(participation_permission IN (0,1)),photo_permission INTEGER NOT NULL DEFAULT 0 CHECK(photo_permission IN (0,1)),interests_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(interests_json)),gender TEXT NOT NULL DEFAULT '',avatar_id TEXT NOT NULL DEFAULT '',photo TEXT,picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),version INTEGER NOT NULL DEFAULT 1,created_utc TEXT NOT NULL,updated_utc TEXT NOT NULL,withdrawn_utc TEXT)`,
  'CREATE INDEX IF NOT EXISTS club_guardian_links_guardian ON club_guardian_links(guardian_account_id)'];
 const ready=new WeakSet();
 async function ensureTable(env,db){if(ready.has(env))return;for(const sql of DDL)await db.prepare(sql).run();ready.add(env)}
 const relationships=['parent','guardian','carer','grandparent','other'],bands=['under16','16-17'];
 const MAX_CHILDREN=8;
 const brisbaneToday=()=>new Date(Date.now()+10*3600000).toISOString().slice(0,10);
-function shape(r){return {id:r.id,fullName:r.full_name,preferredName:r.preferred_name,ageBand:r.age_band,relationship:r.relationship,
+const childPhoto=id=>'/api/member/family/photo/'+id;
+function shape(r){return {id:r.id,fullName:r.full_name,preferredName:r.preferred_name,ageBand:r.age_band,relationship:r.relationship,gender:r.gender,picture:r.picture_type?{type:r.picture_type,avatarId:r.avatar_id}:null,photoUrl:r.picture_type==='photo'?childPhoto(r.id):null,
  participationPermission:!!r.participation_permission,photoPermission:!!r.photo_permission,interests:JSON.parse(r.interests_json||'[]'),
  joinedOn:r.joined_on,version:r.version,...(r.guardian_username!==undefined?{guardian:{username:r.guardian_username,name:r.guardian_name,email:r.guardian_email,mobile:r.guardian_mobile}}:{})}}
-const SELECT=`SELECT p.id,p.full_name,p.preferred_name,p.joined_on,g.age_band,g.relationship,g.participation_permission,g.photo_permission,g.interests_json,g.version
+const SELECT=`SELECT p.id,p.full_name,p.preferred_name,p.joined_on,g.age_band,g.relationship,g.participation_permission,g.photo_permission,g.interests_json,g.gender,g.avatar_id,g.picture_type,g.version
  FROM club_guardian_links g JOIN club_people p ON p.id=g.child_person_id WHERE g.withdrawn_utc IS NULL AND p.status='active'`;
 function input(b){
  const fullName=field(b.fullName,100),preferredName=field(b.preferredName,60),ageBand=field(b.ageBand,10),relationship=field(b.relationship,20)||'parent';
  if(fullName.length<2)fail(400,"Enter your child's name.",'invalid_child');
  if(!bands.includes(ageBand))fail(400,'Choose an age group: under 16, or 16 to 17.','invalid_child');
  if(!relationships.includes(relationship))fail(400,'Choose your relationship to the child.','invalid_child');
+ const gender=field(b.gender,20);if(!GENDERS.includes(gender))fail(400,'Choose female, male or non-binary.','invalid_child');
+ let avatar=validAvatar(b.avatarId)?b.avatarId:'',photo=null;if(b.photo)photo=cleanPhoto(b.photo,fail);
+ const picture=photo?'photo':avatar?'avatar':'';
  const interests=Array.isArray(b.interests)?[...new Set(b.interests.filter(x=>typeof x==='string').map(x=>field(x,60)).filter(Boolean))].slice(0,20):[];
- return {fullName,preferredName,ageBand,relationship,interests,participation:b.participationPermission!==false?1:0,photo:b.photoPermission===true?1:0};
+ return {gender,avatar,photo,picture,fullName,preferredName,ageBand,relationship,interests,participation:b.participationPermission!==false?1:0,photoPermission:b.photoPermission===true?1:0};
 }
 async function requireGuardian(env,db,identity){
  requireRole(identity,['member']);
@@ -32,6 +38,13 @@ async function requireGuardian(env,db,identity){
 }
 export async function familyEndpoint(req,env,path,identity){
  const db=dbFor(env);
+ const photoMatch=path.match(/^\/api\/member\/family\/photo\/([a-f0-9-]{36})$/);
+ if(photoMatch&&req.method==='GET'){
+  requireRole(identity,['member','webmaster']);await ensureTable(env,db);
+  const row=await db.prepare("SELECT photo FROM club_guardian_links WHERE child_person_id=? AND picture_type='photo' AND photo IS NOT NULL AND withdrawn_utc IS NULL"+(identity.role==='webmaster'?'':' AND guardian_account_id=?')).bind(...(identity.role==='webmaster'?[photoMatch[1]]:[photoMatch[1],identity.id])).first();
+  if(!row)fail(404,'Photo unavailable.','not_found');
+  return photoResponse(row.photo);
+ }
  if(path==='/api/committee/families'){
   requireRole(identity,['webmaster']);
   if(req.method!=='GET')fail(405,'Read only.','method_not_allowed');
@@ -47,14 +60,15 @@ export async function familyEndpoint(req,env,path,identity){
  if(b.action==='add'){
   if(b.guardianDeclaration!==true)fail(400,'Confirm you are the parent or legal guardian, or have their authority.','guardian_declaration_required');
   const c=input(b);
+  if(!c.picture)fail(400,'Pick a cartoon avatar or upload a photo for your child.','picture_required');
   if((await mine()).length>=MAX_CHILDREN)fail(409,'You have reached the limit of '+MAX_CHILDREN+' children. Contact the Webmaster.','family_limit');
   const childId=id();
   await db.batch([
    db.prepare("INSERT INTO club_people(id,account_id,full_name,preferred_name,membership_class,status,joined_on,consent_contact,consent_publication,source,created_by,updated_by,created_utc,updated_utc) VALUES(?,NULL,?,?,'youth','active',?,0,?,'guardian-registered',?,?,?,?)")
-    .bind(childId,c.fullName,c.preferredName,brisbaneToday(),c.photo,identity.id,identity.id,at,at),
-   db.prepare('INSERT INTO club_guardian_links(child_person_id,guardian_account_id,relationship,age_band,participation_permission,photo_permission,interests_json,version,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,1,?,?)')
-    .bind(childId,identity.id,c.relationship,c.ageBand,c.participation,c.photo,JSON.stringify(c.interests),at,at),
-   revision(db,{kind:'person',resourceId:childId,resourceVersion:1,action:'child_registered_by_guardian',actor,at,snapshot:{ageBand:c.ageBand,relationship:c.relationship,participation:c.participation,photo:c.photo}}),
+    .bind(childId,c.fullName,c.preferredName,brisbaneToday(),c.photoPermission,identity.id,identity.id,at,at),
+   db.prepare('INSERT INTO club_guardian_links(child_person_id,guardian_account_id,relationship,age_band,participation_permission,photo_permission,interests_json,gender,avatar_id,photo,picture_type,version,created_utc,updated_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,1,?,?)')
+    .bind(childId,identity.id,c.relationship,c.ageBand,c.participation,c.photoPermission,JSON.stringify(c.interests),c.gender,c.avatar,c.photo,c.picture,at,at),
+   revision(db,{kind:'person',resourceId:childId,resourceVersion:1,action:'child_registered_by_guardian',actor,at,snapshot:{ageBand:c.ageBand,relationship:c.relationship,participation:c.participation,photo:c.photoPermission}}),
    audit(db,actor,'child_registered_by_guardian','person',childId,at)
   ]);
   return json({ok:true,id:childId,children:(await mine()).map(shape)},201);
@@ -65,12 +79,13 @@ export async function familyEndpoint(req,env,path,identity){
  if(!current)fail(404,'That child profile is not linked to your account.','child_not_found');
  if(version(b.version)!==current.version)fail(409,'This profile changed. Reload before saving.','conflict');
  if(b.action==='update'){
-  const c=input({...shape(current),...b});
+  const c=input({...shape(current),avatarId:current.avatar_id,...b});
+  const keepPhoto=!b.photo&&!b.avatarId&&current.picture_type==='photo';
   const [r]=await db.batch([
-   db.prepare('UPDATE club_guardian_links SET relationship=?,age_band=?,participation_permission=?,photo_permission=?,interests_json=?,version=version+1,updated_utc=? WHERE child_person_id=? AND guardian_account_id=? AND version=? AND withdrawn_utc IS NULL')
-    .bind(c.relationship,c.ageBand,c.participation,c.photo,JSON.stringify(c.interests),at,childId,identity.id,current.version),
-   db.prepare('UPDATE club_people SET full_name=?,preferred_name=?,consent_publication=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND changes()=1').bind(c.fullName,c.preferredName,c.photo,identity.id,at,childId),
-   revision(db,{kind:'person',resourceId:childId,resourceVersion:current.version+1,action:'child_updated_by_guardian',actor,at,snapshot:{ageBand:c.ageBand,participation:c.participation,photo:c.photo},guarded:true}),
+   db.prepare('UPDATE club_guardian_links SET relationship=?,age_band=?,participation_permission=?,photo_permission=?,interests_json=?,gender=?,avatar_id=?,photo=CASE WHEN ? THEN photo ELSE ? END,picture_type=CASE WHEN ? THEN picture_type ELSE ? END,version=version+1,updated_utc=? WHERE child_person_id=? AND guardian_account_id=? AND version=? AND withdrawn_utc IS NULL')
+    .bind(c.relationship,c.ageBand,c.participation,c.photoPermission,JSON.stringify(c.interests),c.gender,c.avatar,keepPhoto?1:0,c.photo,keepPhoto?1:0,c.picture||'avatar',at,childId,identity.id,current.version),
+   db.prepare('UPDATE club_people SET full_name=?,preferred_name=?,consent_publication=?,version=version+1,updated_by=?,updated_utc=? WHERE id=? AND changes()=1').bind(c.fullName,c.preferredName,c.photoPermission,identity.id,at,childId),
+   revision(db,{kind:'person',resourceId:childId,resourceVersion:current.version+1,action:'child_updated_by_guardian',actor,at,snapshot:{ageBand:c.ageBand,participation:c.participation,photo:c.photoPermission},guarded:true}),
    audit(db,actor,'child_updated_by_guardian','person',childId,at,true)]);
   if(!r.meta.changes)fail(409,'This profile changed. Reload before saving.','conflict');
   return json({ok:true,children:(await mine()).map(shape)});

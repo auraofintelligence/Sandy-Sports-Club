@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture} from './d1-fixture.mjs';
 const person=(extra={})=>({fullName:'Fictional Founder',preferredName:'Fin',email:'founder@example.test',mobile:'',town:'Point Lookout',audienceRegion:'local',
- username:'fictional.founder',password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',...extra});
+ username:'fictional.founder',password:'sandy77',adult:true,contactConsent:true,termsAccepted:true,termsVersion:'sandy-participation-v1',gender:'female',ageGroup:'30-49',...extra});
 const tokenOf=res=>(res.headers.get('set-cookie')||'').match(/__Host-sandy_session=([a-f0-9]{64})/)?.[1];
 test('joining is closed unless founding membership is enabled',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});
@@ -30,12 +30,16 @@ test('join validation: duplicates, minors, short passwords, terms, honeypot',asy
  const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';
  await f.call(null,'/api/join','POST',person({password:'sandy6'}),400);
  await f.call(null,'/api/join','POST',person({adult:false}),400);
+ await f.call(null,'/api/join','POST',person({gender:'prefer-not'}),400);
+ await f.call(null,'/api/join','POST',person({ageGroup:'12'}),400);
+ await f.call(null,'/api/join','POST',person({gender:'non-binary',username:'nb.member',email:'nb@example.test'}),201);
+ assert.equal(f.count('club_people',"gender='non-binary'"),1);
  await f.call(null,'/api/join','POST',person({termsAccepted:false}),400);
  await f.call(null,'/api/join','POST',person({website:'spam'}),201);
- assert.equal(f.count('club_accounts',"role='member'"),0);
+ assert.equal(f.count('club_accounts',"role='member'"),1);
  await f.call(null,'/api/join','POST',person(),201);
  await f.call(null,'/api/join','POST',person({email:'other@example.test'}),409);
- assert.equal(f.count('club_accounts',"role='member'"),1);
+ assert.equal(f.count('club_accounts',"role='member'"),2);
 });
 test('three failed sign-ins lock that account on that connection for 15 minutes; successes do not count',async t=>{
  const f=fixture(t,{actors:[['web','webmaster']]});f.env.SANDY_FOUNDING_MEMBERS='enabled';

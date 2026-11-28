@@ -1,7 +1,8 @@
-// My profile, Members directory and Film Club crew roster inside My Membership.
+// My profile, required picture, Members directory and Film Club crew roster inside My Membership.
+import {picturePicker,pictureSrc} from './picture.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const levels={new:'New to it',social:'Social',competitive:'Competitive',coach:'Coach'};
-const form=$('profile-form');let profile=null,options=null,members=[];
+const form=$('profile-form');let profile=null,options=null,members=[],gender='',photoUrl=null;
 async function api(path,method='GET',data){
  const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});
  const payload=await response.json().catch(()=>({}));
@@ -15,11 +16,20 @@ function fill(){
   for(const box of form.querySelectorAll('input[name="'+name+'"]'))box.checked=profile[key].includes(box.value);
  for(const key of ['filmMember','directoryVisible','showTown','shareContact'])form.elements[key].checked=profile[key];
 }
+async function savePicture(choice,statusEl){
+ statusEl.textContent='Saving…';
+ try{
+  const r=await api('/api/member/picture','POST',choice);profile=r.profile;photoUrl=r.photoUrl;
+  statusEl.textContent='Saved.';showPicture();
+  if(document.body.classList.contains('needs-picture')){document.body.classList.remove('needs-picture');$('picture-step').hidden=true;loadDirectory();loadRoster()}
+ }catch(error){statusEl.textContent=error.message}
+}
+function showPicture(){$('profile-picture').src=pictureSrc(profile.picture,photoUrl&&photoUrl+'?v='+profile.version)}
 function card(m){
  const tags=[...m.sports,m.skillLevel?levels[m.skillLevel]:'',m.filmMember?'Film Club':''].filter(Boolean);
  const action={none:'<button type="button" data-act="request">Connect</button>',requested:'<span>Request sent</span> <button type="button" data-act="remove">Cancel</button>',
   incoming:'<button type="button" data-act="accept">Accept</button> <button type="button" data-act="decline">Decline</button>',connected:'<span>Connected</span> <button type="button" data-act="remove">Remove</button>'}[m.connection]||'';
- return '<article class="member-item" data-member="'+safe(m.accountId)+'"><strong>'+safe(m.name)+(m.town?' · '+safe(m.town):'')+'</strong>'+
+ return '<article class="member-item with-pic" data-member="'+safe(m.accountId)+'"><img class="member-pic" alt="" src="'+safe(pictureSrc(m.picture,m.photoUrl))+'" loading="lazy"><strong>'+safe(m.name)+(m.town?' · '+safe(m.town):'')+'</strong>'+
   (m.bio?'<span>'+safe(m.bio)+'</span>':'')+(tags.length?'<span>'+safe(tags.join(' · '))+'</span>':'')+
   (m.crewSkills.length?'<span>Crew: '+safe(m.crewSkills.join(', '))+'</span>':'')+(m.helping.length?'<span>Can help with: '+safe(m.helping.join(', '))+'</span>':'')+
   (m.contact?'<span>'+safe([m.contact.email,m.contact.mobile].filter(Boolean).join(' · '))+'</span>':'')+
@@ -41,10 +51,18 @@ async function loadRoster(){
 }
 async function load(){
  try{
-  ({profile,options}=await api('/api/member/profile'));
+  ({profile,options,gender,photoUrl}=await api('/api/member/profile'));
+  const who={ageGroup:profile.ageGroup,gender};
+  showPicture();
+  picturePicker($('profile-picture-picker'),{who,current:profile.picture,name:'profile-avatar',onChange:c=>savePicture(c,$('profile-picture-status'))});
+  if(!profile.picture){
+   document.body.classList.add('needs-picture');$('picture-step').hidden=false;
+   picturePicker($('picture-step-picker'),{who,name:'step-avatar',onChange:c=>savePicture(c,$('picture-step-status'))});
+   $('picture-step').scrollIntoView({block:'start'});
+  }
   boxes('profile-sports','sport',options.sports);boxes('profile-availability','availability',options.availability);boxes('profile-crew','crew',options.crew);boxes('profile-helping','helping',options.helping);
   $('directory-sport').insertAdjacentHTML('beforeend',options.sports.map(s=>'<option>'+safe(s)+'</option>').join(''));
-  fill();loadDirectory();loadRoster();
+  fill();if(profile.picture){loadDirectory();loadRoster()}
  }catch(error){form.hidden=true;$('profile-status').textContent=error.message;form.insertAdjacentHTML('beforebegin','<p>'+safe(error.message)+'</p>')}
 }
 form.addEventListener('submit',async event=>{

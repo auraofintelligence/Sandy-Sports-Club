@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS club_member_profiles(
  directory_visible INTEGER NOT NULL DEFAULT 0 CHECK(directory_visible IN (0,1)),
  show_town INTEGER NOT NULL DEFAULT 0 CHECK(show_town IN (0,1)),
  share_contact INTEGER NOT NULL DEFAULT 0 CHECK(share_contact IN (0,1)),
+ age_group TEXT NOT NULL DEFAULT '',
+ avatar_id TEXT NOT NULL DEFAULT '',
+ photo TEXT,
+ picture_type TEXT NOT NULL DEFAULT '' CHECK(picture_type IN ('','avatar','photo')),
  version INTEGER NOT NULL DEFAULT 1,
  updated_utc TEXT NOT NULL
 );

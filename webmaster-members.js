@@ -1,4 +1,5 @@
 // Webmaster members and onboarding overview. Every endpoint here is Webmaster-only on the server.
+import {pictureSrc} from './picture.js';
 const $=id=>document.getElementById(id),safe=x=>String(x??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const data={members:[],children:[],interest:[]};
 async function api(path,method='GET',body){
@@ -7,17 +8,18 @@ async function api(path,method='GET',body){
  if(!response.ok)throw Error(payload.error||'Service error ('+response.status+').');
  return payload;
 }
-const table=(el,head,rows)=>{$(el).innerHTML='<thead><tr>'+head.map(h=>'<th scope="col">'+safe(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+safe(c)+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody>'};
+const pic=src=>({__html:'<img class="member-pic" alt="" loading="lazy" src="'+safe(src)+'">'});
+const table=(el,head,rows)=>{$(el).innerHTML='<thead><tr>'+head.map(h=>'<th scope="col">'+safe(h)+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c&&c.__html?c.__html:safe(c))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'">None yet.</td></tr>')+'</tbody>'};
 const yes=v=>v?'Yes':'';
 const rows={
- members:()=>data.members.map(m=>[m.name,m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible)]),
- children:()=>data.children.map(c=>[c.fullName,c.preferredName,c.ageBand==='under16'?'Under 16':'16 to 17',c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
+ members:()=>data.members.map(m=>[pic(pictureSrc(m.profile.picture,m.photoUrl)),m.name,m.preferredName,m.username,m.email,m.mobile,m.town,m.joinedOn,m.membershipClass,m.profile.sports.join('; '),yes(m.profile.filmMember),m.profile.crewSkills.join('; '),m.profile.helping.join('; '),yes(m.profile.directoryVisible),m.gender,m.profile.ageGroup]),
+ children:()=>data.children.map(c=>[pic(pictureSrc(c.picture,c.photoUrl)),c.fullName,c.preferredName,c.ageBand==='under16'?'Under 16':'16 to 17',c.gender,c.interests.join('; '),yes(c.photoPermission),c.guardian?.name,c.guardian?.username,c.guardian?.email,c.guardian?.mobile,c.joinedOn]),
  interest:()=>data.interest.map(i=>[i.firstName,i.email,i.town,i.audienceRegion,(i.interests||[]).join('; '),i.comments,(i.createdAt||'').slice(0,10)])};
-const heads={members:['Name','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory'],
- children:['Child','Called','Age group','Wants to try','Photos OK','Guardian','Guardian username','Guardian email','Guardian mobile','Added'],
+const heads={members:['Picture','Name','Called','Username','Email','Mobile','Town','Joined','Class','Sports','Film Club','Crew skills','Can help with','In directory','Gender','Age group'],
+ children:['Picture','Child','Called','Age group','Gender','Wants to try','Photos OK','Guardian','Guardian username','Guardian email','Guardian mobile','Added'],
  interest:['First name','Email','Town','Connection','Interests','Comments','Date']};
 function csv(kind){
- const cell=v=>{let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+ const cell=v=>{if(v&&v.__html)return '';let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
  const text=[heads[kind],...rows[kind]()].map(r=>r.map(cell).join(',')).join('\r\n');
  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([text],{type:'text/csv'})),download:'sandy-'+kind+'-'+new Date().toISOString().slice(0,10)+'.csv'});
  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);

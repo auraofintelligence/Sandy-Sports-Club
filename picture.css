@@ -1,0 +1,14 @@
+/* Avatar picker and member pictures */
+.avatar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.6rem;margin:.5rem 0 1rem}
+.avatar-tile{position:relative;display:block;cursor:pointer;border-radius:50%;line-height:0}
+.avatar-tile input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.avatar-tile img{width:100%;height:auto;aspect-ratio:1;border-radius:50%;border:3px solid transparent;object-fit:cover;background:#eef6f8}
+.avatar-tile input:checked+img{border-color:#e8742c;box-shadow:0 0 0 3px #fff,0 0 0 6px #e8742c}
+.avatar-tile input:focus-visible+img{outline:3px solid #102d40;outline-offset:3px}
+.member-pic{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;background:#eef6f8}
+.member-item.with-pic{display:grid;grid-template-columns:56px 1fr;gap:.25rem .8rem;align-items:start}
+.member-item.with-pic>img{grid-row:span 8}
+.picture-current{display:flex;gap:1rem;align-items:center;margin:.5rem 0}
+.picture-current img{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#eef6f8}
+body.needs-picture #member-panel{display:none!important}
+#picture-step{max-width:900px}
