@@ -84,12 +84,13 @@ test('no two image files are the same picture (exact or perceptual near-duplicat
  assert.deepEqual(close,[],close.join('\n'));
 });
 
+// Owner, 28 Nov 2026: Adaptable clubhouses swaps the yarning-circle original for the container clubhouse.
 test('the originals from b1964e4 are kept as files and the home page shows them in their original slots',()=>{
  for(const f of ['hero-film.webp','hero-home.webp','hero-sports.webp','modular-led-concept.webp','women-led-setup.webp'])
   assert.ok(assetImages.includes('assets/'+f),f+' should be restored');
  const home=readFileSync(join(root,'index.html'),'utf8');
  assert.match(home,/<section class="page-hero"><img src="\/assets\/hero-home\.webp"/);
- for(const [title,img] of [['Mixed beach volleyball','hero-sports'],['Flag football','flag-football-concept'],['Adaptable clubhouses','hero-trust'],['A premium outdoor LED cinema','modular-led-concept'],['Public and private backing','hero-funding']]){
+ for(const [title,img] of [['Mixed beach volleyball','hero-sports'],['Flag football','flag-football-concept'],['Adaptable clubhouses','card-index-clubhouses'],['A premium outdoor LED cinema','modular-led-concept'],['Public and private backing','hero-funding']]){
   const card=home.match(new RegExp('<article class="card[^"]*"><img src="/assets/([\\w.-]+)"(?:(?!</article>)[\\s\\S])*?<h3><a [^>]*>'+title+'<'));
   assert.ok(card,'home card '+title+' missing');
   assert.equal(card[1],img+'.webp','home card '+title+' should show its original image');

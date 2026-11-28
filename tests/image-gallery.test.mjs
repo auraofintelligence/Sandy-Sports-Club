@@ -42,5 +42,5 @@ test('section 1 shows all 19 originals, section 2 every newer image, section 3 t
 test('replaced originals are shown side by side with the image now in that slot',()=>{
  const pairs=section('side-by-side');
  assert.match(pairs,/<div class="gallery-pair"><h3>sport-flag-football\.html: page banner<\/h3>[\s\S]*?flag-football-concept\.webp[\s\S]*?sport-flag-football-island\.webp/);
- assert.ok(!/<h3>index\.html: /.test(pairs),'the home page shows its originals again, so it has no replaced slot');
+ assert.deepEqual([...pairs.matchAll(/<h3>(index\.html: [^<]+)<\/h3>/g)].map(m=>m[1]),['index.html: card &quot;Adaptable clubhouses&quot;'],'only the clubhouse card has moved off its original');
 });

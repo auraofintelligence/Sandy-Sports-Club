@@ -31,6 +31,7 @@ ALT = {
     'hero-youth-elders.webp': 'Concept image of young people and elders together at a beach sport day',
     'hero-nearby.webp': 'Concept image of a planning table with an island map',
     'hero-trust.webp': 'Concept image of a club meeting planning shared responsibility',
+    'card-index-clubhouses.webp': 'Concept image of a demountable container clubhouse with a green roof beside a sand court',
     'hero-home.webp': 'Concept image of a Sandy Sports beach sport scene on the island',
     'hero-sports.webp': 'Concept image of mixed beach volleyball on a sand court',
     'modular-led-concept.webp': 'Concept image of a modular LED screen for club film nights',
@@ -163,7 +164,8 @@ for _p, _t, _img, _alt in _CARDS:
 HOME_ORIGINALS = {
     'Mixed beach volleyball': 'hero-sports.webp',
     'Flag football': 'flag-football-concept.webp',
-    'Adaptable clubhouses': 'hero-trust.webp',
+    # Owner, 28 Nov 2026: the yarning-circle image did not fit this card; use the container clubhouse.
+    'Adaptable clubhouses': 'card-index-clubhouses.webp',
     'A premium outdoor LED cinema': 'modular-led-concept.webp',
     'Public and private backing': 'hero-funding.webp',
 }
